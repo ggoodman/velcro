@@ -1,0 +1,28 @@
+{
+  "name": "velcro",
+  "version": "0.0.0",
+  "private": true,
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:ggoodman/velcro.git"
+  },
+  "keywords": [],
+  "author": "Geoff Goodman <geoff@goodman.dev> (https://geoff.goodman.dev)",
+  "license": "MIT",
+  "devDependencies": {
+    "lerna": "^3.13.1",
+    "prettier": "^1.16.4",
+    "typescript": "^3.3.3333"
+  },
+  "prettier": {
+    "printWidth": 120,
+    "singleQuote": true,
+    "tabWidth": 2,
+    "trailingComma": "es5"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "target": "es2018",
+    "module": "commonjs",
+    "declaration": true,
+    "downlevelIteration": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "lib": ["es2018"],
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "sourceMap": true
+  },
+  "include": [],
+  "references": [
+    { "path": "./packages/decoder" },
+    { "path": "./packages/resolver" },
+    { "path": "./packages/resolver-host-unpkg" }
+  ]
+}
