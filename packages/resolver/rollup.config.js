@@ -1,33 +1,36 @@
-import RollupPluginNodeResolve from 'rollup-plugin-node-resolve';
-import RollupPluginCommonJs from 'rollup-plugin-commonjs';
-import RollupPluginTypescript from 'rollup-plugin-typescript2';
-import Typescript from 'typescript';
+const { resolve } = require('path');
 
-import pkg from './package.json';
+const RollupPluginNodeResolve = require('rollup-plugin-node-resolve');
+const RollupPluginCommonJs = require('rollup-plugin-commonjs');
+const RollupPluginTypescript = require('rollup-plugin-typescript2');
+const Typescript = require('typescript');
 
-export default [
-  // browser-friendly UMD build
+const pkg = require('./package.json');
+
+module.exports = [
   {
-    input: 'src/index.ts',
+    input: resolve(__dirname, 'src/index.ts'),
     output: [
       {
         name: pkg.name.replace(/[^a-z]+/g, ' ').replace(/\s+[a-z]|^[a-z]/g, c => c[1].toUpperCase()),
-        file: pkg.browser,
+        file: resolve(__dirname, pkg.browser),
         format: 'umd',
       },
       {
-        file: pkg.main,
+        file: resolve(__dirname, pkg.main),
         format: 'cjs',
         sourcemap: true,
       },
       {
-        file: pkg.module,
+        file: resolve(__dirname, pkg.module),
         format: 'esm',
         sourcemap: true,
       },
     ],
     plugins: [
       RollupPluginTypescript({
+        check: false,
+        tsconfig: resolve(__dirname, './tsconfig.json'),
         typescript: Typescript,
         tsconfigOverride: {
           compilerOptions: {

@@ -17,6 +17,7 @@
   "devDependencies": {
     "lerna": "^3.13.1",
     "prettier": "^1.16.4",
+    "rollup": "^1.6.0",
     "typescript": "^3.3.3333"
   },
   "prettier": {

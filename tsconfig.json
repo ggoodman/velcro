@@ -17,6 +17,7 @@
   "references": [
     { "path": "./packages/decoder" },
     { "path": "./packages/resolver" },
-    { "path": "./packages/resolver-host-unpkg" }
+    { "path": "./packages/resolver-host-unpkg" },
+    { "path": "./packages/runtime" }
   ]
 }

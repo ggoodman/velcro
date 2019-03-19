@@ -4,8 +4,8 @@
     "composite": true,
     "module": "commonjs",
     "rootDir": "./",
-    "noEmit": true,
-    "types": ["@types/node"]
+    "noEmit": true
   },
-  "include": ["./"]
+  "include": ["../"],
+  "exclude": []
 }
