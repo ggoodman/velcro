@@ -11,7 +11,7 @@ export const lab = script();
 
 const { after, before, describe, it } = lab;
 
-declare const VelcroRuntime: typeof import('../');
+declare const Velcro: typeof import('../');
 
 describe(name, () => {
   const codePromise = readFile(resolve(__dirname, '../', browserMain), 'utf8');
@@ -32,12 +32,27 @@ describe(name, () => {
     await page.addScriptTag({ content: await codePromise });
 
     const result = await page.evaluate(async function(spec: string) {
-      const runtime = VelcroRuntime.createRuntime();
+      const runtime = Velcro.createRuntime();
       const inst = await runtime.import(spec);
 
       return Object.keys(inst);
     }, 'react@16');
 
     expect(result).to.contain('createElement');
+  });
+
+  it('will load @angular/core@7', { timeout: 10000 }, async () => {
+    const page = await browser.newPage();
+
+    await page.addScriptTag({ content: await codePromise });
+
+    const result = await page.evaluate(async function(spec: string) {
+      const runtime = Velcro.createRuntime();
+      const inst = await runtime.import(spec);
+
+      return Object.keys(inst);
+    }, '@angular/core@7');
+
+    expect(result).to.contain(['Component', 'Directive', 'Input', 'Output', 'Pipe']);
   });
 });

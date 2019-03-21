@@ -12,7 +12,8 @@ module.exports = [
     input: resolve(__dirname, 'src/index.ts'),
     output: [
       {
-        name: pkg.name.replace(/[^a-z]+/g, ' ').replace(/\s+[a-z]|^[a-z]/g, c => c[1].toUpperCase()),
+        name: 'Velcro',
+        extend: true,
         file: resolve(__dirname, pkg.browser),
         format: 'umd',
       },
@@ -42,7 +43,8 @@ module.exports = [
     input: resolve(__dirname, 'src/index.ts'),
     output: [
       {
-        name: pkg.name.replace(/[^a-z]+/g, ' ').replace(/\s+[a-z]|^[a-z]/g, c => c[1].toUpperCase()),
+        name: 'Velcro',
+        extend: true,
         file: resolve(__dirname, pkg.browser).replace(/\.js$/, '.min.js'),
         format: 'umd',
       },

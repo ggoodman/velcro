@@ -11,7 +11,7 @@ export const lab = script();
 
 const { after, before, describe, it } = lab;
 
-declare const VelcroResolverHostUnpkg: typeof import('../');
+declare const Velcro: typeof import('../');
 
 describe(name, () => {
   const codePromise = readFile(resolve(__dirname, '../', browserMain), 'utf8');
@@ -32,8 +32,8 @@ describe(name, () => {
     await page.addScriptTag({ content: await codePromise });
 
     const result = await page.evaluate(async function(href: string) {
-      const host = new VelcroResolverHostUnpkg.Host();
-      const resolver = new VelcroResolverHostUnpkg.Resolver(host);
+      const host = new Velcro.Host();
+      const resolver = new Velcro.Resolver(host);
       const resolved = await resolver.resolve(href);
 
       return resolved ? resolved.href : null;
@@ -48,8 +48,8 @@ describe(name, () => {
     await page.addScriptTag({ content: await codePromise });
 
     const result = await page.evaluate(async function(href: string) {
-      const host = new VelcroResolverHostUnpkg.Host();
-      const resolver = new VelcroResolverHostUnpkg.Resolver(host);
+      const host = new Velcro.Host();
+      const resolver = new Velcro.Resolver(host);
       const resolved = await resolver.resolve(href);
 
       return resolved ? resolved.href : null;

@@ -11,7 +11,7 @@ export const lab = script();
 
 const { after, before, describe, it } = lab;
 
-declare const VelcroResolver: typeof import('../');
+declare const Velcro: typeof import('../');
 
 describe(name, () => {
   const codePromise = readFile(resolve(__dirname, '../', browserMain), 'utf8');
@@ -26,13 +26,13 @@ describe(name, () => {
     await browser.close();
   });
 
-  it('will expose VelcroResolver as a UMD', async () => {
+  it('will expose Velcro as a UMD', async () => {
     const page = await browser.newPage();
 
     await page.addScriptTag({ content: await codePromise });
 
     const result = await page.evaluate(async function() {
-      return typeof VelcroResolver.Resolver;
+      return typeof Velcro.Resolver;
     });
 
     expect(result).to.equal('function');

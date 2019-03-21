@@ -11,7 +11,7 @@ export const lab = script();
 
 const { after, before, describe, it } = lab;
 
-declare const VelcroDecoder: typeof import('../');
+declare const Velcro: typeof import('../');
 
 describe(name, () => {
   const codePromise = readFile(resolve(__dirname, '../', browserMain), 'utf8');
@@ -37,7 +37,7 @@ describe(name, () => {
     await page.addScriptTag({ content: await codePromise });
 
     const result = await page.evaluate(function(bytes: number[]) {
-      const decoder = new VelcroDecoder.Decoder();
+      const decoder = new Velcro.Decoder();
       const ab = new Uint8Array(bytes).buffer;
 
       return decoder.decode(ab);

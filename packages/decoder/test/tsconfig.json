@@ -1,11 +1,13 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
+    "target": "es2018",
     "composite": true,
     "module": "commonjs",
-    "rootDir": "./",
+    "rootDir": "../",
     "noEmit": true,
-    "types": ["@types/node"]
+    "importHelpers": false
   },
-  "include": ["./"]
+  "include": ["../"],
+  "exclude": []
 }

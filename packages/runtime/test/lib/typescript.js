@@ -13,7 +13,7 @@ module.exports = [
      * @param {string} filename
      */
     transform(source, filename) {
-      const searchPath = Path.dirname(filename);
+      const searchPath = filename;
       const configFileName = Typescript.findConfigFile(searchPath, Typescript.sys.fileExists);
       const { config, error } = Typescript.readConfigFile(configFileName, Typescript.sys.readFile);
 
