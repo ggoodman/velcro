@@ -1,115 +1,14 @@
 import { Decoder } from '@velcro/decoder';
-import { failure } from 'io-ts/lib/PathReporter';
 import LRU from 'lru-cache';
 import { satisfies, validRange } from 'semver';
 
-import { ResolverHost, ResolvedEntry, ResolvedEntryKind, Resolver } from '@velcro/resolver';
-import { IGNORE_DEPENDENCY, THROWS_DEPENDENCY } from './constants';
+import { ResolverHost, ResolvedEntry, ResolvedEntryKind, Resolver, util, PackageJson } from '@velcro/resolver';
 import { EntryNotFoundError } from './error';
-import { BareModuleSpec, Directory, PackageJson, Spec, customFetch } from './types';
-import { parseUnpkgUrl, parseModuleSpec, parseBufferAsPackageJson } from './util';
+import { BareModuleSpec, Directory, Spec, customFetch, isValidDirectory } from './types';
+import { parseUnpkgUrl } from './util';
 
 const UNPKG_PROTOCOL = 'https:';
 const UNPKG_HOST = 'unpkg.com';
-
-const NODE_BUILTINS = [
-  'async_hooks',
-  'assert',
-  'buffer',
-  'child_process',
-  'console',
-  'constants',
-  'crypto',
-  'cluster',
-  'dgram',
-  'dns',
-  'domain',
-  'events',
-  'fs',
-  'http',
-  'http2',
-  '_http_agent',
-  '_http_client',
-  '_http_common',
-  '_http_incoming',
-  '_http_outgoing',
-  '_http_server',
-  'https',
-  'inspector',
-  'module',
-  'net',
-  'os',
-  'path',
-  'perf_hooks',
-  'process',
-  'punycode',
-  'querystring',
-  'readline',
-  'repl',
-  'stream',
-  '_stream_readable',
-  '_stream_writable',
-  '_stream_duplex',
-  '_stream_transform',
-  '_stream_passthrough',
-  '_stream_wrap',
-  'string_decoder',
-  'sys',
-  'timers',
-  'tls',
-  '_tls_common',
-  '_tls_wrap',
-  'trace_events',
-  'tty',
-  'url',
-  'util',
-  'v8',
-  'vm',
-  'zlib',
-  'v8/tools/splaytree',
-  'v8/tools/codemap',
-  'v8/tools/consarray',
-  'v8/tools/csvparser',
-  'v8/tools/profile',
-  'v8/tools/profile_view',
-  'v8/tools/logreader',
-  'v8/tools/arguments',
-  'v8/tools/tickprocessor',
-  'v8/tools/SourceMap',
-  'v8/tools/tickprocessor-driver',
-  'node-inspect/lib/_inspect',
-  'node-inspect/lib/internal/inspect_client',
-  'node-inspect/lib/internal/inspect_repl',
-];
-
-// const NODE_CORE_SHIMS: { [name: string]: string | typeof IGNORE_DEPENDENCY } = {
-//   assert: 'assert@1.4.1',
-//   buffer: 'buffer@5.2.1',
-//   crypto: 'crypto-browserify@3.12.0',
-//   events: 'events@3.0.0',
-//   fs: 'memory-fs',
-//   http: 'stream-http@3.0.0',
-//   https: 'https-browserify@1.0.0',
-//   module: IGNORE_DEPENDENCY,
-//   net: 'node-libs-browser@2.2.0/mock/net.js',
-//   os: 'os-browserify@0.3.0',
-//   path: 'path-browserify@1.0.0',
-//   querystring: 'querystring-es3@0.2.1',
-//   stream: 'stream-browserify@2.0.2',
-//   tls: 'node-libs-browser@2.2.0/mock/tls.js',
-//   url: 'url@0.11.0',
-//   util: 'util@0.11.0',
-//   vm: 'vm-browserify@1.1.0',
-//   zlib: 'browserify-zlib@0.2.0',
-// };
-
-const NODE_CORE_SHIMS = Object.values(NODE_BUILTINS).reduce(
-  (acc, name) => {
-    acc[name] = IGNORE_DEPENDENCY;
-    return acc;
-  },
-  {} as { [name: string]: string | typeof IGNORE_DEPENDENCY }
-);
 
 interface UnpkgPackageHostOptions {
   fetch?: customFetch;
@@ -128,8 +27,6 @@ export class Host implements ResolverHost {
   private readonly packageLock = new Map<string, Promise<any>>();
   private readonly packageEntriesCache = new Map<string, Map<string, Directory>>();
   private readonly packageJsonCache = new Map<string, Map<string, PackageJson>>();
-
-  public static NODE_BUILTINS = NODE_BUILTINS;
 
   constructor(options: UnpkgPackageHostOptions = {}) {
     if (!options.fetch && typeof fetch !== 'function') {
@@ -256,44 +153,6 @@ export class Host implements ResolverHost {
     }
   }
 
-  async resolveBareModuleSpecifier(resolver: Resolver, spec: string, parentUrl: URL) {
-    const parentUrlRoot = await resolver.host.getResolveRoot(resolver, parentUrl);
-    const parsedSpec = parseModuleSpec(spec);
-    const manifestUrl = new URL(Resolver.path.resolve(parentUrlRoot.pathname, './package.json'), parentUrlRoot);
-
-    let dependencies: { [name: string]: string } = {};
-
-    try {
-      const parentPackageJsonContent = await resolver.host.readFileContent(resolver, manifestUrl);
-      const parentPackageJson = parseBufferAsPackageJson(this.decoder, parentPackageJsonContent);
-
-      dependencies = {
-        ...(parentPackageJson.devDependencies || {}),
-        ...(parentPackageJson.dependencies || {}),
-      };
-    } catch (err) {
-      console.warn(`Error reading the package manifest for ${parentUrl.href} from ${manifestUrl.href}: ${err.message}`);
-    }
-
-    if (!Object.hasOwnProperty.call(dependencies, parsedSpec.name)) {
-      if (!Object.hasOwnProperty.call(NODE_CORE_SHIMS, parsedSpec.name)) {
-        return THROWS_DEPENDENCY;
-      }
-
-      const shim = NODE_CORE_SHIMS[parsedSpec.name];
-
-      if (shim === IGNORE_DEPENDENCY) {
-        return IGNORE_DEPENDENCY;
-      }
-
-      return new URL(`${UNPKG_PROTOCOL}//${UNPKG_HOST}/${shim}${parsedSpec.pathname}`);
-    }
-
-    const versionSpec = dependencies[parsedSpec.name];
-
-    return new URL(`${UNPKG_PROTOCOL}//${UNPKG_HOST}/${parsedSpec.name}@${versionSpec}${parsedSpec.pathname}`);
-  }
-
   private async readPackageEntriesWithCache(spec: Spec): Promise<Directory> {
     const lockKey = `entries:${spec.name}`;
     const lock = this.packageLock.get(lockKey);
@@ -383,6 +242,10 @@ export class Host implements ResolverHost {
     const packageJson = await promise;
     this.packageLock.delete(lockKey);
 
+    if (!packageJson.version) {
+      throw new Error(`Manifest missing a version identifier for ${spec}`);
+    }
+
     packageJsonCacheForModule.set(packageJson.version, packageJson);
 
     return packageJson;
@@ -394,19 +257,13 @@ export class Host implements ResolverHost {
     const href = `${UNPKG_PROTOCOL}//${UNPKG_HOST}/${spec}/package.json`;
     const content = await this.readFileContent(resolver, new URL(href));
 
-    let json: unknown;
+    let manifest: PackageJson;
 
     try {
-      const text = this.decoder.decode(content);
-
-      json = JSON.parse(text);
+      manifest = util.parseBufferAsPackageJson(this.decoder, content, spec);
     } catch (err) {
       throw new Error(`Error parsing manifest as json for package ${spec}: ${err.message}`);
     }
-
-    const manifest = PackageJson.decode(json).getOrElseL(errors => {
-      throw new Error(`Unexpected manifest for the package ${spec}: ${failure(errors).join(', ')}`);
-    });
 
     return manifest;
   }
@@ -423,13 +280,12 @@ export class Host implements ResolverHost {
     }
 
     const json = await res.json();
-    const root = Directory.decode(json).getOrElseL(errors => {
-      throw new Error(
-        `Unexpected response payload while listing package contents for ${spec}: ${failure(errors).join(', ')}`
-      );
-    });
 
-    return root;
+    if (!isValidDirectory(json)) {
+      throw new Error(`Unexpected response payload while listing package contents for ${spec}`);
+    }
+
+    return json;
   }
 
   static resolveBareModule(_: ResolverHost, spec: BareModuleSpec) {

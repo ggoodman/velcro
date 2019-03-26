@@ -1,4 +1,5 @@
 import { Decoder } from '@velcro/decoder';
+import { isValidPackageJson, PackageJson } from './types';
 
 const CHAR_DOT = 46; /* . */
 const CHAR_FORWARD_SLASH = 47; /* / */
@@ -32,65 +33,6 @@ function parseTextAsPackageJson(text: string, spec: string): PackageJson {
   }
 
   return json;
-}
-
-export type PackageJson = {
-  browser?: string | { [key: string]: false | string };
-  main?: string;
-  module?: string;
-  'jsnext:main'?: string;
-  dependencies?: { [key: string]: string };
-  devDependencies?: { [key: string]: string };
-  peerDependencies?: { [key: string]: string };
-};
-function isValidPackageJson(json: unknown): json is PackageJson {
-  return (
-    json &&
-    typeof json === 'object' &&
-    json !== null &&
-    !hasInvalidBrowserField(json as any) &&
-    !hasInvalidOptionalStringField(json as any, 'main') &&
-    !hasInvalidOptionalStringField(json as any, 'module') &&
-    !hasInvalidOptionalStringField(json as any, 'jsnext:main') &&
-    !hasInvalidDependenciesField(json as any, 'dependencies') &&
-    !hasInvalidDependenciesField(json as any, 'devDependencies') &&
-    !hasInvalidDependenciesField(json as any, 'peerDependencies')
-  );
-}
-
-function hasInvalidBrowserField(json: any) {
-  let error = '';
-
-  const browser = json.browser;
-  if (browser) {
-    if (typeof browser === 'object') {
-      for (const key in browser) {
-        if (typeof key !== 'string') {
-          error = `The key ${key} of .browser must be a string`;
-          break;
-        }
-        if (typeof browser[key] !== 'string' && browser[key] !== false) {
-          error = `The value ${key} of .browser must be a string or false`;
-          break;
-        }
-      }
-    }
-  }
-
-  return error;
-}
-
-function hasInvalidOptionalStringField(json: any, field: string) {
-  return json[field] !== undefined && typeof json[field] !== 'string';
-}
-
-function hasInvalidDependenciesField(json: any, field: string) {
-  return (
-    json[field] !== undefined &&
-    typeof json[field] === 'object' &&
-    json[field] !== null &&
-    !Object.keys(json[field]).every(key => typeof key === 'string' && typeof json[field][key] === 'string')
-  );
 }
 
 export function getFirstPathSegmentAfterPrefix(child: URL, parent: URL): string {

@@ -1,6 +1,6 @@
 import { Decoder } from '@velcro/decoder';
 
-import { PackageMainField, ResolvedEntry, ResolvedEntryKind } from './types';
+import { PackageMainField, ResolvedEntry, ResolvedEntryKind, PackageJson } from './types';
 import { ResolverHost } from './resolver_host';
 import {
   parseBufferAsPackageJson,
@@ -9,7 +9,6 @@ import {
   basename,
   resolve,
   ensureTrailingSlash,
-  PackageJson,
   extname,
 } from './util';
 import { EntryNotFoundError } from './error';
