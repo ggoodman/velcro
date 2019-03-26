@@ -1,6 +1,6 @@
 {
   "name": "@velcro/runtime",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Execute code in a runtime that provides node module resolution and support for different module formats",
   "keywords": [
     "resolve",
@@ -56,9 +56,9 @@
     "typescript": "^3.3.3333"
   },
   "dependencies": {
-    "@velcro/decoder": "^0.1.0",
-    "@velcro/resolver": "^0.1.0",
-    "@velcro/resolver-host-unpkg": "^0.1.0",
+    "@velcro/decoder": "^0.1.1",
+    "@velcro/resolver": "^0.1.1",
+    "@velcro/resolver-host-unpkg": "^0.1.1",
     "acorn": "^6.1.1",
     "magic-string": "^0.25.2"
   },
