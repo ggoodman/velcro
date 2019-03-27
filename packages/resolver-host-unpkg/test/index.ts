@@ -32,7 +32,7 @@ describe(name, () => {
     await page.addScriptTag({ content: await codePromise });
 
     const result = await page.evaluate(async function(href: string) {
-      const host = new Velcro.Host();
+      const host = new Velcro.ResolverHostUnpkg();
       const resolver = new Velcro.Resolver(host);
       const resolved = await resolver.resolve(href);
 
@@ -48,7 +48,7 @@ describe(name, () => {
     await page.addScriptTag({ content: await codePromise });
 
     const result = await page.evaluate(async function(href: string) {
-      const host = new Velcro.Host();
+      const host = new Velcro.ResolverHostUnpkg();
       const resolver = new Velcro.Resolver(host);
       const resolved = await resolver.resolve(href);
 

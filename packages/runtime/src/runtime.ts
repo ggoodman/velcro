@@ -1,7 +1,7 @@
-import { Host as ResolverHostUnpkg } from '@velcro/resolver-host-unpkg';
+import { ResolverHostUnpkg } from '@velcro/resolver-host-unpkg';
 import { Resolver, ResolverHost } from '@velcro/resolver';
 
-import { Host as SystemHostUnpkg } from './system_host';
+import { SystemHostUnpkg } from './system_host';
 import { System, SystemHost } from './system';
 
 type CreateRuntimeOptions = {

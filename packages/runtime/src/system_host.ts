@@ -42,7 +42,7 @@ const DEFAULT_SHIM_GLOBALS: { [key: string]: { spec: string; export?: string } }
   },
 };
 
-export class Host implements SystemHost {
+export class SystemHostUnpkg implements SystemHost {
   constructor(public readonly resolver: Resolver) {}
 
   async instantiate(loader: System, href: string, parentHref?: string) {

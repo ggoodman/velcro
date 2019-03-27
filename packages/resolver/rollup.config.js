@@ -1,3 +1,5 @@
+'use strict';
+
 const { resolve } = require('path');
 
 const RollupPluginNodeResolve = require('rollup-plugin-node-resolve');

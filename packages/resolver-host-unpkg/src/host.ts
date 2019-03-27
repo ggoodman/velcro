@@ -14,7 +14,7 @@ interface UnpkgPackageHostOptions {
   fetch?: customFetch;
 }
 
-export class Host implements ResolverHost {
+export class ResolverHostUnpkg implements ResolverHost {
   private readonly contentCache = new LRU<string, ArrayBuffer>({
     length(buf) {
       return buf.byteLength;

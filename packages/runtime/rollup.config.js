@@ -1,9 +1,12 @@
+'use strict';
+
 const { resolve } = require('path');
 
 const RollupPluginNodeResolve = require('rollup-plugin-node-resolve');
 const RollupPluginCommonJs = require('rollup-plugin-commonjs');
-const RollupPluginSucrase = require('rollup-plugin-sucrase');
+const RollupPluginTypescript = require('rollup-plugin-typescript2');
 const { terser } = require('rollup-plugin-terser');
+const Typescript = require('typescript');
 
 const pkg = require('./package.json');
 
@@ -29,14 +32,18 @@ module.exports = [
       },
     ],
     plugins: [
-      RollupPluginNodeResolve({
-        extensions: ['.js', '.ts'],
+      RollupPluginTypescript({
+        check: false,
+        tsconfig: resolve(__dirname, './tsconfig.json'),
+        typescript: Typescript,
+        tsconfigOverride: {
+          compilerOptions: {
+            module: 'esnext',
+          },
+        },
       }),
+      RollupPluginNodeResolve(),
       RollupPluginCommonJs(),
-      RollupPluginSucrase({
-        exclude: ['node_modules/**'],
-        transforms: ['typescript'],
-      }),
     ],
   },
   {
@@ -50,14 +57,18 @@ module.exports = [
       },
     ],
     plugins: [
-      RollupPluginNodeResolve({
-        extensions: ['.js', '.ts'],
+      RollupPluginTypescript({
+        check: false,
+        tsconfig: resolve(__dirname, './tsconfig.json'),
+        typescript: Typescript,
+        tsconfigOverride: {
+          compilerOptions: {
+            module: 'esnext',
+          },
+        },
       }),
+      RollupPluginNodeResolve(),
       RollupPluginCommonJs(),
-      RollupPluginSucrase({
-        exclude: ['node_modules/**'],
-        transforms: ['typescript'],
-      }),
       terser(),
     ],
   },

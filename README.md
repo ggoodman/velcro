@@ -74,6 +74,16 @@ const url = await resolver.resolve('https://unpkg.com/react@16');
 
 - Respects the semantics of the `browser` field and supports both the object syntax and string syntax to add resolution overlays.
 
+### `@velcro/resolver-host-fs`
+
+A class that implements the `ResolverHost` interface over a `require('fs')`-compatible interface.
+
+```js
+const host = new Velcro.ResolverHostFs({
+  fs: require('fs'),
+});
+```
+
 ### `@velcro/resolver-host-unpkg`
 
 A class that implements the `ResolverHost` interface over the [unpkg.com](https://unpkg.com) CDN. This host does not rely on unpkg's own automatic main file resolution and so it will respect the parent `Resolver`'s configuration.
