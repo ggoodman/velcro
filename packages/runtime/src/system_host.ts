@@ -26,7 +26,7 @@ const NODE_CORE_SHIMS: { [name: string]: string | (() => string | PromiseLike<st
   tls: 'node-libs-browser@2.2.0/mock/tls.js',
   url: 'url-parse@1.4.4',
   util: 'util@0.11.0',
-  vm: 'vm-browserify@1.1.0',
+  vm: 'vmdom@0.0.23',
   zlib: 'browserify-zlib@0.2.0',
 };
 const DEFAULT_SHIM_GLOBALS: { [key: string]: { spec: string; export?: string } } = {
@@ -343,7 +343,7 @@ export class SystemHostUnpkg implements SystemHost {
             loader.resolve('style-loader'),
           ]);
 
-          return `${loaderPrefix}${styleLoaderHref}!${cssLoaderHref}!${resolved.href}`;
+          return `${loaderPrefix}${styleLoaderHref}!${resolved.href}`;
         }
       }
       return `${loaderPrefix}${resolved.href}`;
