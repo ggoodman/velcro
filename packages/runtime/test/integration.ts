@@ -55,4 +55,19 @@ describe(name, () => {
 
     expect(result).to.contain(['Component', 'Directive', 'Input', 'Output', 'Pipe']);
   });
+
+  it.skip('will load bootstrap@4/dist/css/bootstrap.css', { timeout: 100000 }, async () => {
+    const page = await browser.newPage();
+
+    await page.addScriptTag({ content: await codePromise });
+
+    const result = await page.evaluate(async function(spec: string) {
+      const runtime = Velcro.createRuntime();
+      const inst = await runtime.import(spec);
+
+      return Object.keys(inst);
+    }, 'bootstrap@4/dist/css/bootstrap.css');
+
+    expect(result).to.contain(['']);
+  });
 });
