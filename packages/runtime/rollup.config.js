@@ -5,7 +5,6 @@ const { resolve } = require('path');
 const RollupPluginNodeResolve = require('rollup-plugin-node-resolve');
 const RollupPluginCommonJs = require('rollup-plugin-commonjs');
 const RollupPluginTypescript = require('rollup-plugin-typescript2');
-const { terser } = require('rollup-plugin-terser');
 const Typescript = require('typescript');
 
 const pkg = require('./package.json');
@@ -34,6 +33,7 @@ module.exports = [
     plugins: [
       RollupPluginTypescript({
         check: false,
+        clean: true,
         tsconfig: resolve(__dirname, './tsconfig.json'),
         typescript: Typescript,
         tsconfigOverride: {
@@ -69,7 +69,6 @@ module.exports = [
       }),
       RollupPluginNodeResolve(),
       RollupPluginCommonJs(),
-      terser(),
     ],
   },
 ];

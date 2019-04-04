@@ -5,6 +5,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build": "rollup -c",
     "test": "lerna run test"
   },
   "repository": {

@@ -31,6 +31,7 @@ module.exports = [
     plugins: [
       RollupPluginTypescript({
         check: false,
+        clean: true,
         tsconfig: resolve(__dirname, './tsconfig.json'),
         typescript: Typescript,
         tsconfigOverride: {

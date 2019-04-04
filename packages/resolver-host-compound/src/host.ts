@@ -1,4 +1,4 @@
-import { Resolver, ResolverHost, ResolvedEntry, ResolvedEntryKind } from '@velcro/resolver';
+import { Resolver, ResolverHost } from '@velcro/resolver';
 
 export class CompoundHost implements ResolverHost {
   private readonly hosts = new Map<string, ResolverHost>();

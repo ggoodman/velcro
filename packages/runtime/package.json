@@ -32,6 +32,7 @@
   },
   "scripts": {
     "build": "rollup -c",
+    "prepack": "npm run build && npm run test",
     "test": "lab -fSv --transform ./test/lib/typescript.js"
   },
   "devDependencies": {
@@ -50,7 +51,6 @@
     "rollup-plugin-commonjs": "^9.2.1",
     "rollup-plugin-node-resolve": "^4.0.1",
     "rollup-plugin-sucrase": "^2.1.0",
-    "rollup-plugin-terser": "^4.0.4",
     "rollup-plugin-typescript2": "^0.20.1",
     "tslib": "^1.9.3",
     "typescript": "^3.3.3333"
@@ -58,6 +58,8 @@
   "dependencies": {
     "@velcro/decoder": "^0.2.0",
     "@velcro/resolver": "^0.2.0",
+    "@velcro/resolver-host-compound": "^0.2.0",
+    "@velcro/resolver-host-fs": "^0.2.0",
     "@velcro/resolver-host-unpkg": "^0.2.0",
     "acorn": "^6.1.1",
     "magic-string": "^0.25.2"
