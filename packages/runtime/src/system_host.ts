@@ -21,6 +21,7 @@ const NODE_CORE_SHIMS: { [name: string]: string | (() => string | PromiseLike<st
   net: 'node-libs-browser@2.2.0/mock/net.js',
   os: 'os-browserify@0.3.0',
   path: 'bfs-path@1.0.2',
+  process: 'bfs-process@1.0.0',
   querystring: 'querystringify@2.1.0',
   stream: 'stream-browserify@2.0.2',
   tls: 'node-libs-browser@2.2.0/mock/tls.js',
@@ -38,7 +39,7 @@ const DEFAULT_SHIM_GLOBALS: { [key: string]: { spec: string; export?: string } }
     spec: 'global@4.3.2',
   },
   process: {
-    spec: 'process@0.11.10',
+    spec: 'bfs-process@1.0.0',
   },
 };
 
