@@ -1,8 +1,10 @@
 import { Resolver, ResolverHost } from '@velcro/resolver';
 
-export class CompoundHost implements ResolverHost {
+export class ResolverHostCompound extends ResolverHost {
   private readonly hosts = new Map<string, ResolverHost>();
   constructor(hosts: Record<string, ResolverHost>) {
+    super();
+
     for (const prefix in hosts) {
       this.hosts.set(prefix, hosts[prefix]);
     }
