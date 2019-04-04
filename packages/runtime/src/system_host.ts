@@ -20,7 +20,7 @@ const NODE_CORE_SHIMS: { [name: string]: string | (() => string | PromiseLike<st
   // module: IGNORE_DEPENDENCY,
   net: 'node-libs-browser@2.2.0/mock/net.js',
   os: 'os-browserify@0.3.0',
-  path: 'rollup-plugin-node-builtins@2.1.2/src/es6/path.js',
+  path: 'bfs-path@1.0.2',
   querystring: 'querystringify@2.1.0',
   stream: 'stream-browserify@2.0.2',
   tls: 'node-libs-browser@2.2.0/mock/tls.js',
