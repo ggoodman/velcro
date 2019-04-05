@@ -3,6 +3,7 @@
   "version": "0.2.2",
   "description": "Abstract string decoder for node and the browser",
   "keywords": [
+    "velcro",
     "decoder",
     "buffer",
     "arraybuffer",

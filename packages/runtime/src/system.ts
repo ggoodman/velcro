@@ -285,6 +285,18 @@ export class System {
               value: true,
             });
 
+            // // Hack for legacy typescript
+            // if (module.exports.__esModule === true) {
+            //   console.log('esModule', id, module.exports);
+            //   const props = Object.getOwnPropertyNames(module.exports);
+
+            //   if (props.length === 1 && props[0] === 'default') {
+            //     module.exports = Object.assign(module.exports.default, {
+            //       default: module.exports.default,
+            //     });
+            //   }
+            // }
+
             ns.module = module;
 
             for (let i = 0; i < importerSetters.length; i++) importerSetters[i](ns.module.exports);

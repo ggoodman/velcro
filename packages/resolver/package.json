@@ -3,6 +3,7 @@
   "version": "0.2.2",
   "description": "Resolve references to absolute urls using the node module resolution algorithm using an generic host interface",
   "keywords": [
+    "velcro",
     "resolve",
     "npm",
     "resolution",

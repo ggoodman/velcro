@@ -3,6 +3,7 @@
   "version": "0.2.4",
   "description": "Execute code in a runtime that provides node module resolution and support for different module formats",
   "keywords": [
+    "velcro",
     "resolve",
     "npm",
     "resolution",
@@ -44,13 +45,13 @@
     "@types/node": "^11.11.3",
     "@types/puppeteer": "^1.12.3",
     "code": "^5.2.4",
+    "fetch-h2": "^2.2.0",
     "fs-extra": "^7.0.1",
     "lab": "^18.0.2",
     "puppeteer": "^1.13.0",
     "rollup": "^1.6.0",
     "rollup-plugin-commonjs": "^9.2.1",
     "rollup-plugin-node-resolve": "^4.0.1",
-    "rollup-plugin-sucrase": "^2.1.0",
     "rollup-plugin-typescript2": "^0.20.1",
     "tslib": "^1.9.3",
     "typescript": "^3.3.3333"
@@ -70,5 +71,5 @@
     "tabWidth": 2,
     "trailingComma": "es5"
   },
-  "gitHead": "e3d2ad4382cb4a6edf8f634b39f8dc66be5e4c1d"
+  "gitHead": "46e99d3bd84e94bfdf94e8f7ca62c069cc9407d1"
 }

@@ -21,7 +21,7 @@ const NODE_CORE_SHIMS: { [name: string]: string | (() => string | PromiseLike<st
   net: 'node-libs-browser@2.2.0/mock/net.js',
   os: 'os-browserify@0.3.0',
   path: 'bfs-path@1.0.2',
-  process: 'bfs-process@1.0.0',
+  process: 'process@0.11.0',
   querystring: 'querystringify@2.1.0',
   stream: 'stream-browserify@2.0.2',
   tls: 'node-libs-browser@2.2.0/mock/tls.js',
@@ -39,7 +39,8 @@ const DEFAULT_SHIM_GLOBALS: { [key: string]: { spec: string; export?: string } }
     spec: 'global@4.3.2',
   },
   process: {
-    spec: 'bfs-process@1.0.0',
+    spec: 'process@0.11.0',
+    export: 'default',
   },
 };
 
@@ -65,7 +66,7 @@ export class SystemHostUnpkg implements SystemHost {
       try {
         url = new URL(href);
       } catch (err) {
-        console.warn(originalHref, href, parentHref);
+        // console.warn(originalHref, href, parentHref);
         throw new Error(`Error instantiating ${href} because it could not be resolved as a URL: ${err.message}`);
       }
 
@@ -135,7 +136,7 @@ export class SystemHostUnpkg implements SystemHost {
       for (const globalName of ctx.injectGlobals) {
         const injectGlobal = DEFAULT_SHIM_GLOBALS[globalName];
 
-        console.warn('global(%s): %s', href, globalName, injectGlobal);
+        // console.warn('global(%s): %s', href, globalName, injectGlobal);
 
         if (injectGlobal) {
           resolvedInjectPromises.push(
@@ -145,7 +146,7 @@ export class SystemHostUnpkg implements SystemHost {
 
               requires.push(resolvedHref);
 
-              console.warn('injected(%s)', href, injected);
+              // console.warn('injected(%s)', href, injected);
             })
           );
         }
@@ -189,7 +190,7 @@ export class SystemHostUnpkg implements SystemHost {
 
           const require = Object.assign(
             function require(id: string) {
-              console.warn('require(%s): %s', id, href);
+              // console.warn('require(%s): %s', id, href);
               return __meta.cjsRequire(id);
             },
             {
@@ -242,7 +243,7 @@ export class SystemHostUnpkg implements SystemHost {
 
       return registration;
     } finally {
-      console.warn('instantiate(%s, %s): %d', href, parentHref, Date.now() - start);
+      // console.warn('instantiate(%s, %s): %d', href, parentHref, Date.now() - start);
     }
   }
 
@@ -349,7 +350,7 @@ export class SystemHostUnpkg implements SystemHost {
       }
       return `${loaderPrefix}${resolved.href}`;
     } finally {
-      console.warn('resolve(%s, %s): %d', href, parentHref, Date.now() - start);
+      // console.warn('resolve(%s, %s): %d', href, parentHref, Date.now() - start);
     }
   }
 }
