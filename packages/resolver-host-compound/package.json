@@ -1,6 +1,6 @@
 {
   "name": "@velcro/resolver-host-compound",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Implements a @velcro/resolver host that delegates to multiple child hosts based on url prefix",
   "keywords": [
     "velcro",
@@ -51,7 +51,7 @@
     "typescript": "^3.3.3333"
   },
   "dependencies": {
-    "@velcro/resolver": "^0.2.2"
+    "@velcro/resolver": "^0.2.5"
   },
   "prettier": {
     "printWidth": 120,
