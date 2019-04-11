@@ -4,4 +4,6 @@ export * from '@velcro/resolver-host-compound';
 export * from '@velcro/resolver-host-fs';
 export * from '@velcro/resolver-host-unpkg';
 
+export * from './node';
 export * from './runtime';
+export * from './unpkg';

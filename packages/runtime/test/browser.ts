@@ -11,9 +11,9 @@ export const lab = script();
 
 const { after, before, describe, it } = lab;
 
-declare const Velcro: typeof import('../');
+declare const Velcro: typeof import('../dist/dist-main');
 
-describe(name, () => {
+describe(`${name} in the browser`, () => {
   const codePromise = readFile(resolve(__dirname, '../', browserMain), 'utf8');
 
   let browser: Browser;
