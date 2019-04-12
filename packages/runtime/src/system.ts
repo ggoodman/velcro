@@ -219,6 +219,54 @@ export class System {
     return this._host.instantiate(this, url, firstParentUrl);
   }
 
+  async invalidate(id: string, parentUrl?: string): Promise<boolean> {
+    const resolvedId = await this.resolve(id, parentUrl);
+    const dependentsGraph = new Map<string, Set<string>>();
+
+    for (const id in this[REGISTRY]) {
+      const load = this[REGISTRY][id];
+
+      if (load.d) {
+        for (const childLoad of load.d) {
+          let dependents = dependentsGraph.get(childLoad.id);
+
+          if (!dependents) {
+            dependents = new Set();
+            dependentsGraph.set(childLoad.id, dependents);
+          }
+
+          dependents.add(load.id);
+        }
+      }
+    }
+
+    let invalidated = false;
+
+    const invalidationQueue = [resolvedId] as string[];
+    const seen = new Set<string>();
+
+    while (invalidationQueue.length) {
+      const id = invalidationQueue.shift() as string;
+
+      if (seen.has(id)) continue;
+      seen.add(id);
+
+      const load = this[REGISTRY][id];
+
+      if (load) {
+        invalidated = this.delete(id) || invalidated;
+
+        const dependents = dependentsGraph.get(load.id);
+
+        if (dependents) {
+          invalidationQueue.push(...dependents);
+        }
+      }
+    }
+
+    return invalidated;
+  }
+
   async preLoad(id: string, parentUrl?: string): Promise<void> {
     const resolvedId = await this.resolve(id, parentUrl);
     const load = await System.getOrCreateLoad(this, resolvedId);

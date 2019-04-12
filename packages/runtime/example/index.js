@@ -1,6 +1,9 @@
 /** @type {import('../src')} */
 const Velcro = window.Velcro;
 
+/**
+ * @returns {Promise<ReturnType<import('../src').createRuntime>>}
+ */
 async function main() {
   const cacheStats = {
     hits: 0,
@@ -29,27 +32,42 @@ async function main() {
   });
 
   console.time('preload');
-  await Promise.all([runtime.load('react'), runtime.load('react-dom')]);
+  const preLoadStart = Date.now();
+  await Promise.all([runtime.preLoad('react'), runtime.preLoad('react-dom')]);
+  const preLoadEnd = Date.now();
   console.timeEnd('preload');
-
-  await delay(5000);
 
   console.time('first-render');
 
+  const importStart = Date.now();
   /** @type {[import('react'), import('react-dom')]} */
   const [React, ReactDom] = await Promise.all([runtime.import('react'), runtime.import('react-dom')]);
+  const importEnd = Date.now();
 
-  ReactDom.render(React.createElement('h1', null, 'Hello world'), document.getElementById('root'), () => {
-    console.timeEnd('first-render');
-    console.log(
-      'Finished rendering with %f.00% cache hit ratio',
-      (100 * cacheStats.hits) / (cacheStats.hits + cacheStats.misses)
-    );
-  });
+  return new Promise(resolve =>
+    ReactDom.render(
+      React.createElement(
+        'h1',
+        null,
+        `Preloaded in ${preLoadEnd - preLoadStart}ms -- imported in ${importEnd - importStart}ms`
+      ),
+      document.getElementById('root'),
+      () => {
+        console.timeEnd('first-render');
+        console.log(
+          'Finished rendering with %f.00% cache hit ratio',
+          (100 * cacheStats.hits) / (cacheStats.hits + cacheStats.misses)
+        );
+
+        resolve(runtime);
+      }
+    )
+  );
 }
 
-function delay(n) {
-  return new Promise(resolve => setTimeout(resolve, n));
-}
-
-main().catch(console.error);
+main()
+  .then(async runtime => {
+    await runtime.invalidate('process@0.11.0');
+    return main();
+  })
+  .catch(console.error);
