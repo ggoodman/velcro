@@ -18,7 +18,6 @@ describe(`${name} in node`, { timeout: 200000 }, () => {
       const runtime = Velcro.createRuntime({
         fetch,
         resolveBareModule: Velcro.resolveBareModuleToUnpkg,
-        injectGlobals: false,
       });
       const inst = await runtime.import(spec);
       const result = Object.keys(inst);
@@ -31,7 +30,6 @@ describe(`${name} in node`, { timeout: 200000 }, () => {
       const runtime = Velcro.createRuntime({
         fetch,
         resolveBareModule: Velcro.resolveBareModuleToUnpkg,
-        injectGlobals: false,
       });
       const inst = await runtime.import(spec);
       const result = Object.keys(inst);
@@ -45,7 +43,6 @@ describe(`${name} in node`, { timeout: 200000 }, () => {
       const spec = `file://${Velcro.util.resolve(__dirname, '../')}`;
       const resolverHost = new Velcro.ResolverHostFs({ fs: Fs });
       const runtime = Velcro.createRuntime({
-        injectGlobals: false,
         resolveBareModule: Velcro.resolveBareModuleWithNode,
         resolverHost,
       });

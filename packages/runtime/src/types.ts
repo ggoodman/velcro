@@ -9,7 +9,15 @@ export type BareModuleResolver = (
   parentHref?: string
 ) => string | PromiseLike<string>;
 
-export interface ICache<TItem = any> {
-  get(key: string): Promise<TItem | undefined>;
-  set(key: string, value: TItem): Promise<void>;
+export type GlobalInjection = { spec: string; export?: string };
+export type GlobalInjector = (globalName: string) => GlobalInjection | undefined;
+
+export interface ICache {
+  get(key: string): Promise<Serializable | undefined>;
+  set(key: string, value: Serializable): Promise<void>;
 }
+
+interface SerializableArray extends Array<Serializable> {}
+interface SerializableObject extends Record<number | string, Serializable> {}
+
+export type Serializable = boolean | number | null | string | undefined | SerializableArray | SerializableObject;

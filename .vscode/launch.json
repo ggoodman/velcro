@@ -12,7 +12,7 @@
       "program": "${workspaceRoot}/packages/runtime/node_modules/.bin/lab",
       "args": ["-fSv", "--transform", "./test/lib/typescript.js"],
       "outputCapture": "std",
-      "skipFiles": ["<node_internals>/!(https:)/*.js"]
+      "skipFiles": ["<node_internals>/**/*.js"]
       // "sourceMaps": true
     }
   ]

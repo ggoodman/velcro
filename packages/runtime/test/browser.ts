@@ -32,7 +32,10 @@ describe(`${name} in the browser`, () => {
     await page.addScriptTag({ content: await codePromise });
 
     const result = await page.evaluate(async function(spec: string) {
-      const runtime = Velcro.createRuntime();
+      const runtime = Velcro.createRuntime({
+        injectGlobal: Velcro.injectGlobalFromUnpkg,
+        resolveBareModule: Velcro.resolveBareModuleToUnpkg,
+      });
       const inst = await runtime.import(spec);
 
       return Object.keys(inst);
@@ -47,7 +50,10 @@ describe(`${name} in the browser`, () => {
     await page.addScriptTag({ content: await codePromise });
 
     const result = await page.evaluate(async function(spec: string) {
-      const runtime = Velcro.createRuntime();
+      const runtime = Velcro.createRuntime({
+        injectGlobal: Velcro.injectGlobalFromUnpkg,
+        resolveBareModule: Velcro.resolveBareModuleToUnpkg,
+      });
       const inst = await runtime.import(spec);
 
       return Object.keys(inst);
@@ -62,7 +68,10 @@ describe(`${name} in the browser`, () => {
     await page.addScriptTag({ content: await codePromise });
 
     const result = await page.evaluate(async function(spec: string) {
-      const runtime = Velcro.createRuntime();
+      const runtime = Velcro.createRuntime({
+        injectGlobal: Velcro.injectGlobalFromUnpkg,
+        resolveBareModule: Velcro.resolveBareModuleToUnpkg,
+      });
       const inst = await runtime.import(spec);
 
       return Object.keys(inst);

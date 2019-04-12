@@ -1,22 +1,19 @@
 {
   "compilerOptions": {
-    "composite": true,
-    "esModuleInterop": true,
-    "target": "es2018",
-    "module": "commonjs",
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "declaration": true,
     "downlevelIteration": true,
-    "strict": true,
+    "esModuleInterop": true,
+    "importHelpers": false,
+    "lib": ["es2018", "dom"],
+    "module": "commonjs",
+    "moduleResolution": "node",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "lib": ["es2018", "dom"],
-    "skipLibCheck": true,
-    "moduleResolution": "node",
     "resolveJsonModule": true,
-    "sourceMap": true
+    "rootDir": ".",
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "es2018"
   },
-  "include": ["src"],
+  "include": ["src", "test"],
   "exclude": ["node_modules/@types/node"]
 }
