@@ -145,7 +145,7 @@ export class SystemHostUnpkg implements SystemHost {
   }
 
   async instantiate(loader: System, href: string, parentHref?: string) {
-    const cacheKey = `${href}|${parentHref}`;
+    const cacheKey = href;
     const cacheSegment = 'instantiate';
     let inflightInstantiation = this.inflightInstantiations.get(cacheKey);
 
@@ -185,7 +185,7 @@ export class SystemHostUnpkg implements SystemHost {
   }
 
   async resolve(loader: System, href: string, parentHref?: string) {
-    const cacheKey = `${href}|${parentHref}`;
+    const cacheKey = href;
     const cacheSegment = 'resolve';
     let inflightResolution = this.inflightResolutions.get(cacheKey);
 
