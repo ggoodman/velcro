@@ -145,7 +145,8 @@ export class SystemHostUnpkg implements SystemHost {
   }
 
   async instantiate(loader: System, href: string, parentHref?: string) {
-    const cacheKey = `instantiate:${href}:${parentHref}`;
+    const cacheKey = `${href}|${parentHref}`;
+    const cacheSegment = 'instantiate';
     let inflightInstantiation = this.inflightInstantiations.get(cacheKey);
 
     if (!inflightInstantiation) {
@@ -153,7 +154,11 @@ export class SystemHostUnpkg implements SystemHost {
         let registration: Registration | undefined = undefined;
 
         if (this.cache) {
-          const cached = (await this.cache.get(cacheKey)) as { code: string; href: string; requires: string[] };
+          const cached = (await this.cache.get(cacheSegment, cacheKey)) as {
+            code: string;
+            href: string;
+            requires: string[];
+          };
 
           if (cached) {
             registration = createRegistration(cached.href, cached.code, cached.requires);
@@ -164,7 +169,7 @@ export class SystemHostUnpkg implements SystemHost {
           const result = await this.instantiateWithoutCache(loader, href, parentHref);
 
           if (this.cache) {
-            await this.cache.set(cacheKey, result);
+            await this.cache.set(cacheSegment, cacheKey, result);
           }
 
           registration = createRegistration(result.href, result.code, result.requires);
@@ -180,13 +185,14 @@ export class SystemHostUnpkg implements SystemHost {
   }
 
   async resolve(loader: System, href: string, parentHref?: string) {
-    const cacheKey = `resolve:${href}:${parentHref}`;
+    const cacheKey = `${href}|${parentHref}`;
+    const cacheSegment = 'resolve';
     let inflightResolution = this.inflightResolutions.get(cacheKey);
 
     if (!inflightResolution) {
       inflightResolution = (async () => {
         if (this.cache) {
-          const cached = await this.cache.get(cacheKey);
+          const cached = await this.cache.get(cacheSegment, cacheKey);
 
           if (cached) {
             return cached as string;
@@ -196,7 +202,7 @@ export class SystemHostUnpkg implements SystemHost {
         const result = await this.resolveWithoutCache(loader, href, parentHref);
 
         if (result && this.cache) {
-          await this.cache.set(cacheKey, result);
+          await this.cache.set(cacheSegment, cacheKey, result);
         }
 
         return result;

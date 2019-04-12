@@ -13,8 +13,8 @@ export type GlobalInjection = { spec: string; export?: string };
 export type GlobalInjector = (globalName: string) => GlobalInjection | undefined;
 
 export interface ICache {
-  get(key: string): Promise<Serializable | undefined>;
-  set(key: string, value: Serializable): Promise<void>;
+  get(segment: string, id: string): Promise<Serializable | undefined>;
+  set(segment: string, id: string, value: Serializable): Promise<void>;
 }
 
 interface SerializableArray extends Array<Serializable> {}
