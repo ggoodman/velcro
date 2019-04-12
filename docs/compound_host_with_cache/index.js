@@ -1,4 +1,4 @@
-/** @type {import('../../packages/runtime/src')} */
+/** @type {import('../../packages/runtime')} */
 const Velcro = window.Velcro;
 
 /**
@@ -125,9 +125,6 @@ class ResolverHostMemory extends Velcro.ResolverHost {
   }
 }
 
-/**
- * @returns {Promise<ReturnType<import('../../packages/runtime/src').createRuntime>>}
- */
 async function main() {
   const cacheStats = {
     hits: 0,

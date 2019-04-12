@@ -1,9 +1,6 @@
-/** @type {import('../../packages/runtime/src')} */
+/** @type {import('../../packages/runtime')} */
 const Velcro = window.Velcro;
 
-/**
- * @returns {Promise<ReturnType<import('../../packages/runtime/src').createRuntime>>}
- */
 async function main() {
   const runtime = Velcro.createRuntime({
     injectGlobal: Velcro.injectGlobalFromUnpkg,

@@ -27,7 +27,7 @@
   },
   "scripts": {
     "build": "rollup -c",
-    "prepack": "npm run build && npm run test",
+    "prepack": "npm run build",
     "test": "lab -fSv --transform ./test/lib/typescript.js"
   },
   "devDependencies": {

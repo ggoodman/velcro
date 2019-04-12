@@ -32,14 +32,15 @@ module.exports = [
     ],
     plugins: [
       RollupPluginTypescript({
-        check: false,
-        clean: true,
+        check: true,
         tsconfig: resolve(__dirname, './tsconfig.json'),
         typescript: Typescript,
         tsconfigOverride: {
           compilerOptions: {
             module: 'esnext',
+            rootDir: './src',
           },
+          exclude: ['./test'],
         },
       }),
       RollupPluginNodeResolve(),

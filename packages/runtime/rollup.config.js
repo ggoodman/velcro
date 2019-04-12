@@ -11,6 +11,7 @@ const pkg = require('./package.json');
 
 module.exports = [
   {
+    external: ['module'],
     input: resolve(__dirname, 'src/index.ts'),
     output: [
       {
@@ -32,14 +33,15 @@ module.exports = [
     ],
     plugins: [
       RollupPluginTypescript({
-        check: false,
-        clean: true,
+        check: true,
         tsconfig: resolve(__dirname, './tsconfig.json'),
         typescript: Typescript,
         tsconfigOverride: {
           compilerOptions: {
             module: 'esnext',
+            rootDir: './src',
           },
+          exclude: ['./test'],
         },
       }),
       RollupPluginNodeResolve(),
@@ -47,6 +49,7 @@ module.exports = [
     ],
   },
   {
+    external: ['module'],
     input: resolve(__dirname, 'src/index.ts'),
     output: [
       {
@@ -58,13 +61,15 @@ module.exports = [
     ],
     plugins: [
       RollupPluginTypescript({
-        check: false,
+        check: true,
         tsconfig: resolve(__dirname, './tsconfig.json'),
         typescript: Typescript,
         tsconfigOverride: {
           compilerOptions: {
             module: 'esnext',
+            rootDir: './src',
           },
+          exclude: ['./test'],
         },
       }),
       RollupPluginNodeResolve(),
