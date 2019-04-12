@@ -53,6 +53,7 @@
     "rollup-plugin-commonjs": "^9.2.1",
     "rollup-plugin-node-resolve": "^4.0.1",
     "rollup-plugin-typescript2": "^0.20.1",
+    "serve": "^11.0.0",
     "tslib": "^1.9.3",
     "typescript": "^3.3.3333"
   },

@@ -3,12 +3,12 @@ import { Resolver, ResolverHost } from '@velcro/resolver';
 
 import { SystemHostUnpkg } from './system_host';
 import { System, SystemHost } from './system';
-import { resolveBareModuleToUnpkg } from './unpkg';
-import { BareModuleResolver } from './types';
+import { BareModuleResolver, GlobalInjector, ICache } from './types';
 
 type CreateRuntimeOptions = {
+  cache?: ICache;
   fetch?: customFetch;
-  injectGlobals?: boolean;
+  injectGlobal?: GlobalInjector;
   resolveBareModule?: BareModuleResolver;
   resolverHost?: ResolverHost;
   resolver?: Resolver;
@@ -24,10 +24,13 @@ export function createRuntime(options: CreateRuntimeOptions = {}) {
           packageMain: ['browser', 'main'],
         }),
       {
-        shouldInjectGlobals: options.injectGlobals !== false,
-        resolveBareModule: options.resolveBareModule || resolveBareModuleToUnpkg,
+        cache: options.cache,
+        injectGlobal: options.injectGlobal,
+        resolveBareModule: options.resolveBareModule || resolveBareModuleToIdentity,
       }
     );
 
   return new System(systemHost);
 }
+
+const resolveBareModuleToIdentity: BareModuleResolver = (_system, _resolver, href) => href;

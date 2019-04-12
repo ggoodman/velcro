@@ -1,9 +1,21 @@
-import { Resolver } from '@velcro/resolver';
-
 import { parseBareModuleSpec } from './bare_modules';
-import { System } from './system';
+import { GlobalInjector, BareModuleResolver } from './types';
 
 const BARE_MODULE_PREFIX = 'https://unpkg.com/';
+
+const DEFAULT_SHIM_GLOBALS: { [key: string]: { spec: string; export?: string } } = {
+  Buffer: {
+    spec: 'buffer@5.2.1',
+    export: 'Buffer',
+  },
+  global: {
+    spec: 'global@4.3.2',
+  },
+  process: {
+    spec: 'process@0.11.0',
+    export: 'default',
+  },
+};
 
 const NODE_CORE_SHIMS = {
   assert: 'assert@1.4.1',
@@ -26,7 +38,11 @@ const NODE_CORE_SHIMS = {
   zlib: 'browserify-zlib@0.2.0',
 } as Record<string, string>;
 
-export async function resolveBareModuleToUnpkg(_system: System, resolver: Resolver, href: string, parentHref?: string) {
+export const injectGlobalFromUnpkg: GlobalInjector = globalName => {
+  return DEFAULT_SHIM_GLOBALS[globalName];
+};
+
+export const resolveBareModuleToUnpkg: BareModuleResolver = async (_system, resolver, href, parentHref) => {
   const parsedSpec = parseBareModuleSpec(href);
 
   let resolvedSpec: string | undefined = undefined;
@@ -85,4 +101,4 @@ export async function resolveBareModuleToUnpkg(_system: System, resolver: Resolv
   }
 
   return `${BARE_MODULE_PREFIX}@kingjs/empty-object`;
-}
+};
