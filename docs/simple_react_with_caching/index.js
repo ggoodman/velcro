@@ -8,7 +8,8 @@ async function main() {
   };
 
   const cache = {
-    get(key) {
+    get(segment, id) {
+      const key = `${segment}:${id}`;
       const result = localStorage.getItem(key);
 
       if (result) {
@@ -17,7 +18,9 @@ async function main() {
       }
       cacheStats.misses++;
     },
-    set(key, value) {
+    set(segment, id, value) {
+      const key = `${segment}:${id}`;
+
       localStorage.setItem(key, JSON.stringify(value));
     },
   };
