@@ -30,5 +30,19 @@
         <a href="https://github.com/ggoodman/velcro/blob/master/docs/simple_react_with_caching/index.js">View code</a>
       </p>
     </section>
+    <section>
+      <h2>React from Unpkg and user-code from memory</h2>
+      <p>
+        This example is similar to the Simple React example with caching, except that instead of the react code living
+        in the example's index.js, it will create a sort of union filesystem between Unpkg and a set of in-memory files.
+        The in-memory file-system contains the code to render the react components, in the <code>index.js</code>, as
+        well as a <code>package.json</code> file that will tell <code>@velcro/runtime</code> how to resolve modules like
+        `react` and `react-dom`.
+      </p>
+      <p>
+        <a href="./compound_host_with_cache/">View example</a> |
+        <a href="https://github.com/ggoodman/velcro/blob/master/docs/compound_host_with_cache/index.js">View code</a>
+      </p>
+    </section>
   </body>
 </html>

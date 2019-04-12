@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/kognise/water.css@latest/dist/dark.css" />
+    <script src="https://unpkg.com/@velcro/runtime"></script>
+    <title>@velcro/runtime - Union file-system</title>
+  </head>
+  <body>
+    <nav><a href="../">Back to examples</a></nav>
+    <h1>Simple React (with caching)</h1>
+    <p>
+      This example is similar to the Simple React example with caching, except that instead of the react code living in
+      the example's index.js, it will create a sort of union filesystem between Unpkg and a set of in-memory files. The
+      in-memory file-system contains the code to render the react components, in the <code>index.js</code>, as well as a
+      <code>package.json</code> file that will tell <code>@velcro/runtime</code> how to resolve modules like `react` and
+      `react-dom`.
+    </p>
+    <p>
+      As an exercise, try modifying the version ranges for <code>react</code> and <code>react-dom</code> and re-running.
+      You will see that the code in the <code>index.js</code> gets versions of its dependencies based on the version
+      ranges found in a <code>package.json</code> file; much like you would get if you had run
+      <code>npm install</code> and then run the code through a bundler.
+    </p>
+    <p>
+      Here, however, there is no bundler. <code>react</code> and <code>react-dom</code>, as well as their dependencies,
+      are being loaded fully dynamically.
+    </p>
+    <p>
+      <a href="https://github.com/ggoodman/velcro/blob/master/docs/compound_host_with_cache/index.js">View code</a>
+    </p>
+    <pre><code id="root"></code></pre>
+    <script src="./index.js"></script>
+  </body>
+</html>
