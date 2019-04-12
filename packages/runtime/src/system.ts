@@ -219,6 +219,12 @@ export class System {
     return this._host.instantiate(this, url, firstParentUrl);
   }
 
+  async preLoad(id: string, parentUrl?: string): Promise<void> {
+    const resolvedId = await this.resolve(id, parentUrl);
+    const load = await System.getOrCreateLoad(this, resolvedId);
+    await System.instantiateAll(this, load, {});
+  }
+
   protected onload(id: string, err?: Error) {
     if (this._host.onload) {
       this._host.onload(this, id, err);
