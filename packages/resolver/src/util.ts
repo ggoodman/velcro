@@ -9,6 +9,10 @@ export function ensureTrailingSlash(pathname: string): string {
   return pathname.replace(TRAILING_SLASH_RX, '/');
 }
 
+export function stripTrailingSlash(pathname: string): string {
+  return pathname.replace(TRAILING_SLASH_RX, '');
+}
+
 export function parseBufferAsPackageJson(decoder: Decoder, content: ArrayBuffer, spec: string): PackageJson {
   try {
     const text = decoder.decode(content);
