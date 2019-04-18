@@ -4,14 +4,14 @@ import { satisfies, validRange } from 'semver';
 
 import { ResolverHost, ResolvedEntry, ResolvedEntryKind, Resolver, util, PackageJson } from '@velcro/resolver';
 import { EntryNotFoundError } from './error';
-import { BareModuleSpec, Directory, Spec, customFetch, isValidDirectory } from './types';
+import { BareModuleSpec, Directory, Spec, CustomFetch, isValidDirectory } from './types';
 import { parseUnpkgUrl } from './util';
 
 const UNPKG_PROTOCOL = 'https:';
 const UNPKG_HOST = 'unpkg.com';
 
 interface UnpkgPackageHostOptions {
-  fetch?: customFetch;
+  fetch?: CustomFetch;
 }
 
 export class ResolverHostUnpkg implements ResolverHost {
@@ -22,7 +22,7 @@ export class ResolverHostUnpkg implements ResolverHost {
     max: 1024 * 1024 * 5,
   });
   private readonly decoder = new Decoder();
-  private readonly fetch: customFetch;
+  private readonly fetch: CustomFetch;
   private readonly inflightContentRequests = new Map<string, Promise<ArrayBuffer>>();
   private readonly packageLock = new Map<string, Promise<any>>();
   private readonly packageEntriesCache = new Map<string, Map<string, Directory>>();

@@ -1,5 +1,5 @@
 import { Decoder } from '@velcro/decoder';
-import { Resolver } from '@velcro/resolver';
+import { Resolver, util } from '@velcro/resolver';
 
 import { System } from './system';
 
@@ -76,19 +76,6 @@ function splitQuery(req: string): [string, string] {
   var i = req.indexOf('?');
   if (i < 0) return [req, ''];
   return [req.substr(0, i), req.substr(i)];
-}
-
-function dirname(path: string) {
-  if (path === '/') return '/';
-  var i = path.lastIndexOf('/');
-  var j = path.lastIndexOf('\\');
-  var i2 = path.indexOf('/');
-  var j2 = path.indexOf('\\');
-  var idx = i > j ? i : j;
-  var idx2 = i > j ? i2 : j2;
-  if (idx < 0) return path;
-  if (idx === idx2) return path.substr(0, idx + 1);
-  return path.substr(0, idx);
 }
 
 function createLoaderObject(loader: WebpackLoader): WebpackLoader {
@@ -312,7 +299,7 @@ function iterateNormalLoaders(
 
 exports.getContext = function getContext(resource: string) {
   var splitted = splitQuery(resource);
-  return dirname(splitted[0]);
+  return util.dirname(splitted[0]);
 };
 
 export function runLoaders(options: RunLoaderOptions): Promise<RunLoaderResult> {
@@ -327,10 +314,7 @@ export function runLoaders(options: RunLoaderOptions): Promise<RunLoaderResult> 
   });
 }
 
-export function runLoadersWithCb(
-  options: RunLoaderOptions,
-  callback: (err: Error | null, result?: RunLoaderResult) => void
-) {
+function runLoadersWithCb(options: RunLoaderOptions, callback: (err: Error | null, result?: RunLoaderResult) => void) {
   // read options
   var resource = options.resource || '';
   var loaders = options.loaders || [];
@@ -340,7 +324,7 @@ export function runLoadersWithCb(
   var splittedResource = resource && splitQuery(resource);
   var resourcePath = splittedResource ? splittedResource[0] : undefined;
   var resourceQuery = splittedResource ? splittedResource[1] : undefined;
-  var contextDirectory = resourcePath ? dirname(resourcePath) : null;
+  var contextDirectory = resourcePath ? util.dirname(resourcePath) : null;
 
   // execution state
   var requestCacheable = true;
@@ -462,7 +446,7 @@ export function runLoadersWithCb(
     systemLoader: options.systemLoader,
     resourceBuffer: undefined,
     async readResource(id: string, cb: (err: Error | null, data?: ArrayBuffer) => void) {
-      const url = await options.resolver.resolve(id);
+      const url = await options.resolver.resolve(new URL(id, loaderContext.resourcePath));
 
       if (!url) {
         return cb(new Error(`Unable to read unresolvable file: ${id}`));

@@ -4,6 +4,7 @@ const { resolve } = require('path');
 
 const RollupPluginNodeResolve = require('rollup-plugin-node-resolve');
 const RollupPluginCommonJs = require('rollup-plugin-commonjs');
+const RollupPluginJson = require('rollup-plugin-json');
 const RollupPluginTypescript = require('rollup-plugin-typescript2');
 const Typescript = require('typescript');
 
@@ -32,6 +33,7 @@ module.exports = [
       },
     ],
     plugins: [
+      RollupPluginJson(),
       RollupPluginTypescript({
         check: true,
         tsconfig: resolve(__dirname, './tsconfig.json'),
@@ -60,6 +62,7 @@ module.exports = [
       },
     ],
     plugins: [
+      RollupPluginJson(),
       RollupPluginTypescript({
         check: true,
         tsconfig: resolve(__dirname, './tsconfig.json'),

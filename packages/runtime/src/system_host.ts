@@ -5,16 +5,20 @@ import { parse } from './ast';
 import { isBareModuleSpecifier } from './bare_modules';
 import { SystemHost, System, Registration } from './system';
 import { traverse } from './traverse';
-import { ICache, BareModuleResolver, GlobalInjector } from './types';
+import { ICache, BareModuleResolver, GlobalInjector, CacheSegment } from './types';
 import { scopingAndRequiresVisitor, DependencyVisitorContext, collectGlobalsVisitor } from './visitors';
+import { runLoaders } from './webpack_loader_runner';
+import { injectUnresolvedFallback } from './util';
 
 export interface SystemHostUnpkgOptions {
   cache?: ICache;
+  enableSourceMaps?: boolean;
   injectGlobal?: GlobalInjector;
   resolveBareModule: BareModuleResolver;
 }
 
 export class SystemHostUnpkg implements SystemHost {
+  private readonly enableSourceMaps: boolean;
   private readonly resolveBareModule: BareModuleResolver;
   private readonly injectGlobal: GlobalInjector | undefined;
   private readonly cache: ICache | undefined;
@@ -22,25 +26,52 @@ export class SystemHostUnpkg implements SystemHost {
   private readonly inflightInstantiations = new Map<string, Promise<Registration>>();
   private readonly inflightResolutions = new Map<string, Promise<string>>();
   // private readonly dependencies = new Map<string, string>();
+
+  // private readonly loaderCache = new Map<string, string>();
+
   constructor(public readonly resolver: Resolver, options: SystemHostUnpkgOptions) {
     this.cache = options.cache;
     this.resolveBareModule = options.resolveBareModule;
     this.injectGlobal = options.injectGlobal;
+    this.enableSourceMaps = options.enableSourceMaps === true;
   }
 
   private async instantiateWithoutCache(loader: System, href: string, _parentHref?: string) {
-    let code: string;
-    let url: URL;
+    let code: string | undefined = undefined;
 
-    try {
-      url = new URL(href);
-    } catch (err) {
-      // console.warn(originalHref, href, parentHref);
-      throw new Error(`Error instantiating ${href} because it could not be resolved as a URL: ${err.message}`);
+    const loaderSpec = parseLoaderSpec(href);
+
+    if (loaderSpec.prefix || loaderSpec.loaders.length) {
+      const result = await runLoaders({
+        loaders: loaderSpec.loaders,
+        resolver: this.resolver,
+        resource: loaderSpec.resource,
+        systemLoader: loader,
+      });
+
+      if (result.result) {
+        const [codeVal] = result.result;
+        code = typeof codeVal === 'string' ? codeVal : this.resolver.decoder.decode(codeVal);
+      }
     }
 
-    const codeBuf = await this.resolver.host.readFileContent(this.resolver, url);
-    code = this.resolver.decoder.decode(codeBuf);
+    if (!code) {
+      let url: URL;
+
+      try {
+        url = new URL(href);
+      } catch (err) {
+        // console.warn(originalHref, href, parentHref);
+        throw new Error(`Error instantiating ${href} because it could not be resolved as a URL: ${err.message}`);
+      }
+
+      const codeBuf = await this.resolver.host.readFileContent(this.resolver, url);
+      code = this.resolver.decoder.decode(codeBuf);
+    }
+
+    if (href.endsWith('.json')) {
+      code = `"use strict";\nmodule.exports = ${code};`;
+    }
 
     const magicString = new MagicString(code, {
       filename: href,
@@ -126,27 +157,85 @@ export class SystemHostUnpkg implements SystemHost {
       magicString.overwrite(replacement.start, replacement.end, replacement.replacement);
     }
 
-    return { href, code: magicString.toString(), requires };
+    const codeWithSourceMap = this.enableSourceMaps
+      ? `${magicString.toString()}\n//# sourceMappingURL=${magicString
+          .generateMap({
+            includeContent: false,
+            source: href,
+          })
+          .toUrl()}`
+      : magicString.toString();
+
+    return {
+      cacheable: true,
+      registration: { href, code: codeWithSourceMap, requires },
+    };
   }
 
-  private async resolveWithoutCache(loader: System, href: string, parentHref?: string) {
-    if (isBareModuleSpecifier(href)) {
-      return this.resolveBareModule(loader, this.resolver, href, parentHref);
+  private async resolveWithoutCache(
+    loader: System,
+    href: string,
+    parentHref?: string
+  ): Promise<{ cacheable: boolean; id: string }> {
+    if (href.startsWith('!') || (parentHref && parentHref.startsWith('!'))) {
+      // We're resolving something related to webpack loaders
+      const loaderSpec = parseLoaderSpec(href);
+      const parentLoaderSpec = parentHref ? parseLoaderSpec(parentHref) : undefined;
+
+      // 1. The main 'resource' is relative
+      if (loaderSpec.resource.startsWith('.')) {
+        if (parentLoaderSpec) {
+          loaderSpec.resource = new URL(
+            loaderSpec.resource,
+            parentLoaderSpec.loaders[0] || parentLoaderSpec.resource
+          ).href;
+        }
+      }
+
+      if (loaderSpec.loaders.length) {
+        loaderSpec.loaders = await Promise.all(loaderSpec.loaders.map(spec => loader.resolve(spec, parentHref)));
+      }
+
+      const id = `${loaderSpec.prefix}${loaderSpec.loaders.concat(loaderSpec.resource).join('!')}${loaderSpec.query}`;
+
+      return {
+        cacheable: true,
+        id,
+      };
     }
 
-    const url = new URL(href, parentHref);
-    const resolved = await this.resolver.resolve(url);
+    let id = isBareModuleSpecifier(href)
+      ? await this.resolveBareModule(loader, this.resolver, href, parentHref)
+      : undefined;
 
-    if (!resolved) {
-      throw new Error(`Unable to resolve ${href}${parentHref ? `from ${parentHref}` : ''}`);
+    if (!id) {
+      const url = new URL(href, parentHref);
+      const resolved = await this.resolver.resolve(url);
+
+      if (resolved) {
+        id = resolved.href;
+      }
     }
 
-    return resolved.href;
+    if (!id) {
+      return {
+        cacheable: false,
+        id: injectUnresolvedFallback(loader, href, parentHref),
+      };
+    }
+
+    if (id.match(/\.css$/)) {
+      return this.resolveWithoutCache(loader, `!!style-loader!css-loader!${id}`);
+    }
+
+    return {
+      cacheable: true,
+      id,
+    };
   }
 
   async instantiate(loader: System, href: string, parentHref?: string) {
     const cacheKey = href;
-    const cacheSegment = 'instantiate';
     let inflightInstantiation = this.inflightInstantiations.get(cacheKey);
 
     if (!inflightInstantiation) {
@@ -154,7 +243,7 @@ export class SystemHostUnpkg implements SystemHost {
         let registration: Registration | undefined = undefined;
 
         if (this.cache) {
-          const cached = (await this.cache.get(cacheSegment, cacheKey)) as {
+          const cached = (await this.cache.get(CacheSegment.Instantiate, cacheKey)) as {
             code: string;
             href: string;
             requires: string[];
@@ -168,11 +257,15 @@ export class SystemHostUnpkg implements SystemHost {
         if (!registration) {
           const result = await this.instantiateWithoutCache(loader, href, parentHref);
 
-          if (this.cache) {
-            await this.cache.set(cacheSegment, cacheKey, result);
+          if (result.cacheable && this.cache) {
+            await this.cache.set(CacheSegment.Instantiate, cacheKey, result.registration);
           }
 
-          registration = createRegistration(result.href, result.code, result.requires);
+          registration = createRegistration(
+            result.registration.href,
+            result.registration.code,
+            result.registration.requires
+          );
         }
 
         return registration;
@@ -185,14 +278,13 @@ export class SystemHostUnpkg implements SystemHost {
   }
 
   async resolve(loader: System, href: string, parentHref?: string) {
-    const cacheKey = href;
-    const cacheSegment = 'resolve';
+    const cacheKey = `${href}|${parentHref}`;
     let inflightResolution = this.inflightResolutions.get(cacheKey);
 
     if (!inflightResolution) {
       inflightResolution = (async () => {
         if (this.cache) {
-          const cached = await this.cache.get(cacheSegment, cacheKey);
+          const cached = await this.cache.get(CacheSegment.Resolve, cacheKey);
 
           if (cached) {
             return cached as string;
@@ -201,11 +293,11 @@ export class SystemHostUnpkg implements SystemHost {
 
         const result = await this.resolveWithoutCache(loader, href, parentHref);
 
-        if (result && this.cache) {
-          await this.cache.set(cacheSegment, cacheKey, result);
+        if (result && result.cacheable && this.cache) {
+          await this.cache.set(CacheSegment.Resolve, cacheKey, result.id);
         }
 
-        return result;
+        return result.id;
       })();
 
       this.inflightResolutions.set(cacheKey, inflightResolution);
@@ -243,7 +335,8 @@ function createRegistration(href: string, code: string, requires: string[]): Reg
         '__dirname',
         `${code}\n//# sourceURL=${href}`
       );
-      const pathname = new URL(href).pathname;
+      const __dirname = Resolver.path.dirname(href);
+      const __filename = Resolver.path.basename(href);
 
       __meta.cjsExport(module);
 
@@ -253,11 +346,7 @@ function createRegistration(href: string, code: string, requires: string[]): Reg
         }),
         execute() {
           // console.log('execute', href);
-
           try {
-            const __dirname = Resolver.path.dirname(pathname);
-            const __filename = Resolver.path.basename(pathname);
-
             execute.call(module, module.exports, require, module, __filename, __dirname);
           } catch (err) {
             const wrappedErr = new Error(`Error while executing ${href}: ${err.message}`);
@@ -275,4 +364,23 @@ function createRegistration(href: string, code: string, requires: string[]): Reg
   ];
 
   return registration;
+}
+
+function parseLoaderSpec(spec: string) {
+  const matches = spec.match(/^(!!?)?(.*?)(\?.*)?$/);
+
+  if (!matches) {
+    throw new Error(`Failed to parse the spec ${spec} as a webpack loader url`);
+  }
+
+  const [, prefix = '', body = '', query = ''] = matches;
+  const loaders = body.split('!');
+  const resource = loaders.pop() || '';
+
+  return {
+    loaders,
+    prefix,
+    query,
+    resource,
+  };
 }

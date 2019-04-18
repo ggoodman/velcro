@@ -1,48 +1,56 @@
+import { version as nodeLibsVersion } from '@velcro/node-libs/package.json';
+
 import { parseBareModuleSpec } from './bare_modules';
 import { GlobalInjector, BareModuleResolver } from './types';
+import { injectUnresolvedFallback } from './util';
 
 const BARE_MODULE_PREFIX = 'https://unpkg.com/';
 
 const DEFAULT_SHIM_GLOBALS: { [key: string]: { spec: string; export?: string } } = {
   Buffer: {
-    spec: 'buffer@5.2.1',
+    spec: `@velcro/node-libs@${nodeLibsVersion}/lib/buffer.js`,
     export: 'Buffer',
   },
   global: {
-    spec: 'global@4.3.2',
+    spec: `@velcro/node-libs@${nodeLibsVersion}/lib/global.js`,
   },
   process: {
-    spec: 'process@0.11.0',
-    export: 'default',
+    spec: `@velcro/node-libs@${nodeLibsVersion}/lib/process.js`,
   },
 };
 
-const NODE_CORE_SHIMS = {
-  assert: 'assert@1.4.1',
-  buffer: 'buffer@5.2.1',
-  crypto: 'crypto-browserify@3.12.0',
-  events: 'events@3.0.0',
-  fs: 'memory-fs',
-  http: 'stream-http@3.0.0',
-  https: 'https-browserify@1.0.0',
-  net: 'node-libs-browser@2.2.0/mock/net.js',
-  os: 'os-browserify@0.3.0',
-  path: 'bfs-path@1.0.2',
-  process: 'process@0.11.0',
-  querystring: 'querystringify@2.1.0',
-  stream: 'stream-browserify@2.0.2',
-  tls: 'node-libs-browser@2.2.0/mock/tls.js',
-  url: 'url-parse@1.4.4',
-  util: 'util@0.11.0',
-  vm: 'vmdom@0.0.23',
-  zlib: 'browserify-zlib@0.2.0',
-} as Record<string, string>;
+const NODE_CORE_SHIMS = [
+  'assert',
+  'buffer',
+  'crypto',
+  'events',
+  'fs',
+  'http',
+  'https',
+  'net',
+  'os',
+  'path',
+  'process',
+  'querystring',
+  'stream',
+  'tls',
+  'url',
+  'util',
+  'vm',
+  'zlib',
+].reduce(
+  (shims, coreLibName) =>
+    Object.assign(shims, { [coreLibName]: `@velcro/node-libs@${nodeLibsVersion}/lib/${coreLibName}.js` }),
+  {} as Record<string, string>
+);
+
+NODE_CORE_SHIMS['string_decoder'] = 'string_decoder@1.2.0';
 
 export const injectGlobalFromUnpkg: GlobalInjector = globalName => {
   return DEFAULT_SHIM_GLOBALS[globalName];
 };
 
-export const resolveBareModuleToUnpkg: BareModuleResolver = async (_system, resolver, href, parentHref) => {
+export const resolveBareModuleToUnpkg: BareModuleResolver = async (system, resolver, href, parentHref) => {
   const parsedSpec = parseBareModuleSpec(href);
 
   let resolvedSpec: string | undefined = undefined;
@@ -100,5 +108,5 @@ export const resolveBareModuleToUnpkg: BareModuleResolver = async (_system, reso
     }
   }
 
-  return `${BARE_MODULE_PREFIX}@kingjs/empty-object`;
+  return injectUnresolvedFallback(system, href, parentHref);
 };

@@ -168,7 +168,7 @@ export class System {
   }
 
   set(id: string, ns: SystemJSImporterNamespace) {
-    const done = Promise.resolve(ns);
+    const done = Promise.resolve();
     this.delete(id);
     this[REGISTRY][id] = {
       id: id,
@@ -212,7 +212,7 @@ export class System {
     const resolvedId = await this.resolve(id, parentUrl);
     const load = await System.getOrCreateLoad(this, resolvedId);
 
-    return (load.C || System.topLevelLoad(this, load)).then(() => this.get(resolvedId));
+    return Promise.resolve(load.C || System.topLevelLoad(this, load)).then(() => this.get(resolvedId));
   }
 
   protected instantiate(url: string, firstParentUrl?: string): Registration | PromiseLike<Registration> {

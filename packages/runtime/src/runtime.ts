@@ -1,4 +1,4 @@
-import { ResolverHostUnpkg, customFetch } from '@velcro/resolver-host-unpkg';
+import { ResolverHostUnpkg, CustomFetch } from '@velcro/resolver-host-unpkg';
 import { Resolver, ResolverHost } from '@velcro/resolver';
 
 import { SystemHostUnpkg } from './system_host';
@@ -7,7 +7,7 @@ import { BareModuleResolver, GlobalInjector, ICache } from './types';
 
 type CreateRuntimeOptions = {
   cache?: ICache;
-  fetch?: customFetch;
+  fetch?: CustomFetch;
   injectGlobal?: GlobalInjector;
   resolveBareModule?: BareModuleResolver;
   resolverHost?: ResolverHost;

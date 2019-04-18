@@ -48,7 +48,11 @@ export class Resolver {
 
   async resolve(url: URL | string): Promise<URL | undefined> {
     if (!(url instanceof URL)) {
-      url = new URL(url);
+      try {
+        url = new URL(url);
+      } catch (err) {
+        throw new Error(`Invalid URL: ${url}: ${err.message}`);
+      }
     }
 
     const optionsWithDefaults: Required<ResolverResolveOptions> = {

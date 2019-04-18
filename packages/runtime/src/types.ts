@@ -12,9 +12,20 @@ export type BareModuleResolver = (
 export type GlobalInjection = { spec: string; export?: string };
 export type GlobalInjector = (globalName: string) => GlobalInjection | undefined;
 
+export enum CacheSegment {
+  Instantiate = 'instantiate',
+  Resolve = 'resolve',
+}
+
+export interface CachedRegistrationRecord {
+  code: string;
+  href: string;
+  requires: string[];
+}
+
 export interface ICache {
-  get(segment: string, id: string): Promise<Serializable | undefined>;
-  set(segment: string, id: string, value: Serializable): Promise<void>;
+  get(segment: CacheSegment, id: string): Promise<CachedRegistrationRecord | string | undefined>;
+  set(segment: CacheSegment, id: string, value: CachedRegistrationRecord | string): Promise<unknown>;
 }
 
 interface SerializableArray extends Array<Serializable> {}
