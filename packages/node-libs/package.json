@@ -1,0 +1,60 @@
+{
+  "name": "@velcro/node-libs",
+  "version": "0.5.8",
+  "description": "A curated collection of browser-compatible shims for node core modules",
+  "keywords": [
+    "node",
+    "core",
+    "libs",
+    "shim",
+    "browser",
+    "webpack",
+    "browserify"
+  ],
+  "author": "Geoff Goodman <ggoodman@gmail.com>",
+  "homepage": "https://github.com/ggoodman/velcro",
+  "license": "MIT",
+  "main": "lib/index.js",
+  "files": [
+    "lib"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:ggoodman/velcro.git"
+  },
+  "scripts": {
+    "build": "echo Nothing to build",
+    "test": "echo Nothing to test"
+  },
+  "dependencies": {
+    "assert": "1.4.1",
+    "browserify-zlib": "^0.2.0",
+    "buffer": "5.2.1",
+    "crypto-browserify": "3.12.0",
+    "events": "3.0.0",
+    "memory-fs": "^0.4.1",
+    "node-libs-browser": "^2.2.0",
+    "os-browserify": "^0.3.0",
+    "querystring": "^0.2.0",
+    "readable-stream": "^3.3.0",
+    "stream-http": "^3.0.0",
+    "string_decoder": "^1.2.0",
+    "url-parse": "^1.4.6",
+    "util": "^0.11.1",
+    "vmdom": "^0.0.23"
+  },
+  "devDependencies": {
+    "@types/node": "^11.11.3",
+    "eslint": "^5.16.0"
+  },
+  "prettier": {
+    "printWidth": 120,
+    "singleQuote": true,
+    "tabWidth": 2,
+    "trailingComma": "es5"
+  },
+  "gitHead": "99a2a797c00d93edd33a1cd8a1b29de7dbe952d3"
+}
