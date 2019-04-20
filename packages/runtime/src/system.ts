@@ -36,6 +36,8 @@ interface SystemJSExportFunction {
 export interface SystemHost {
   createContext?(loader: System, url: string): Context;
   instantiate(loader: System, url: string, firstParentUrl?: string): Registration | PromiseLike<Registration>;
+  invalidateModule(loader: System, id: string): Promise<void>;
+  invalidateResolve(loader: System, id: string, url: string, parentUrl?: string): Promise<void>;
   onload?(loader: System, id: string, err?: Error): void;
   resolve(loader: System, id: string, parentId?: string): string | PromiseLike<string>;
 }
@@ -221,6 +223,11 @@ export class System {
 
   async invalidate(id: string, parentUrl?: string): Promise<boolean> {
     const resolvedId = await this.resolve(id, parentUrl);
+
+    console.log('invalidate(%s, %s) = %s', id, parentUrl, resolvedId);
+
+    await this._host.invalidateResolve(this, resolvedId, id, parentUrl);
+
     const dependentsGraph = new Map<string, Set<string>>();
 
     for (const id in this[REGISTRY]) {
@@ -240,6 +247,8 @@ export class System {
       }
     }
 
+    console.log('dependents', dependentsGraph);
+
     let invalidated = false;
 
     const invalidationQueue = [resolvedId] as string[];
@@ -253,8 +262,16 @@ export class System {
 
       const load = this[REGISTRY][id];
 
+      console.log('invalidating', {
+        id,
+        load,
+        dependents: dependentsGraph.get(id),
+      });
+
       if (load) {
         invalidated = this.delete(id) || invalidated;
+
+        await this._host.invalidateModule(this, id);
 
         const dependents = dependentsGraph.get(load.id);
 

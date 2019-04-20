@@ -24,6 +24,7 @@ export interface CachedRegistrationRecord {
 }
 
 export interface ICache {
+  delete(segment: CacheSegment, id: string): Promise<unknown>;
   get(segment: CacheSegment, id: string): Promise<CachedRegistrationRecord | string | undefined>;
   set(segment: CacheSegment, id: string, value: CachedRegistrationRecord | string): Promise<unknown>;
 }

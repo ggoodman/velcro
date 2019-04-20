@@ -26,6 +26,9 @@ export function createCache(name: string): ICache {
   });
 
   return {
+    delete(segment: CacheSegment, key: string) {
+      return idbPromise.then(idb => idb.delete(segment, key));
+    },
     get(segment: CacheSegment, key: string) {
       return idbPromise.then(idb => idb.get(segment, key));
     },

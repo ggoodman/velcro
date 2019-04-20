@@ -36,7 +36,12 @@ export class SystemHostUnpkg implements SystemHost {
     this.enableSourceMaps = options.enableSourceMaps === true;
   }
 
-  private async instantiateWithoutCache(loader: System, href: string, _parentHref?: string) {
+  private async instantiateWithoutCache(
+    loader: System,
+    href: string,
+    parentHref?: string
+  ): Promise<{ cacheable: boolean; registration: { href: string; code: string; requires: string[] } }> {
+    let cacheable = true;
     let code: string | undefined = undefined;
 
     const loaderSpec = parseLoaderSpec(href);
@@ -49,9 +54,19 @@ export class SystemHostUnpkg implements SystemHost {
         systemLoader: loader,
       });
 
+      cacheable = result.cacheable;
+
       if (result.result) {
         const [codeVal] = result.result;
         code = typeof codeVal === 'string' ? codeVal : this.resolver.decoder.decode(codeVal);
+      }
+    } else if (!parentHref) {
+      if (href.endsWith('.css')) {
+        const loaders = await Promise.all([loader.resolve('style-loader'), loader.resolve('css-loader')]);
+
+        const loaderHref = `!!${loaders.concat(href).join('!')}`;
+
+        return this.instantiateWithoutCache(loader, loaderHref);
       }
     }
 
@@ -69,92 +84,100 @@ export class SystemHostUnpkg implements SystemHost {
       code = this.resolver.decoder.decode(codeBuf);
     }
 
-    if (href.endsWith('.json')) {
-      code = `"use strict";\nmodule.exports = ${code};`;
-    }
-
     const magicString = new MagicString(code, {
       filename: href,
       indentExclusionRanges: [],
     });
-    const ctx: DependencyVisitorContext = {
-      injectGlobals: new Set(),
-      locals: new Map(),
-      nodeEnv: 'development',
-      replacements: [],
-      requires: [],
-      resolves: [],
-      skip: new Set(),
-    };
+    const requires = [] as string[];
 
-    try {
-      const ast = parse(code);
+    if (href.endsWith('.json')) {
+      magicString.prepend('"use strict";\nmodule.exports = ');
+    } else {
+      const ctx: DependencyVisitorContext = {
+        injectGlobals: new Set(),
+        locals: new Map(),
+        nodeEnv: 'development',
+        replacements: [],
+        requires: [],
+        resolves: [],
+        skip: new Set(),
+      };
 
-      traverse(ast, ctx, scopingAndRequiresVisitor);
+      try {
+        const ast = parse(code);
+
+        traverse(ast, ctx, scopingAndRequiresVisitor);
+
+        if (this.injectGlobal) {
+          traverse(ast, ctx, collectGlobalsVisitor);
+        }
+      } catch (err) {
+        throw new Error(`Error parsing ${href}: ${err.message}`);
+      }
+
+      const resolvedInjectPromises = [] as Promise<void>[];
+      const resolvedRequirePromises = [] as Promise<void>[];
+      const resolvedResolvePromises = [] as Promise<void>[];
+      // const requireMappings = {} as { [key: string]: string };
+      // const resolveMappings = {} as { [key: string]: string };
 
       if (this.injectGlobal) {
-        traverse(ast, ctx, collectGlobalsVisitor);
-      }
-    } catch (err) {
-      throw new Error(`Error parsing ${href}: ${err.message}`);
-    }
+        for (const globalName of ctx.injectGlobals) {
+          const injectGlobal = this.injectGlobal(globalName);
+          // const injectGlobal = DEFAULT_SHIM_GLOBALS[globalName];
 
-    const resolvedInjectPromises = [] as Promise<void>[];
-    const resolvedRequirePromises = [] as Promise<void>[];
-    const resolvedResolvePromises = [] as Promise<void>[];
-    const requires = [] as string[];
-    // const requireMappings = {} as { [key: string]: string };
-    // const resolveMappings = {} as { [key: string]: string };
+          // console.warn('global(%s): %s', href, globalName, injectGlobal);
 
-    if (this.injectGlobal) {
-      for (const globalName of ctx.injectGlobals) {
-        const injectGlobal = this.injectGlobal(globalName);
-        // const injectGlobal = DEFAULT_SHIM_GLOBALS[globalName];
+          if (injectGlobal) {
+            resolvedInjectPromises.push(
+              Promise.resolve(loader.resolve(injectGlobal.spec, href)).then(resolvedHref => {
+                const injected = `var ${globalName} = require(${JSON.stringify(resolvedHref)});\n`;
+                magicString.prepend(injected);
 
-        // console.warn('global(%s): %s', href, globalName, injectGlobal);
+                requires.push(resolvedHref);
 
-        if (injectGlobal) {
-          resolvedInjectPromises.push(
-            Promise.resolve(loader.resolve(injectGlobal.spec, href)).then(resolvedHref => {
-              const injected = `var ${globalName} = require(${JSON.stringify(resolvedHref)});\n`;
-              magicString.prepend(injected);
-
-              requires.push(resolvedHref);
-
-              // console.warn('injected(%s)', href, injected);
-            })
-          );
+                // console.warn('injected(%s)', href, injected);
+              })
+            );
+          }
         }
       }
-    }
 
-    for (const dep of ctx.requires) {
-      resolvedRequirePromises.push(
-        Promise.resolve(loader.resolve(dep.value, href)).then(resolvedHref => {
-          magicString.overwrite((dep as any).start!, (dep as any).end!, JSON.stringify(resolvedHref));
-          requires.push(resolvedHref);
-          // requireMappings[dep.value] = resolvedHref;
-        })
-      );
-    }
+      for (const dep of ctx.requires) {
+        resolvedRequirePromises.push(
+          Promise.resolve(loader.resolve(dep.value, href)).then(async resolvedHref => {
+            // Inject asset loader pipeline by rewriting dependencies
+            if (!resolvedHref.startsWith('!') && resolvedHref.endsWith('.css')) {
+              const loaders = await Promise.all([loader.resolve('style-loader'), loader.resolve('css-loader')]);
 
-    for (const dep of ctx.resolves) {
-      resolvedResolvePromises.push(
-        Promise.resolve(loader.resolve(dep.value, href)).then(resolvedHref => {
-          magicString.overwrite((dep as any).start!, (dep as any).end!, JSON.stringify(resolvedHref));
-          // resolveMappings[dep.value] = resolvedHref;
-        })
-      );
-    }
+              resolvedHref = `!!${loaders.concat(resolvedHref).join('!')}`;
+            }
 
-    const promises = [...resolvedInjectPromises, ...resolvedRequirePromises, ...resolvedResolvePromises];
+            magicString.overwrite((dep as any).start!, (dep as any).end!, JSON.stringify(resolvedHref));
+            requires.push(resolvedHref);
+            // requireMappings[dep.value] = resolvedHref;
+          })
+        );
+      }
 
-    if (promises.length) {
-      await Promise.all(promises);
-    }
+      for (const dep of ctx.resolves) {
+        resolvedResolvePromises.push(
+          Promise.resolve(loader.resolve(dep.value, href)).then(resolvedHref => {
+            magicString.overwrite((dep as any).start!, (dep as any).end!, JSON.stringify(resolvedHref));
+            // resolveMappings[dep.value] = resolvedHref;
+          })
+        );
+      }
 
-    for (const replacement of ctx.replacements) {
-      magicString.overwrite(replacement.start, replacement.end, replacement.replacement);
+      const promises = [...resolvedInjectPromises, ...resolvedRequirePromises, ...resolvedResolvePromises];
+
+      if (promises.length) {
+        await Promise.all(promises);
+      }
+
+      for (const replacement of ctx.replacements) {
+        magicString.overwrite(replacement.start, replacement.end, replacement.replacement);
+      }
     }
 
     const codeWithSourceMap = this.enableSourceMaps
@@ -167,9 +190,23 @@ export class SystemHostUnpkg implements SystemHost {
       : magicString.toString();
 
     return {
-      cacheable: true,
+      cacheable,
       registration: { href, code: codeWithSourceMap, requires },
     };
+  }
+
+  async invalidateResolve(_loader: System, _resolvedHref: string, href: string, parentHref?: string) {
+    console.debug('invalidateResolve', href, parentHref);
+    if (this.cache) {
+      await this.cache.delete(CacheSegment.Resolve, getResolveCacheKey(href, parentHref));
+    }
+  }
+
+  async invalidateModule(_loader: System, href: string) {
+    console.debug('invalidateModule', href);
+    if (this.cache) {
+      await this.cache.delete(CacheSegment.Instantiate, href);
+    }
   }
 
   private async resolveWithoutCache(
@@ -199,7 +236,7 @@ export class SystemHostUnpkg implements SystemHost {
       const id = `${loaderSpec.prefix}${loaderSpec.loaders.concat(loaderSpec.resource).join('!')}${loaderSpec.query}`;
 
       return {
-        cacheable: true,
+        cacheable: false,
         id,
       };
     }
@@ -222,10 +259,6 @@ export class SystemHostUnpkg implements SystemHost {
         cacheable: false,
         id: injectUnresolvedFallback(loader, href, parentHref),
       };
-    }
-
-    if (id.match(/\.css$/)) {
-      return this.resolveWithoutCache(loader, `!!style-loader!css-loader!${id}`);
     }
 
     return {
@@ -278,7 +311,8 @@ export class SystemHostUnpkg implements SystemHost {
   }
 
   async resolve(loader: System, href: string, parentHref?: string) {
-    const cacheKey = `${href}|${parentHref}`;
+    const cacheKey = getResolveCacheKey(href, parentHref);
+
     let inflightResolution = this.inflightResolutions.get(cacheKey);
 
     if (!inflightResolution) {
@@ -364,6 +398,10 @@ function createRegistration(href: string, code: string, requires: string[]): Reg
   ];
 
   return registration;
+}
+
+function getResolveCacheKey(href: string, parentHref?: string) {
+  return `${href}|${parentHref}`;
 }
 
 function parseLoaderSpec(spec: string) {
