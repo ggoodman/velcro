@@ -7,7 +7,7 @@ import { SystemHost, System, Registration } from './system';
 import { traverse } from './traverse';
 import { ICache, BareModuleResolver, GlobalInjector, CacheSegment } from './types';
 import { scopingAndRequiresVisitor, DependencyVisitorContext, collectGlobalsVisitor } from './visitors';
-import { runLoaders } from './webpack_loader_runner';
+import { runLoaders, parseLoaderSpec, parseLoaderHref, serializeLoaderHref } from './webpack_loader_runner';
 import { injectUnresolvedFallback } from './util';
 
 export interface SystemHostUnpkgOptions {
@@ -25,9 +25,6 @@ export class SystemHostUnpkg implements SystemHost {
 
   private readonly inflightInstantiations = new Map<string, Promise<Registration>>();
   private readonly inflightResolutions = new Map<string, Promise<string>>();
-  // private readonly dependencies = new Map<string, string>();
-
-  // private readonly loaderCache = new Map<string, string>();
 
   constructor(public readonly resolver: Resolver, options: SystemHostUnpkgOptions) {
     this.cache = options.cache;
@@ -44,13 +41,31 @@ export class SystemHostUnpkg implements SystemHost {
     let cacheable = true;
     let code: string | undefined = undefined;
 
-    const loaderSpec = parseLoaderSpec(href);
+    let parsedHref = parseLoaderHref(href);
 
-    if (loaderSpec.prefix || loaderSpec.loaders.length) {
+    if (!parsedHref) {
+      if (href.endsWith('.css')) {
+        const loaderHref = await loader.resolve(
+          serializeLoaderHref({
+            loaders: ['style-loader', 'css-loader'],
+            resource: href,
+            query: '',
+          })
+        );
+
+        parsedHref = parseLoaderHref(loaderHref);
+
+        if (!parsedHref) {
+          throw new Error(`Loader failed to produce a parsable loader href ${loaderHref} for ${href}`);
+        }
+      }
+    }
+
+    if (parsedHref) {
       const result = await runLoaders({
-        loaders: loaderSpec.loaders,
+        loaders: parsedHref.loaders,
         resolver: this.resolver,
-        resource: loaderSpec.resource,
+        resource: parsedHref.resource,
         systemLoader: loader,
       });
 
@@ -59,25 +74,16 @@ export class SystemHostUnpkg implements SystemHost {
       if (result.result) {
         const [codeVal] = result.result;
         code = typeof codeVal === 'string' ? codeVal : this.resolver.decoder.decode(codeVal);
+      } else {
+        throw new Error(`Loaders failed to produce code for ${href}`);
       }
-    } else if (!parentHref) {
-      if (href.endsWith('.css')) {
-        const loaders = await Promise.all([loader.resolve('style-loader'), loader.resolve('css-loader')]);
-
-        const loaderHref = `!!${loaders.concat(href).join('!')}`;
-
-        return this.instantiateWithoutCache(loader, loaderHref);
-      }
-    }
-
-    if (!code) {
+    } else {
       let url: URL;
 
       try {
-        url = new URL(href);
+        url = new URL(href, parentHref);
       } catch (err) {
-        // console.warn(originalHref, href, parentHref);
-        throw new Error(`Error instantiating ${href} because it could not be resolved as a URL: ${err.message}`);
+        throw new Error(`Unable to instantiate ${href} because this could not be parsed as a URL`);
       }
 
       const codeBuf = await this.resolver.host.readFileContent(this.resolver, url);
@@ -118,25 +124,17 @@ export class SystemHostUnpkg implements SystemHost {
       const resolvedInjectPromises = [] as Promise<void>[];
       const resolvedRequirePromises = [] as Promise<void>[];
       const resolvedResolvePromises = [] as Promise<void>[];
-      // const requireMappings = {} as { [key: string]: string };
-      // const resolveMappings = {} as { [key: string]: string };
 
       if (this.injectGlobal) {
         for (const globalName of ctx.injectGlobals) {
           const injectGlobal = this.injectGlobal(globalName);
-          // const injectGlobal = DEFAULT_SHIM_GLOBALS[globalName];
-
-          // console.warn('global(%s): %s', href, globalName, injectGlobal);
 
           if (injectGlobal) {
             resolvedInjectPromises.push(
               Promise.resolve(loader.resolve(injectGlobal.spec, href)).then(resolvedHref => {
                 const injected = `var ${globalName} = require(${JSON.stringify(resolvedHref)});\n`;
                 magicString.prepend(injected);
-
                 requires.push(resolvedHref);
-
-                // console.warn('injected(%s)', href, injected);
               })
             );
           }
@@ -144,18 +142,21 @@ export class SystemHostUnpkg implements SystemHost {
       }
 
       for (const dep of ctx.requires) {
+        // Hook into the resolution of each require dependency found inline
+        // in code.
+        const parsedDep = parseLoaderSpec(dep.value);
+        let value = dep.value;
+
+        if (parsedDep) {
+          // This is a loader, let's transform it into our url format
+
+          value = serializeLoaderHref(parsedDep);
+        }
+
         resolvedRequirePromises.push(
-          Promise.resolve(loader.resolve(dep.value, href)).then(async resolvedHref => {
-            // Inject asset loader pipeline by rewriting dependencies
-            if (!resolvedHref.startsWith('!') && resolvedHref.endsWith('.css')) {
-              const loaders = await Promise.all([loader.resolve('style-loader'), loader.resolve('css-loader')]);
-
-              resolvedHref = `!!${loaders.concat(resolvedHref).join('!')}`;
-            }
-
+          Promise.resolve(loader.resolve(value, href)).then(async resolvedHref => {
             magicString.overwrite((dep as any).start!, (dep as any).end!, JSON.stringify(resolvedHref));
             requires.push(resolvedHref);
-            // requireMappings[dep.value] = resolvedHref;
           })
         );
       }
@@ -164,7 +165,6 @@ export class SystemHostUnpkg implements SystemHost {
         resolvedResolvePromises.push(
           Promise.resolve(loader.resolve(dep.value, href)).then(resolvedHref => {
             magicString.overwrite((dep as any).start!, (dep as any).end!, JSON.stringify(resolvedHref));
-            // resolveMappings[dep.value] = resolvedHref;
           })
         );
       }
@@ -214,26 +214,27 @@ export class SystemHostUnpkg implements SystemHost {
     href: string,
     parentHref?: string
   ): Promise<{ cacheable: boolean; id: string }> {
-    if (href.startsWith('!') || (parentHref && parentHref.startsWith('!'))) {
+    const loaderSpec = parseLoaderHref(href);
+    const parentLoaderSpec = parentHref ? parseLoaderHref(parentHref) : undefined;
+
+    if (loaderSpec || parentLoaderSpec) {
       // We're resolving something related to webpack loaders
-      const loaderSpec = parseLoaderSpec(href);
-      const parentLoaderSpec = parentHref ? parseLoaderSpec(parentHref) : undefined;
+
+      const query = loaderSpec ? loaderSpec.query : '';
+
+      let resource = loaderSpec ? loaderSpec.resource : href;
+      let loaders = loaderSpec
+        ? await Promise.all(loaderSpec.loaders.map(spec => loader.resolve(spec, parentHref)))
+        : [];
 
       // 1. The main 'resource' is relative
-      if (loaderSpec.resource.startsWith('.')) {
+      if (resource.startsWith('.')) {
         if (parentLoaderSpec) {
-          loaderSpec.resource = new URL(
-            loaderSpec.resource,
-            parentLoaderSpec.loaders[0] || parentLoaderSpec.resource
-          ).href;
+          resource = new URL(resource, parentLoaderSpec.loaders[0] || parentLoaderSpec.resource).href;
         }
       }
 
-      if (loaderSpec.loaders.length) {
-        loaderSpec.loaders = await Promise.all(loaderSpec.loaders.map(spec => loader.resolve(spec, parentHref)));
-      }
-
-      const id = `${loaderSpec.prefix}${loaderSpec.loaders.concat(loaderSpec.resource).join('!')}${loaderSpec.query}`;
+      const id = serializeLoaderHref({ loaders, query, resource });
 
       return {
         cacheable: false,
@@ -307,7 +308,11 @@ export class SystemHostUnpkg implements SystemHost {
       this.inflightInstantiations.set(cacheKey, inflightInstantiation);
     }
 
-    return inflightInstantiation;
+    try {
+      return await inflightInstantiation;
+    } finally {
+      this.inflightInstantiations.delete(cacheKey);
+    }
   }
 
   async resolve(loader: System, href: string, parentHref?: string) {
@@ -337,7 +342,11 @@ export class SystemHostUnpkg implements SystemHost {
       this.inflightResolutions.set(cacheKey, inflightResolution);
     }
 
-    return inflightResolution;
+    try {
+      return await inflightResolution;
+    } finally {
+      this.inflightResolutions.delete(cacheKey);
+    }
   }
 }
 
@@ -402,23 +411,4 @@ function createRegistration(href: string, code: string, requires: string[]): Reg
 
 function getResolveCacheKey(href: string, parentHref?: string) {
   return `${href}|${parentHref}`;
-}
-
-function parseLoaderSpec(spec: string) {
-  const matches = spec.match(/^(!!?)?(.*?)(\?.*)?$/);
-
-  if (!matches) {
-    throw new Error(`Failed to parse the spec ${spec} as a webpack loader url`);
-  }
-
-  const [, prefix = '', body = '', query = ''] = matches;
-  const loaders = body.split('!');
-  const resource = loaders.pop() || '';
-
-  return {
-    loaders,
-    prefix,
-    query,
-    resource,
-  };
 }

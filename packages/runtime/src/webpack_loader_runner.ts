@@ -3,6 +3,8 @@ import { Resolver, util } from '@velcro/resolver';
 
 import { System } from './system';
 
+const LOADER_PROTOCOL = 'webpack-loader:';
+
 interface WebpackLoader {
   path: string;
   query: string;
@@ -446,7 +448,9 @@ function runLoadersWithCb(options: RunLoaderOptions, callback: (err: Error | nul
     systemLoader: options.systemLoader,
     resourceBuffer: undefined,
     async readResource(id: string, cb: (err: Error | null, data?: ArrayBuffer) => void) {
-      const url = await options.resolver.resolve(new URL(id, loaderContext.resourcePath));
+      const parsedId = parseLoaderHref(id);
+      const href = parsedId ? parsedId.resource : id;
+      const url = await options.resolver.resolve(href);
 
       if (!url) {
         return cb(new Error(`Unable to read unresolvable file: ${id}`));
@@ -503,4 +507,66 @@ class LoaderRunnerError extends Error {
     this.name = 'LoaderRunnerError';
     Error.captureStackTrace(this, this.constructor);
   }
+}
+
+export function parseLoaderSpec(spec: string) {
+  const matches = spec.match(/^(!!?)?(.*?)(\?.*)?$/);
+
+  if (!matches) {
+    return;
+  }
+
+  const [, prefix = '', body = '', query = ''] = matches;
+  const loaders = body.split('!');
+  const resource = loaders.pop() || '';
+
+  if (!prefix && !loaders.length) {
+    return;
+  }
+
+  return {
+    loaders,
+    prefix,
+    query,
+    resource,
+  };
+}
+
+export function parseLoaderHref(href: string) {
+  try {
+    const url = new URL(href);
+
+    if (url.protocol !== LOADER_PROTOCOL) {
+      return;
+    }
+
+    const segments = url.pathname.split('!');
+    const resource = segments.pop();
+
+    if (typeof resource !== 'string') {
+      return;
+    }
+
+    const loaders = segments;
+
+    return {
+      loaders,
+      query: url.search,
+      resource,
+    };
+  } catch (_err) {
+    return;
+  }
+}
+
+export function serializeLoaderHref({
+  loaders,
+  query,
+  resource,
+}: {
+  loaders: string[];
+  query: string;
+  resource: string;
+}) {
+  return `${LOADER_PROTOCOL}${loaders.concat(resource).join('!')}${query}`;
 }

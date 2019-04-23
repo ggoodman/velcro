@@ -221,13 +221,7 @@ export class System {
     return this._host.instantiate(this, url, firstParentUrl);
   }
 
-  async invalidate(id: string, parentUrl?: string): Promise<boolean> {
-    const resolvedId = await this.resolve(id, parentUrl);
-
-    console.log('invalidate(%s, %s) = %s', id, parentUrl, resolvedId);
-
-    await this._host.invalidateResolve(this, resolvedId, id, parentUrl);
-
+  getDependentsGraph() {
     const dependentsGraph = new Map<string, Set<string>>();
 
     for (const id in this[REGISTRY]) {
@@ -246,6 +240,52 @@ export class System {
         }
       }
     }
+
+    return dependentsGraph;
+  }
+
+  async invalidate(id: string, parentUrl?: string): Promise<boolean> {
+    const resolvedId = await this.resolve(id, parentUrl);
+
+    if (!resolvedId) {
+      return false;
+    }
+
+    console.log('invalidate(%s, %s) = %s', id, parentUrl, resolvedId);
+    const deps: DepNode = {
+      id: resolvedId,
+      children: [],
+    };
+    const depQueue = [deps];
+    const seenDeps = new Set<string>();
+
+    while (depQueue.length) {
+      const dep = depQueue.shift() as DepNode;
+
+      if (seenDeps.has(dep.id)) continue;
+      else seenDeps.add(dep.id);
+
+      const load = this[REGISTRY][dep.id];
+
+      if (load && load.d) {
+        for (const childDep of load.d) {
+          const child: DepNode = {
+            id: childDep.id,
+            children: [],
+          };
+
+          dep.children.push(child);
+
+          depQueue.push(child);
+        }
+      }
+    }
+
+    console.dir(deps);
+
+    await this._host.invalidateResolve(this, resolvedId, id, parentUrl);
+
+    const dependentsGraph = this.getDependentsGraph();
 
     console.log('dependents', dependentsGraph);
 
@@ -272,12 +312,12 @@ export class System {
         invalidated = this.delete(id) || invalidated;
 
         await this._host.invalidateModule(this, id);
+      }
 
-        const dependents = dependentsGraph.get(load.id);
+      const dependents = dependentsGraph.get(id);
 
-        if (dependents) {
-          invalidationQueue.push(...dependents);
-        }
+      if (dependents) {
+        invalidationQueue.push(...dependents);
       }
     }
 
@@ -298,6 +338,22 @@ export class System {
 
   register(deps: Dependencies, declare: DeclareFunction): void {
     this._lastRegister = [deps, declare];
+  }
+
+  registerDependency(id: string, dependencyId: string): void {
+    const load = System.getOrCreateLoad(this, id);
+
+    if (!load.d) {
+      load.d = [];
+    }
+
+    if (load && load.d) {
+      const dependencyLoad = System.getOrCreateLoad(this, dependencyId, id);
+
+      load.d.push(dependencyLoad);
+    } else {
+      console.log('registerDependency miss(%s, %s)', id, dependencyId);
+    }
   }
 
   resolve(id: string, parentUrl?: string): string | PromiseLike<string> {
@@ -589,3 +645,8 @@ export class System {
 function isExecPromise(result: unknown): result is Promise<void> {
   return result && result instanceof Promise;
 }
+
+type DepNode = {
+  id: string;
+  children: DepNode[];
+};

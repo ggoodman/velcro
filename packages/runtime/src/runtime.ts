@@ -7,6 +7,7 @@ import { BareModuleResolver, GlobalInjector, ICache } from './types';
 
 type CreateRuntimeOptions = {
   cache?: ICache;
+  enableSourceMaps?: boolean;
   fetch?: CustomFetch;
   injectGlobal?: GlobalInjector;
   resolveBareModule?: BareModuleResolver;
@@ -25,6 +26,7 @@ export function createRuntime(options: CreateRuntimeOptions = {}) {
         }),
       {
         cache: options.cache,
+        enableSourceMaps: options.enableSourceMaps,
         injectGlobal: options.injectGlobal,
         resolveBareModule: options.resolveBareModule || resolveBareModuleToIdentity,
       }
