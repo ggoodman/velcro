@@ -2,7 +2,7 @@ import { version as nodeLibsVersion } from '@velcro/node-libs/package.json';
 
 import { parseBareModuleSpec } from './bare_modules';
 import { GlobalInjector, BareModuleResolver } from './types';
-import { injectUnresolvedFallback } from './util';
+import { Resolver } from '@velcro/resolver';
 
 const BARE_MODULE_PREFIX = 'https://unpkg.com/';
 
@@ -50,7 +50,7 @@ export const injectGlobalFromUnpkg: GlobalInjector = globalName => {
   return DEFAULT_SHIM_GLOBALS[globalName];
 };
 
-export const resolveBareModuleToUnpkg: BareModuleResolver = async (system, resolver, href, parentHref) => {
+export const resolveBareModuleToUnpkg: BareModuleResolver = async (resolver: Resolver, href, parentHref) => {
   const parsedSpec = parseBareModuleSpec(href);
 
   let resolvedSpec: string | undefined = undefined;
@@ -108,5 +108,5 @@ export const resolveBareModuleToUnpkg: BareModuleResolver = async (system, resol
     }
   }
 
-  return injectUnresolvedFallback(system, href, parentHref);
+  return undefined;
 };

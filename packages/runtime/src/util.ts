@@ -32,3 +32,22 @@ export function injectUnresolvedFallback(system: System, href: string, parentHre
 export function isESModule(code: string) {
   return IMPORT_EXPORT_RX.test(code);
 }
+
+export function log(...args: Parameters<WindowConsole['console']['log']>) {
+  if ((window as any).VELCRO_DEBUG) {
+    console.log(...args);
+  }
+}
+
+export class Deferred<T> {
+  public readonly promise: Promise<T>;
+  public resolve!: (value: T) => void;
+  public reject!: (err: Error) => void;
+
+  constructor() {
+    this.promise = new Promise<T>((resolve, reject) => {
+      this.resolve = resolve;
+      this.reject = reject;
+    });
+  }
+}

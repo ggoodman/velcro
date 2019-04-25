@@ -1,3 +1,5 @@
+import { ICache, CacheSegment } from './types';
+
 const REGISTRY = Symbol('registry');
 
 export interface Context {
@@ -35,9 +37,19 @@ interface SystemJSExportFunction {
 
 export interface SystemHost {
   createContext?(loader: System, url: string): Context;
-  instantiate(loader: System, url: string, firstParentUrl?: string): Registration | PromiseLike<Registration>;
+  createRegistration?(
+    loader: System,
+    url: string,
+    asset: RegistrationDefinition
+  ): Registration | PromiseLike<Registration>;
+  // instantiate(loader: System, url: string, firstParentUrl?: string): Registration | PromiseLike<Registration>;
   invalidateModule(loader: System, id: string): Promise<void>;
   invalidateResolve(loader: System, id: string, url: string, parentUrl?: string): Promise<void>;
+  loadAsset(
+    loader: System,
+    url: string,
+    firstParentUrl?: string
+  ): RegistrationDefinition | PromiseLike<RegistrationDefinition>;
   onload?(loader: System, id: string, err?: Error): void;
   resolve(loader: System, id: string, parentId?: string): string | PromiseLike<string>;
 }
@@ -112,22 +124,29 @@ interface SystemJSLoad {
   n: SystemJSImporterNamespace | undefined;
 }
 
-export type Instantiation = [Dependencies, Setter[]];
+type Instantiation = [Dependencies, Setter[]];
 export type Registration = [Dependencies, DeclareFunction];
+
+export interface RegistrationDefinition {
+  code: string;
+  requires: string[];
+}
 
 // function isInstantiatedModule(m: unknown): m is InstantiatedModule {
 //   return m && typeof m === 'object' && (m as any)[toStringTag] === 'Module';
 // }
 
 export class System {
-  private _host: SystemHost;
+  private readonly _cache: ICache | undefined;
+  private readonly _host: SystemHost;
   // private _lastError: Error | undefined;
   private _lastRegister: Registration | undefined;
 
-  private _registeredModules = new Set<any>();
-
   // the closest we can get to call(undefined)
-  private static _nullContext = Object.freeze(Object.create(null));
+  private static readonly _nullContext = Object.freeze(Object.create(null));
+
+  private readonly inflightInstantiations = new Map<string, Promise<Registration>>();
+  private readonly inflightResolutions = new Map<string, Promise<string>>();
 
   private [REGISTRY] = Object.create(null) as {
     [id: string]: SystemJSLoad;
@@ -151,7 +170,7 @@ export class System {
 
     delete this[REGISTRY][id];
 
-    return this._registeredModules.delete(load.n);
+    return true;
   }
 
   get(id: string) {
@@ -185,7 +204,6 @@ export class System {
       E: undefined,
       C: done,
     };
-    this._registeredModules.add(ns);
     return ns;
   }
 
@@ -218,7 +236,50 @@ export class System {
   }
 
   protected instantiate(url: string, firstParentUrl?: string): Registration | PromiseLike<Registration> {
-    return this._host.instantiate(this, url, firstParentUrl);
+    const cacheKey = url;
+    let inflightInstantiation = this.inflightInstantiations.get(cacheKey);
+
+    if (!inflightInstantiation) {
+      inflightInstantiation = (async () => {
+        let registration: RegistrationDefinition | undefined = undefined;
+
+        if (this._cache) {
+          const cached = (await this._cache.get(CacheSegment.Instantiate, cacheKey)) as {
+            code: string;
+            requires: string[];
+          };
+
+          if (cached) {
+            registration = createRegistration(cached.href, cached.code, cached.requires);
+          }
+        }
+
+        if (!registration) {
+          const result = await this._host.loadAsset(this, url, firstParentUrl);
+
+          if (result.cacheable && this._cache) {
+            await this._cache.set(CacheSegment.Instantiate, cacheKey, result.registration);
+          }
+
+          registration = createRegistration(
+            result.registration.href,
+            result.registration.code,
+            result.registration.requires
+          );
+        }
+
+        return registration;
+      })();
+
+      this.inflightInstantiations.set(cacheKey, inflightInstantiation);
+      // return this._host.instantiate(this, url, firstParentUrl);
+    }
+
+    try {
+      return await inflightInstantiation;
+    } finally {
+      this.inflightInstantiations.delete(cacheKey);
+    }
   }
 
   getDependentsGraph() {

@@ -1,7 +1,7 @@
 import { Decoder } from '@velcro/decoder';
-import { Resolver, util } from '@velcro/resolver';
+import { util } from '@velcro/resolver';
 
-import { System } from './system';
+import { Velcro } from './velcro';
 
 const LOADER_PROTOCOL = 'webpack-loader:';
 
@@ -24,11 +24,11 @@ interface WebpackLoader {
 interface WebpackLoaderContext {}
 
 interface RunLoaderOptions {
+  assetHost: Velcro.AssetHost;
   resource: string;
   loaders: any[];
   context?: WebpackLoaderContext;
-  systemLoader: System;
-  resolver: Resolver;
+  // resolver: Resolver;
 }
 
 interface RunLoaderResult {
@@ -68,9 +68,8 @@ interface ExtendedLoaderContext {
 }
 
 interface ProcessOptions {
-  decoder: Decoder;
+  assetHost: Velcro.AssetHost;
   readResource(id: string, cb: (err: Error | null, data?: ArrayBuffer) => void): void;
-  systemLoader: System;
   resourceBuffer?: ArrayBuffer;
 }
 
@@ -190,8 +189,8 @@ function runSyncOrAsync(
   }
 }
 
-function convertArgs(decoder: Decoder, args: any[], raw?: boolean) {
-  if (!raw && typeof args[0] !== 'string') args[0] = decoder.decode(args[0]);
+function convertArgs(decode: Decoder['decode'], args: any[], raw?: boolean) {
+  if (!raw && typeof args[0] !== 'string') args[0] = decode(args[0]);
   else if (raw && typeof args[0] === 'string') args[0] = Buffer.from(args[0], 'utf-8');
 }
 
@@ -213,7 +212,7 @@ function iteratePitchingLoaders(
   }
 
   // load loader module
-  loadLoader(options.systemLoader, currentLoaderObject, function(err) {
+  loadLoader(options.assetHost, currentLoaderObject, function(err) {
     if (err) {
       loaderContext.cacheable(false);
       return callback(err);
@@ -289,7 +288,7 @@ function iterateNormalLoaders(
     return iterateNormalLoaders(options, loaderContext, args, callback);
   }
 
-  convertArgs(options.decoder, args, currentLoaderObject.raw);
+  convertArgs(options.assetHost.decodeBuffer, args, currentLoaderObject.raw);
 
   runSyncOrAsync(fn, loaderContext, args, function(err: Error | null) {
     if (err) return callback(err);
@@ -444,21 +443,19 @@ function runLoadersWithCb(options: RunLoaderOptions, callback: (err: Error | nul
   }
 
   var processOptions: ProcessOptions = {
-    decoder: options.resolver.decoder,
-    systemLoader: options.systemLoader,
+    assetHost: options.assetHost,
+    // velcro: options.velcro,
     resourceBuffer: undefined,
     async readResource(id: string, cb: (err: Error | null, data?: ArrayBuffer) => void) {
       const parsedId = parseLoaderHref(id);
       const href = parsedId ? parsedId.resource : id;
-      const url = await options.resolver.resolve(href);
+      const url = await options.assetHost.resolve(href);
 
       if (!url) {
         return cb(new Error(`Unable to read unresolvable file: ${id}`));
       }
 
-      options.resolver.host.readFileContent(options.resolver, url).then(data => {
-        return cb(null, data);
-      }, cb);
+      options.assetHost.readFileContent(url).then(data => cb(null, data), cb);
     },
   };
   iteratePitchingLoaders(processOptions, loaderContext, function(err: Error | null, result?: any) {
@@ -479,8 +476,12 @@ function runLoadersWithCb(options: RunLoaderOptions, callback: (err: Error | nul
   });
 }
 
-function loadLoader(systemLoader: System, loader: WebpackLoader, callback: (err?: LoaderRunnerError) => void): void {
-  return void systemLoader.import(loader.path).then(
+function loadLoader(
+  assetHost: Velcro.AssetHost,
+  loader: WebpackLoader,
+  callback: (err?: LoaderRunnerError) => void
+): void {
+  return void assetHost.import(loader.path).then(
     module => {
       if (typeof module !== 'function' && typeof module !== 'object') {
         return callback(

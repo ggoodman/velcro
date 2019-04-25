@@ -1,38 +1,38 @@
 import { openDB, DBSchema } from 'idb';
 
-import { ICache, CacheSegment, CachedRegistrationRecord } from './types';
+import { Velcro } from './velcro';
 
 interface CacheSchema extends DBSchema {
-  [CacheSegment.Instantiate]: {
-    key: string;
-    value: {
-      code: string;
-      href: string;
-      requires: string[];
-    };
-  };
-  [CacheSegment.Resolve]: {
+  // [Velcro.CacheSegment.Instantiate]: {
+  //   key: string;
+  //   value: {
+  //     code: string;
+  //     href: string;
+  //     requires: string[];
+  //   };
+  // };
+  [Velcro.CacheSegment.Resolution]: {
     key: string;
     value: string;
   };
 }
 
-export function createCache(name: string): ICache {
+export function createCache(name: string): Velcro.Cache {
   const idbPromise = openDB<CacheSchema>(name, 1, {
     upgrade(db) {
-      db.createObjectStore(CacheSegment.Instantiate);
-      db.createObjectStore(CacheSegment.Resolve);
+      // db.createObjectStore(CacheSegment.Instantiate);
+      db.createObjectStore(Velcro.CacheSegment.Resolution);
     },
   });
 
   return {
-    delete(segment: CacheSegment, key: string) {
+    delete(segment: Velcro.CacheSegment, key: string) {
       return idbPromise.then(idb => idb.delete(segment, key));
     },
-    get(segment: CacheSegment, key: string) {
+    get(segment: Velcro.CacheSegment, key: string) {
       return idbPromise.then(idb => idb.get(segment, key));
     },
-    set(segment: CacheSegment, key: string, value: string | CachedRegistrationRecord) {
+    set(segment: Velcro.CacheSegment, key: string, value: string) {
       return idbPromise.then(idb => idb.put(segment, value, key));
     },
   };

@@ -1,13 +1,12 @@
 import { Resolver } from '@velcro/resolver';
 
-import { System } from './system';
+export type Awaitable<T> = T | PromiseLike<T>;
 
 export type BareModuleResolver = (
-  system: System,
   resolver: Resolver,
   href: string,
   parentHref?: string
-) => string | PromiseLike<string>;
+) => Awaitable<string | undefined>;
 
 export type GlobalInjection = { spec: string; export?: string };
 export type GlobalInjector = (globalName: string) => GlobalInjection | undefined;
