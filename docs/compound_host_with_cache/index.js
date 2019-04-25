@@ -19,9 +19,7 @@ async function main() {
    * @type {import('../../packages/runtime').Runtime.Cache}
    * */
   const cache = {
-    delete(segment, id) {
-      return idbCache.delete(segment, id);
-    },
+    ...idbCache,
     async get(segment, id) {
       const result = await idbCache.get(segment, id);
 
@@ -30,9 +28,6 @@ async function main() {
         return result;
       }
       cacheStats.misses++;
-    },
-    set(segment, id, value) {
-      return idbCache.set(segment, id, value);
     },
   };
 
@@ -85,6 +80,19 @@ ReactDom.render(
   const importStart = Date.now();
   const render = await runtime.import('file:///index.js');
   const importEnd = Date.now();
+
+  document.getElementById('cache_clear').addEventListener('click', () => {
+    const msgEl = document.getElementById('cache_msg');
+
+    Promise.resolve(cache.clear()).then(
+      () => {
+        msgEl.innerText = 'Cache cleared';
+      },
+      err => {
+        msgEl.innerText = `Error clearing cache: ${err.message}`;
+      }
+    );
+  });
 
   // Now let's call the exported render function with the stats
   render(importStart, importEnd, cacheStats);

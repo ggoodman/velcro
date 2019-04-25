@@ -24,6 +24,11 @@ export function createCache(name: string, predicate?: CachePredicate): Runtime.C
   });
 
   return {
+    clear(segment?: Runtime.CacheSegment) {
+      const clearSegments = segment ? [segment] : Object.values(Runtime.CacheSegment);
+
+      return Promise.all(clearSegments.map(segment => idbPromise.then(idb => idb.clear(segment))));
+    },
     delete(segment: Runtime.CacheSegment, key: string) {
       if (!predicate || predicate(segment, key)) {
         return idbPromise.then(idb => idb.delete(segment, key));

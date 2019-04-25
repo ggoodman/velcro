@@ -8,6 +8,7 @@ import { JsonAsset } from './assets/json';
 import { InjectedJsAsset } from './assets/injected';
 
 interface ICache<T extends Record<string, any>> {
+  clear<TSegment extends keyof T>(segment?: TSegment): Awaitable<unknown>;
   delete<TSegment extends keyof T>(segment: TSegment, key: string): Awaitable<unknown>;
   get<TSegment extends keyof T>(segment: TSegment, key: string): Awaitable<T[TSegment] | undefined>;
   set<TSegment extends keyof T>(segment: TSegment, key: string, value: T[TSegment]): Awaitable<unknown>;

@@ -19,9 +19,7 @@ async function main() {
    * @type {import('../../packages/runtime').Runtime.Cache}
    * */
   const cache = {
-    delete(segment, id) {
-      return idbCache.delete(segment, id);
-    },
+    ...idbCache,
     async get(segment, id) {
       const result = await idbCache.get(segment, id);
 
@@ -31,15 +29,25 @@ async function main() {
       }
       cacheStats.misses++;
     },
-    set(segment, id, value) {
-      return idbCache.set(segment, id, value);
-    },
   };
 
   const runtime = Velcro.createRuntime({
     cache,
     injectGlobal: Velcro.injectGlobalFromUnpkg,
     resolveBareModule: Velcro.resolveBareModuleToUnpkg,
+  });
+
+  document.getElementById('cache_clear').addEventListener('click', () => {
+    const msgEl = document.getElementById('cache_msg');
+
+    Promise.resolve(cache.clear()).then(
+      () => {
+        msgEl.innerText = 'Cache cleared';
+      },
+      err => {
+        msgEl.innerText = `Error clearing cache: ${err.message}`;
+      }
+    );
   });
 
   const importStart = Date.now();
@@ -50,10 +58,16 @@ async function main() {
   return new Promise(resolve =>
     ReactDom.render(
       React.createElement(
-        'span',
+        'pre',
         null,
-        `Imported in ${importEnd - importStart}ms with ${(100 * cacheStats.hits) /
-          (cacheStats.hits + cacheStats.misses)}% cache hit rate (${cacheStats.hits} hits, ${cacheStats.misses} misses)`
+        React.createElement(
+          'code',
+          null,
+          `Imported in ${importEnd - importStart}ms with ${(100 * cacheStats.hits) /
+            (cacheStats.hits + cacheStats.misses)}% cache hit rate (${cacheStats.hits} hits, ${
+            cacheStats.misses
+          } misses)`
+        )
       ),
       document.getElementById('root'),
       () => {
