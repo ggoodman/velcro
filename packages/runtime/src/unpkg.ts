@@ -1,8 +1,9 @@
 import { version as nodeLibsVersion } from '@velcro/node-libs/package.json';
+import { Resolver } from '@velcro/resolver';
 
-import { parseBareModuleSpec } from './bare_modules';
-import { GlobalInjector, BareModuleResolver } from './types';
-import { injectUnresolvedFallback } from './util';
+import { Velcro } from './velcro';
+import { BareModuleResolver } from './types';
+import { parseBareModuleSpec } from './util';
 
 const BARE_MODULE_PREFIX = 'https://unpkg.com/';
 
@@ -46,11 +47,16 @@ const NODE_CORE_SHIMS = [
 
 NODE_CORE_SHIMS['string_decoder'] = 'string_decoder@1.2.0';
 
-export const injectGlobalFromUnpkg: GlobalInjector = globalName => {
+export const injectGlobalFromUnpkg: Velcro.GlobalInjector = globalName => {
   return DEFAULT_SHIM_GLOBALS[globalName];
 };
 
-export const resolveBareModuleToUnpkg: BareModuleResolver = async (system, resolver, href, parentHref) => {
+export const resolveBareModuleToUnpkg: BareModuleResolver = async (
+  _velcro: Velcro,
+  resolver: Resolver,
+  href,
+  parentHref
+) => {
   const parsedSpec = parseBareModuleSpec(href);
 
   let resolvedSpec: string | undefined = undefined;
@@ -108,5 +114,5 @@ export const resolveBareModuleToUnpkg: BareModuleResolver = async (system, resol
     }
   }
 
-  return injectUnresolvedFallback(system, href, parentHref);
+  return undefined;
 };
