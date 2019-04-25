@@ -8,9 +8,9 @@ import { JsonAsset } from './assets/json';
 import { InjectedJsAsset } from './assets/injected';
 
 interface ICache<T extends Record<string, any>> {
-  delete<TSegment extends keyof T>(segment: TSegment, key: string): Promise<unknown>;
-  get<TSegment extends keyof T>(segment: TSegment, key: string): Promise<T[TSegment] | undefined>;
-  set<TSegment extends keyof T>(segment: TSegment, key: string, value: T[TSegment]): Promise<unknown>;
+  delete<TSegment extends keyof T>(segment: TSegment, key: string): Awaitable<unknown>;
+  get<TSegment extends keyof T>(segment: TSegment, key: string): Awaitable<T[TSegment] | undefined>;
+  set<TSegment extends keyof T>(segment: TSegment, key: string, value: T[TSegment]): Awaitable<unknown>;
 }
 
 type Registry = Map<string, RegistryEntry>;
@@ -21,13 +21,13 @@ type RegistryEntry = {
   executed: boolean;
   executeFunction: Runtime.ExecuteFunction | undefined;
   loaded: boolean;
-  loadedPromise: ReturnType<Runtime.Asset['load']>;
+  loadedPromise?: ReturnType<Runtime.Asset['load']>;
 };
 
 export class Runtime {
   private readonly _assetHost: Runtime.AssetHost;
   private readonly _cache: Runtime.Cache | undefined = undefined;
-  private readonly _inflightImports = new Map<string, Promise<any>>();
+  private readonly _inflightImports = new Map<string, Promise<Runtime.LoadedModule>>();
   private readonly _inflightResolutions = new Map<string, Promise<string | undefined>>();
   private readonly _registry: Registry = new Map();
 
@@ -48,7 +48,7 @@ export class Runtime {
           executeFunction: undefined,
           executed: true,
           loaded: true,
-          loadedPromise: asset.load(),
+          loadedPromise: undefined,
         };
 
         this.registerEntry(entry);
@@ -122,7 +122,7 @@ export class Runtime {
         executeFunction: undefined,
         executed: false,
         loaded: false,
-        loadedPromise: asset.load(),
+        loadedPromise: undefined,
       };
 
       this.registerEntry(entry);
@@ -139,11 +139,7 @@ export class Runtime {
       throw new Error(`The asset ${id} did not resolve to anything using the node module resolution algorithm`);
     }
 
-    const cacheKey = `${id}#${fromId}`;
-
-    let inflightImport = this._inflightImports.get(cacheKey);
-
-    log('Velcro.import(%s, %s) cacheKey: %s, inflight: %s', id, fromId, cacheKey, !!inflightImport);
+    log('Velcro.import(%s, %s)', id, fromId);
 
     const entry = this.getOrCreateEntry(resolvedId, fromId);
 
@@ -177,7 +173,9 @@ export class Runtime {
     if (!seen.has(entry)) {
       seen.add(entry);
 
-      await entry.loadedPromise;
+      if (entry.loadedPromise) {
+        await entry.loadedPromise;
+      }
 
       await Promise.all(Array.from(entry.dependencies).map(dependencyEntry => this.loadEntry(dependencyEntry, seen)));
     }
@@ -185,8 +183,37 @@ export class Runtime {
 
   private registerEntry(entry: RegistryEntry) {
     if (!entry.loaded) {
-      entry.loadedPromise.then(
-        ({ code, dependencies, type }) => {
+      const cacheKey = entry.asset.id;
+
+      if (!entry.loadedPromise) {
+        entry.loadedPromise = (async () => {
+          let loaded: Runtime.LoadedModule | undefined;
+          let cached = false;
+
+          if (this._cache) {
+            loaded = await this._cache.get(Runtime.CacheSegment.Registration, cacheKey);
+            cached = !!loaded;
+          }
+
+          if (!loaded) {
+            try {
+              log('Velcro.registerEntry(%s) cacheKey: %s, type: %s', entry.asset.id, cacheKey, 'MISS');
+              loaded = await entry.asset.load();
+            } catch (err) {
+              entry.loaded = true;
+              entry.err = err;
+
+              throw err;
+            }
+          } else {
+            log('Velcro.registerEntry(%s) cacheKey: %s, type: %s', entry.asset.id, cacheKey, 'HIT');
+          }
+
+          if (loaded.cacheable && this._cache && !cached) {
+            await this._cache.set(Runtime.CacheSegment.Registration, cacheKey, loaded);
+          }
+
+          const { code, dependencies, type } = loaded;
           let execute: Runtime.ExecuteFunction;
 
           switch (type) {
@@ -205,12 +232,13 @@ export class Runtime {
 
           entry.loaded = true;
           entry.executeFunction = execute;
-        },
-        err => {
-          entry.loaded = true;
-          entry.err = err;
-        }
-      );
+
+          return loaded;
+        })();
+        entry.loadedPromise;
+      } else {
+        log('Velcro.registerEntry(%s) cacheKey: %s, type: %s', entry.asset.id, cacheKey, 'INFLIGHT');
+      }
     }
 
     this._registry.set(entry.asset.id, entry);
@@ -333,12 +361,12 @@ export namespace Runtime {
   }
 
   export enum CacheSegment {
-    // Registration = 'registration',
+    Registration = 'registration',
     Resolution = 'resolution',
   }
 
   export type Cache = ICache<{
-    // [CacheSegment.Registration]: ParsedAsset;
+    [CacheSegment.Registration]: LoadedModule;
     [CacheSegment.Resolution]: string;
   }>;
 

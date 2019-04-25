@@ -1,11 +1,12 @@
 import * as Fs from 'fs';
 import { resolve } from 'path';
 
+import { Resolver } from '@velcro/resolver';
 import { expect } from 'code';
 import { script } from 'lab';
 
 import { browser as browserMain, main, name } from '../package.json';
-import * as Velcro from '../';
+import { ResolverHostFs } from '../';
 
 export const lab = script();
 
@@ -14,10 +15,10 @@ const { describe, it } = lab;
 describe(name, () => {
   it('will resolve a module entrypoint', async () => {
     const href = `file://${resolve(__dirname, '../')}/`;
-    const host = new Velcro.ResolverHostFs({
+    const host = new ResolverHostFs({
       fs: Fs,
     });
-    const resolver = new Velcro.Resolver(host);
+    const resolver = new Resolver(host);
     const resolved = await resolver.resolve(href);
 
     expect(resolved).to.be.an.instanceOf(URL);
@@ -26,10 +27,10 @@ describe(name, () => {
 
   it('will resolve a module entrypoint with the browser field', async () => {
     const href = `file://${resolve(__dirname, '../')}/`;
-    const host = new Velcro.ResolverHostFs({
+    const host = new ResolverHostFs({
       fs: Fs,
     });
-    const resolver = new Velcro.Resolver(host, {
+    const resolver = new Resolver(host, {
       packageMain: ['browser', 'main'],
     });
     const resolved = await resolver.resolve(href);

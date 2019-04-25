@@ -1,161 +1,46 @@
+// @ts-check
 /** @type {import('../../packages/runtime')} */
+// @ts-ignore
 const Velcro = window.Velcro;
-
-/**
- * An ResolverHost implementation that holds a set of files in an in-memory structure
- */
-class ResolverHostMemory extends Velcro.ResolverHost {
-  constructor(files) {
-    super();
-
-    this.root = {
-      type: 'directory',
-      children: {},
-    };
-
-    this.textEncoder = new TextEncoder();
-
-    for (const pathname in files) {
-      this.addFile(pathname, files[pathname]);
-    }
-  }
-
-  getEntryAtPath(pathname) {
-    const segments = Array.isArray(pathname) ? pathname.slice() : pathname.split('/').filter(Boolean);
-
-    let parent = this.root;
-
-    for (const segment of segments) {
-      if (!parent || parent.type !== 'directory') {
-        throw new Error(`Failed to add ${pathname}`);
-      }
-
-      parent = parent.children[segment];
-    }
-
-    return parent;
-  }
-
-  addFile(pathname, content = '') {
-    const segments = pathname.split('/').filter(Boolean);
-    const filename = segments.pop();
-
-    if (!filename) {
-      throw new Error(`Unable to add a file without a filename '${pathname}'`);
-    }
-
-    let parent = this.root;
-
-    for (const segment of segments) {
-      if (!parent || parent.type !== 'directory') {
-        throw new Error(`Failed to add ${pathname}`);
-      }
-
-      let dir = parent.children[segment];
-
-      if (!dir) {
-        dir = {
-          type: 'directory',
-          children: {},
-        };
-
-        parent.children[segment] = dir;
-      }
-
-      parent = dir;
-    }
-
-    if (parent.type !== 'directory') {
-      throw new Error(`Cannot add file to a non directory entry ${pathname}`);
-    }
-
-    if (parent.children[filename]) {
-      throw new Error(`Entry already exists at ${pathname}`);
-    }
-
-    const entry = {
-      type: 'file',
-      content,
-    };
-
-    parent.children[filename] = entry;
-
-    return entry;
-  }
-
-  getResolveRoot(resolver, url) {
-    return Promise.resolve(new URL(`file:///`));
-  }
-
-  listEntries(resolver, url) {
-    const parent = this.getEntryAtPath(url.pathname);
-
-    if (!parent) {
-      return;
-    }
-
-    if (parent.type !== 'directory') {
-      throw new Error(`Cannot list entries under a file at ${url.href}`);
-    }
-
-    return Promise.resolve(
-      Object.keys(parent.children).map(filename => {
-        const entry = parent.children[filename];
-
-        return {
-          url: new URL(Velcro.util.join(url.pathname, filename), url),
-          type: entry.type,
-        };
-      })
-    );
-  }
-
-  readFileContent(resolver, url) {
-    const entry = this.getEntryAtPath(url.pathname);
-
-    if (!entry) {
-      return;
-    }
-
-    if (entry.type !== 'file') {
-      throw new Error(`Cannot read content of a non-file at ${url.href}`);
-    }
-
-    return Promise.resolve(this.textEncoder.encode(entry.content).buffer);
-  }
-}
 
 async function main() {
   const cacheStats = {
     hits: 0,
     misses: 0,
   };
-  // Create an object implementing the cache interface. This cache is designed to keep
-  // stats and ignore anything from a `file:///` url.
+
+  /**
+   * Create a indexeddb cache with a predicate that skips in-memory files
+   */
+  const idbCache = Velcro.createCache('@velcro/runtime:cache', (_segment, key) => !key.startsWith('file:///'));
+
+  /**
+   * A wrapper around the indexeddb cache to keep some stats
+   * @type {import('../../packages/runtime').Runtime.Cache}
+   * */
   const cache = {
-    get(segment, id) {
-      const key = `${segment}:${id}`;
-      const result = localStorage.getItem(key);
+    delete(segment, id) {
+      return idbCache.delete(segment, id);
+    },
+    async get(segment, id) {
+      const result = await idbCache.get(segment, id);
 
       if (result) {
         cacheStats.hits++;
-        return JSON.parse(result);
+        return result;
       }
       cacheStats.misses++;
     },
     set(segment, id, value) {
-      if (id.startsWith('file:///')) {
-        // Don't cache anything on the virtual file:/// system
-        return;
-      }
-
-      const key = `${segment}:${id}`;
-      localStorage.setItem(key, JSON.stringify(value));
+      return idbCache.set(segment, id, value);
     },
   };
-  // The initial set of files in the virtual file:/// system. We create a simple index.js file
-  // that exports a function that will render a react component to `#root`. The virtual filesystem
-  // also holds a simple `package.json` that describes which version of react to use.
+
+  /**
+   * The initial set of files in the virtual file:// system. We create a simple index.js file
+   * that exports a function that will render a react component to `#root`. The virtual filesystem
+   * also holds a simple `package.json` that describes which version of react to use.
+   */
   const initialFiles = {
     'index.js': `
 'use strict';
@@ -188,7 +73,7 @@ ReactDom.render(
   };
   const resolverHost = new Velcro.ResolverHostCompound({
     'https://unpkg.com/': new Velcro.ResolverHostUnpkg(),
-    'file:///': new ResolverHostMemory(initialFiles),
+    'file:///': new Velcro.ResolverHostMemory(initialFiles),
   });
   const runtime = Velcro.createRuntime({
     cache,

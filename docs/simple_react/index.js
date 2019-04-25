@@ -1,4 +1,6 @@
+//@ts-check
 /** @type {import('../../packages/runtime')} */
+// @ts-ignore
 const Velcro = window.Velcro;
 
 async function main() {

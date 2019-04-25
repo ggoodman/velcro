@@ -1,4 +1,6 @@
+// @ts-check
 /** @type {import('../../packages/runtime')} */
+// @ts-ignore
 const Velcro = window.Velcro;
 
 async function main() {
@@ -7,23 +9,33 @@ async function main() {
     misses: 0,
   };
 
+  /**
+   * Create a indexeddb cache with a predicate that skips in-memory files
+   */
+  const idbCache = Velcro.createCache('@velcro/runtime:cache', (_segment, key) => !key.startsWith('file:///'));
+
+  /**
+   * A wrapper around the indexeddb cache to keep some stats
+   * @type {import('../../packages/runtime').Runtime.Cache}
+   * */
   const cache = {
-    get(segment, id) {
-      const key = `${segment}:${id}`;
-      const result = localStorage.getItem(key);
+    delete(segment, id) {
+      return idbCache.delete(segment, id);
+    },
+    async get(segment, id) {
+      const result = await idbCache.get(segment, id);
 
       if (result) {
         cacheStats.hits++;
-        return JSON.parse(result);
+        return result;
       }
       cacheStats.misses++;
     },
     set(segment, id, value) {
-      const key = `${segment}:${id}`;
-
-      localStorage.setItem(key, JSON.stringify(value));
+      return idbCache.set(segment, id, value);
     },
   };
+
   const runtime = Velcro.createRuntime({
     cache,
     injectGlobal: Velcro.injectGlobalFromUnpkg,

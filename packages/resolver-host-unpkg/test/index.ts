@@ -11,10 +11,13 @@ export const lab = script();
 
 const { after, before, describe, it } = lab;
 
-declare const Velcro: typeof import('../');
+declare const Velcro: typeof import('../') & typeof import('@velcro/resolver');
 
 describe(name, () => {
-  const codePromise = readFile(resolve(__dirname, '../', browserMain), 'utf8');
+  const codePromises = Promise.all([
+    readFile(resolve(__dirname, '../', browserMain), 'utf8'),
+    readFile(resolve(__dirname, '../node_modules/@velcro/resolver', browserMain), 'utf8'),
+  ]);
 
   let browser: Browser;
 
@@ -28,8 +31,9 @@ describe(name, () => {
 
   it('will resolve a module entrypoint', async () => {
     const page = await browser.newPage();
+    const scripts = await codePromises;
 
-    await page.addScriptTag({ content: await codePromise });
+    await Promise.all(scripts.map(content => page.addScriptTag({ content })));
 
     const result = await page.evaluate(async function(href: string) {
       const host = new Velcro.ResolverHostUnpkg();
@@ -44,8 +48,9 @@ describe(name, () => {
 
   it('will resolve a module entrypoint with partial version hints', async () => {
     const page = await browser.newPage();
+    const scripts = await codePromises;
 
-    await page.addScriptTag({ content: await codePromise });
+    await Promise.all(scripts.map(content => page.addScriptTag({ content })));
 
     const result = await page.evaluate(async function(href: string) {
       const host = new Velcro.ResolverHostUnpkg();
