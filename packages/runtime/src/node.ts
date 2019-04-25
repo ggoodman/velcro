@@ -3,10 +3,10 @@ import Module from 'module';
 import { Resolver } from '@velcro/resolver';
 
 import { BareModuleResolver } from './types';
-import { Velcro } from './velcro';
+import { Runtime } from './runtime';
 
 export const resolveBareModuleWithNode: BareModuleResolver = (
-  runtime: Velcro,
+  runtime: Runtime,
   _resolver: Resolver,
   href: string,
   parentHref?: string

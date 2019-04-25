@@ -2,13 +2,13 @@ import MagicString from 'magic-string';
 
 import { parse } from '../ast';
 import { traverse } from '../traverse';
-import { Velcro } from '../velcro';
+import { Runtime } from '../runtime';
 import { scopingAndRequiresVisitor, DependencyVisitorContext, collectGlobalsVisitor } from '../visitors';
 
-export class CommonJsAsset implements Velcro.Asset {
+export class CommonJsAsset implements Runtime.Asset {
   public readonly module: { exports: any } = { exports: {} };
 
-  constructor(public readonly id: string, protected readonly host: Velcro.AssetHost) {}
+  constructor(public readonly id: string, protected readonly host: Runtime.AssetHost) {}
 
   get exports() {
     return this.module.exports;
@@ -21,14 +21,14 @@ export class CommonJsAsset implements Velcro.Asset {
     return module;
   }
 
-  protected static async loadCode(id: string, host: Velcro.AssetHost) {
+  protected static async loadCode(id: string, host: Runtime.AssetHost) {
     const contentBuf = await host.readFileContent(id);
     const code = host.decodeBuffer(contentBuf);
 
     return code;
   }
 
-  protected static async loadModule(id: string, code: string, host: Velcro.AssetHost, cacheable: boolean) {
+  protected static async loadModule(id: string, code: string, host: Runtime.AssetHost, cacheable: boolean) {
     const magicString = new MagicString(code, {
       filename: id,
       indentExclusionRanges: [],
@@ -121,6 +121,6 @@ export class CommonJsAsset implements Velcro.Asset {
       .toUrl();
     const codeWithMap = `${magicString.toString()}\n//# sourceMappingURL=${sourceMapUrl}`;
 
-    return { cacheable, code: codeWithMap, dependencies: requires, type: Velcro.ModuleKind.CommonJs };
+    return { cacheable, code: codeWithMap, dependencies: requires, type: Runtime.ModuleKind.CommonJs };
   }
 }

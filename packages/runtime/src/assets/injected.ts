@@ -1,6 +1,6 @@
-import { Velcro } from '../velcro';
+import { Runtime } from '../runtime';
 
-export class InjectedJsAsset implements Velcro.Asset {
+export class InjectedJsAsset implements Runtime.Asset {
   public readonly module: { exports: any };
 
   constructor(public readonly id: string, exports: any) {
@@ -12,11 +12,11 @@ export class InjectedJsAsset implements Velcro.Asset {
   }
 
   load() {
-    const record: Velcro.LoadedModule = {
+    const record: Runtime.LoadedModule = {
       cacheable: false,
       code: `throw new Error('Invariant violation: this should not be called');`,
       dependencies: [] as string[],
-      type: Velcro.ModuleKind.CommonJs,
+      type: Runtime.ModuleKind.CommonJs,
     };
 
     return Promise.resolve(record);

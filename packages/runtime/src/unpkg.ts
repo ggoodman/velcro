@@ -1,7 +1,7 @@
 import { version as nodeLibsVersion } from '@velcro/node-libs/package.json';
 import { Resolver } from '@velcro/resolver';
 
-import { Velcro } from './velcro';
+import { Runtime } from './runtime';
 import { BareModuleResolver } from './types';
 import { parseBareModuleSpec } from './util';
 
@@ -47,12 +47,12 @@ const NODE_CORE_SHIMS = [
 
 NODE_CORE_SHIMS['string_decoder'] = 'string_decoder@1.2.0';
 
-export const injectGlobalFromUnpkg: Velcro.GlobalInjector = globalName => {
+export const injectGlobalFromUnpkg: Runtime.GlobalInjector = globalName => {
   return DEFAULT_SHIM_GLOBALS[globalName];
 };
 
 export const resolveBareModuleToUnpkg: BareModuleResolver = async (
-  _velcro: Velcro,
+  _velcro: Runtime,
   resolver: Resolver,
   href,
   parentHref

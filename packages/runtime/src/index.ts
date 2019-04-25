@@ -5,7 +5,7 @@ export * from '@velcro/resolver-host-fs';
 export * from '@velcro/resolver-host-unpkg';
 
 export * from './idb_cache';
+export * from './factory';
 export * from './node';
-export * from './runtime';
 export * from './unpkg';
-export * from './velcro';
+export * from './runtime';

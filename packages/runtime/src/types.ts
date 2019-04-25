@@ -1,10 +1,10 @@
 import { Resolver } from '@velcro/resolver';
-import { Velcro } from './velcro';
+import { Runtime } from './runtime';
 
 export type Awaitable<T> = T | PromiseLike<T>;
 
 export type BareModuleResolver = (
-  runtime: Velcro,
+  runtime: Runtime,
   resolver: Resolver,
   href: string,
   parentHref?: string

@@ -1,11 +1,11 @@
 import MagicString from 'magic-string';
 
-import { Velcro } from '../velcro';
+import { Runtime } from '../runtime';
 
-export class JsonAsset implements Velcro.Asset {
+export class JsonAsset implements Runtime.Asset {
   public readonly module = { exports: {} };
 
-  constructor(public readonly id: string, private readonly host: Velcro.AssetHost) {}
+  constructor(public readonly id: string, private readonly host: Runtime.AssetHost) {}
 
   get exports() {
     return this.module.exports;
@@ -34,7 +34,7 @@ export class JsonAsset implements Velcro.Asset {
       cacheable: true,
       code: codeWithMap,
       dependencies: [],
-      type: Velcro.ModuleKind.CommonJs,
+      type: Runtime.ModuleKind.CommonJs,
     };
   }
 }

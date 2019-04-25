@@ -1,4 +1,4 @@
-import { Velcro } from './velcro';
+import { Runtime } from './runtime';
 
 const RELATE_PATH_RX = /^[./]|^[a-z]+:/;
 const SPEC_RX = /^((@[^/]+\/[^/@]+|[^/@]+)(?:@([^/]+))?)(.*)?$/;
@@ -15,7 +15,7 @@ export function isBareModuleSpecifier(spec: string): boolean {
 }
 
 export function log(...args: Parameters<WindowConsole['console']['log']>) {
-  if (Velcro.debug) {
+  if (Runtime.debug) {
     console.log(...args);
   }
 }
