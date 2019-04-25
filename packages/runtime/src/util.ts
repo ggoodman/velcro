@@ -1,34 +1,42 @@
-import { System } from './system';
+import { Velcro } from './velcro';
 
-const IMPORT_EXPORT_RX = /(;|^)(import|export)(\s|{)/gm;
+const RELATE_PATH_RX = /^[./]|^[a-z]+:/;
+const SPEC_RX = /^((@[^/]+\/[^/@]+|[^/@]+)(?:@([^/]+))?)(.*)?$/;
 
-export function injectUnresolvedFallback(system: System, href: string, parentHref?: string) {
-  const fallbackUrl = new URL(href, parentHref);
-  const fallbackHref = fallbackUrl.href;
-  const proxyTarget = Object.create(null);
-  const proxyHandler: ProxyHandler<typeof proxyTarget> = {
-    apply(_target, _thisArg, argArray) {
-      throw new Error(
-        `Attempting to invoke the exports of a module that could not be resolved: ${href}${
-          parentHref ? ` from ${parentHref}` : ''
-        } with arguments: ${argArray.join(', ')}`
-      );
-    },
-    construct(_target, argArray, _newTarget) {
-      throw new Error(
-        `Attempting to construct the exports of a module that could not be resolved: ${href}${
-          parentHref ? ` from ${parentHref}` : ''
-        } with arguments: ${argArray.join(', ')}`
-      );
-    },
-  };
-  const fallbackModule = typeof Proxy === 'function' ? new Proxy(proxyTarget, proxyHandler) : Object.create(null);
-
-  system.set(fallbackHref, fallbackModule);
-
-  return fallbackHref;
+interface BareModuleSpec {
+  nameSpec: string;
+  name: string;
+  spec: string;
+  pathname: string;
 }
 
-export function isESModule(code: string) {
-  return IMPORT_EXPORT_RX.test(code);
+export function isBareModuleSpecifier(spec: string): boolean {
+  return !RELATE_PATH_RX.test(spec);
+}
+
+export function log(...args: Parameters<WindowConsole['console']['log']>) {
+  if (Velcro.debug) {
+    console.log(...args);
+  }
+}
+
+export function parseBareModuleSpec(spec: string): BareModuleSpec {
+  /**
+   * 1: scope + name + version
+   * 2: scope + name
+   * 3: version?
+   * 4: pathname
+   */
+  const matches = spec.match(SPEC_RX);
+
+  if (!matches) {
+    throw new Error(`Unable to parse unexpected unpkg url: ${spec}`);
+  }
+
+  return {
+    nameSpec: matches[1],
+    name: matches[2],
+    spec: matches[3] || '',
+    pathname: matches[4] || '',
+  };
 }

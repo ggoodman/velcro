@@ -8,3 +8,4 @@ export * from './idb_cache';
 export * from './node';
 export * from './runtime';
 export * from './unpkg';
+export * from './velcro';

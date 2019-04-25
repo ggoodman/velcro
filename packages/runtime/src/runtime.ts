@@ -1,38 +1,30 @@
 import { ResolverHostUnpkg, CustomFetch } from '@velcro/resolver-host-unpkg';
 import { Resolver, ResolverHost } from '@velcro/resolver';
 
-import { SystemHostUnpkg } from './system_host';
-import { System, SystemHost } from './system';
-import { BareModuleResolver, GlobalInjector, ICache } from './types';
+import { BareModuleResolver } from './types';
+import { Velcro } from './velcro';
+
+export { createCache } from './idb_cache';
 
 type CreateRuntimeOptions = {
-  cache?: ICache;
+  cache?: Velcro.Cache;
   enableSourceMaps?: boolean;
   fetch?: CustomFetch;
-  injectGlobal?: GlobalInjector;
+  injectGlobal?: Velcro.GlobalInjector;
   resolveBareModule?: BareModuleResolver;
   resolverHost?: ResolverHost;
   resolver?: Resolver;
-  systemHost?: SystemHost;
 };
 
 export function createRuntime(options: CreateRuntimeOptions = {}) {
-  const systemHost =
-    options.systemHost ||
-    new SystemHostUnpkg(
-      options.resolver ||
-        new Resolver(options.resolverHost || new ResolverHostUnpkg({ fetch: options.fetch }), {
-          packageMain: ['browser', 'main'],
-        }),
-      {
-        cache: options.cache,
-        enableSourceMaps: options.enableSourceMaps,
-        injectGlobal: options.injectGlobal,
-        resolveBareModule: options.resolveBareModule || resolveBareModuleToIdentity,
-      }
-    );
-
-  return new System(systemHost);
+  return new Velcro({
+    cache: options.cache,
+    injectGlobal: options.injectGlobal,
+    resolveBareModule: options.resolveBareModule || resolveBareModuleToIdentity,
+    resolver: new Resolver(options.resolverHost || new ResolverHostUnpkg({ fetch: options.fetch }), {
+      packageMain: ['browser', 'main'],
+    }),
+  });
 }
 
-const resolveBareModuleToIdentity: BareModuleResolver = (_system, _resolver, href) => href;
+const resolveBareModuleToIdentity: BareModuleResolver = (_runtime, _resolver, href) => href;
