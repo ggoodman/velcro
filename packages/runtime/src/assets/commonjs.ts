@@ -6,6 +6,7 @@ import { Runtime } from '../runtime';
 import { scopingAndRequiresVisitor, DependencyVisitorContext, collectGlobalsVisitor } from '../visitors';
 
 export class CommonJsAsset implements Runtime.Asset {
+  public readonly fileDependencies = new Set<string>();
   public readonly module: { exports: any } = { exports: {} };
 
   constructor(public readonly id: string, protected readonly host: Runtime.AssetHost) {}
@@ -15,8 +16,8 @@ export class CommonJsAsset implements Runtime.Asset {
   }
 
   async load() {
-    const code = await CommonJsAsset.loadCode(this.id, this.host);
-    const module = await CommonJsAsset.loadModule(this.id, code, this.host, true);
+    const code = await CommonJsAsset.loadCode(this.id.replace(/^!+/, ''), this.host);
+    const module = await CommonJsAsset.loadModule(this.id.replace(/^!+/, ''), code, this.host, true);
 
     return module;
   }
@@ -33,8 +34,7 @@ export class CommonJsAsset implements Runtime.Asset {
       filename: id,
       indentExclusionRanges: [],
     });
-    const requires = [] as string[];
-
+    const dependencies = [] as string[];
     const ctx: DependencyVisitorContext = {
       injectGlobals: new Set(),
       locals: new Map(),
@@ -69,12 +69,14 @@ export class CommonJsAsset implements Runtime.Asset {
           resolvedInjectPromises.push(
             Promise.resolve(host.resolve(injectGlobal.spec, id)).then(async resolvedHref => {
               if (!resolvedHref) {
-                resolvedHref = await host.injectUnresolvedFallback(injectGlobal.spec, id);
+                throw new Error(
+                  `Failed to resolve the module ${injectGlobal.spec} from ${id} for the global ${globalName}`
+                );
               }
 
               const injected = `var ${globalName} = require(${JSON.stringify(resolvedHref)});\n`;
               magicString.prepend(injected);
-              requires.push(resolvedHref);
+              dependencies.push(resolvedHref);
             })
           );
         }
@@ -83,14 +85,33 @@ export class CommonJsAsset implements Runtime.Asset {
 
     for (const dep of ctx.requires) {
       resolvedRequirePromises.push(
-        Promise.resolve(host.resolve(dep.value, id)).then(async resolvedHref => {
-          if (!resolvedHref) {
-            resolvedHref = await host.injectUnresolvedFallback(dep.value, id);
+        (async () => {
+          // const rawSpec = await getRawSpec(dep.value, id, host);
+          const parts = dep.value.split('!');
+
+          for (const idx in parts) {
+            const part = parts[idx];
+
+            if (part) {
+              const resolvedPart = await host.resolve(part, id);
+
+              if (!resolvedPart) {
+                throw new Error(
+                  `Failed to resolve ${part}, which is required for the webpack loader resource ${
+                    dep.value
+                  }, required by ${id}`
+                );
+              }
+
+              parts[idx] = resolvedPart;
+            }
           }
 
-          magicString.overwrite((dep as any).start!, (dep as any).end!, JSON.stringify(resolvedHref));
-          requires.push(resolvedHref);
-        })
+          const spec = parts.join('!');
+
+          magicString.overwrite((dep as any).start!, (dep as any).end!, JSON.stringify(spec));
+          dependencies.push(spec);
+        })()
       );
     }
 
@@ -115,12 +136,28 @@ export class CommonJsAsset implements Runtime.Asset {
 
     const sourceMapUrl = magicString
       .generateMap({
-        includeContent: false,
+        includeContent: !id.match(/^https?:\/\//),
         source: id,
       })
       .toUrl();
     const codeWithMap = `${magicString.toString()}\n//# sourceMappingURL=${sourceMapUrl}`;
 
-    return { cacheable, code: codeWithMap, dependencies: requires, type: Runtime.ModuleKind.CommonJs };
+    return { cacheable, code: codeWithMap, dependencies, type: Runtime.ModuleKind.CommonJs };
   }
 }
+
+// async function getRawSpec(id: string, fromId: string, host: Runtime.AssetHost): Promise<string> {
+//   if (id.startsWith('!')) {
+//     return id;
+//   }
+
+//   const parts = [id];
+
+//   if (id.endsWith('.css')) {
+//     parts.unshift('style-loader', 'css-loader');
+//   }
+
+//   const resolvedParts = await Promise.all(parts.map(part => host.resolve(part, fromId)));
+
+//   return resolvedParts.length > 1 ? `!!${parts.join('!')}` : parts[0];
+// }

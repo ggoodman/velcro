@@ -6,6 +6,7 @@
   "main": "index.js",
   "scripts": {
     "build": "rollup -c",
+    "build:docs": "lerna run build --scope @velcro/docs",
     "test": "lerna run test"
   },
   "repository": {
@@ -16,8 +17,12 @@
   "author": "Geoff Goodman <geoff@goodman.dev> (https://geoff.goodman.dev)",
   "license": "MIT",
   "devDependencies": {
-    "lerna": "^3.13.3",
+    "docz": "^1.0.4",
+    "docz-theme-default": "^1.0.4",
+    "lerna": "^3.13.4",
     "prettier": "^1.17.0",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
     "rollup": "^1.10.1",
     "typescript": "^3.4.5"
   },

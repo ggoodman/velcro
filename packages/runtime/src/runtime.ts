@@ -6,6 +6,7 @@ import { Awaitable, BareModuleResolver } from './types';
 import { isBareModuleSpecifier, log } from './util';
 import { JsonAsset } from './assets/json';
 import { InjectedJsAsset } from './assets/injected';
+import { WebpackLoaderAsset } from './assets/webpack';
 
 interface ICache<T extends Record<string, any>> {
   clear<TSegment extends keyof T>(segment?: TSegment): Awaitable<unknown>;
@@ -18,6 +19,7 @@ type Registry = Map<string, RegistryEntry>;
 type RegistryEntry = {
   asset: Runtime.Asset;
   dependencies: Set<RegistryEntry>;
+  dependents: Set<RegistryEntry>;
   err: Error | undefined;
   executed: boolean;
   executeFunction: Runtime.ExecuteFunction | undefined;
@@ -26,49 +28,58 @@ type RegistryEntry = {
 };
 
 export class Runtime {
-  private readonly _assetHost: Runtime.AssetHost;
-  private readonly _cache: Runtime.Cache | undefined = undefined;
-  private readonly _inflightImports = new Map<string, Promise<Runtime.LoadedModule>>();
-  private readonly _inflightResolutions = new Map<string, Promise<string | undefined>>();
-  private readonly _registry: Registry = new Map();
+  private readonly assetHost: Runtime.AssetHost;
+  private readonly cache: Runtime.Cache | undefined = undefined;
+  private readonly inflightResolutions = new Map<string, Promise<string | undefined>>();
+  private readonly registry: Registry = new Map();
 
   public readonly resolveBareModule: BareModuleResolver;
   public readonly resolver: Resolver;
 
   constructor(options: Runtime.Options) {
-    this._assetHost = {
+    this.assetHost = {
       decodeBuffer: buffer => this.resolver.decoder.decode(buffer),
       import: this.import.bind(this),
       injectGlobal: options.injectGlobal,
-      injectUnresolvedFallback: (id: string, fromId?: string) => {
-        const asset = new UnresolvedAsset(id, fromId);
-        const entry: RegistryEntry = {
-          asset,
-          dependencies: new Set(),
-          err: undefined,
-          executeFunction: undefined,
-          executed: true,
-          loaded: true,
-          loadedPromise: undefined,
-        };
+      injectUnresolvedFallback: () => {
+        let entry = this.registry.get(UnresolvedAsset.id);
 
-        this.registerEntry(entry);
+        if (!entry) {
+          entry = {
+            asset: new UnresolvedAsset(),
+            dependencies: new Set(),
+            dependents: new Set(),
+            err: undefined,
+            executeFunction: undefined,
+            executed: true,
+            loaded: true,
+            loadedPromise: undefined,
+          };
 
-        return asset.id;
+          this.registerEntry(entry);
+        }
+
+        return entry.asset.id;
       },
-      readFileContent: (href: string) => {
+      readFileContent: async (href: string) => {
+        const resolvedHref = await this.resolve(href);
+
+        if (!resolvedHref) {
+          throw new Error(`Unable to read ${href} because it could not be resolved to a canonical url`);
+        }
+
         let url: URL;
 
         try {
-          url = new URL(href);
+          url = new URL(resolvedHref);
         } catch (err) {
-          throw new Error(`Unable to read ${href} because it could not be parsed as a valid url`);
+          throw new Error(`Unable to read ${resolvedHref} because it could not be parsed as a valid url`);
         }
 
         return this.resolver.host.readFileContent(this.resolver, url);
       },
       require: (id: string, fromId?: string) => {
-        const entry = this._registry.get(id);
+        const entry = this.registry.get(id);
 
         if (!entry) {
           throw new Error(`Module not found ${id}${fromId ? ` from ${fromId}` : ''}`);
@@ -94,31 +105,56 @@ export class Runtime {
 
         return entry.asset.exports;
       },
-      resolve: (id: string, fromId?: string) => this.resolve(id, fromId),
+      resolve: (id: string, fromId?: string) => {
+        return this.resolve(id, fromId);
+      },
       resolveBareModule: (id: string, fromId?: string) => options.resolveBareModule(this, this.resolver, id, fromId),
     };
-    this._cache = options.cache;
-    // this._injectGlobal = options.injectGlobal;
+    this.cache = options.cache;
     this.resolver = options.resolver;
     this.resolveBareModule = options.resolveBareModule;
+
+    // Seed the registry with the unresolved module
+    this.assetHost.injectUnresolvedFallback();
   }
 
   private createAsset(id: string, _fromId?: string) {
-    if (id.endsWith('.json')) {
-      return new JsonAsset(id, this._assetHost);
+    if (id.startsWith('!')) {
+      const parts = id.split('!');
+      const resource = parts.pop() as string;
+      const loaders = parts.filter(Boolean);
+      const fromEntry = this.registry.get(resource);
+
+      if (loaders.length) {
+        return new WebpackLoaderAsset(
+          id,
+          this.assetHost,
+          fromEntry && fromEntry.asset instanceof WebpackLoaderAsset ? fromEntry.asset.fromId : _fromId,
+          loaders
+        );
+      }
     }
 
-    return new CommonJsAsset(id, this._assetHost);
+    if (id.endsWith('.css')) {
+      return new WebpackLoaderAsset(id, this.assetHost, _fromId, ['style-loader', 'css-loader']);
+    }
+
+    if (id.endsWith('.json')) {
+      return new JsonAsset(id, this.assetHost);
+    }
+
+    return new CommonJsAsset(id, this.assetHost);
   }
 
   private getOrCreateEntry(id: string, fromId?: string): RegistryEntry {
-    let entry = this._registry.get(id);
+    let entry = this.registry.get(id);
 
     if (!entry) {
       const asset = this.createAsset(id, fromId);
       entry = {
         asset,
         dependencies: new Set(),
+        dependents: new Set(),
         err: undefined,
         executeFunction: undefined,
         executed: false,
@@ -148,7 +184,56 @@ export class Runtime {
 
     log('Velcro.import(%s, %s) dependencies loaded', id, fromId);
 
-    return this._assetHost.require(entry.asset.id, fromId);
+    return this.assetHost.require(entry.asset.id, fromId);
+  }
+
+  async invalidate(id: string, fromId?: string): Promise<boolean> {
+    // Get the canonical url of the underlying resource
+    const resolvedId = await this.resolve(id, fromId);
+    const resolutionCacheKey = `${id}#${fromId}`;
+
+    let invalidated = false;
+
+    log('Runtime.invalidate(%s, %s): %s', id, fromId, resolvedId);
+
+    if (!resolvedId) {
+      throw new Error(`The asset ${id} did not resolve to anything using the node module resolution algorithm`);
+    }
+
+    if (this.cache) {
+      await this.cache.delete(Runtime.CacheSegment.Resolution, resolutionCacheKey);
+    }
+
+    const entry = this.registry.get(resolvedId);
+
+    if (!entry) {
+      return invalidated;
+    }
+    /**
+     * A queue of **resolved** ids
+     */
+    const queue = [entry];
+    const seen = new Set<RegistryEntry>();
+
+    while (queue.length) {
+      const entry = queue.shift() as RegistryEntry;
+
+      if (seen.has(entry)) continue;
+      seen.add(entry);
+
+      invalidated = true;
+
+      if (this.cache) {
+        await this.cache.delete(Runtime.CacheSegment.Registration, entry.asset.id);
+      }
+
+      log('Runtime.invalidate(%s, %s): Deleting %s', id, fromId, entry.asset.id);
+      this.registry.delete(entry.asset.id);
+
+      queue.push(...entry.dependents);
+    }
+
+    return invalidated;
   }
 
   async load(id: string, fromId?: string) {
@@ -159,11 +244,7 @@ export class Runtime {
       throw new Error(`The asset ${id} did not resolve to anything using the node module resolution algorithm`);
     }
 
-    const cacheKey = `${id}#${fromId}`;
-
-    let inflightImport = this._inflightImports.get(cacheKey);
-
-    log('Velcro.import(%s, %s) cacheKey: %s, inflight: %s', id, fromId, cacheKey, !!inflightImport);
+    log('Velcro.import(%s, %s)', id, fromId);
 
     const entry = this.getOrCreateEntry(resolvedId, fromId);
 
@@ -191,8 +272,8 @@ export class Runtime {
           let loaded: Runtime.LoadedModule | undefined;
           let cached = false;
 
-          if (this._cache) {
-            loaded = await this._cache.get(Runtime.CacheSegment.Registration, cacheKey);
+          if (this.cache) {
+            loaded = await this.cache.get(Runtime.CacheSegment.Registration, cacheKey);
             cached = !!loaded;
           }
 
@@ -210,8 +291,8 @@ export class Runtime {
             log('Velcro.registerEntry(%s) cacheKey: %s, type: %s', entry.asset.id, cacheKey, 'HIT');
           }
 
-          if (loaded.cacheable && this._cache && !cached) {
-            await this._cache.set(Runtime.CacheSegment.Registration, cacheKey, loaded);
+          if (loaded.cacheable && this.cache && !cached) {
+            await this.cache.set(Runtime.CacheSegment.Registration, cacheKey, loaded);
           }
 
           const { code, dependencies, type } = loaded;
@@ -219,7 +300,7 @@ export class Runtime {
 
           switch (type) {
             case Runtime.ModuleKind.CommonJs:
-              execute = createCommonJsExecuteFunction(entry.asset, this._assetHost, code);
+              execute = createCommonJsExecuteFunction(entry.asset, this.assetHost, code);
               break;
             default:
               throw new Error(
@@ -228,7 +309,9 @@ export class Runtime {
           }
 
           for (const dependency of dependencies) {
-            entry.dependencies.add(this.getOrCreateEntry(dependency, entry.asset.id));
+            const dependencyEntry = this.getOrCreateEntry(dependency, entry.asset.id);
+            entry.dependencies.add(dependencyEntry);
+            dependencyEntry.dependents.add(entry);
           }
 
           entry.loaded = true;
@@ -242,18 +325,18 @@ export class Runtime {
       }
     }
 
-    this._registry.set(entry.asset.id, entry);
+    this.registry.set(entry.asset.id, entry);
   }
 
   async resolve(id: string, fromId?: string): Promise<string | undefined> {
     const cacheKey = `${id}#${fromId}`;
 
-    let inflightResolution = this._inflightResolutions.get(cacheKey);
+    let inflightResolution = this.inflightResolutions.get(cacheKey);
 
     if (!inflightResolution) {
       inflightResolution = (async () => {
-        if (this._cache) {
-          const cached = await this._cache.get(Runtime.CacheSegment.Resolution, cacheKey);
+        if (this.cache) {
+          const cached = await this.cache.get(Runtime.CacheSegment.Resolution, cacheKey);
 
           if (cached) {
             log('Velcro.resolve(%s, %s) cacheKey: %s, type: %s', id, fromId, cacheKey, 'HIT');
@@ -267,31 +350,39 @@ export class Runtime {
         let resolvedId: string | undefined = undefined;
 
         if (isBareModuleSpecifier(id)) {
-          resolvedId =
-            (await this.resolveBareModule(this, this.resolver, id, fromId)) ||
-            this._assetHost.injectUnresolvedFallback(id, fromId);
+          resolvedId = await this.resolveBareModule(this, this.resolver, id, fromId);
+
+          if (!resolvedId) {
+            const fromMsg = fromId ? ` from ${fromId}` : '';
+            throw new Error(
+              `Unable to resolve the bare module ${id}${fromMsg}. Have you checked to make sure that your dependencies or devDependencies include ${id}?`
+            );
+          }
         } else {
           const url = parseUrl(id, fromId);
           const resolvedUrl = await this.resolver.resolve(url);
 
           if (resolvedUrl) {
             resolvedId = resolvedUrl.href;
+          } else if (resolvedUrl === false) {
+            // We should inject an unresolved fallback
+            resolvedId = this.assetHost.injectUnresolvedFallback();
           }
         }
 
         if (!resolvedId) {
-          cacheable = false;
-          resolvedId = this._assetHost.injectUnresolvedFallback(id, fromId);
+          const fromMsg = fromId ? ` from ${fromId}` : '';
+          throw new Error(`Failed to resolve ${id}${fromMsg}`);
         }
 
-        if (cacheable && this._cache) {
-          await this._cache.set(Runtime.CacheSegment.Resolution, cacheKey, resolvedId);
+        if (cacheable && this.cache) {
+          await this.cache.set(Runtime.CacheSegment.Resolution, cacheKey, resolvedId);
         }
 
         return resolvedId;
       })();
 
-      this._inflightResolutions.set(cacheKey, inflightResolution);
+      this.inflightResolutions.set(cacheKey, inflightResolution);
     } else {
       log('Velcro.resolve(%s, %s) cacheKey: %s, type: %s', id, fromId, cacheKey, 'INFLIGHT');
     }
@@ -304,6 +395,7 @@ export class Runtime {
     const entry: RegistryEntry = {
       asset,
       dependencies: new Set(),
+      dependents: new Set(),
       err: undefined,
       executeFunction: undefined,
       executed: true,
@@ -311,7 +403,7 @@ export class Runtime {
       loadedPromise: asset.load(),
     };
 
-    this._registry.set(id, entry);
+    this.registry.set(id, entry);
   }
 }
 
@@ -321,7 +413,7 @@ export namespace Runtime {
   export interface Asset {
     readonly id: string;
     readonly exports: any;
-    readonly module: { exports: any };
+    readonly module: { exports: any; hot?: HotModuleInterface };
 
     load(): Promise<LoadedModule>;
   }
@@ -342,7 +434,7 @@ export namespace Runtime {
     /**
      * Create and inject an Asset into the registry to represent an asset that could not be resolved
      */
-    injectUnresolvedFallback(id: string, fromId?: string): string;
+    injectUnresolvedFallback(): string;
     /**
      * Read the content of an asset at a url as a binary buffer
      */
@@ -376,6 +468,51 @@ export namespace Runtime {
   type GlobalInjection = { spec: string; export?: string };
 
   export type GlobalInjector = AssetHost['injectGlobal'];
+
+  export interface HotModuleInterface {
+    /** Accept updates for the given `dependencies` and fire a `callback` to react to those updates. */
+    accept(dependencies: string | string[], callback?: (err?: Error) => void): void;
+    /** Accept updates for itself. */
+    accept(callback?: (err: Error) => void): void;
+    /**
+     * Add a handler which is executed when the current module code is replaced.
+     *
+     * @alias dispose
+     */
+    addDisposeHandler(callback: (data: any) => void): void;
+    /** Reject updates for the given `dependencies` forcing the update to fail with a `decline` code. */
+    decline(dependencies: string | string[]): void;
+    /** Reject updates for itself. */
+    decline(): void;
+    /**
+     * Add a handler which is executed when the current module code is replaced.
+     *
+     * This should be used to remove any persistent resource you have claimed or created. If you want to transfer state to the updated module, add it to given data parameter. This object will be available at module.hot.data after the update.
+     */
+    dispose(callback: (data: any) => void): void;
+
+    /** Remove the callback added via `dispose` or `addDisposeHandler`. */
+    removeDisposeHandler(callback: (data: any) => void): void;
+  }
+
+  export enum HotModuleRuntimeStatus {
+    /** The process is waiting for a call to `check` */
+    Idle = 'idle',
+    /** The process is checking for updates */
+    Check = 'check',
+    /** The process is getting ready for the update (e.g. downloading the updated module) */
+    Prepare = 'prepare',
+    /** The update is prepared and available */
+    Ready = 'ready',
+    /** The process is calling the `dispose` handlers on the modules that will be replaced */
+    Dispose = 'dispose',
+    /** The process is calling the accept handlers and re-executing self-accepted modules */
+    Apply = 'apply',
+    /** An update was aborted, but the system is still in its previous state */
+    Abort = 'abort',
+    /** An update has thrown an exception and the system's state has been compromised */
+    Fail = 'fail',
+  }
 
   export type LoadedModule = { cacheable: boolean; code: string; dependencies: string[]; type: ModuleKind };
 

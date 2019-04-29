@@ -1,6 +1,9 @@
 import { openDB, DBSchema } from 'idb';
 
 import { Runtime } from './runtime';
+import { log } from './util';
+
+const IDB_CACHE_VERSION = 2;
 
 type CachePredicate = (segment: Runtime.CacheSegment, key: string) => boolean;
 
@@ -16,10 +19,18 @@ interface CacheSchema extends DBSchema {
 }
 
 export function createCache(name: string, predicate?: CachePredicate): Runtime.Cache {
-  const idbPromise = openDB<CacheSchema>(name, 1, {
-    upgrade(db) {
-      db.createObjectStore(Runtime.CacheSegment.Registration);
-      db.createObjectStore(Runtime.CacheSegment.Resolution);
+  const idbPromise = openDB<CacheSchema>(name, IDB_CACHE_VERSION, {
+    async upgrade(db, oldVersion, newVersion, tx) {
+      log('Upgrading cache from version %s to %s', oldVersion, newVersion);
+
+      switch (oldVersion) {
+        case 0:
+          db.createObjectStore(Runtime.CacheSegment.Registration);
+          db.createObjectStore(Runtime.CacheSegment.Resolution);
+        case 1:
+          await tx.objectStore(Runtime.CacheSegment.Registration).clear();
+          await tx.objectStore(Runtime.CacheSegment.Resolution).clear();
+      }
     },
   });
 

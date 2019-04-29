@@ -35,17 +35,24 @@ const cache = {
 
 const resolverHost = new Velcro.ResolverHostCompound({
   'https://unpkg.com/': new Velcro.ResolverHostUnpkg(),
-  'file:///': new Velcro.ResolverHostMemory({
+  'memory:/': new Velcro.ResolverHostMemory({
     'package.json': JSON.stringify({
       name: 'test',
       dependencies: {
+        bootstrap: '4.3',
         react: '16',
         'react-dom': '16',
+      },
+      devDependencies: {
+        'css-loader': '*',
+        'style-loader': '*',
       },
     }),
     'index.js': `
 const React = require("react");
 const ReactDOM = require("react-dom");
+
+require('bootstrap/dist/css/bootstrap.css');
 
 class Hello extends React.Component {
   render() {
@@ -104,4 +111,11 @@ document.getElementById('cache_clear').addEventListener('click', () => {
 
 const start = Date.now();
 
-runtime.import('file:///').then(render => render(cacheStats, start), console.error);
+runtime.import('memory:/').then(async render => {
+  render(cacheStats, start);
+
+  await runtime
+    .invalidate('bootstrap/dist/css/bootstrap.css', 'memory:/index.js')
+    .then(() => runtime.import('memory:/'))
+    .then(render => render(cacheStats, start));
+}, console.error);

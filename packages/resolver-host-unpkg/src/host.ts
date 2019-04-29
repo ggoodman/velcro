@@ -126,20 +126,14 @@ export class ResolverHostUnpkg implements ResolverHost {
     }
 
     // console.log('[MISS] readFileContent(%s)', href);
-    const promise = (async () => {
-      const fetch = this.fetch;
-      const res = await fetch(href, {
-        redirect: 'follow',
-      });
-
+    const fetch = this.fetch;
+    const promise = fetch(href, { redirect: 'follow' }).then(res => {
       if (!res.ok) {
-        throw new Error(`Error reading file content for ${href}: ${res.status}`);
+        return Promise.reject(new Error(`Error reading file content for ${href}: ${res.status}`));
       }
 
-      const ab = await res.arrayBuffer();
-
-      return ab;
-    })();
+      return res.arrayBuffer();
+    });
 
     this.inflightContentRequests.set(href, promise);
 
