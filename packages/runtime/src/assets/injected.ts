@@ -1,6 +1,7 @@
 import { Runtime } from '../runtime';
 
 export class InjectedJsAsset implements Runtime.Asset {
+  public readonly fileDependencies = new Set<string>();
   public readonly module: { exports: any };
 
   constructor(public readonly id: string, exports: any) {

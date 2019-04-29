@@ -3,6 +3,7 @@ import MagicString from 'magic-string';
 import { Runtime } from '../runtime';
 
 export class JsonAsset implements Runtime.Asset {
+  public readonly fileDependencies = new Set<string>();
   public readonly module = { exports: {} };
 
   constructor(public readonly id: string, private readonly host: Runtime.AssetHost) {}

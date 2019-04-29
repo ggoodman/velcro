@@ -111,7 +111,7 @@ export class ResolverHostMemory extends ResolverHost {
   }
 
   async getResolveRoot() {
-    return new URL(`file:///`);
+    return new URL(`memory:/`);
   }
 
   async listEntries(_resolver: Resolver, url: URL) {

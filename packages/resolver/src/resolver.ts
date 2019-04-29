@@ -46,7 +46,7 @@ export class Resolver {
     this.packageMain = options.packageMain || ['main'];
   }
 
-  async resolve(url: URL | string): Promise<URL | undefined> {
+  async resolve(url: URL | string): Promise<URL | false | undefined> {
     if (!(url instanceof URL)) {
       try {
         url = new URL(url);
@@ -89,7 +89,10 @@ export class Resolver {
    *
    * The outcome of this process will then be resolved as if it were a file.
    */
-  private async resolveAsDirectory(url: URL, options: Required<ResolverResolveOptions>): Promise<URL | undefined> {
+  private async resolveAsDirectory(
+    url: URL,
+    options: Required<ResolverResolveOptions>
+  ): Promise<URL | false | undefined> {
     const rootUrl = await this.host.getResolveRoot(this, url);
     const entries = await this.host.listEntries(this, url);
 
@@ -123,7 +126,7 @@ export class Resolver {
    * 2. Look for an exact file match or a file match with one of the supplied extensions
    * 3. Look for a matching child directory and attempt to resolve that as a directory
    */
-  private async resolveAsFile(url: URL, options: Required<ResolverResolveOptions>): Promise<URL | undefined> {
+  private async resolveAsFile(url: URL, options: Required<ResolverResolveOptions>): Promise<URL | false | undefined> {
     if (url.pathname === '' || url.pathname === '/') {
       throw new TypeError(`Unable to resolve the root as a file: ${url.href}`);
     }
@@ -148,18 +151,15 @@ export class Resolver {
           targetSpec === false ? false : new URL(resolve(packageJsonDir, targetSpec), parentPackageJson.url);
 
         if (impliedUrl.href === url.href) {
-          if (target) {
-            // console.warn('REMAPPED %s to %s', url, target);
-
-            // We found an exact match so let's make sure we resolve the re-mapped file but
-            // also that we don't go through the browser overrides rodeo again.
-            return this.resolveAsFile(target, { ...options, ignoreBrowserOverrides: true });
+          if (target === false) {
+            return false;
           }
 
-          // console.warn('REMAPPED %s to undefined', url);
+          // console.warn('REMAPPED %s to %s', url, target);
 
-          // The mapped target was set as `false` so we should indicate that this file could not be resolved
-          return undefined;
+          // We found an exact match so let's make sure we resolve the re-mapped file but
+          // also that we don't go through the browser overrides rodeo again.
+          return this.resolveAsFile(target, { ...options, ignoreBrowserOverrides: true });
         }
 
         browserOverrides.set(impliedUrl.href, target);
@@ -195,7 +195,7 @@ export class Resolver {
 
       if (mapping === false) {
         // console.warn('REMAPPED %s to undefined', url);
-        return undefined;
+        return false;
       } else if (mapping) {
         // console.warn('REMAPPED %s to %s', url, mapping);
 
