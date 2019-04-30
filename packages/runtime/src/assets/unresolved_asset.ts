@@ -14,7 +14,8 @@ export class UnresolvedAsset implements Runtime.Asset {
     const record: Runtime.LoadedModule = {
       cacheable: false,
       code: `throw new Error('Invariant violation: this should never be called');`,
-      dependencies: [] as string[],
+      fileDependencies: [],
+      moduleDependencies: [],
       type: Runtime.ModuleKind.CommonJs,
     };
 

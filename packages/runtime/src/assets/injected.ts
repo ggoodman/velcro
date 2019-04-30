@@ -16,7 +16,8 @@ export class InjectedJsAsset implements Runtime.Asset {
     const record: Runtime.LoadedModule = {
       cacheable: false,
       code: `throw new Error('Invariant violation: this should not be called');`,
-      dependencies: [] as string[],
+      fileDependencies: [],
+      moduleDependencies: [],
       type: Runtime.ModuleKind.CommonJs,
     };
 

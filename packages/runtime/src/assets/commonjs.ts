@@ -29,7 +29,12 @@ export class CommonJsAsset implements Runtime.Asset {
     return code;
   }
 
-  protected static async loadModule(id: string, code: string, host: Runtime.AssetHost, cacheable: boolean) {
+  protected static async loadModule(
+    id: string,
+    code: string,
+    host: Runtime.AssetHost,
+    cacheable: boolean
+  ): Promise<Runtime.LoadedModule> {
     const magicString = new MagicString(code, {
       filename: id,
       indentExclusionRanges: [],
@@ -88,6 +93,13 @@ export class CommonJsAsset implements Runtime.Asset {
         (async () => {
           // const rawSpec = await getRawSpec(dep.value, id, host);
           const parts = dep.value.split('!');
+          // const resource = parts.pop();
+
+          // if (!resource) {
+          //   throw new Error(`Unexpected webpack loader syntax with an empty final segment: ${dep.value}`);
+          // }
+
+          // const resolvedId = await host.resolve
 
           for (const idx in parts) {
             const part = parts[idx];
@@ -103,7 +115,9 @@ export class CommonJsAsset implements Runtime.Asset {
                 );
               }
 
-              parts[idx] = resolvedPart;
+              if (parts.length === 1) {
+                parts[idx] = await host.resolveAssetId(resolvedPart, id);
+              }
             }
           }
 
@@ -142,7 +156,13 @@ export class CommonJsAsset implements Runtime.Asset {
       .toUrl();
     const codeWithMap = `${magicString.toString()}\n//# sourceMappingURL=${sourceMapUrl}`;
 
-    return { cacheable, code: codeWithMap, dependencies, type: Runtime.ModuleKind.CommonJs };
+    return {
+      cacheable,
+      code: codeWithMap,
+      fileDependencies: [],
+      moduleDependencies: dependencies,
+      type: Runtime.ModuleKind.CommonJs,
+    };
   }
 }
 

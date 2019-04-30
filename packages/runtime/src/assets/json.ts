@@ -34,7 +34,8 @@ export class JsonAsset implements Runtime.Asset {
     return {
       cacheable: true,
       code: codeWithMap,
-      dependencies: [],
+      fileDependencies: [],
+      moduleDependencies: [],
       type: Runtime.ModuleKind.CommonJs,
     };
   }
