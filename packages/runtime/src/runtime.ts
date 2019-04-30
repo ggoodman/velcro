@@ -30,6 +30,7 @@ type RegistryEntry = {
 export class Runtime {
   private readonly assetHost: Runtime.AssetHost;
   private readonly cache: Runtime.Cache | undefined = undefined;
+  private readonly fileDependents = new Map<string, Set<RegistryEntry>>();
   private readonly inflightResolutions = new Map<string, Promise<string | undefined>>();
   private readonly registry: Registry = new Map();
 
@@ -105,9 +106,8 @@ export class Runtime {
 
         return entry.asset.exports;
       },
-      resolve: (id: string, fromId?: string) => {
-        return this.resolve(id, fromId);
-      },
+      resolve: (id: string, fromId?: string) => this.resolve(id, fromId),
+      resolveAssetId: (id: string, fromId?: string) => this.resolveAssetId(id, fromId),
       resolveBareModule: (id: string, fromId?: string) => options.resolveBareModule(this, this.resolver, id, fromId),
     };
     this.cache = options.cache;
@@ -118,7 +118,7 @@ export class Runtime {
     this.assetHost.injectUnresolvedFallback();
   }
 
-  private createAsset(id: string, _fromId?: string) {
+  private createAsset(id: string, _fromId?: string): Runtime.Asset {
     if (id.startsWith('!')) {
       const parts = id.split('!');
       const resource = parts.pop() as string;
@@ -133,10 +133,6 @@ export class Runtime {
           loaders
         );
       }
-    }
-
-    if (id.endsWith('.css')) {
-      return new WebpackLoaderAsset(id, this.assetHost, _fromId, ['style-loader', 'css-loader']);
     }
 
     if (id.endsWith('.json')) {
@@ -176,9 +172,11 @@ export class Runtime {
       throw new Error(`The asset ${id} did not resolve to anything using the node module resolution algorithm`);
     }
 
-    log('Velcro.import(%s, %s)', id, fromId);
+    const assetId = await this.resolveAssetId(resolvedId, fromId);
 
-    const entry = this.getOrCreateEntry(resolvedId, fromId);
+    log('Velcro.import(%s, %s) %s => %s', id, fromId, resolvedId, assetId);
+
+    const entry = this.getOrCreateEntry(assetId, fromId);
 
     await this.loadEntry(entry);
 
@@ -205,15 +203,21 @@ export class Runtime {
     }
 
     const entry = this.registry.get(resolvedId);
-
-    if (!entry) {
-      return invalidated;
-    }
     /**
      * A queue of **resolved** ids
      */
-    const queue = [entry];
+    const queue: RegistryEntry[] = [];
     const seen = new Set<RegistryEntry>();
+
+    if (entry) {
+      queue.push(entry);
+    }
+
+    const dependentEntries = this.fileDependents.get(resolvedId);
+
+    if (dependentEntries) {
+      queue.push(...dependentEntries);
+    }
 
     while (queue.length) {
       const entry = queue.shift() as RegistryEntry;
@@ -244,7 +248,9 @@ export class Runtime {
       throw new Error(`The asset ${id} did not resolve to anything using the node module resolution algorithm`);
     }
 
-    log('Velcro.import(%s, %s)', id, fromId);
+    const assetId = await this.resolveAssetId(resolvedId, fromId);
+
+    log('Velcro.import(%s, %s) %s => %s', id, fromId, resolvedId, assetId);
 
     const entry = this.getOrCreateEntry(resolvedId, fromId);
 
@@ -295,7 +301,7 @@ export class Runtime {
             await this.cache.set(Runtime.CacheSegment.Registration, cacheKey, loaded);
           }
 
-          const { code, dependencies, type } = loaded;
+          const { code, fileDependencies, moduleDependencies, type } = loaded;
           let execute: Runtime.ExecuteFunction;
 
           switch (type) {
@@ -308,10 +314,21 @@ export class Runtime {
               );
           }
 
-          for (const dependency of dependencies) {
+          for (const dependency of moduleDependencies) {
             const dependencyEntry = this.getOrCreateEntry(dependency, entry.asset.id);
             entry.dependencies.add(dependencyEntry);
             dependencyEntry.dependents.add(entry);
+          }
+
+          for (const dependency of fileDependencies) {
+            let dependents = this.fileDependents.get(dependency);
+
+            if (!dependents) {
+              dependents = new Set();
+              this.fileDependents.set(dependency, dependents);
+            }
+
+            dependents.add(entry);
           }
 
           entry.loaded = true;
@@ -390,6 +407,16 @@ export class Runtime {
     return inflightResolution;
   }
 
+  async resolveAssetId(id: string, fromId?: string): Promise<string> {
+    if (id.endsWith('.css')) {
+      const loaders = await Promise.all([this.resolve('style-loader', fromId), this.resolve('css-loader', fromId)]);
+
+      return `!!${[...loaders, id].join('!')}`;
+    }
+
+    return id;
+  }
+
   set(id: string, moduleNamespace: any) {
     const asset = new InjectedJsAsset(id, moduleNamespace);
     const entry: RegistryEntry = {
@@ -447,6 +474,10 @@ export namespace Runtime {
      * Attempt to resolve a reference to an asset in the context of an optional parent asset
      */
     resolve(id: string, fromId?: string): Awaitable<string | undefined>;
+    /**
+     * Attempt to resolve a reference to an asset in the context of an optional parent asset
+     */
+    resolveAssetId(id: string, fromId?: string): Awaitable<string>;
     /**
      * Attempt to resolve a bare module reference in the context of an optional parent asset
      */
@@ -514,7 +545,13 @@ export namespace Runtime {
     Fail = 'fail',
   }
 
-  export type LoadedModule = { cacheable: boolean; code: string; dependencies: string[]; type: ModuleKind };
+  export interface LoadedModule {
+    cacheable: boolean;
+    code: string;
+    fileDependencies: string[];
+    moduleDependencies: string[];
+    type: ModuleKind;
+  }
 
   export enum ModuleKind {
     CommonJs = 'commonjs',
