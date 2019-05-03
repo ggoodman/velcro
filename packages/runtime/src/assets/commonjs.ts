@@ -39,7 +39,7 @@ export class CommonJsAsset implements Runtime.Asset {
       filename: id,
       indentExclusionRanges: [],
     });
-    const dependencies = [] as string[];
+    const dependencies = [] as Runtime.AssetReference[];
     const ctx: DependencyVisitorContext = {
       injectGlobals: new Set(),
       locals: new Map(),
@@ -79,9 +79,10 @@ export class CommonJsAsset implements Runtime.Asset {
                 );
               }
 
-              const injected = `var ${globalName} = require(${JSON.stringify(resolvedHref)});\n`;
+              const assetRef = await host.resolveAssetReference(resolvedHref, id);
+              const injected = `var ${globalName} = require(${JSON.stringify(assetRef.id)});\n`;
               magicString.prepend(injected);
-              dependencies.push(resolvedHref);
+              dependencies.push(assetRef);
             })
           );
         }
@@ -91,40 +92,41 @@ export class CommonJsAsset implements Runtime.Asset {
     for (const dep of ctx.requires) {
       resolvedRequirePromises.push(
         (async () => {
-          // const rawSpec = await getRawSpec(dep.value, id, host);
-          const parts = dep.value.split('!');
-          // const resource = parts.pop();
+          const assetRef = await host.resolveAssetReference(dep.value, id);
+          // // const rawSpec = await getRawSpec(dep.value, id, host);
+          // const parts = dep.value.split('!');
+          // // const resource = parts.pop();
 
-          // if (!resource) {
-          //   throw new Error(`Unexpected webpack loader syntax with an empty final segment: ${dep.value}`);
+          // // if (!resource) {
+          // //   throw new Error(`Unexpected webpack loader syntax with an empty final segment: ${dep.value}`);
+          // // }
+
+          // // const resolvedId = await host.resolve
+
+          // for (const idx in parts) {
+          //   const part = parts[idx];
+
+          //   if (part) {
+          //     const resolvedPart = await host.resolve(part, id);
+
+          //     if (!resolvedPart) {
+          //       throw new Error(
+          //         `Failed to resolve ${part}, which is required for the webpack loader resource ${
+          //           dep.value
+          //         }, required by ${id}`
+          //       );
+          //     }
+
+          //     if (parts.length === 1) {
+          //       parts[idx] = await host.resolveAssetReference(resolvedPart, id);
+          //     }
+          //   }
           // }
 
-          // const resolvedId = await host.resolve
+          // const spec = parts.join('!');
 
-          for (const idx in parts) {
-            const part = parts[idx];
-
-            if (part) {
-              const resolvedPart = await host.resolve(part, id);
-
-              if (!resolvedPart) {
-                throw new Error(
-                  `Failed to resolve ${part}, which is required for the webpack loader resource ${
-                    dep.value
-                  }, required by ${id}`
-                );
-              }
-
-              if (parts.length === 1) {
-                parts[idx] = await host.resolveAssetId(resolvedPart, id);
-              }
-            }
-          }
-
-          const spec = parts.join('!');
-
-          magicString.overwrite((dep as any).start!, (dep as any).end!, JSON.stringify(spec));
-          dependencies.push(spec);
+          magicString.overwrite((dep as any).start!, (dep as any).end!, JSON.stringify(assetRef.id));
+          dependencies.push(assetRef);
         })()
       );
     }

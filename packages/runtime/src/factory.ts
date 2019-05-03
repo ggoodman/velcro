@@ -14,6 +14,7 @@ type CreateRuntimeOptions = {
   resolveBareModule?: BareModuleResolver;
   resolverHost?: ResolverHost;
   resolver?: Resolver;
+  rules?: Runtime.Options['rules'];
 };
 
 export function createRuntime(options: CreateRuntimeOptions = {}) {
@@ -24,6 +25,7 @@ export function createRuntime(options: CreateRuntimeOptions = {}) {
     resolver: new Resolver(options.resolverHost || new ResolverHostUnpkg({ fetch: options.fetch }), {
       packageMain: ['browser', 'main'],
     }),
+    rules: options.rules,
   });
 }
 

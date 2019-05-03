@@ -23,6 +23,7 @@ const DEFAULT_SHIM_GLOBALS: { [key: string]: { spec: string; export?: string } }
 const NODE_CORE_SHIMS = [
   'assert',
   'buffer',
+  'constants',
   'crypto',
   'events',
   'fs',
