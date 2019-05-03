@@ -33,6 +33,7 @@ export class Runtime {
   private readonly fileDependents = new Map<string, Set<RegistryEntry>>();
   private readonly inflightResolutions = new Map<string, Promise<string | undefined>>();
   private readonly registry: Registry = new Map();
+  private readonly rules: Runtime.Options['rules'];
 
   public readonly resolveBareModule: BareModuleResolver;
   public readonly resolver: Resolver;
@@ -107,46 +108,42 @@ export class Runtime {
         return entry.asset.exports;
       },
       resolve: (id: string, fromId?: string) => this.resolve(id, fromId),
-      resolveAssetId: (id: string, fromId?: string) => this.resolveAssetId(id, fromId),
+      resolveAssetReference: (id: string, fromId?: string) => this.resolveAssetReference(id, fromId),
       resolveBareModule: (id: string, fromId?: string) => options.resolveBareModule(this, this.resolver, id, fromId),
     };
     this.cache = options.cache;
     this.resolver = options.resolver;
     this.resolveBareModule = options.resolveBareModule;
+    this.rules = options.rules;
 
     // Seed the registry with the unresolved module
     this.assetHost.injectUnresolvedFallback();
   }
 
-  private createAsset(id: string, _fromId?: string): Runtime.Asset {
-    if (id.startsWith('!')) {
-      const parts = id.split('!');
-      const resource = parts.pop() as string;
-      const loaders = parts.filter(Boolean);
-      const fromEntry = this.registry.get(resource);
+  private createAsset(assetRef: Runtime.AssetReference, _fromId?: string): Runtime.Asset {
+    if (assetRef.loaders.length || assetRef.id.startsWith('!')) {
+      const fromEntry = this.registry.get(assetRef.resource);
 
-      if (loaders.length) {
-        return new WebpackLoaderAsset(
-          id,
-          this.assetHost,
-          fromEntry && fromEntry.asset instanceof WebpackLoaderAsset ? fromEntry.asset.fromId : _fromId,
-          loaders
-        );
-      }
+      return new WebpackLoaderAsset(
+        assetRef.id,
+        this.assetHost,
+        fromEntry && fromEntry.asset instanceof WebpackLoaderAsset ? fromEntry.asset.fromId : _fromId,
+        assetRef.loaders
+      );
     }
 
-    if (id.endsWith('.json')) {
-      return new JsonAsset(id, this.assetHost);
+    if (assetRef.resource.endsWith('.json')) {
+      return new JsonAsset(assetRef.resource, this.assetHost);
     }
 
-    return new CommonJsAsset(id, this.assetHost);
+    return new CommonJsAsset(assetRef.resource, this.assetHost);
   }
 
-  private getOrCreateEntry(id: string, fromId?: string): RegistryEntry {
-    let entry = this.registry.get(id);
+  private getOrCreateEntry(assetRef: Runtime.AssetReference, fromId?: string): RegistryEntry {
+    let entry = this.registry.get(assetRef.id);
 
     if (!entry) {
-      const asset = this.createAsset(id, fromId);
+      const asset = this.createAsset(assetRef, fromId);
       entry = {
         asset,
         dependencies: new Set(),
@@ -165,18 +162,18 @@ export class Runtime {
   }
 
   async import(id: string, fromId?: string): Promise<any> {
-    // Get the canonical url of the underlying resource
-    const resolvedId = await this.resolve(id, fromId);
+    // // Get the canonical url of the underlying resource
+    // const resolvedId = await this.resolve(id, fromId);
 
-    if (!resolvedId) {
-      throw new Error(`The asset ${id} did not resolve to anything using the node module resolution algorithm`);
-    }
+    // if (!resolvedId) {
+    //   throw new Error(`The asset ${id} did not resolve to anything using the node module resolution algorithm`);
+    // }
 
-    const assetId = await this.resolveAssetId(resolvedId, fromId);
+    const assetRef = await this.resolveAssetReference(id, fromId);
 
-    log('Velcro.import(%s, %s) %s => %s', id, fromId, resolvedId, assetId);
+    log('Velcro.import(%s, %s) => %s', id, fromId, assetRef);
 
-    const entry = this.getOrCreateEntry(assetId, fromId);
+    const entry = this.getOrCreateEntry(assetRef, fromId);
 
     await this.loadEntry(entry);
 
@@ -187,22 +184,25 @@ export class Runtime {
 
   async invalidate(id: string, fromId?: string): Promise<boolean> {
     // Get the canonical url of the underlying resource
-    const resolvedId = await this.resolve(id, fromId);
+    const assetRef = await this.resolveAssetReference(id, fromId);
     const resolutionCacheKey = `${id}#${fromId}`;
 
     let invalidated = false;
 
-    log('Runtime.invalidate(%s, %s): %s', id, fromId, resolvedId);
+    log('Runtime.invalidate(%s, %s): %s', id, fromId, assetRef.id);
 
-    if (!resolvedId) {
+    if (!assetRef) {
       throw new Error(`The asset ${id} did not resolve to anything using the node module resolution algorithm`);
     }
 
     if (this.cache) {
-      await this.cache.delete(Runtime.CacheSegment.Resolution, resolutionCacheKey);
+      await Promise.all([
+        this.cache.delete(Runtime.CacheSegment.Resolution, resolutionCacheKey),
+        this.cache.delete(Runtime.CacheSegment.Registration, assetRef.id),
+      ]);
     }
 
-    const entry = this.registry.get(resolvedId);
+    const entry = this.registry.get(assetRef.id);
     /**
      * A queue of **resolved** ids
      */
@@ -213,7 +213,7 @@ export class Runtime {
       queue.push(entry);
     }
 
-    const dependentEntries = this.fileDependents.get(resolvedId);
+    const dependentEntries = this.fileDependents.get(assetRef.id);
 
     if (dependentEntries) {
       queue.push(...dependentEntries);
@@ -241,18 +241,11 @@ export class Runtime {
   }
 
   async load(id: string, fromId?: string) {
-    // Get the canonical url of the underlying resource
-    const resolvedId = await this.resolve(id, fromId);
+    const assetRef = await this.resolveAssetReference(id, fromId);
 
-    if (!resolvedId) {
-      throw new Error(`The asset ${id} did not resolve to anything using the node module resolution algorithm`);
-    }
+    log('Velcro.import(%s, %s) => %s', id, fromId, assetRef);
 
-    const assetId = await this.resolveAssetId(resolvedId, fromId);
-
-    log('Velcro.import(%s, %s) %s => %s', id, fromId, resolvedId, assetId);
-
-    const entry = this.getOrCreateEntry(resolvedId, fromId);
+    const entry = this.getOrCreateEntry(assetRef, fromId);
 
     return this.loadEntry(entry);
   }
@@ -407,14 +400,96 @@ export class Runtime {
     return inflightResolution;
   }
 
-  async resolveAssetId(id: string, fromId?: string): Promise<string> {
-    if (id.endsWith('.css')) {
-      const loaders = await Promise.all([this.resolve('style-loader', fromId), this.resolve('css-loader', fromId)]);
+  async resolveAssetReference(unresolvedId: string, fromId?: string): Promise<Runtime.AssetReference> {
+    const resolveLoaderWithOptions = async (rawLoader: string, options: any = undefined) => {
+      const loader = await this.resolve(rawLoader, fromId);
 
-      return `!!${[...loaders, id].join('!')}`;
+      if (!loader) {
+        throw new Error(`The loader ${rawLoader} required by ${unresolvedId} failed to load`);
+      }
+
+      return { loader, options };
+    };
+
+    const matches = unresolvedId.match(/^(!!?)(.*)$/);
+
+    if (matches) {
+      // For urls that are already encoded as webpack-specific urls
+      const [, prefix, body] = matches;
+      const bodyParts = body.split('!');
+
+      const parts = await Promise.all(
+        bodyParts.map(async part => {
+          const matches = part.match(/^([^?]+)(\?.*)?$/);
+
+          if (!matches) {
+            return part;
+          }
+
+          const [, path, query] = matches;
+
+          return `${await this.resolve(path, fromId)}${query || ''}`;
+        })
+      );
+
+      const id = `${prefix}${parts.join('!')}`;
+      const resource = parts.pop() as string;
+      const loaders = parts.map(loader => {
+        return { loader, options: undefined };
+      });
+
+      return {
+        id,
+        loaders,
+        resource,
+      };
     }
 
-    return id;
+    const resource = await this.resolve(unresolvedId, fromId);
+
+    if (!resource) {
+      throw new Error(
+        `The asset ${unresolvedId} did not resolve to anything using the node module resolution algorithm`
+      );
+    }
+
+    if (this.rules) {
+      let matchedRule = false;
+
+      const loaders = [] as Array<{ loader: string; options: string | {} }>;
+      for (const rule of this.rules) {
+        const applicable =
+          (!rule.include || rule.include.test(resource)) &&
+          (!rule.exclude || !rule.exclude.test(resource)) &&
+          (!rule.test || rule.test.test(resource));
+
+        if (applicable) {
+          const ruleLoaders = await Promise.all(
+            rule.use.map(useLoader => resolveLoaderWithOptions(useLoader.loader, useLoader.options))
+          );
+
+          loaders.push(...ruleLoaders);
+
+          matchedRule = true;
+        }
+      }
+
+      if (matchedRule) {
+        const id = `!!${[...loaders.map(loader => loader.loader), resource].join('!')}`;
+
+        return {
+          id,
+          loaders,
+          resource,
+        };
+      }
+    }
+
+    return {
+      id: resource,
+      loaders: [],
+      resource,
+    };
   }
 
   set(id: string, moduleNamespace: any) {
@@ -477,11 +552,17 @@ export namespace Runtime {
     /**
      * Attempt to resolve a reference to an asset in the context of an optional parent asset
      */
-    resolveAssetId(id: string, fromId?: string): Awaitable<string>;
+    resolveAssetReference(id: string, fromId?: string): Awaitable<AssetReference>;
     /**
      * Attempt to resolve a bare module reference in the context of an optional parent asset
      */
     resolveBareModule(id: string, fromId?: string): Awaitable<string | undefined>;
+  }
+
+  export interface AssetReference {
+    id: string;
+    loaders: Array<{ loader: string; options: any }>;
+    resource: string;
   }
 
   export enum CacheSegment {
@@ -549,7 +630,7 @@ export namespace Runtime {
     cacheable: boolean;
     code: string;
     fileDependencies: string[];
-    moduleDependencies: string[];
+    moduleDependencies: Runtime.AssetReference[];
     type: ModuleKind;
   }
 
@@ -562,6 +643,21 @@ export namespace Runtime {
     injectGlobal?: GlobalInjector;
     resolveBareModule: BareModuleResolver;
     resolver: Resolver;
+    rules?: Rules;
+  }
+
+  interface Rule {
+    exclude?: RegExp;
+    include?: RegExp;
+    test?: RegExp;
+    use: Array<UseEntry>;
+  }
+
+  type Rules = Array<Rule>;
+
+  interface UseEntry {
+    loader: string;
+    options?: string | {};
   }
 }
 

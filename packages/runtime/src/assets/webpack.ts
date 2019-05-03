@@ -12,7 +12,7 @@ export class WebpackLoaderAsset extends CommonJsAsset {
     id: string,
     host: Runtime.AssetHost,
     readonly fromId: string | undefined,
-    private readonly loaders: string[]
+    private readonly loaders: Array<{ loader: string; options: any }>
   ) {
     super(id, host);
 
@@ -30,6 +30,11 @@ export class WebpackLoaderAsset extends CommonJsAsset {
   async load() {
     // const loaders = await Promise.all(this.loaders.map(loader => this.host.resolve(loader, this.fromId)));
     const loaderResult = await runLoaders({
+      context: {
+        emitError: console.error,
+        emitWarning: console.warn,
+        webpack: false,
+      },
       assetHost: this.host,
       loaders: this.loaders,
       resource: this.resource,
@@ -41,12 +46,7 @@ export class WebpackLoaderAsset extends CommonJsAsset {
 
     const [loaderResultCode] = loaderResult.result;
     const code = typeof loaderResultCode === 'string' ? loaderResultCode : this.host.decodeBuffer(loaderResultCode);
-    const record = await CommonJsAsset.loadModule(
-      this.loaders[0] || this.resource,
-      code,
-      this.host,
-      loaderResult.cacheable
-    );
+    const record = await CommonJsAsset.loadModule(this.resource, code, this.host, loaderResult.cacheable);
 
     record.fileDependencies.push(...loaderResult.fileDependencies);
 
