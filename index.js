@@ -44,15 +44,38 @@ const resolverHost = new Velcro.ResolverHostCompound({
         'react-dom': '16',
       },
       devDependencies: {
+        '@sucrase/webpack-loader': '^2.0.0',
         'css-loader': '*',
         'style-loader': '*',
+        sucrase: '^3.10.1',
+        svelte: 'latest',
+        'svelte-loader': '^2.13.3',
       },
     }),
+    'widget.svelte': `
+<style>
+  button { border: 1px dotted red }
+</style>
+<script>
+  export let className;
+  let count = 0;
+
+  function handleClick() {
+    count += 1;
+  }
+</script>
+
+<button class={className} on:click={handleClick}>
+  Clicked {count} {count === 1 ? 'time' : 'times'}
+</button>
+      `,
     'index.js': `
 const React = require("react");
 const ReactDOM = require("react-dom");
 
-require('bootstrap/dist/css/bootstrap.css');
+const Bootstrap = require('bootstrap/dist/css/bootstrap.css');
+
+const Widget = require("./widget.svelte").default;
 
 class Hello extends React.Component {
   render() {
@@ -75,7 +98,9 @@ class Hello extends React.Component {
   }
 }
 
-module.exports = (cacheStats, start) =>
+console.log(Bootstrap);
+
+module.exports = (cacheStats, start) => {
   ReactDOM.render(
     React.createElement(
       Hello,
@@ -84,6 +109,13 @@ module.exports = (cacheStats, start) =>
     ),
     document.getElementById("root")
   );
+  const widget = new Widget({
+    props: {
+      className: \`\${Bootstrap.btn} \${Bootstrap['btn-sm']}\`,
+    },
+    target: document.body,
+  })
+}
     `,
   }),
 });
@@ -94,6 +126,16 @@ var runtime = Velcro.createRuntime({
   enableSourceMaps: true,
   injectGlobal: Velcro.injectGlobalFromUnpkg,
   resolveBareModule: Velcro.resolveBareModuleToUnpkg,
+  rules: [
+    {
+      test: /\.css$/,
+      use: [{ loader: 'style-loader' }, { loader: 'css-loader', options: { modules: true } }],
+    },
+    {
+      test: /\.svelte$/,
+      use: [{ loader: '@sucrase/webpack-loader', options: { transforms: ['imports'] } }, { loader: 'svelte-loader' }],
+    },
+  ],
 });
 
 document.getElementById('cache_clear').addEventListener('click', () => {
@@ -111,11 +153,14 @@ document.getElementById('cache_clear').addEventListener('click', () => {
 
 const start = Date.now();
 
-runtime.import('memory:/').then(async render => {
-  render(cacheStats, start);
+runtime
+  .import('memory:/')
+  .then(async render => {
+    render(cacheStats, start);
 
-  await runtime
-    .invalidate('bootstrap/dist/css/bootstrap.css', 'memory:/index.js')
-    .then(() => runtime.import('memory:/'))
-    .then(render => render(cacheStats, start));
-}, console.error);
+    await runtime
+      .invalidate('bootstrap/dist/css/bootstrap.css', 'memory:/index.js')
+      .then(() => runtime.import('memory:/'))
+      .then(render => render(cacheStats, start));
+  })
+  .catch(console.error);

@@ -268,10 +268,10 @@ function visitRequires(node: NodeWithParent, _parent: NodeWithParent | null, ctx
       }
     } else if (
       isMemberExpression(callee) &&
-      isStringLiteral(callee.object) &&
-      callee.object.value === 'require' &&
-      isStringLiteral(callee.property) &&
-      callee.property.value === 'resolve'
+      isIdentifier(callee.object) &&
+      callee.object.name === 'require' &&
+      isIdentifier(callee.property) &&
+      callee.property.name === 'resolve'
     ) {
       const firstArg = node.arguments[0];
 

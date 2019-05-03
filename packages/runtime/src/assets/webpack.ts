@@ -2,6 +2,7 @@ import { Runtime } from '../runtime';
 import { runLoaders } from '../webpack_loader_runner';
 import { CommonJsAsset } from './commonjs';
 import { HotModuleRuntime } from '../hmr';
+import { util } from '@velcro/resolver';
 
 export class WebpackLoaderAsset extends CommonJsAsset {
   public readonly module: Runtime.Asset['module'];
@@ -28,11 +29,17 @@ export class WebpackLoaderAsset extends CommonJsAsset {
   }
 
   async load() {
+    // const packageJson = await this.host.readParentPackageJson(this.resource);
+
+    // const rootContext = packageJson ? util.dirname(packageJson.href) : util.dirname(this.resource);
     // const loaders = await Promise.all(this.loaders.map(loader => this.host.resolve(loader, this.fromId)));
     const loaderResult = await runLoaders({
       context: {
         emitError: console.error,
         emitWarning: console.warn,
+        rootContext: util.dirname(this.fromId || this.resource),
+        // resource: this.resource,
+        // resourcePath: this.resource,
         webpack: false,
       },
       assetHost: this.host,
