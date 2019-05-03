@@ -80,6 +80,16 @@ export class Runtime {
 
         return this.resolver.host.readFileContent(this.resolver, url);
       },
+      readParentPackageJson: async (href: string) => {
+        const result = await this.resolver.readParentPackageJson(new URL(href));
+
+        if (result) {
+          return {
+            href: result.url.href,
+            packageJson: result.packageJson,
+          };
+        }
+      },
       require: (id: string, fromId?: string) => {
         const entry = this.registry.get(id);
 
@@ -417,26 +427,32 @@ export class Runtime {
       // For urls that are already encoded as webpack-specific urls
       const [, prefix, body] = matches;
       const bodyParts = body.split('!');
+      const resource = await this.resolve(bodyParts.pop() as string, fromId);
 
-      const parts = await Promise.all(
+      if (!resource) {
+        throw new Error(
+          `The asset ${unresolvedId} did not resolve to anything using the node module resolution algorithm`
+        );
+      }
+
+      const loaders = await Promise.all(
         bodyParts.map(async part => {
-          const matches = part.match(/^([^?]+)(\?.*)?$/);
+          const matches = part.match(/^([^?]+)(?:\?(.*))?$/);
 
           if (!matches) {
-            return part;
+            return { loader: part, options: undefined };
           }
 
           const [, path, query] = matches;
 
-          return `${await this.resolve(path, fromId)}${query || ''}`;
+          return await resolveLoaderWithOptions(path, query ? JSON.parse(query) : '');
         })
       );
 
-      const id = `${prefix}${parts.join('!')}`;
-      const resource = parts.pop() as string;
-      const loaders = parts.map(loader => {
-        return { loader, options: undefined };
-      });
+      const id = `${prefix}${[
+        ...loaders.map(loader => `${loader.loader}${loader.options ? `?${JSON.stringify(loader.options)}` : ''}`),
+        resource,
+      ].join('!')}`;
 
       return {
         id,
@@ -475,7 +491,10 @@ export class Runtime {
       }
 
       if (matchedRule) {
-        const id = `!!${[...loaders.map(loader => loader.loader), resource].join('!')}`;
+        const id = `!!${[
+          ...loaders.map(loader => `${loader.loader}${loader.options ? `?${JSON.stringify(loader.options)}` : ''}`),
+          resource,
+        ].join('!')}`;
 
         return {
           id,
@@ -541,6 +560,10 @@ export namespace Runtime {
      * Read the content of an asset at a url as a binary buffer
      */
     readFileContent(href: string): Promise<ArrayBuffer>;
+    /**
+     * Read the content of an asset at a url as a binary buffer
+     */
+    readParentPackageJson(href: string): Promise<{ href: string; packageJson: any } | undefined>;
     /**
      * Require a module by exececuting the asset, if necessary
      */

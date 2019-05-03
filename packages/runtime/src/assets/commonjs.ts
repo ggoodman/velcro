@@ -80,7 +80,9 @@ export class CommonJsAsset implements Runtime.Asset {
               }
 
               const assetRef = await host.resolveAssetReference(resolvedHref, id);
-              const injected = `var ${globalName} = require(${JSON.stringify(assetRef.id)});\n`;
+              const propertyAccess = injectGlobal.export ? `.${injectGlobal.export}` : '';
+              const injected = `var ${globalName} = require(${JSON.stringify(assetRef.id)})${propertyAccess};\n`;
+
               magicString.prepend(injected);
               dependencies.push(assetRef);
             })
@@ -154,6 +156,7 @@ export class CommonJsAsset implements Runtime.Asset {
       .generateMap({
         includeContent: !id.match(/^https?:\/\//),
         source: id,
+        hires: false,
       })
       .toUrl();
     const codeWithMap = `${magicString.toString()}\n//# sourceMappingURL=${sourceMapUrl}`;

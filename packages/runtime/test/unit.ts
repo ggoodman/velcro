@@ -16,8 +16,10 @@ describe(`${name} unit tests`, () => {
       const code = function() {
         if (process.env.NODE_ENV === 'development') {
           require('OK');
+          require.resolve('OK');
         } else {
           require('NOT OK');
+          require.resolve('NOT OK');
         }
       }.toString();
       const ast = parse(`var fn = ${code}`);
@@ -34,7 +36,7 @@ describe(`${name} unit tests`, () => {
       traverse(ast, ctx, scopingAndRequiresVisitor);
 
       expect(ctx.requires.map(node => node.value)).to.equal(['OK']);
-      expect(ctx.resolves.length).to.equal(0);
+      expect(ctx.resolves.map(node => node.value)).to.equal(['OK']);
       expect(ctx.skip.size).to.equal(1);
     });
 
@@ -45,8 +47,10 @@ describe(`${name} unit tests`, () => {
             a: 'A',
           };
           require('OK');
+          require.resolve('OK');
         } else {
           require('NOT OK' + b);
+          require.resolve('NOT OK');
         }
 
         function test() {

@@ -62,7 +62,7 @@ describe(`${name} in the browser`, () => {
     expect(result).to.contain(['Component', 'Directive', 'Input', 'Output', 'Pipe']);
   });
 
-  it.skip('will load bootstrap@4/dist/css/bootstrap.css', { timeout: 100000 }, async () => {
+  it('will load bootstrap@4/dist/css/bootstrap.css as a css module using a loader', { timeout: 100000 }, async () => {
     const page = await browser.newPage();
 
     await page.addScriptTag({ content: await codePromise });
@@ -71,12 +71,18 @@ describe(`${name} in the browser`, () => {
       const runtime = Velcro.createRuntime({
         injectGlobal: Velcro.injectGlobalFromUnpkg,
         resolveBareModule: Velcro.resolveBareModuleToUnpkg,
+        rules: [
+          {
+            test: /\.css$/,
+            use: [{ loader: 'style-loader' }, { loader: 'css-loader', options: { modules: true } }],
+          },
+        ],
       });
       const inst = await runtime.import(spec);
 
       return Object.keys(inst);
     }, 'bootstrap@4/dist/css/bootstrap.css');
 
-    expect(result).to.contain(['']);
+    expect(result).to.contain(['btn', 'btn-sm']);
   });
 });
