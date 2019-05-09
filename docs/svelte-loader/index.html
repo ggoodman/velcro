@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/kognise/water.css@latest/dist/dark.css" />
+    <script src="https://unpkg.com/@velcro/runtime@0.9"></script>
+    <title>@velcro/runtime - Union file-system with css-loader</title>
+  </head>
+  <body>
+    <nav><a href="../">Back to examples</a></nav>
+    <h1>Rendering a Svelte application using svelte-loader</h1>
+    <p>
+      This example uses the <a href="https://npm.im/svelte-loader" target="_blank" rel="noopener">svelte-loader</a> to
+      compile and render a
+      <a href="https://svelte.dev/docs#Component_format" target="_blank" rel="noopener">single-file component</a> with
+      the statistics generated via
+      <a href="https://svelte.dev/tutorial/reactive-declarations" target="_blank" rel="noopener"
+        >reactive declarations</a
+      >.
+    </p>
+    <p>
+      Remember, there is <strong>no server-side bundling</strong> happening here. Everything needed to execute this demo
+      was loaded dynamically from <a href="https://unpkg.com" target="_blank" rel="noopener">unpkg.com</a>. That is also
+      why this <strong>take a while</strong> for the first load.
+    </p>
+    <p>
+      <a href="https://github.com/ggoodman/velcro/blob/master/docs/svelte/index.js">View code</a>
+    </p>
+    <p>
+      <button id="cache_clear">Clear cache</button>
+      <span id="cache_msg"></span>
+    </p>
+    <pre><code id="root">Please be patient for the first run on an empty cache...</code></pre>
+    <script src="./index.js"></script>
+  </body>
+</html>
