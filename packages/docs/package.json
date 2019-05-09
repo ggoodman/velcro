@@ -1,0 +1,36 @@
+{
+  "name": "@velcro/docs",
+  "version": "0.9.0",
+  "private": true,
+  "description": "Documentation for Velcro",
+  "keywords": [
+    "velcro",
+    "docs"
+  ],
+  "author": "Geoff Goodman <ggoodman@gmail.com>",
+  "homepage": "https://github.com/ggoodman/velcro",
+  "license": "MIT",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:ggoodman/velcro.git"
+  },
+  "scripts": {
+    "build": "docz build",
+    "dev": "docz dev",
+    "prepack": "npm run build",
+    "test": "echo No tests"
+  },
+  "devDependencies": {
+    "docz": "^1.0.4",
+    "docz-theme-default": "^1.0.4",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6"
+  },
+  "prettier": {
+    "printWidth": 120,
+    "singleQuote": true,
+    "tabWidth": 2,
+    "trailingComma": "es5"
+  }
+}
