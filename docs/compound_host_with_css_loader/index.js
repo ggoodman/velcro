@@ -37,20 +37,36 @@ async function main() {
    * also holds a simple `package.json` that describes which version of react to use.
    */
   const initialFiles = {
-    'index.js': `
+    'index.css': `
+.stat {
+  color: red;
+  font-weight: bold;
+}
+    `.trim(),
+    'index.jsx': `
 'use strict';
 
-const React = require('react');
-const ReactDom = require('react-dom');
+import React from 'react';
+import ReactDom from 'react-dom';
 
-module.exports = (importStart, importEnd, cacheStats) =>
+import Styles from './index.css';
+
+const Stats = (props) =>
+    <>
+      Imported in
+      {' '}
+      <strong className={Styles.stat}>{props.importEnd - props.importStart}ms</strong>
+      {' '}
+      with
+      {' '}
+      <strong className={Styles.stat}>{Math.round(1000 * props.cacheStats.hits / (props.cacheStats.hits + props.cacheStats.misses)) / 10}%</strong>
+      {' '}
+      hit rate ({props.cacheStats.hits} hits, {props.cacheStats.misses} misses).
+    </>;
+
+export const render = (importStart, importEnd, cacheStats) =>
 ReactDom.render(
-  React.createElement(
-    'span',
-    null,
-    \`Imported in \${importEnd - importStart}ms with \${(100 * cacheStats.hits) /
-      (cacheStats.hits + cacheStats.misses)}% cache hit rate (\${cacheStats.hits} hits, \${cacheStats.misses} misses)\`
-  ),
+  <Stats {...{importStart, importEnd, cacheStats}} />,
   document.getElementById('root')
 );
     `.trim(),
@@ -60,6 +76,12 @@ ReactDom.render(
         dependencies: {
           react: '^16.8.6',
           'react-dom': '^16.8.6',
+        },
+        devDependencies: {
+          '@sucrase/webpack-loader': '^2.0.0',
+          'css-loader': '^2.1.1',
+          'style-loader': '^0.23.1',
+          sucrase: '^3.10.1',
         },
       },
       null,
@@ -75,10 +97,20 @@ ReactDom.render(
     injectGlobal: Velcro.injectGlobalFromUnpkg,
     resolveBareModule: Velcro.resolveBareModuleToUnpkg,
     resolverHost,
+    rules: [
+      {
+        test: /\.css$/,
+        use: [{ loader: 'style-loader' }, { loader: 'css-loader', options: { modules: true } }],
+      },
+      {
+        test: /\.jsx$/,
+        use: [{ loader: '@sucrase/webpack-loader', options: { transforms: ['imports', 'jsx'] } }],
+      },
+    ],
   });
 
   const importStart = Date.now();
-  const render = await runtime.import('memory:/index.js');
+  const { render } = await runtime.import('memory:/index.jsx');
   const importEnd = Date.now();
 
   document.getElementById('cache_clear').addEventListener('click', () => {

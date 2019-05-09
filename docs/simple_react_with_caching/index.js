@@ -12,7 +12,7 @@ async function main() {
   /**
    * Create a indexeddb cache with a predicate that skips in-memory files
    */
-  const idbCache = Velcro.createCache('@velcro/runtime:cache', (_segment, key) => !key.startsWith('file:///'));
+  const idbCache = Velcro.createCache('@velcro/runtime:cache', (_segment, key) => !key.startsWith('memory:/'));
 
   /**
    * A wrapper around the indexeddb cache to keep some stats
