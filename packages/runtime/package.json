@@ -1,6 +1,6 @@
 {
   "name": "@velcro/runtime",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Execute code in a runtime that provides node module resolution and support for different module formats",
   "keywords": [
     "velcro",
