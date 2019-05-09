@@ -60,7 +60,7 @@
   },
   "dependencies": {
     "@velcro/decoder": "^0.9.0",
-    "@velcro/node-libs": "^0.8.0",
+    "@velcro/node-libs": "^0.9.0",
     "@velcro/resolver": "^0.9.0",
     "@velcro/resolver-host-compound": "^0.9.0",
     "@velcro/resolver-host-fs": "^0.9.0",
