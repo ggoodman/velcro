@@ -25,6 +25,7 @@ type Entry = DirectoryEntry | FileEntry;
 type FileInput = string | FileInputWithEncoding;
 
 export class ResolverHostMemory extends ResolverHost {
+  private readonly baseUrl: URL;
   private readonly root: DirectoryEntry = {
     type: ResolvedEntryKind.Directory,
     children: {},
@@ -32,8 +33,10 @@ export class ResolverHostMemory extends ResolverHost {
 
   private readonly textEncoder = new TextEncoder();
 
-  constructor(files: Record<string, FileInput>) {
+  constructor(files: Record<string, FileInput>, basePath: string = `${Date.now()}`) {
     super();
+
+    this.baseUrl = new URL(util.ensureTrailingSlash(basePath), 'memory:/');
 
     for (const pathname in files) {
       const file = files[pathname];
@@ -111,11 +114,14 @@ export class ResolverHostMemory extends ResolverHost {
   }
 
   async getResolveRoot() {
-    return new URL(`memory:/`);
+    return this.baseUrl;
   }
 
   async listEntries(_resolver: Resolver, url: URL) {
-    const parent = this.getEntryAtPath(url.pathname);
+    const urlPathname = util.ensureTrailingSlash(url.pathname);
+    const basePathname = this.baseUrl.pathname;
+    const fsPathname = urlPathname.startsWith(basePathname) ? urlPathname.slice(basePathname.length - 1) : urlPathname;
+    const parent = this.getEntryAtPath(fsPathname);
 
     if (!parent) {
       throw new Error(`No such directory ${url.href}`);
@@ -129,14 +135,17 @@ export class ResolverHostMemory extends ResolverHost {
       const entry = parent.children[filename];
 
       return {
-        url: new URL(util.join(url.pathname, filename), url),
+        url: this.urlFromPath(util.join(fsPathname, filename)),
         type: entry.type,
       };
     });
   }
 
   async readFileContent(_resolver: Resolver, url: URL) {
-    const entry = this.getEntryAtPath(url.pathname);
+    const urlPathname = util.ensureTrailingSlash(url.pathname);
+    const basePathname = this.baseUrl.pathname;
+    const fsPathname = urlPathname.startsWith(basePathname) ? urlPathname.slice(basePathname.length - 1) : urlPathname;
+    const entry = this.getEntryAtPath(fsPathname);
 
     if (!entry) {
       throw new Error(`No such file ${url.href}`);
@@ -163,5 +172,9 @@ export class ResolverHostMemory extends ResolverHost {
       default:
         throw new Error(`Unsupported encoding for ${url.href}: ${entry.encoding}`);
     }
+  }
+
+  urlFromPath(pathname: string): URL {
+    return new URL(util.join(this.baseUrl.pathname, pathname), this.baseUrl);
   }
 }

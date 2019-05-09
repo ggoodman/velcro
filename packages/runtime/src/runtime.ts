@@ -171,13 +171,10 @@ export class Runtime {
     return entry;
   }
 
-  async import(id: string, fromId?: string): Promise<any> {
-    // // Get the canonical url of the underlying resource
-    // const resolvedId = await this.resolve(id, fromId);
-
-    // if (!resolvedId) {
-    //   throw new Error(`The asset ${id} did not resolve to anything using the node module resolution algorithm`);
-    // }
+  async import(id: string | URL, fromId?: string): Promise<any> {
+    if (id instanceof URL) {
+      id = id.href;
+    }
 
     const assetRef = await this.resolveAssetReference(id, fromId);
 
@@ -189,10 +186,16 @@ export class Runtime {
 
     log('Velcro.import(%s, %s) dependencies loaded', id, fromId);
 
-    return this.assetHost.require(entry.asset.id, fromId);
+    const exports = this.assetHost.require(entry.asset.id, fromId);
+
+    return exports;
   }
 
-  async invalidate(id: string, fromId?: string): Promise<boolean> {
+  async invalidate(id: string | URL, fromId?: string): Promise<boolean> {
+    if (id instanceof URL) {
+      id = id.href;
+    }
+
     // Get the canonical url of the underlying resource
     const assetRef = await this.resolveAssetReference(id, fromId);
     const resolutionCacheKey = `${id}#${fromId}`;
@@ -250,7 +253,11 @@ export class Runtime {
     return invalidated;
   }
 
-  async load(id: string, fromId?: string) {
+  async load(id: string | URL, fromId?: string) {
+    if (id instanceof URL) {
+      id = id.href;
+    }
+
     const assetRef = await this.resolveAssetReference(id, fromId);
 
     log('Velcro.import(%s, %s) => %s', id, fromId, assetRef);
@@ -348,7 +355,11 @@ export class Runtime {
     this.registry.set(entry.asset.id, entry);
   }
 
-  async resolve(id: string, fromId?: string): Promise<string | undefined> {
+  async resolve(id: string | URL, fromId?: string): Promise<string | undefined> {
+    if (id instanceof URL) {
+      id = id.href;
+    }
+
     const cacheKey = `${id}#${fromId}`;
 
     let inflightResolution = this.inflightResolutions.get(cacheKey);
@@ -410,7 +421,7 @@ export class Runtime {
     return inflightResolution;
   }
 
-  async resolveAssetReference(unresolvedId: string, fromId?: string): Promise<Runtime.AssetReference> {
+  private async resolveAssetReference(unresolvedId: string, fromId?: string): Promise<Runtime.AssetReference> {
     const resolveLoaderWithOptions = async (rawLoader: string, options: any = undefined) => {
       const loader = await this.resolve(rawLoader, fromId);
 

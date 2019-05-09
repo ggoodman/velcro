@@ -3,6 +3,21 @@
 // @ts-ignore
 const Velcro = window.Velcro;
 
+/**
+ *
+ * @param {import('../../packages/runtime').Runtime} runtime
+ * @param {import('../../packages/runtime').ResolverHostMemory} memoryHost
+ * @param {{ hits: number, misses: number }} cacheStats
+ */
+async function demo(runtime, memoryHost, cacheStats) {
+  const importStart = Date.now();
+  const { render } = await runtime.import(memoryHost.urlFromPath('/index.jsx'));
+  const importEnd = Date.now();
+
+  // Now let's call the exported render function with the stats
+  render(importStart, importEnd, cacheStats);
+}
+
 async function main() {
   const cacheStats = {
     hits: 0,
@@ -88,9 +103,10 @@ ReactDom.render(
       2
     ),
   };
+  const memoryHost = new Velcro.ResolverHostMemory(initialFiles, 'compound_host_with_css_loader');
   const resolverHost = new Velcro.ResolverHostCompound({
     'https://unpkg.com/': new Velcro.ResolverHostUnpkg(),
-    'memory:/': new Velcro.ResolverHostMemory(initialFiles),
+    [memoryHost.urlFromPath('/').href]: memoryHost,
   });
   const runtime = Velcro.createRuntime({
     cache,
@@ -109,9 +125,25 @@ ReactDom.render(
     ],
   });
 
-  const importStart = Date.now();
-  const { render } = await runtime.import('memory:/index.jsx');
-  const importEnd = Date.now();
+  for (const pathname in initialFiles) {
+    const wrapperEl = document.createElement('div');
+    const pathnameEl = document.createElement('h4');
+
+    pathnameEl.innerText = pathname;
+
+    const pre = document.createElement('pre');
+    const code = document.createElement('code');
+    const codeText = document.createTextNode(initialFiles[pathname]);
+
+    code.className = `language-${Velcro.util.extname(pathname).slice(1)}`;
+
+    code.appendChild(codeText);
+    pre.appendChild(code);
+    wrapperEl.appendChild(pathnameEl);
+    wrapperEl.appendChild(pre);
+
+    document.getElementById('files').appendChild(wrapperEl);
+  }
 
   document.getElementById('cache_clear').addEventListener('click', () => {
     const msgEl = document.getElementById('cache_msg');
@@ -126,10 +158,7 @@ ReactDom.render(
     );
   });
 
-  // Now let's call the exported render function with the stats
-  render(importStart, importEnd, cacheStats);
-
-  return;
+  return demo(runtime, memoryHost, cacheStats);
 }
 
 main().catch(console.error);

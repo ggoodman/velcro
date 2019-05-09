@@ -37,7 +37,7 @@ async function main() {
    * also holds a simple `package.json` that describes which version of react to use.
    */
   const initialFiles = {
-    'stats.svelte': `
+    'stats.html': `
 <script>
   export let importStart;
   export let importEnd;
@@ -53,14 +53,12 @@ async function main() {
   }
 </style>
 
-Imported in <strong class="stat">{latency}ms</strong>
-with <strong class="stat">{hitRatio}%</strong>
-hit rate ({cacheStats.hits} hits, {cacheStats.misses} misses).
+Imported in <strong class="stat">{latency}ms</strong> with <strong class="stat">{hitRatio}%</strong> hit rate ({cacheStats.hits} hits, {cacheStats.misses} misses).
     `.trim(),
     'index.js': `
 'use strict';
 
-const Stats = require('./stats.svelte');
+const Stats = require('./stats.html').default;
 
 module.exports = (importStart, importEnd, cacheStats) => {
   const target = document.getElementById('root');
@@ -88,9 +86,10 @@ module.exports = (importStart, importEnd, cacheStats) => {
       2
     ),
   };
+  const memoryHost = new Velcro.ResolverHostMemory(initialFiles, 'svelte-loader');
   const resolverHost = new Velcro.ResolverHostCompound({
     'https://unpkg.com/': new Velcro.ResolverHostUnpkg(),
-    'memory:/': new Velcro.ResolverHostMemory(initialFiles),
+    [memoryHost.urlFromPath('/').href]: memoryHost,
   });
   const runtime = Velcro.createRuntime({
     cache,
@@ -99,15 +98,11 @@ module.exports = (importStart, importEnd, cacheStats) => {
     resolverHost,
     rules: [
       {
-        test: /\.svelte$/,
+        test: /\.html$/,
         use: [{ loader: '@sucrase/webpack-loader', options: { transforms: ['imports'] } }, { loader: 'svelte-loader' }],
       },
     ],
   });
-
-  const importStart = Date.now();
-  const { render } = await runtime.import('memory:/index.js');
-  const importEnd = Date.now();
 
   document.getElementById('cache_clear').addEventListener('click', () => {
     const msgEl = document.getElementById('cache_msg');
@@ -121,6 +116,30 @@ module.exports = (importStart, importEnd, cacheStats) => {
       }
     );
   });
+
+  for (const pathname in initialFiles) {
+    const wrapperEl = document.createElement('div');
+    const pathnameEl = document.createElement('h4');
+
+    pathnameEl.innerText = pathname;
+
+    const pre = document.createElement('pre');
+    const code = document.createElement('code');
+    const codeText = document.createTextNode(initialFiles[pathname]);
+
+    code.className = `language-${Velcro.util.extname(pathname).slice(1)}`;
+
+    code.appendChild(codeText);
+    pre.appendChild(code);
+    wrapperEl.appendChild(pathnameEl);
+    wrapperEl.appendChild(pre);
+
+    document.getElementById('files').appendChild(wrapperEl);
+  }
+
+  const importStart = Date.now();
+  const render = await runtime.import(memoryHost.urlFromPath('index.js'));
+  const importEnd = Date.now();
 
   // Now let's call the exported render function with the stats
   render(importStart, importEnd, cacheStats);

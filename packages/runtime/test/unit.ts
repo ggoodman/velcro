@@ -53,6 +53,7 @@ describe(`${name} unit tests`, () => {
           require.resolve('NOT OK');
         }
 
+        //@ts-ignore
         function test() {
           if (evtType === 'yes') {
           }

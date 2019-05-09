@@ -166,7 +166,7 @@ export class Resolver {
       }
     }
 
-    const containingUrl = new URL(dirname(url.pathname), rootUrl);
+    const containingUrl = new URL(ensureTrailingSlash(dirname(url.pathname)), rootUrl);
     const filename = basename(url.pathname);
     const entries = await this.host.listEntries(this, containingUrl);
     const entryDirectoryMap = new Map<string, ResolvedEntry>();

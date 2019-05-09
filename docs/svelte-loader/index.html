@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/kognise/water.css@latest/dist/dark.css" />
-    <script src="https://unpkg.com/@velcro/runtime@0.9"></script>
+    <link rel="stylesheet" href="https://unpkg.com/prismjs@^1.16.0/themes/prism.css" />
+    <script src="https://unpkg.com/@velcro/runtime@^0.9.0"></script>
     <title>@velcro/runtime - Union file-system with css-loader</title>
   </head>
   <body>
@@ -32,7 +33,11 @@
       <button id="cache_clear">Clear cache</button>
       <span id="cache_msg"></span>
     </p>
-    <pre><code id="root">Please be patient for the first run on an empty cache...</code></pre>
+    <h2>Result</h2>
+    <pre><code id="root">Loading...</code></pre>
+    <h2>Demo code</h2>
+    <div id="files"></div>
     <script src="./index.js"></script>
+    <script src="https://unpkg.com/prismjs@^1.16.0/prism.js"></script>
   </body>
 </html>
