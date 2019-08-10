@@ -1,5 +1,5 @@
 import { ResolverHostUnpkg, CustomFetch } from '@velcro/resolver-host-unpkg';
-import { Resolver, ResolverHost } from '@velcro/resolver';
+import { Resolver } from '@velcro/resolver';
 
 import { BareModuleResolver } from './types';
 import { Runtime } from './runtime';
@@ -12,7 +12,7 @@ type CreateRuntimeOptions = {
   fetch?: CustomFetch;
   injectGlobal?: Runtime.GlobalInjector;
   resolveBareModule?: BareModuleResolver;
-  resolverHost?: ResolverHost;
+  resolverHost?: Resolver.Host;
   resolver?: Resolver;
   rules?: Runtime.Options['rules'];
 };
