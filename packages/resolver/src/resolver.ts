@@ -1,7 +1,6 @@
 import { Decoder } from '@velcro/decoder';
 
 import { PackageMainField, ResolvedEntry, ResolvedEntryKind, PackageJson } from './types';
-import { ResolverHost } from './resolver_host';
 import {
   parseBufferAsPackageJson,
   dirname,
@@ -41,7 +40,7 @@ export class Resolver {
 
   public readonly decoder = new Decoder();
 
-  constructor(public readonly host: ResolverHost, options: ResolverOptions = {}) {
+  constructor(public readonly host: Resolver.Host, options: ResolverOptions = {}) {
     this.extensions = Array.from(options.extensions || Resolver.defaultExtensions);
     this.packageMain = options.packageMain || ['main'];
   }
@@ -276,4 +275,33 @@ export class Resolver {
     extname,
     resolve,
   };
+}
+
+export namespace Resolver {
+  export abstract class Host {
+    /**
+     * Get the canonical url for this resource
+     *
+     * This might involve traversing symlinks or following redirects. The idea is to provide
+     * an optional mechanism for hosts dereference links to the canonical form.
+     */
+    getCanonicalUrl(_resolver: Resolver, url: URL): Promise<URL> {
+      return Promise.resolve(url);
+    }
+
+    /**
+     * Get the URL that should be treated as the resolution root for this host
+     */
+    abstract getResolveRoot(resolver: Resolver, url: URL): Promise<URL>;
+
+    /**
+     * List the entries that are children of the given url, assuming this refers to a directory
+     */
+    abstract listEntries(resolver: Resolver, url: URL): Promise<ResolvedEntry[]>;
+
+    /**
+     * Read the content of a url as a file and produce a buffer
+     */
+    abstract readFileContent(resolver: Resolver, url: URL): Promise<ArrayBuffer>;
+  }
 }

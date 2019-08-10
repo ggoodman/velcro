@@ -1,4 +1,4 @@
-import { Resolver, ResolverHost, ResolvedEntry, ResolvedEntryKind } from '@velcro/resolver';
+import { Resolver, ResolvedEntry, ResolvedEntryKind } from '@velcro/resolver';
 
 import { FsInterface } from './types';
 import { util } from '@velcro/resolver';
@@ -10,7 +10,7 @@ interface ResolverHostFsOptions {
   fs: FsInterface;
 }
 
-export class ResolverHostFs extends ResolverHost {
+export class ResolverHostFs extends Resolver.Host {
   private readonly fs: FsInterface;
 
   constructor(options: ResolverHostFsOptions) {

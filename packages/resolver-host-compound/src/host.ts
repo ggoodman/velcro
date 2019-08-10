@@ -1,8 +1,8 @@
-import { Resolver, ResolverHost } from '@velcro/resolver';
+import { Resolver } from '@velcro/resolver';
 
-export class ResolverHostCompound extends ResolverHost {
-  private readonly hosts = new Map<string, ResolverHost>();
-  constructor(hosts: Record<string, ResolverHost>) {
+export class ResolverHostCompound extends Resolver.Host {
+  private readonly hosts = new Map<string, Resolver.Host>();
+  constructor(hosts: Record<string, Resolver.Host>) {
     super();
 
     for (const prefix in hosts) {

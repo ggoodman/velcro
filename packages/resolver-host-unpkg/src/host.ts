@@ -2,7 +2,7 @@ import { Decoder } from '@velcro/decoder';
 import LRU from 'lru-cache';
 import { satisfies, validRange } from 'semver';
 
-import { ResolverHost, ResolvedEntry, ResolvedEntryKind, Resolver, util, PackageJson } from '@velcro/resolver';
+import { ResolvedEntry, ResolvedEntryKind, Resolver, util, PackageJson } from '@velcro/resolver';
 import { EntryNotFoundError } from './error';
 import { BareModuleSpec, Directory, Spec, CustomFetch, isValidDirectory } from './types';
 import { parseUnpkgUrl } from './util';
@@ -14,7 +14,7 @@ interface UnpkgPackageHostOptions {
   fetch?: CustomFetch;
 }
 
-export class ResolverHostUnpkg implements ResolverHost {
+export class ResolverHostUnpkg implements Resolver.Host {
   private readonly contentCache = new LRU<string, ArrayBuffer>({
     length(buf) {
       return buf.byteLength;
@@ -282,7 +282,7 @@ export class ResolverHostUnpkg implements ResolverHost {
     return json;
   }
 
-  static resolveBareModule(_: ResolverHost, spec: BareModuleSpec) {
+  static resolveBareModule(_: Resolver.Host, spec: BareModuleSpec) {
     return new URL(`${UNPKG_PROTOCOL}//${UNPKG_HOST}/${spec.name}@${spec.spec}${spec.pathname}`);
   }
 }

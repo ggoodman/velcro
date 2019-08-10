@@ -1,4 +1,4 @@
-import { ResolverHost, ResolvedEntryKind, util, Resolver } from '@velcro/resolver';
+import { ResolvedEntryKind, util, Resolver } from '@velcro/resolver';
 
 interface DirectoryEntry {
   type: ResolvedEntryKind.Directory;
@@ -24,7 +24,7 @@ interface FileInputWithEncoding {
 type Entry = DirectoryEntry | FileEntry;
 type FileInput = string | FileInputWithEncoding;
 
-export class ResolverHostMemory extends ResolverHost {
+export class ResolverHostMemory extends Resolver.Host {
   private readonly baseUrl: URL;
   private readonly root: DirectoryEntry = {
     type: ResolvedEntryKind.Directory,
