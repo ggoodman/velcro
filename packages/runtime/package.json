@@ -54,6 +54,7 @@
     "rollup-plugin-json": "^4.0.0",
     "rollup-plugin-node-resolve": "^4.0.1",
     "rollup-plugin-typescript2": "^0.20.1",
+    "rollup-plugin-visualizer": "^2.5.4",
     "serve": "^11.0.0",
     "tslib": "^1.9.3",
     "typescript": "^3.3.3333"
