@@ -4,3 +4,4 @@ node_modules
 dist
 lerna-debug.log
 .docz
+stats.html

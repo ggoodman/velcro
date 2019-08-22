@@ -6,7 +6,6 @@
   "main": "index.js",
   "scripts": {
     "build": "rollup -c",
-    "build:docs": "lerna run build --scope @velcro/docs",
     "test": "lerna run test"
   },
   "repository": {
