@@ -46,6 +46,16 @@ export class Resolver {
   }
 
   async resolve(url: URL | string): Promise<URL | false | undefined> {
+    const result = await this.resolveWithDetails(url);
+
+    if (result.ignored) {
+      return false;
+    }
+
+    return result.resolvedUrl;
+  }
+
+  async resolveWithDetails(url: URL | string): Promise<Resolver.ResolveDetails> {
     if (!(url instanceof URL)) {
       try {
         url = new URL(url);
@@ -73,11 +83,16 @@ export class Resolver {
       throw new Error(`Unable to resolve a module whose path ${canonicalHref} is above the host's root ${rootHref}`);
     }
 
-    if (rootHrefWithoutTrailingSlash === canonicalHref || rootHref == canonicalHref) {
-      return this.resolveAsDirectory(canonicalUrl, optionsWithDefaults);
-    }
+    const resolvedUrl =
+      rootHrefWithoutTrailingSlash === canonicalHref || rootHref == canonicalHref
+        ? await this.resolveAsDirectory(canonicalUrl, optionsWithDefaults)
+        : await this.resolveAsFile(canonicalUrl, optionsWithDefaults);
 
-    return this.resolveAsFile(canonicalUrl, optionsWithDefaults);
+    return {
+      ignored: resolvedUrl === false,
+      resolvedUrl: resolvedUrl || undefined,
+      rootUrl,
+    };
   }
 
   /**
@@ -303,5 +318,11 @@ export namespace Resolver {
      * Read the content of a url as a file and produce a buffer
      */
     abstract readFileContent(resolver: Resolver, url: URL): Promise<ArrayBuffer>;
+  }
+
+  export interface ResolveDetails {
+    ignored: boolean;
+    resolvedUrl?: URL;
+    rootUrl: URL;
   }
 }
