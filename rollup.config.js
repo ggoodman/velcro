@@ -7,5 +7,6 @@ module.exports = [
   ...require('./packages/resolver-host-fs/rollup.config'),
   ...require('./packages/resolver-host-memory/rollup.config'),
   ...require('./packages/resolver-host-unpkg/rollup.config'),
-  ...require('./packages/runtime/rollup.config'),
+  ...require('./packages/bundler/rollup.config'),
+  // ...require('./packages/runtime/rollup.config'),
 ];
