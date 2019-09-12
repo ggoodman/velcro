@@ -35,7 +35,6 @@ export function parseFile(uri: string, magicString: MagicString) {
   const ctx: DependencyVisitorContext = {
     unboundSymbols: new Map(),
     locals: new Map(),
-    magicString,
     nodeEnv: 'development',
     replacements: [],
     requires: [],
@@ -44,7 +43,11 @@ export function parseFile(uri: string, magicString: MagicString) {
   };
 
   try {
-    const ast = parse(magicString.original);
+    const ast = parse(magicString.original, {
+      onToken: token => {
+        magicString.addSourcemapLocation(token.start);
+      },
+    });
 
     traverse(ast, ctx, scopingAndRequiresVisitor);
     traverse(ast, ctx, collectGlobalsVisitor);
@@ -89,7 +92,6 @@ export type CommonJsRequireResolve = {
 export type DependencyVisitorContext = {
   readonly unboundSymbols: Map<string, NodeWithStartAndEnd[]>;
   readonly locals: Map<Node, { [identifier: string]: boolean }>;
-  readonly magicString: MagicString;
   readonly nodeEnv: string;
   readonly requires: CommonJsRequire[];
   readonly replacements: Array<{ start: number; end: number; replacement: string }>;
@@ -101,11 +103,6 @@ export const scopingAndRequiresVisitor: Visitor<DependencyVisitorContext> = {
   enter(node, parent, ctx) {
     if (ctx.skip.has(node)) {
       return this.skip();
-    }
-
-    if (isNodeWithStartAndEnd(node)) {
-      ctx.magicString.addSourcemapLocation(node.start);
-      ctx.magicString.addSourcemapLocation(node.end);
     }
 
     visitAndCaptureScoping(node, parent, ctx);

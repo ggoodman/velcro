@@ -1,11 +1,11 @@
 import { Resolver } from '@velcro/resolver';
+import MagicString from 'magic-string';
 
 import { isBareModuleSpecifier, Deferred } from './util';
 import { resolveBareModuleToUnpkgWithDetails } from './unpkg';
 import { parseFile } from './parser';
 import { Asset } from './asset';
 import { AssetGroup } from './asset_group';
-import MagicString from 'magic-string';
 
 const EMPTY_MODULE_HREF = new URL('velcro://@empty');
 const EMPTY_MODULE_CODE = 'module.exports = {};';

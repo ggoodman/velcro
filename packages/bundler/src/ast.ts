@@ -130,8 +130,9 @@ export function isStringLiteral(node: Node): node is StringLiteral {
   return isLiteral(node) && typeof node.value === 'string';
 }
 
-export function parse(code: string) {
+export function parse(code: string, options?: acorn.Options) {
   return (acornParse(code, {
+    ...options,
     allowReturnOutsideFunction: true,
     sourceType: 'script',
   }) as any) as Program;

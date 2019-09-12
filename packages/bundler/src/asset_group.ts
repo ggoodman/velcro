@@ -14,8 +14,29 @@ export class AssetGroup {
   generateCode(options: { sourceMap?: boolean } = {}): string {
     const bundle = new Bundle({ separator: ',\n' });
 
-    const prelude = function(modules: Record<string, any>) {
-      return modules;
+    const prelude = function(modules: Record<string, (exports: any, module: any, require: any) => any>) {
+      const installedModules = {} as Record<string, any>;
+      function __velcro_require(stableHref: string) {
+        let module = installedModules[stableHref];
+
+        if (!module) {
+          module = {
+            exports: {},
+          };
+
+          const factory = modules[stableHref];
+
+          if (!factory) {
+            throw new Error(`Module not found for ${stableHref}`);
+          }
+
+          factory.call(module.exports, module, module.exports, __velcro_require);
+
+          return module.exports;
+        }
+      }
+
+      return __velcro_require;
     };
 
     for (const asset of this.assets) {
@@ -23,7 +44,7 @@ export class AssetGroup {
 
       magicString.trim();
       magicString.prepend(
-        `${JSON.stringify(asset.href)}: (function(exports, require, module, __dirname, __filename){\n`
+        `${JSON.stringify(asset.href)}: (function(module, exports, __velcro_require, __dirname, __filename){\n`
       );
       magicString.append('\n})');
 
@@ -33,12 +54,12 @@ export class AssetGroup {
       for (const dependency of asset.dependencies) {
         switch (dependency.type) {
           case Asset.DependencyKind.CommonJsRequire:
-            // magicString.overwrite(dependency.spec.start, dependency.spec.end, JSON.stringify(dependency.stableHref));
-            // magicString.overwrite(dependency.callee.start, dependency.callee.end, '__velcro_require');
+            magicString.overwrite(dependency.spec.start, dependency.spec.end, JSON.stringify(dependency.stableHref));
+            magicString.overwrite(dependency.callee.start, dependency.callee.end, '__velcro_require');
             break;
           case Asset.DependencyKind.CommonJsRequireResolve:
-            // magicString.overwrite(dependency.spec.start, dependency.spec.end, JSON.stringify(dependency.stableHref));
-            // magicString.overwrite(dependency.callee.start, dependency.callee.end, '__velcro_require_resolve');
+            magicString.overwrite(dependency.spec.start, dependency.spec.end, JSON.stringify(dependency.stableHref));
+            magicString.overwrite(dependency.callee.start, dependency.callee.end, '__velcro_require_resolve');
             break;
         }
       }
@@ -54,12 +75,15 @@ export class AssetGroup {
     let sourceMapSuffix = '';
 
     if (options.sourceMap) {
-      const sourceMapUrl = bundle
-        .generateMap({
-          includeContent: false,
-          hires: false,
-        })
-        .toUrl();
+      const sourceMap = bundle.generateMap({
+        includeContent: false,
+        hires: false,
+        file: this.baseHref,
+      });
+
+      sourceMap.file = this.baseHref;
+
+      const sourceMapUrl = sourceMap.toUrl();
 
       sourceMapSuffix = `\n//# sourceMappingURL=${sourceMapUrl}`;
     }
