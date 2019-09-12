@@ -32,7 +32,10 @@ describe(`${name} in node`, { timeout: 200000 }, () => {
 
         expect(bundleString).to.be.a.string();
 
-        await Fs.writeFile(`${__dirname}/../${Velcro.util.basename(bundleName)}.js`, bundleString);
+        await Fs.writeFile(
+          `${__dirname}/../${Velcro.util.basename(bundleName)}.js`,
+          `eval(${JSON.stringify(bundleString)})`
+        );
 
         console.log(bundleName, bundle!.generateLinkManifest());
       }

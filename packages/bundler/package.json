@@ -61,7 +61,10 @@
     "@velcro/node-libs": "^0.10.0",
     "@velcro/resolver": "^0.10.0",
     "acorn": "^7.0.0",
-    "magic-string": "^0.25.2"
+    "astring": "^1.4.1",
+    "magic-string": "^0.25.2",
+    "source-map": "^0.6.1",
+    "sucrase": "^3.10.1"
   },
   "prettier": {
     "printWidth": 120,
