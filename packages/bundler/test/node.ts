@@ -1,7 +1,6 @@
 import { expect } from '@hapi/code';
 import { script } from '@hapi/lab';
 import { fetch } from 'fetch-h2';
-import * as Fs from 'fs-extra';
 
 import { name } from '../package.json';
 import * as Velcro from '../dist/dist-main';
@@ -12,7 +11,7 @@ const { describe, it } = lab;
 
 describe(`${name} in node`, { timeout: 200000 }, () => {
   describe('the Bundler will', () => {
-    it('will load react@16', async () => {
+    it('will load react@16 and this code will be executable', async () => {
       const resolverHost = new Velcro.ResolverHostUnpkg({
         fetch: (...args: Parameters<typeof fetch>) => {
           console.log('fetching', ...args);
@@ -23,22 +22,17 @@ describe(`${name} in node`, { timeout: 200000 }, () => {
       const resolver = new Velcro.Resolver(resolverHost, { packageMain: ['browser', 'main'] });
       const bundler = new Velcro.Bundler({ resolver });
 
-      await Promise.all([bundler.add('react'), bundler.add('react-dom')]);
+      await bundler.add('react@16');
 
-      for (const [bundleName, bundle] of bundler.assetGroups) {
-        expect(bundle).to.exist();
+      const bundle = bundler.generateBundleCode({ sourceMap: true });
+      expect(bundle).to.be.a.string();
 
-        const bundleString = bundle!.generateCode({ sourceMap: true });
+      eval(bundle);
 
-        expect(bundleString).to.be.a.string();
+      const React = Velcro.runtime.require('react@16');
 
-        await Fs.writeFile(
-          `${__dirname}/../${Velcro.util.basename(bundleName)}.js`,
-          `eval(${JSON.stringify(bundleString)})`
-        );
-
-        console.log(bundleName, bundle!.generateLinkManifest());
-      }
+      expect(React).to.exist();
+      expect(React.createElement).to.be.a.function();
     });
   });
 });

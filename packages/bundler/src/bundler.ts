@@ -1,24 +1,124 @@
+import { version as nodeLibsVersion } from '@velcro/node-libs/package.json';
 import { Resolver } from '@velcro/resolver';
-import MagicString from 'magic-string';
+import MagicString, { Bundle } from 'magic-string';
 
-import { isBareModuleSpecifier, Deferred } from './util';
+import { isBareModuleSpecifier } from './util';
 import { resolveBareModuleToUnpkgWithDetails } from './unpkg';
 import { parseFile } from './parser';
 import { Asset } from './asset';
-import { AssetGroup } from './asset_group';
+import { createRuntime } from './runtime';
+import { Queue } from './queue';
 
 const EMPTY_MODULE_HREF = new URL('velcro://@empty');
 const EMPTY_MODULE_CODE = 'module.exports = {};';
 
-export class Bundler {
-  public readonly assetsByHref = new Map<string, Asset>();
-  public readonly assetGroups = new Map<string, AssetGroup>();
-  public readonly resolver: Resolver;
+const DEFAULT_SHIM_GLOBALS: { [key: string]: { spec: string; export?: string } } = {
+  Buffer: {
+    spec: `@velcro/node-libs@${nodeLibsVersion}/lib/buffer.js`,
+    export: 'Buffer',
+  },
+  global: {
+    spec: `@velcro/node-libs@${nodeLibsVersion}/lib/global.js`,
+  },
+  process: {
+    spec: `@velcro/node-libs@${nodeLibsVersion}/lib/process.js`,
+  },
+};
 
-  private readonly assetPromisesByHref = new Map<string, Promise<Asset>>();
+export class Bundler {
+  private readonly aliases = new Map<string, string>();
+  private readonly assetsByHref = new Map<string, Asset>();
+  private readonly pendingAdds = new Map<string, Promise<Asset>>();
+  private readonly pendingResolves = new Map<string, Promise<Asset>>();
+  private readonly resolver: Resolver;
 
   constructor(options: Bundler.Options) {
     this.resolver = options.resolver;
+  }
+
+  private async addUnresolved(queue: Queue, href: string, fromHref?: string): Promise<Asset> {
+    const resolveKey = `${href}\0${fromHref}`;
+
+    let pendingResolve = this.pendingResolves.get(resolveKey);
+
+    if (!pendingResolve) {
+      pendingResolve = this.addResolving(queue, href, fromHref);
+      this.pendingResolves.set(resolveKey, pendingResolve);
+    }
+
+    try {
+      return await pendingResolve;
+    } finally {
+      this.pendingResolves.delete(resolveKey);
+    }
+  }
+
+  private async addResolving(queue: Queue, href: string, fromHref?: string): Promise<Asset> {
+    const resolveResult = await this.resolveWithDetails(href, fromHref);
+
+    let asset = this.assetsByHref.get(resolveResult.resolvedHref);
+
+    if (!asset) {
+      asset = new Asset(resolveResult.resolvedHref, resolveResult.rootHref);
+      this.assetsByHref.set(resolveResult.resolvedHref, asset);
+
+      const code = await this.readCode(resolveResult.resolvedHref);
+
+      asset.magicString = new MagicString(code, {
+        filename: resolveResult.resolvedHref,
+        indentExclusionRanges: [],
+      });
+
+      const parser = getParserForFile(resolveResult.resolvedHref);
+
+      const parsedFile = parser.parse(resolveResult.resolvedHref, asset.magicString);
+
+      for (const dependency of parsedFile.requireDependencies) {
+        queue.add(async () => {
+          const dependencyAsset = await this.addUnresolved(queue, dependency.spec.value, resolveResult.resolvedHref);
+
+          asset!.dependencies.push({
+            type: Asset.DependencyKind.Require,
+            asset: dependencyAsset,
+            callee: dependency.callee,
+            spec: dependency.spec,
+          });
+        });
+      }
+
+      for (const dependency of parsedFile.requireResolveDependencies) {
+        queue.add(async () => {
+          const dependencyAsset = await this.addUnresolved(queue, dependency.spec.value, resolveResult.resolvedHref);
+
+          asset!.dependencies.push({
+            type: Asset.DependencyKind.RequireResolve,
+            asset: dependencyAsset,
+            callee: dependency.callee,
+            spec: dependency.spec,
+          });
+        });
+      }
+
+      for (const [symbolName, references] of parsedFile.unboundSymbols) {
+        const shim = DEFAULT_SHIM_GLOBALS[symbolName];
+
+        if (shim) {
+          queue.add(async () => {
+            const dependencyAsset = await this.addUnresolved(queue, shim.spec, resolveResult.resolvedHref);
+
+            asset!.dependencies.push({
+              type: Asset.DependencyKind.InjectedGlobal,
+              asset: dependencyAsset,
+              references,
+              exportName: shim.export,
+              symbolName,
+            });
+          });
+        }
+      }
+    }
+
+    return asset;
   }
 
   /**
@@ -27,105 +127,88 @@ export class Bundler {
    * @param spec A resolvable asset that should be added
    */
   async add(spec: string): Promise<Asset> {
-    const resolvedSpec = await this.resolveWithDetails(spec);
-    const dfd = new Deferred<Asset>();
+    const queue = new Queue();
+    const asset = await this.addUnresolved(queue, spec);
 
-    let pending = 0;
+    this.aliases.set(spec, asset.href);
 
-    const addOne = (
-      uri: string,
-      fromUri?: string
-    ): Promise<{ asset: Asset; stableHref: string; stableRootHref: string }> => {
-      pending++;
-      const start = Date.now();
-      const added = this.resolveWithDetails(uri, fromUri).then(async resolveResult => {
-        const asset = this.assetsByHref.get(resolveResult.resolvedHref);
-        const stableHref = resolveResult.stableHref;
-        const stableRootHref = resolveResult.stableRootHref;
+    await queue.wait();
 
-        if (asset) {
-          return { asset, stableHref, stableRootHref };
-        }
-
-        let assetPromise = this.assetPromisesByHref.get(resolveResult.resolvedHref);
-
-        if (!assetPromise) {
-          assetPromise = (async (): Promise<Asset> => {
-            const code = await this.readCode(resolveResult.resolvedHref);
-            const magicString = new MagicString(code, {
-              filename: resolveResult.resolvedHref,
-              indentExclusionRanges: [],
-            });
-            const parser = getParserForFile(resolveResult.resolvedHref);
-            const parsedFile = parser.parse(resolveResult.resolvedHref, magicString);
-            const dependencies: Asset.ResolvedDependency[] = await Promise.all(
-              [...parsedFile.dependencies].map(dependency =>
-                addOne(dependency.spec.value, resolveResult.resolvedHref).then(
-                  ({ asset, stableHref, stableRootHref }) => {
-                    return {
-                      type: dependency.type,
-                      asset,
-                      spec: dependency.spec,
-                      stableHref,
-                      stableRootHref,
-                      callee: dependency.callee,
-                    };
-                  }
-                )
-              )
-            );
-            const asset = new Asset(
-              resolveResult.resolvedHref,
-              resolveResult.rootHref,
-              magicString,
-              dependencies,
-              parsedFile.unboundSymbols
-            );
-
-            this.addAsset(asset);
-
-            console.log('added', pending, Date.now() - start, asset.href, asset.dependencies.length);
-            return asset;
-          })();
-
-          this.assetPromisesByHref.set(resolveResult.resolvedHref, assetPromise);
-        }
-
-        return { asset: await assetPromise, stableHref, stableRootHref };
-      });
-
-      added.then(
-        ({ asset }) => {
-          pending--;
-          if (pending <= 0) {
-            dfd.resolve(asset);
-          }
-        },
-        err => {
-          dfd.reject(err);
-        }
-      );
-
-      return added;
-    };
-
-    addOne(resolvedSpec.resolvedHref);
-
-    return dfd.promise;
+    return asset;
   }
 
-  private addAsset(asset: Asset) {
-    this.assetsByHref.set(asset.href, asset);
-    this.assetPromisesByHref.delete(asset.href);
-
-    let assetGroup = this.assetGroups.get(asset.rootHref);
-
-    if (!assetGroup) {
-      assetGroup = new AssetGroup(asset.rootHref);
-      this.assetGroups.set(assetGroup.baseHref, assetGroup);
+  generateBundleCode(options: { sourceMap?: boolean } = {}): string {
+    if (this.pendingAdds.size || this.pendingResolves.size) {
+      throw new Error(`Unable to generate bundle code while assets are being loaded`);
     }
 
-    assetGroup.add(asset);
+    const bundle = new Bundle({ separator: '\n' });
+
+    for (const [aliasFrom, aliasTo] of this.aliases) {
+      bundle.append(`Velcro.runtime.alias(${JSON.stringify(aliasFrom)}, ${JSON.stringify(aliasTo)});\n`);
+    }
+
+    for (const [, asset] of this.assetsByHref) {
+      if (!asset.magicString) {
+        throw new Error(`Invariant violation: asset is not loaded ${asset.href}`);
+      }
+
+      const magicString = asset.magicString.clone();
+
+      magicString.trim();
+
+      // We'll replace each dependency string with the resolved stable href. The stable href doesn't require any
+      // information about where it is being resolved from, so it is useful as a long-term pointer whose target
+      // can change over time
+      for (const dependency of asset.dependencies) {
+        switch (dependency.type) {
+          case Asset.DependencyKind.Require:
+            magicString.overwrite(dependency.spec.start, dependency.spec.end, JSON.stringify(dependency.asset.href));
+            magicString.overwrite(dependency.callee.start, dependency.callee.end, '__velcro_require');
+            break;
+          case Asset.DependencyKind.RequireResolve:
+            magicString.overwrite(dependency.spec.start, dependency.spec.end, JSON.stringify(dependency.asset.href));
+            // magicString.overwrite(dependency.callee.start, dependency.callee.end, '__velcro_require_resolve');
+            break;
+          case Asset.DependencyKind.InjectedGlobal:
+            magicString.prepend(
+              `const ${dependency.symbolName} = __velcro_require(${JSON.stringify(dependency.asset.href)})${
+                dependency.exportName ? `.${dependency.exportName}` : ''
+              };\n`
+            );
+            break;
+          default:
+            throw new Error(`Invariant violation: Encountered unexpected dependency kind ${(dependency as any).type}`);
+        }
+      }
+
+      magicString.trim();
+      magicString.prepend(
+        `Velcro.runtime.register(${JSON.stringify(
+          asset.href
+        )}, function(module, exports, __velcro_require, __dirname, __filename){\n`
+      );
+      magicString.append('\n});');
+
+      bundle.addSource(magicString);
+    }
+
+    bundle.prepend(`(${createRuntime.toString()})(typeof globalThis === 'object' ? globalThis : this);\n`);
+
+    let sourceMapSuffix = '';
+
+    if (options.sourceMap) {
+      const sourceMap = bundle.generateMap({
+        includeContent: false,
+        hires: false,
+      });
+
+      const sourceMapUrl = sourceMap.toUrl();
+
+      sourceMapSuffix = `\n//# sourceMappingURL=${sourceMapUrl}`;
+    }
+
+    return `${bundle.toString()}${sourceMapSuffix}`;
   }
 
   private async readCode(uri: string): Promise<string> {
@@ -235,10 +318,14 @@ export namespace Bundler {
   export type ResolveDetails = BareModuleResolveDetails | RelativeResolveDetails;
 }
 
-function getParserForFile(uri: string) {
+function getParserForFile(uri: string): { parse: typeof parseFile } {
   if (uri.endsWith('.json')) {
     return {
-      parse: () => ({ dependencies: [], unboundSymbols: new Map() } as ReturnType<typeof parseFile>),
+      parse: (): ReturnType<typeof parseFile> => ({
+        requireDependencies: [],
+        requireResolveDependencies: [],
+        unboundSymbols: new Map(),
+      }),
     };
   }
 

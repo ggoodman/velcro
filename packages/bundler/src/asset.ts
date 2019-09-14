@@ -1,68 +1,41 @@
 import MagicString from 'magic-string';
 
-import { NodeWithStartAndEnd } from './ast';
-
 export class Asset {
-  constructor(
-    public readonly href: string,
-    public readonly rootHref: string,
-    public readonly magicString: MagicString,
-    public readonly dependencies: Asset.ResolvedDependency[],
-    public readonly unboundSymbols: Map<string, NodeWithStartAndEnd[]>
-  ) {}
+  readonly dependencies = [] as Asset.Dependency[];
 
-  generateCode(options: { sourceMap?: boolean } = {}): string {
-    const magicString = this.magicString.clone();
+  magicString?: MagicString;
 
-    for (const dependency of this.dependencies) {
-      switch (dependency.type) {
-        case Asset.DependencyKind.CommonJsRequire:
-          magicString.overwrite(dependency.spec.start, dependency.spec.end, JSON.stringify(dependency.spec.value));
-          magicString.overwrite(dependency.callee.start, dependency.callee.end, '__velcro_require');
-          break;
-        case Asset.DependencyKind.CommonJsRequireResolve:
-          magicString.overwrite(dependency.spec.start, dependency.spec.end, JSON.stringify(dependency.spec.value));
-          magicString.overwrite(dependency.callee.start, dependency.callee.end, '__velcro_require_resolve');
-          break;
-      }
-    }
-
-    let sourceMapSuffix = '';
-
-    if (options.sourceMap) {
-      const sourceMapUrl = magicString
-        .generateMap({
-          includeContent: !this.href.match(/^https?:\/\//),
-          hires: true,
-        })
-        .toUrl();
-
-      sourceMapSuffix = `\n//# sourceMappingURL=${sourceMapUrl}`;
-    }
-    const codeWithMap = `${magicString.toString()}${sourceMapSuffix}`;
-
-    return codeWithMap;
-  }
+  constructor(readonly href: string, readonly rootHref: string) {}
 }
 
 export namespace Asset {
   export enum DependencyKind {
-    CommonJsRequire = 'require',
-    CommonJsRequireResolve = 'require.resolve',
+    Require = 'require',
+    RequireResolve = 'require.resolve',
+    InjectedGlobal = 'injected_global',
   }
 
-  export interface ResolvedDependency {
-    type: DependencyKind;
+  export interface RequireDependency {
+    type: DependencyKind.Require;
     asset: Asset;
     callee: { start: number; end: number };
     spec: { start: number; end: number; value: string };
-    stableHref: string;
-    stableRootHref: string;
   }
 
-  export interface UnresolvedDependency {
-    type: DependencyKind;
+  export interface RequireResolveDependency {
+    type: DependencyKind.RequireResolve;
+    asset: Asset;
     callee: { start: number; end: number };
     spec: { start: number; end: number; value: string };
   }
+
+  export interface InjectedGlobalDependency {
+    type: DependencyKind.InjectedGlobal;
+    asset: Asset;
+    exportName?: string;
+    references: { start: number; end: number }[];
+    symbolName: string;
+  }
+
+  export type Dependency = RequireDependency | RequireResolveDependency | InjectedGlobalDependency;
 }
