@@ -1,8 +1,8 @@
 import { Decoder } from '@velcro/decoder';
+import { ResolvedEntry, ResolvedEntryKind, Resolver, util, PackageJson } from '@velcro/resolver';
 import LRU from 'lru-cache';
 import { satisfies, validRange } from 'semver';
 
-import { ResolvedEntry, ResolvedEntryKind, Resolver, util, PackageJson } from '@velcro/resolver';
 import { EntryNotFoundError } from './error';
 import { BareModuleSpec, Directory, Spec, CustomFetch, isValidDirectory } from './types';
 import { parseUnpkgUrl } from './util';

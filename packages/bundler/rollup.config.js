@@ -5,6 +5,7 @@ const { resolve } = require('path');
 const RollupPluginNodeResolve = require('rollup-plugin-node-resolve');
 const RollupPluginCommonJs = require('rollup-plugin-commonjs');
 const RollupPluginJson = require('rollup-plugin-json');
+const { terser } = require('rollup-plugin-terser');
 const RollupPluginTypescript = require('rollup-plugin-typescript2');
 // const RollupPluginVisualizer = require('rollup-plugin-visualizer');
 const Typescript = require('typescript');
@@ -84,6 +85,11 @@ module.exports = [
       }),
       RollupPluginNodeResolve(),
       RollupPluginCommonJs(),
+      terser({
+        mangle: {
+          reserved: ['Velcro'],
+        },
+      }),
     ],
   },
 ];

@@ -28,8 +28,9 @@ import {
   isNodeWithStartAndEnd,
   NodeWithStartAndEnd,
 } from './ast';
-import { Asset } from './asset';
 import MagicString from 'magic-string';
+
+// const whitespaceRx = /^\s*$/m;
 
 export function parseFile(uri: string, magicString: MagicString) {
   const ctx: DependencyVisitorContext = {
@@ -43,9 +44,26 @@ export function parseFile(uri: string, magicString: MagicString) {
   };
 
   try {
+    // let lastToken: acorn.Token | undefined = undefined;
+
     const ast = parse(magicString.original, {
+      onComment: (_isBlock, _test, start, end) => {
+        magicString.remove(start, end);
+      },
       onToken: token => {
         magicString.addSourcemapLocation(token.start);
+
+        // const wsStart = lastToken ? lastToken.end : 0;
+
+        // if (wsStart < token.start - 1) {
+        //   const between = magicString.original.substring(wsStart, token.start);
+
+        //   if (whitespaceRx.test(between)) {
+        //     magicString.overwrite(wsStart, token.start - 1, ' ');
+        //   }
+        // }
+
+        // lastToken = token;
       },
     });
 
@@ -55,27 +73,40 @@ export function parseFile(uri: string, magicString: MagicString) {
     throw new Error(`Error parsing ${uri}: ${err.message}`);
   }
 
-  const dependencies = [] as Asset.UnresolvedDependency[];
+  const requireDependencies = [] as {
+    callee: { start: number; end: number };
+    spec: { start: number; end: number; value: string };
+  }[];
 
   for (const node of ctx.requires) {
-    dependencies.push({
-      type: Asset.DependencyKind.CommonJsRequire,
+    requireDependencies.push({
       callee: { ...node.callee },
       spec: { ...node.spec },
     });
   }
 
+  const requireResolveDependencies = [] as {
+    callee: { start: number; end: number };
+    spec: { start: number; end: number; value: string };
+  }[];
+
   for (const node of ctx.requireResolves) {
-    dependencies.push({
-      type: Asset.DependencyKind.CommonJsRequireResolve,
+    requireResolveDependencies.push({
       callee: { ...node.callee },
       spec: { ...node.spec },
     });
+  }
+
+  const unboundSymbols = new Map<string, { start: number; end: number }[]>();
+
+  for (const [symbolName, symbolNodes] of ctx.unboundSymbols) {
+    unboundSymbols.set(symbolName, symbolNodes.map(node => ({ start: node.start, end: node.end })));
   }
 
   return {
-    dependencies,
-    unboundSymbols: ctx.unboundSymbols,
+    requireDependencies,
+    requireResolveDependencies,
+    unboundSymbols,
   };
 }
 
