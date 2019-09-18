@@ -10,7 +10,7 @@ import { createRuntime } from './runtime';
 import { Queue } from './queue';
 
 const EMPTY_MODULE_HREF = new URL('velcro://@empty');
-const EMPTY_MODULE_CODE = 'module.exports = {};';
+const EMPTY_MODULE_CODE = 'module.exports = function(){};';
 
 const DEFAULT_SHIM_GLOBALS: { [key: string]: { spec: string; export?: string } } = {
   Buffer: {
