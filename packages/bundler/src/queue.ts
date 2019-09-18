@@ -1,7 +1,10 @@
+import { Asset } from './asset';
+
 export class Queue {
+  private assets = new Set<Asset>();
   private pendingCount = 0;
   private resolvedPromise = Promise.resolve();
-  private waiters = [] as { resolve: () => void; reject: (err: Error) => void }[];
+  private waiters = [] as { resolve: (assets: Set<Asset>) => void; reject: (err: Error) => void }[];
 
   constructor() {}
 
@@ -9,12 +12,16 @@ export class Queue {
     return this.pendingCount;
   }
 
-  add<T>(job: () => Promise<T>) {
+  add(job: () => Promise<Asset | undefined>) {
     this.pendingCount++;
 
     this.resolvedPromise.then(job).then(
-      result => {
+      asset => {
         this.pendingCount--;
+
+        if (asset) {
+          this.assets.add(asset);
+        }
 
         if (this.pendingCount < 0) {
           throw new Error(`Invariant violation: queue pending count fell below 0`);
@@ -24,7 +31,7 @@ export class Queue {
           this.releaseWithSuccess();
         }
 
-        return result;
+        return asset;
       },
       err => {
         this.pendingCount--;
@@ -36,11 +43,15 @@ export class Queue {
     );
   }
 
-  wait(): Promise<void> {
+  wait(): Promise<Set<Asset>> {
+    if (this.pendingCount === 0) {
+      return Promise.resolve(this.assets);
+    }
+
     let resolve: any = undefined;
     let reject: any = undefined;
 
-    const promise = new Promise<void>((promiseResolve, promiseReject) => {
+    const promise = new Promise<Set<Asset>>((promiseResolve, promiseReject) => {
       resolve = promiseResolve;
       reject = promiseReject;
     });
@@ -65,7 +76,7 @@ export class Queue {
       while (this.waiters.length) {
         const waiter = this.waiters.shift()!;
 
-        waiter.resolve();
+        waiter.resolve(this.assets);
       }
     });
   }

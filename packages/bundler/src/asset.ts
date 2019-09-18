@@ -2,6 +2,7 @@ import MagicString from 'magic-string';
 
 export class Asset {
   readonly dependencies = [] as Asset.Dependency[];
+  readonly roots = new Set<string>();
 
   magicString?: MagicString;
 

@@ -28,6 +28,7 @@ const DEFAULT_SHIM_GLOBALS: { [key: string]: { spec: string; export?: string } }
 export class Bundler {
   private readonly aliases = new Map<string, string>();
   private readonly assetsByHref = new Map<string, Asset>();
+  private readonly aliasDependencies = new Map<string, Set<Asset>>();
   private readonly pendingAdds = new Map<string, Promise<Asset>>();
   private readonly pendingResolves = new Map<string, Promise<Asset>>();
   private readonly resolver: Resolver;
@@ -83,6 +84,8 @@ export class Bundler {
             callee: dependency.callee,
             spec: dependency.spec,
           });
+
+          return dependencyAsset;
         });
       }
 
@@ -96,6 +99,8 @@ export class Bundler {
             callee: dependency.callee,
             spec: dependency.spec,
           });
+
+          return dependencyAsset;
         });
       }
 
@@ -113,6 +118,8 @@ export class Bundler {
               exportName: shim.export,
               symbolName,
             });
+
+            return dependencyAsset;
           });
         }
       }
@@ -126,20 +133,28 @@ export class Bundler {
    *
    * @param spec A resolvable asset that should be added
    */
-  async add(spec: string): Promise<Asset> {
+  async add(spec: string): Promise<Asset | undefined> {
     const queue = new Queue();
     const asset = await this.addUnresolved(queue, spec);
 
     this.aliases.set(spec, asset.href);
 
-    await queue.wait();
+    const assets = await queue.wait();
+
+    assets.add(asset);
+
+    this.aliasDependencies.set(spec, assets);
 
     return asset;
   }
 
-  generateBundleCode(options: { sourceMap?: boolean } = {}): string {
+  generateBundleCode(options: { entrypoint?: string; sourceMap?: boolean } = {}): string {
     if (this.pendingAdds.size || this.pendingResolves.size) {
       throw new Error(`Unable to generate bundle code while assets are being loaded`);
+    }
+
+    if (options.entrypoint && !this.aliases.has(options.entrypoint)) {
+      throw new Error(`Unable to generate bundle with an unknown entrypoint ${options.entrypoint}`);
     }
 
     const bundle = new Bundle({ separator: '\n' });
@@ -153,7 +168,7 @@ export class Bundler {
         throw new Error(`Invariant violation: asset is not loaded ${asset.href}`);
       }
 
-      const magicString = asset.magicString.clone();
+      const magicString = asset.magicString;
 
       magicString.trim();
 
@@ -188,12 +203,19 @@ export class Bundler {
           asset.href
         )}, function(module, exports, __velcro_require, __dirname, __filename){\n`
       );
+
       magicString.append('\n});');
 
       bundle.addSource(magicString);
     }
 
-    bundle.prepend(`(${createRuntime.toString()})(typeof globalThis === 'object' ? globalThis : this);\n`);
+    bundle.prepend(
+      `(${createRuntime.toString()})(typeof globalThis === 'object' ? (globalThis.Velcro || (globalThis.Velcro = {})) : (this.Velcro || (this.Velcro = {})));\n`
+    );
+
+    if (options.entrypoint) {
+      bundle.append(`Velcro.runtime.require(${JSON.stringify(options.entrypoint)});\n`);
+    }
 
     let sourceMapSuffix = '';
 
@@ -211,6 +233,29 @@ export class Bundler {
     return `${bundle.toString()}${sourceMapSuffix}`;
   }
 
+  async remove(href: string): Promise<boolean> {
+    const aliasDependencies = this.aliasDependencies.get(href);
+
+    if (!aliasDependencies) {
+      return false;
+    }
+
+    this.aliasDependencies.delete(href);
+    this.aliases.delete(href);
+
+    dependency: for (const dependency of aliasDependencies) {
+      for (const otherDependencies of this.aliasDependencies.values()) {
+        if (otherDependencies.has(dependency)) {
+          continue dependency;
+        }
+      }
+
+      this.assetsByHref.delete(dependency.href);
+    }
+
+    return true;
+  }
+
   private async readCode(uri: string): Promise<string> {
     if (uri === EMPTY_MODULE_HREF.href) {
       return EMPTY_MODULE_CODE;
@@ -226,10 +271,6 @@ export class Bundler {
     if (isBareModuleSpecifier(uri)) {
       const bareModuleResolveResult = await resolveBareModuleToUnpkgWithDetails(this.resolver, uri, fromUri);
 
-      if (!bareModuleResolveResult.resolvedUrl) {
-        throw new Error(`Failed to resolve bare module ${uri} from ${fromUri || '@root'}`);
-      }
-
       if (!bareModuleResolveResult.stableUrl) {
         throw new Error(`Failed to resolve bare module ${uri} from ${fromUri || '@root'} to a stable url`);
       }
@@ -237,6 +278,10 @@ export class Bundler {
       if (!bareModuleResolveResult.stableRootUrl) {
         throw new Error(`Failed to resolve bare module ${uri} from ${fromUri || '@root'} to a stable root url`);
       }
+
+      const resolvedHref = bareModuleResolveResult.resolvedUrl
+        ? bareModuleResolveResult.resolvedUrl.href
+        : EMPTY_MODULE_HREF.href;
 
       return {
         type: Bundler.ResolveDetailsKind.BareModule,
@@ -246,7 +291,7 @@ export class Bundler {
           versionSpec: bareModuleResolveResult.bareModule.versionSpec,
         },
         ignored: bareModuleResolveResult.ignored,
-        resolvedHref: bareModuleResolveResult.resolvedUrl.href,
+        resolvedHref,
         rootHref: bareModuleResolveResult.rootUrl.href,
         stableHref: bareModuleResolveResult.stableUrl.href,
         stableRootHref: bareModuleResolveResult.stableRootUrl.href,
@@ -258,14 +303,10 @@ export class Bundler {
 
     let resolvedUri: URL;
 
-    if (resolveResult.resolvedUrl === undefined) {
-      throw new Error(`Failed to resolve ${uri} from ${fromUri || '@root'}`);
-    }
-
-    if (resolveResult.ignored) {
+    if (!resolveResult.resolvedUrl) {
       resolvedUri = EMPTY_MODULE_HREF;
     } else {
-      resolvedUri = resolveResult.resolvedUrl as URL;
+      resolvedUri = resolveResult.resolvedUrl;
     }
 
     const resolvedHref = resolvedUri.href;
@@ -321,11 +362,15 @@ export namespace Bundler {
 function getParserForFile(uri: string): { parse: typeof parseFile } {
   if (uri.endsWith('.json')) {
     return {
-      parse: (): ReturnType<typeof parseFile> => ({
-        requireDependencies: [],
-        requireResolveDependencies: [],
-        unboundSymbols: new Map(),
-      }),
+      parse: (_uri, magicString): ReturnType<typeof parseFile> => {
+        magicString.prepend('module.exports = ');
+
+        return {
+          requireDependencies: [],
+          requireResolveDependencies: [],
+          unboundSymbols: new Map(),
+        };
+      },
     };
   }
 

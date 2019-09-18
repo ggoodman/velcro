@@ -13,6 +13,7 @@ export interface IRuntime {
   alias(spec: string, href: string): void;
   import(sect: string): Promise<any>;
   register(spec: string, factory: ModuleFactory): any;
+  remove(spec: string): boolean;
   require(spec: string): any;
 }
 
@@ -54,13 +55,13 @@ export function createRuntime(Velcro: typeof import('./')): { new (): IRuntime }
         throw new Error('Velcro.Bundler must be loaded for dynamic import');
       }
 
-      const ResolverHostUnpkg = Velcro.ResolverHostUnpkg;
+      const ResolverHostUnpkg = ((Velcro as unknown) as typeof import('@velcro/resolver-host-unpkg')).ResolverHostUnpkg;
 
       if (!ResolverHostUnpkg) {
         throw new Error('Velcro.ResolverHostUnpkg must be loaded for dynamic import');
       }
 
-      const Resolver = Velcro.Resolver;
+      const Resolver = ((Velcro as unknown) as typeof import('@velcro/resolver')).Resolver;
 
       if (!Resolver) {
         throw new Error('Velcro.Resolver must be loaded for dynamic import');
@@ -86,6 +87,33 @@ export function createRuntime(Velcro: typeof import('./')): { new (): IRuntime }
       this[registrySymbol][id] = factory;
     }
 
+    remove(id: string): boolean {
+      id = this[aliasesSymbol][id] || id;
+      const module = this[modulesSymbol][id];
+
+      if (!module) {
+        return false;
+      }
+
+      const seen = new Set<Module>();
+      const removalQueue = [module];
+
+      while (removalQueue.length) {
+        const moduleToRemove = removalQueue.shift()!;
+
+        if (seen.has(moduleToRemove)) {
+          continue;
+        }
+        seen.add(moduleToRemove);
+
+        removalQueue.push(...moduleToRemove.dependents);
+
+        delete this[modulesSymbol][moduleToRemove.id];
+      }
+
+      return true;
+    }
+
     require(id: string) {
       return this.root.require(id);
     }
@@ -93,6 +121,8 @@ export function createRuntime(Velcro: typeof import('./')): { new (): IRuntime }
 
   class Module {
     public readonly exports = {};
+    public readonly dependents = new Set<Module>();
+
     constructor(public readonly id: string, private readonly runtime: Runtime) {}
     require(id: string) {
       id = this.runtime[aliasesSymbol][id] || id;
@@ -114,16 +144,19 @@ export function createRuntime(Velcro: typeof import('./')): { new (): IRuntime }
         let dirname = id;
         let filename = id;
 
-        if (Velcro.util.dirname) {
-          dirname = Velcro.util.dirname(id);
+        const util = ((Velcro as unknown) as typeof import('@velcro/resolver')).util;
+
+        if (util && util.dirname) {
+          dirname = util.dirname(id);
         }
-        if (Velcro.util.basename) {
-          filename = Velcro.util.basename(id);
+        if (util && util.basename) {
+          filename = util.basename(id);
         }
 
-        if (Velcro.util)
-          factory.call(module.exports, module, module.exports, module.require.bind(module), dirname, filename);
+        factory.call(module.exports, module, module.exports, module.require.bind(module), dirname, filename);
       }
+
+      module.dependents.add(this);
 
       return module.exports;
     }

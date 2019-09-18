@@ -1,5 +1,5 @@
-const RELATE_PATH_RX = /^[./]|^[a-z]+:/;
-const SPEC_RX = /^((@[^/]+\/[^./@]+|[^./@]+)(?:@([^/]+))?)(.*)?$/;
+const RELATE_PATH_RX = /^[./]|^[a-z_-]+:/;
+const SPEC_RX = /^((@[^/]+\/[^/@]+|[^./@][^/@]*)(?:@([^/]+))?)(.*)?$/;
 
 interface BareModuleSpec {
   nameSpec: string;
