@@ -132,18 +132,8 @@ var Process = /** @class */ (function(_super) {
     _this._gid = 1;
     _this._errorCallback = null;
     _this._uid = 1;
-    _this.version = 'v5.0';
-    _this.versions = {
-      http_parser: '0.0',
-      node: '5.0',
-      v8: '0.0',
-      uv: '0.0',
-      zlib: '0.0',
-      ares: '0.0',
-      icu: '0.0',
-      modules: '0',
-      openssl: '0.0',
-    };
+    _this.version = 'v0.0.0';
+    _this.versions = {};
     _this.config = {
       target_defaults: { cflags: [], default_configuration: 'Release', defines: [], include_dirs: [], libraries: [] },
       variables: {
