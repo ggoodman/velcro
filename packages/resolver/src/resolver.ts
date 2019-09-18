@@ -278,6 +278,11 @@ export class Resolver {
       // Not found here, let's try one up
       const parentDir = new URL(ensureTrailingSlash(dirname(dir.pathname)), dir);
 
+      // Skip infinite recursion
+      if (parentDir.href === dir.href) {
+        return undefined;
+      }
+
       return readPackageJsonOrRecurse(parentDir);
     };
 
