@@ -18,10 +18,12 @@
   "devDependencies": {
     "docz-theme-default": "^1.0.4",
     "lerna": "^3.16.4",
+    "monaco-editor": "^0.18.0",
     "prettier": "^1.17.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "rollup": "^1.21.2",
+    "serve": "^11.1.0",
     "typescript": "^3.4.5"
   },
   "prettier": {

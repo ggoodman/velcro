@@ -1,0 +1,17 @@
+<div class="workbench">
+  <div class="file_tree">
+    <div
+      class="file"
+      ng-class="{
+        active: $ctrl.activeModelPath == path,
+        focused: $ctrl.focusedModelPath == path,
+      }"
+      ng-click="$ctrl.onClickPath(path)"
+      ng-repeat="(path, model) in $ctrl.models"
+    >
+      {{ path }}
+    </div>
+  </div>
+  <div class="editor"></div>
+  <div class="preview"></div>
+</div>

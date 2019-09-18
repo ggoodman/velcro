@@ -1,0 +1,74 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.workbench {
+  border: 1px solid red;
+  display: grid;
+  grid-template-columns: minmax(20%, 200px) 1fr 1fr;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
+}
+
+.workbench .file_tree {
+  grid-column: 1 / 1;
+}
+
+.workbench .editor {
+  grid-column: 2 / 2;
+}
+
+.workbench .preview {
+  grid-column: 3 / 3;
+}
+
+.file_tree {
+  border: 1px solid yellow;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.file {
+  flex: 0 0 24px;
+  align-content: center;
+  align-items: center;
+  padding-left: 4px;
+}
+
+.file:hover {
+  background: #ccc;
+  cursor: pointer;
+}
+
+.file.active {
+  text-decoration: underline;
+}
+
+.file.focused {
+  font-weight: bold;
+}
+
+.editor {
+  border: 1px solid blue;
+}
+
+.preview {
+  border: 1px solid green;
+}
+
+.preview .iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.preview .status {
+  margin: 1em 2em;
+  font-size: 16px;
+}
