@@ -1,8 +1,8 @@
 import * as Fs from 'fs';
 
-import { expect } from 'code';
+import { expect } from '@hapi/code';
 import { fetch } from 'fetch-h2';
-import { script } from 'lab';
+import { script } from '@hapi/lab';
 
 import { name } from '../package.json';
 import * as Velcro from '../dist/dist-main';

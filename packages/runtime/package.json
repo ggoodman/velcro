@@ -37,14 +37,14 @@
     "test": "lab -fSv --transform ./test/lib/typescript.js"
   },
   "devDependencies": {
+    "@hapi/code": "^6.0.0",
+    "@hapi/lab": "^20.2.2",
     "@types/acorn": "^4.0.5",
-    "@types/code": "^4.0.5",
     "@types/estree": "0.0.39",
     "@types/fs-extra": "^5.0.5",
     "@types/lab": "^11.1.0",
     "@types/node": "^11.11.3",
     "@types/puppeteer": "^1.12.3",
-    "code": "^5.2.4",
     "fetch-h2": "^2.2.0",
     "fs-extra": "^7.0.1",
     "lab": "^18.0.2",

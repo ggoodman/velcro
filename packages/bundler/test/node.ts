@@ -9,7 +9,7 @@ import * as Velcro from '../dist/dist-main';
 import { Resolver } from '@velcro/resolver';
 import { ResolverHostUnpkg } from '@velcro/resolver-host-unpkg';
 
-export const lab = script();
+export const lab = script({ cli: { globals: 'Velcro' } });
 
 const { describe, it } = lab;
 

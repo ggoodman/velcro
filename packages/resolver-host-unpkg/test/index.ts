@@ -1,8 +1,8 @@
 import { resolve } from 'path';
 
-import { expect } from 'code';
+import { expect } from '@hapi/code';
 import { readFile } from 'fs-extra';
-import { script } from 'lab';
+import { script } from '@hapi/lab';
 import { Browser, launch } from 'puppeteer';
 
 import { browser as browserMain, name } from '../package.json';

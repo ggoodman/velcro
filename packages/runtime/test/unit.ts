@@ -1,5 +1,5 @@
-import { expect } from 'code';
-import { script } from 'lab';
+import { expect } from '@hapi/code';
+import { script } from '@hapi/lab';
 
 import { name } from '../package.json';
 import { parse } from '../src/ast';

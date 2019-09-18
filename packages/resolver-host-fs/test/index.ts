@@ -2,8 +2,8 @@ import * as Fs from 'fs';
 import { resolve } from 'path';
 
 import { Resolver } from '@velcro/resolver';
-import { expect } from 'code';
-import { script } from 'lab';
+import { expect } from '@hapi/code';
+import { script } from '@hapi/lab';
 
 import { browser as browserMain, main, name } from '../package.json';
 import { ResolverHostFs } from '../';

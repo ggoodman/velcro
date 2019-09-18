@@ -33,14 +33,14 @@
     "test": "lab -fSv --transform ./test/lib/typescript.js"
   },
   "devDependencies": {
-    "@types/code": "^4.0.5",
+    "@hapi/code": "^6.0.0",
+    "@hapi/lab": "^20.2.2",
     "@types/fs-extra": "^5.0.5",
     "@types/lab": "^11.1.0",
     "@types/lru-cache": "^5.1.0",
     "@types/node": "^11.11.3",
     "@types/puppeteer": "^1.12.3",
     "@types/semver": "^5.5.0",
-    "code": "^5.2.4",
     "fs-extra": "^7.0.1",
     "lab": "^18.0.2",
     "puppeteer": "^1.13.0",
