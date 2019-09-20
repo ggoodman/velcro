@@ -20,9 +20,7 @@ export abstract class ResolverHost {
    * This might involve traversing symlinks or following redirects. The idea is to provide
    * an optional mechanism for hosts dereference links to the canonical form.
    */
-  getCanonicalUrl(_resolver: Resolver, url: URL): Promise<URL> {
-    return Promise.resolve(url);
-  }
+  getCanonicalUrl?(_resolver: Resolver, url: URL): Promise<URL>
 
   /**
    * Get the URL that should be treated as the resolution root for this host
