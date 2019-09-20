@@ -9,9 +9,17 @@
       ng-click="$ctrl.onClickPath(path)"
       ng-repeat="(path, model) in $ctrl.models"
     >
-      {{ path }}
+      <span class="path">{{ path }}</span>
     </div>
   </div>
-  <div class="editor"></div>
+  <div class="editor">
+    <div ng-if="$ctrl.error" class="error">{{ $ctrl.error.stack }}</div>
+  </div>
   <div class="preview"></div>
+  <div class="statusbar" ng-switch="$ctrl.state">
+    <span ng-switch-when="building">Build progress: {{ $ctrl.completedAssets || 0 }} / {{ $ctrl.pendingAssets }}</span>
+    <span ng-switch-when="failed">Build failed: {{ $ctrl.error.message }}</span>
+    <span ng-switch-when="built">Build completed in {{ $ctrl.buildTime }}ms</span>
+    <span ng-switch-when="ready">Ready</span>
+  </div>
 </div>
