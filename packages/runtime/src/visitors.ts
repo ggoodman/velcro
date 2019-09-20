@@ -98,7 +98,7 @@ export const collectGlobalsVisitor: Visitor<DependencyVisitorContext> = {
 
 function visitAndCaptureScoping(node: NodeWithParent, _parent: NodeWithParent | null, ctx: DependencyVisitorContext) {
   if (isVariableDeclaration(node)) {
-    let parent: NodeWithParent;
+    let parent: NodeWithParent | undefined = undefined;
     let nextParent = node.parent;
 
     while (nextParent) {
@@ -110,7 +110,7 @@ function visitAndCaptureScoping(node: NodeWithParent, _parent: NodeWithParent | 
       nextParent = nextParent.parent;
     }
 
-    if (!parent!) {
+    if (!parent) {
       throw new Error(`Invariant violation: Failed to find a parent`);
     }
 
@@ -125,7 +125,7 @@ function visitAndCaptureScoping(node: NodeWithParent, _parent: NodeWithParent | 
       declarePattern(declaration.id, locals);
     }
   } else if (isFunctionDeclaration(node)) {
-    let parent: NodeWithParent;
+    let parent: NodeWithParent | undefined = undefined;
     let nextParent = node.parent;
 
     if (nextParent && nextParent.parent) {
@@ -141,7 +141,7 @@ function visitAndCaptureScoping(node: NodeWithParent, _parent: NodeWithParent | 
       nextParent = nextParent.parent;
     }
 
-    if (!parent!) {
+    if (!parent) {
       throw new Error(`Invariant violation: Failed to find a parent`);
     }
 
@@ -163,7 +163,7 @@ function visitAndCaptureScoping(node: NodeWithParent, _parent: NodeWithParent | 
 
     declareFunction(node, locals);
   } else if (isClassDeclaration(node) && node.id) {
-    let parent: NodeWithParent;
+    let parent: NodeWithParent | undefined = undefined;
     let nextParent = node.parent;
 
     if (nextParent && nextParent.parent) {
@@ -179,7 +179,7 @@ function visitAndCaptureScoping(node: NodeWithParent, _parent: NodeWithParent | 
       nextParent = nextParent.parent;
     }
 
-    if (!parent!) {
+    if (!parent) {
       throw new Error(`Invariant violation: Failed to find a parent`);
     }
 

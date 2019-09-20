@@ -6,7 +6,6 @@ const RollupPluginNodeResolve = require('rollup-plugin-node-resolve');
 const RollupPluginCommonJs = require('rollup-plugin-commonjs');
 const RollupPluginJson = require('rollup-plugin-json');
 const RollupPluginTypescript = require('rollup-plugin-typescript2');
-const RollupPluginVisualizer = require('rollup-plugin-visualizer');
 const Typescript = require('typescript');
 
 const pkg = require('./package.json');
@@ -50,11 +49,6 @@ module.exports = [
       }),
       RollupPluginNodeResolve(),
       RollupPluginCommonJs(),
-      RollupPluginVisualizer({
-        open: true,
-        // sour÷cemap: true,
-        template: 'treemap',
-      }),
     ],
   },
   {

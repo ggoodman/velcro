@@ -16,6 +16,5 @@
     "target": "es2018"
   },
   "include": ["src", "test"],
-  "exclude": ["node_modules/@types/node"],
-  "references": ["../"]
+  "exclude": ["node_modules/@types/node"]
 }
