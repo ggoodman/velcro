@@ -1,15 +1,22 @@
 *,
 *::before,
 *::after {
-  box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+body {
+  font-family: Open Sans, Helvetica Neue, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #222;
+  background-color: #fff;
+}
+
 .workbench {
-  border: 1px solid red;
   display: grid;
   grid-template-columns: minmax(20%, 200px) 1fr 1fr;
+  grid-template-rows: auto 16px;
   height: 100vh;
   max-height: 100vh;
   overflow: hidden;
@@ -17,21 +24,28 @@
 
 .workbench .file_tree {
   grid-column: 1 / 1;
+  grid-row: 1 / 1;
 }
 
 .workbench .editor {
   grid-column: 2 / 2;
+  grid-row: 1 / 1;
 }
 
 .workbench .preview {
   grid-column: 3 / 3;
+  grid-row: 1 / 1;
+}
+
+.workbench .statusbar {
+  grid-column: 1 / 4;
+  grid-row: 2 / 2;
 }
 
 .file_tree {
-  border: 1px solid yellow;
-
   display: flex;
   flex-direction: column;
+  border-right: 1px solid #ddd;
 }
 
 .file {
@@ -47,19 +61,28 @@
 }
 
 .file.active {
-  text-decoration: underline;
+  background-color: #4a9fba;
 }
 
 .file.focused {
-  font-weight: bold;
+  background-color: #008cba;
+}
+
+.file.active .path {
+  color: #fff;
+}
+
+.file.focused .path {
+}
+
+.file .path {
 }
 
 .editor {
-  border: 1px solid blue;
+  border-right: 1px solid #ddd;
 }
 
 .preview {
-  border: 1px solid green;
 }
 
 .preview .iframe {
@@ -71,4 +94,9 @@
 .preview .status {
   margin: 1em 2em;
   font-size: 16px;
+}
+
+.statusbar {
+  background: #ececec;
+  border-top: 1px solid #ddd;
 }

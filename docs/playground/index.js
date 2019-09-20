@@ -51,12 +51,17 @@ Loader(['vs/editor/editor.main'], function() {
           this.el = $element;
           /** @type {import('angular').IScope} */
           this.scope = $scope;
+
+          this.pendingAssets = 0;
+          this.completedAssets = 0;
           /**
            * @private
            * @readonly
            * @type {Record<string, import('monaco-editor').editor.ITextModel>}
            **/
           this.models = {};
+          /** @type {'ready' | 'building' | 'failed' | 'built'} */
+          this.state = 'ready';
 
           const indexUri = Monaco.Uri.file('/index.js');
           this.models[indexUri.fsPath] = Monaco.editor.createModel(
@@ -154,6 +159,16 @@ ReactDOM.render(
         }
 
         $postLink() {
+          window.addEventListener(
+            'message',
+            e => {
+              this.withApply(() => {
+                this.error = e.data.payload;
+              });
+            },
+            true
+          );
+
           const editorDiv = this.el.children().children()[1];
           const model = this.models[Monaco.Uri.file('/index.js').fsPath];
 
@@ -211,6 +226,7 @@ ReactDOM.render(
         }
 
         async refreshPreview() {
+          const start = Date.now();
           console.time('refreshPreview');
           if (this.previousIframe) {
             this.previousIframe.remove();
@@ -239,8 +255,42 @@ ReactDOM.render(
 
             this.bundler.remove(entrypoint);
 
-            await this.bundler.add(entrypoint);
+            this.withApply(() => {
+              this.pendingAssets = 0;
+              this.completedAssets = 0;
+              this.state = 'building';
+            });
 
+            await this.bundler.add(entrypoint, {
+              onCompleteAsset: () => {
+                this.withApply(() => {
+                  this.completedAssets++;
+                });
+              },
+              onEnqueueAsset: () => {
+                this.withApply(() => {
+                  this.pendingAssets++;
+                });
+              },
+            });
+
+            const errorWatcher = new File(
+              [
+                `
+window.onerror = function(msg, url, lineNo, columnNo, err) {
+  const payload = { url, lineNo, columnNo, name: err.name };
+  for (const key of Object.getOwnPropertyNames(err)) {
+    payload[key] = err[key];
+  }
+  window.parent.postMessage({ type: 'error', payload }, '*');
+}
+            `,
+              ],
+              'watcher.js',
+              {
+                type: 'text/javascript',
+              }
+            );
             const code = this.bundler.generateBundleCode({ entrypoint, sourceMap: true });
             const bundleFile = new File([code], entrypoint, {
               type: 'text/javascript',
@@ -255,6 +305,7 @@ ReactDOM.render(
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta http-equiv="X-UA-Compatible" content="ie=edge">
       <title>Document</title>
+      <script src="${URL.createObjectURL(errorWatcher)}"></script>
     </head>
     <body>
       <div id="root"></div>
@@ -274,8 +325,17 @@ ReactDOM.render(
             this.loadingIndicator = undefined;
 
             preview.appendChild(iframe);
+
+            this.withApply(() => {
+              this.state = 'built';
+              this.buildTime = Date.now() - start;
+            });
           } catch (err) {
             this.loadingIndicator.textContent = `Loading failed: ${err.stack}`;
+
+            this.withApply(() => {
+              this.state = 'failed';
+            });
           }
 
           console.timeEnd('refreshPreview');
