@@ -1,6 +1,6 @@
 {
   "name": "@velcro/runtime",
-  "version": "0.11.0",
+  "version": "0.12.0",
   "description": "Execute code in a runtime that provides node module resolution and support for different module formats",
   "keywords": [
     "velcro",
@@ -61,13 +61,13 @@
   },
   "dependencies": {
     "@types/hapi__code": "^5.3.0",
-    "@velcro/decoder": "^0.11.0",
-    "@velcro/node-libs": "^0.11.0",
-    "@velcro/resolver": "^0.11.0",
-    "@velcro/resolver-host-compound": "^0.11.0",
-    "@velcro/resolver-host-fs": "^0.11.0",
-    "@velcro/resolver-host-memory": "^0.11.0",
-    "@velcro/resolver-host-unpkg": "^0.11.0",
+    "@velcro/decoder": "^0.12.0",
+    "@velcro/node-libs": "^0.12.0",
+    "@velcro/resolver": "^0.12.0",
+    "@velcro/resolver-host-compound": "^0.12.0",
+    "@velcro/resolver-host-fs": "^0.12.0",
+    "@velcro/resolver-host-memory": "^0.12.0",
+    "@velcro/resolver-host-unpkg": "^0.12.0",
     "acorn": "^6.1.1",
     "idb": "^4.0.3",
     "magic-string": "^0.25.2"
