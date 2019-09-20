@@ -47,10 +47,10 @@ export function createCache(name: string, predicate?: CachePredicate): Runtime.C
     },
     get(segment: Runtime.CacheSegment, key: string) {
       if (!predicate || predicate(segment, key)) {
-        return idbPromise.then(idb => idb.get(segment, key));
+        return idbPromise.then(idb => idb.get(segment, key) as any);
       }
     },
-    set(segment: Runtime.CacheSegment, key: string, value: string) {
+    set(segment: Runtime.CacheSegment, key: string, value: any) {
       if (!predicate || predicate(segment, key)) {
         return idbPromise.then(idb => idb.put(segment, value, key));
       }

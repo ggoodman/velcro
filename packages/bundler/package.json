@@ -73,5 +73,6 @@
     "singleQuote": true,
     "tabWidth": 2,
     "trailingComma": "es5"
-  }
+  },
+  "gitHead": "01fca1cfce6a75973988cf4f0fba27b79137e08e"
 }
