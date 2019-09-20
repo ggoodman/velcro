@@ -5,3 +5,4 @@ dist
 lerna-debug.log
 .docz
 stats.html
+package-lock.json
