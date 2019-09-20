@@ -1,6 +1,6 @@
 {
   "name": "@velcro/decoder",
-  "version": "0.12.1",
+  "version": "0.12.2",
   "description": "Abstract string decoder for node and the browser",
   "keywords": [
     "velcro",
