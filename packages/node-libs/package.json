@@ -30,6 +30,7 @@
     "test": "echo Nothing to test"
   },
   "dependencies": {
+    "@types/hapi__code": "^5.3.0",
     "assert": "1.4.1",
     "browserify-zlib": "^0.2.0",
     "buffer": "5.2.1",

@@ -6,7 +6,7 @@ export class Queue {
   private resolvedPromise = Promise.resolve();
   private waiters = [] as { resolve: (assets: Set<Asset>) => void; reject: (err: Error) => void }[];
 
-  constructor() {}
+  constructor(private onEnqueue?: () => void, private onComplete?: () => void) {}
 
   get size() {
     return this.pendingCount;
@@ -15,9 +15,17 @@ export class Queue {
   add(job: () => Promise<Asset | undefined>) {
     this.pendingCount++;
 
+    if (this.onEnqueue) {
+      this.onEnqueue();
+    }
+
     this.resolvedPromise.then(job).then(
       asset => {
         this.pendingCount--;
+
+        if (this.onComplete) {
+          this.onComplete();
+        }
 
         if (asset) {
           this.assets.add(asset);
@@ -35,6 +43,10 @@ export class Queue {
       },
       err => {
         this.pendingCount--;
+
+        if (this.onComplete) {
+          this.onComplete();
+        }
 
         this.releaseWithError(err);
 

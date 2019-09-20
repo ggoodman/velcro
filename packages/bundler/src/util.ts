@@ -75,3 +75,30 @@ export function parseBareModuleSpec(spec: string): BareModuleSpec {
 
   return parsed;
 }
+
+// this looks ridiculous, but it prevents sourcemap tooling from mistaking
+// this for an actual sourceMappingURL
+let SOURCEMAPPING_URL = 'sourceMa';
+SOURCEMAPPING_URL += 'ppingURL';
+
+export function getSourceMappingUrl(str: string) {
+  // assume we want the last occurence
+  const index = str.lastIndexOf(`${SOURCEMAPPING_URL}=`);
+
+  if (index === -1) {
+    return undefined;
+  }
+
+  const substring = str.substring(index + 17);
+  const match = /^[^\r\n]+/.exec(substring);
+
+  let url = match ? match[0] : undefined;
+
+  // possibly a better way to do this, but we don't want to exclude whitespace
+  // from the sourceMappingURL because it might not have been correctly encoded
+  if (url && url.slice(-2) === '*/') {
+    url = url.slice(0, -2).trim();
+  }
+
+  return url;
+}
