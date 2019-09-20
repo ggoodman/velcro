@@ -5,6 +5,7 @@ export class Asset {
   readonly roots = new Set<string>();
 
   magicString?: MagicString;
+  sourceMappingUrl?: string;
 
   constructor(readonly href: string, readonly rootHref: string) {}
 }

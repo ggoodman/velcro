@@ -1,8 +1,10 @@
+import remapping from '@ampproject/remapping';
 import { version as nodeLibsVersion } from '@velcro/node-libs/package.json';
 import { Resolver } from '@velcro/resolver';
+import { Base64 } from 'js-base64';
 import MagicString, { Bundle } from 'magic-string';
 
-import { isBareModuleSpecifier } from './util';
+import { isBareModuleSpecifier, getSourceMappingUrl } from './util';
 import { resolveBareModuleToUnpkgWithDetails } from './unpkg';
 import { parseFile } from './parser';
 import { Asset } from './asset';
@@ -69,6 +71,7 @@ export class Bundler {
         filename: resolveResult.resolvedHref,
         indentExclusionRanges: [],
       });
+      asset.sourceMappingUrl = getSourceMappingUrl(code);
 
       const parser = getParserForFile(resolveResult.resolvedHref);
 
@@ -133,8 +136,8 @@ export class Bundler {
    *
    * @param spec A resolvable asset that should be added
    */
-  async add(spec: string): Promise<Asset | undefined> {
-    const queue = new Queue();
+  async add(spec: string, options: Bundler.AddOptions = {}): Promise<Asset | undefined> {
+    const queue = new Queue(options.onEnqueueAsset, options.onCompleteAsset);
     const asset = await this.addUnresolved(queue, spec);
 
     this.aliases.set(spec, asset.href);
@@ -217,6 +220,8 @@ export class Bundler {
       bundle.append(`Velcro.runtime.require(${JSON.stringify(options.entrypoint)});\n`);
     }
 
+    const bundleCode = bundle.toString();
+
     let sourceMapSuffix = '';
 
     if (options.sourceMap) {
@@ -225,12 +230,50 @@ export class Bundler {
         hires: false,
       });
 
-      const sourceMapUrl = sourceMap.toUrl();
+      sourceMap.file = `velcro://${options.entrypoint || 'root'}`;
 
-      sourceMapSuffix = `\n//# sourceMappingURL=${sourceMapUrl}`;
+      // In case a source map seems to be self-referential, avoid crashing
+      const seen = new Set<Asset>();
+      const combinedMap = remapping(
+        sourceMap.toString(),
+        (uri: string) => {
+          const asset = this.assetsByHref.get(uri);
+
+          if (asset && asset.sourceMappingUrl) {
+            if (seen.has(asset)) {
+              return null;
+            }
+
+            seen.add(asset);
+
+            const match = asset.sourceMappingUrl.match(/^data:application\/json;(?:charset=([^;]+);)?base64,(.*)$/);
+
+            if (match) {
+              if (match[1] && match[1] !== 'utf-8') {
+                return null;
+              }
+
+              try {
+                const decoded = JSON.parse(Base64.decode(match[2]));
+
+                return decoded;
+              } catch (err) {
+                return null;
+              }
+            }
+          }
+
+          return null;
+        },
+        false
+      );
+
+      sourceMapSuffix = `\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${btoa(
+        JSON.stringify(combinedMap)
+      )}`;
     }
 
-    return `${bundle.toString()}${sourceMapSuffix}`;
+    return `${bundleCode}${sourceMapSuffix}`;
   }
 
   async remove(href: string): Promise<boolean> {
@@ -324,6 +367,11 @@ export class Bundler {
 }
 
 export namespace Bundler {
+  export interface AddOptions {
+    onEnqueueAsset?(): void;
+    onCompleteAsset?(): void;
+  }
+
   export interface Options {
     resolver: Resolver;
   }

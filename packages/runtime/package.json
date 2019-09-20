@@ -60,6 +60,7 @@
     "typescript": "^3.3.3333"
   },
   "dependencies": {
+    "@types/hapi__code": "^5.3.0",
     "@velcro/decoder": "^0.11.0",
     "@velcro/node-libs": "^0.11.0",
     "@velcro/resolver": "^0.11.0",
