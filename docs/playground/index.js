@@ -174,6 +174,9 @@ ReactDOM.render(
 
           this.editor = Monaco.editor.create(editorDiv, {
             model: null,
+            automaticLayout: true,
+            showUnused: true,
+            scrollBeyondLastLine: false,
           });
 
           this.editor.onDidChangeModel(e => {
