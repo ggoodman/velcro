@@ -60,7 +60,8 @@ export const resolveBareModuleToUnpkg: BareModuleResolver = async (
 
 export const resolveBareModuleToUnpkgWithDetails = async (resolver: Resolver, href: string, parentHref?: string) => {
   const parsedSpec = parseBareModuleSpec(href);
-  const details = { bareModule: {}, resolvedUrl: undefined } as {
+  const details = { bareModule: {}, cacheable: true, resolvedUrl: undefined } as {
+    cacheable: boolean;
     bareModule: {
       isBuiltIn: boolean;
       versionSpec?: string;

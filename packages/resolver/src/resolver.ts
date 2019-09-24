@@ -88,7 +88,10 @@ export class Resolver {
         ? await this.resolveAsDirectory(canonicalUrl, optionsWithDefaults)
         : await this.resolveAsFile(canonicalUrl, optionsWithDefaults);
 
+    const cacheable = resolvedUrl ? await this.host.isCacheable(this, resolvedUrl) : false;
+
     return {
+      cacheable,
       ignored: resolvedUrl === false,
       resolvedUrl: resolvedUrl || undefined,
       rootUrl,
@@ -314,6 +317,10 @@ export namespace Resolver {
      */
     abstract getResolveRoot(resolver: Resolver, url: URL): Promise<URL>;
 
+    isCacheable(_resolver: Resolver, _url: URL): Promise<boolean> {
+      return Promise.resolve(true);
+    }
+
     /**
      * List the entries that are children of the given url, assuming this refers to a directory
      */
@@ -326,6 +333,7 @@ export namespace Resolver {
   }
 
   export interface ResolveDetails {
+    cacheable: boolean;
     ignored: boolean;
     resolvedUrl?: URL;
     rootUrl: URL;

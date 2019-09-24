@@ -22,6 +22,7 @@ module.exports = [
         extend: true,
         file: resolve(__dirname, pkg.browser),
         format: 'umd',
+        sourcemap: true,
       },
       {
         file: resolve(__dirname, pkg.main),
@@ -44,6 +45,7 @@ module.exports = [
           compilerOptions: {
             module: 'esnext',
             rootDir: './src',
+            sourceMap: true,
           },
           exclude: ['./test'],
         },
@@ -67,6 +69,7 @@ module.exports = [
         extend: true,
         file: resolve(__dirname, pkg.browser).replace(/\.js$/, '.min.js'),
         format: 'umd',
+        sourcemap: true,
       },
     ],
     plugins: [
@@ -81,6 +84,7 @@ module.exports = [
             rootDir: './src',
           },
           exclude: ['./test'],
+          sourceMap: true,
         },
       }),
       RollupPluginNodeResolve(),

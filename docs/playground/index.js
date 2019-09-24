@@ -7,7 +7,11 @@ const Angular = window['angular'];
 const Velcro = window['Velcro'];
 
 /** @type {import('monaco-editor/dev/vs/loader')} */
+// @ts-ignore
 const Loader = window['require'];
+
+/** @type {import('idb')} */
+const { openDB } = window['idb'];
 
 Loader.config({ paths: { vs: 'https://unpkg.com/monaco-editor/min/vs' } });
 Loader(['vs/editor/editor.main'], function() {
@@ -35,6 +39,39 @@ Loader(['vs/editor/editor.main'], function() {
     target: Monaco.languages.typescript.ScriptTarget.ES2016,
     typeRoots: [`node_modules/@types`],
   });
+
+  const idbPromise = openDB('velcro', Velcro.Bundler.schemaVersion, {
+    async upgrade(db, oldVersion, newVersion, transaction) {
+      console.log('Upgrading cache from version %s to %s', oldVersion, newVersion);
+
+      if (!oldVersion) {
+        db.createObjectStore(Velcro.Bundler.CacheSegmentKind.Asset);
+        db.createObjectStore(Velcro.Bundler.CacheSegmentKind.Resolve);
+      }
+
+      await transaction.objectStore(Velcro.Bundler.CacheSegmentKind.Asset).clear();
+      await transaction.objectStore(Velcro.Bundler.CacheSegmentKind.Resolve).clear();
+    },
+  });
+
+  /** @type {import('../../packages/bundler').Bundler.Cache} */
+  const cache = {
+    delete(record) {
+      return idbPromise.then(idb => {
+        return idb.delete(record.segment, record.id);
+      });
+    },
+    get(record) {
+      return idbPromise.then(idb => {
+        return idb.get(record.segment, record.id);
+      });
+    },
+    set(record, value) {
+      return idbPromise.then(idb => {
+        return idb.put(record.segment, value, record.id).then(() => undefined);
+      });
+    },
+  };
 
   Angular.module('velcro', []).component('workbench', {
     templateUrl: './components/workbench.html',
@@ -155,7 +192,7 @@ ReactDOM.render(
             packageMain: ['browser', 'main'],
           });
 
-          this.bundler = new Velcro.Bundler({ resolver });
+          this.bundler = new Velcro.Bundler({ cache, resolver });
         }
 
         $postLink() {

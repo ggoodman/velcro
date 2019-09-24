@@ -1,16 +1,46 @@
 import MagicString from 'magic-string';
+import { getSourceMappingUrl } from './util';
 
 export class Asset {
   readonly dependencies = [] as Asset.Dependency[];
-  readonly roots = new Set<string>();
 
   magicString?: MagicString;
   sourceMappingUrl?: string;
 
   constructor(readonly href: string, readonly rootHref: string) {}
+
+  setCode(code: string) {
+    this.magicString = new MagicString(code, {
+      filename: this.href,
+      indentExclusionRanges: [],
+    });
+    this.sourceMappingUrl = getSourceMappingUrl(code);
+  }
+
+  toJSON() {
+    return {
+      href: this.href,
+      rootHref: this.rootHref,
+      dependencies: this.dependencies,
+      sourceMappingUrl: this.sourceMappingUrl,
+      code: this.magicString ? this.magicString.original : '',
+    };
+  }
+
+  static fromJSON(json: Asset.AsObject): Asset {
+    const asset = new Asset(json.href, json.rootHref);
+
+    asset.dependencies.push(...json.dependencies);
+    asset.sourceMappingUrl = json.sourceMappingUrl;
+    asset.setCode(json.code);
+
+    return asset;
+  }
 }
 
 export namespace Asset {
+  export type AsObject = ReturnType<Asset['toJSON']>;
+
   export enum DependencyKind {
     Require = 'require',
     RequireResolve = 'require.resolve',

@@ -1,10 +1,10 @@
 import { Asset } from './asset';
 
 export class Queue {
-  private assets = new Set<Asset>();
+  public readonly assets = new Set<Asset>();
   private pendingCount = 0;
-  private resolvedPromise = Promise.resolve();
-  private waiters = [] as { resolve: (assets: Set<Asset>) => void; reject: (err: Error) => void }[];
+  private readonly resolvedPromise = Promise.resolve();
+  private readonly waiters = [] as { resolve: (assets: Set<Asset>) => void; reject: (err: Error) => void }[];
 
   constructor(private onEnqueue?: () => void, private onComplete?: () => void) {}
 
@@ -12,47 +12,49 @@ export class Queue {
     return this.pendingCount;
   }
 
-  add(job: () => Promise<Asset | undefined>) {
-    this.pendingCount++;
+  add(...jobs: Promise<Asset | undefined>[]) {
+    for (const job of jobs) {
+      this.pendingCount++;
 
-    if (this.onEnqueue) {
-      this.onEnqueue();
-    }
-
-    this.resolvedPromise.then(job).then(
-      asset => {
-        this.pendingCount--;
-
-        if (this.onComplete) {
-          this.onComplete();
-        }
-
-        if (asset) {
-          this.assets.add(asset);
-        }
-
-        if (this.pendingCount < 0) {
-          throw new Error(`Invariant violation: queue pending count fell below 0`);
-        }
-
-        if (this.pendingCount === 0) {
-          this.releaseWithSuccess();
-        }
-
-        return asset;
-      },
-      err => {
-        this.pendingCount--;
-
-        if (this.onComplete) {
-          this.onComplete();
-        }
-
-        this.releaseWithError(err);
-
-        throw err;
+      if (this.onEnqueue) {
+        this.onEnqueue();
       }
-    );
+
+      Promise.resolve(job).then(
+        asset => {
+          this.pendingCount--;
+
+          if (this.onComplete) {
+            this.onComplete();
+          }
+
+          if (asset) {
+            this.assets.add(asset);
+          }
+
+          if (this.pendingCount < 0) {
+            throw new Error(`Invariant violation: queue pending count fell below 0`);
+          }
+
+          if (this.pendingCount === 0) {
+            this.releaseWithSuccess();
+          }
+
+          return asset;
+        },
+        err => {
+          this.pendingCount--;
+
+          if (this.onComplete) {
+            this.onComplete();
+          }
+
+          this.releaseWithError(err);
+
+          throw err;
+        }
+      );
+    }
   }
 
   wait(): Promise<Set<Asset>> {

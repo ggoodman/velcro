@@ -14,7 +14,7 @@ interface UnpkgPackageHostOptions {
   fetch?: CustomFetch;
 }
 
-export class ResolverHostUnpkg implements Resolver.Host {
+export class ResolverHostUnpkg extends Resolver.Host {
   private readonly contentCache = new LRU<string, ArrayBuffer>({
     length(buf) {
       return buf.byteLength;
@@ -29,6 +29,8 @@ export class ResolverHostUnpkg implements Resolver.Host {
   private readonly packageJsonCache = new Map<string, Map<string, PackageJson>>();
 
   constructor(options: UnpkgPackageHostOptions = {}) {
+    super();
+
     if (!options.fetch && typeof fetch !== 'function') {
       throw new TypeError(
         `A fetch function must be provided to the ${this.constructor.name} if the environment doesn't provide one`
