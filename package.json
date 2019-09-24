@@ -16,6 +16,7 @@
   "author": "Geoff Goodman <geoff@goodman.dev> (https://geoff.goodman.dev)",
   "license": "MIT",
   "devDependencies": {
+    "idb": "^4.0.4",
     "lerna": "^3.16.4",
     "monaco-editor": "^0.18.1",
     "prettier": "^1.18.2",
