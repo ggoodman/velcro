@@ -725,7 +725,7 @@ export function createCommonJsExecuteFunction(asset: Runtime.Asset, host: Runtim
 
 function parseUrl(id: string, fromId?: string): URL {
   try {
-    const url = new URL(id, fromId);
+    const url = fromId ? new URL(id, fromId) : new URL(id);
 
     return url;
   } catch {
