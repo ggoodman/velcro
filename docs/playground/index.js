@@ -4,6 +4,7 @@
 const Angular = window['angular'];
 
 /** @type {import('../../packages/bundler') & import('../../packages/resolver') & import('../../packages/resolver-host-compound') & import('../../packages/resolver-host-memory') & import('../../packages/resolver-host-unpkg')} */
+// @ts-ignore
 const Velcro = window['Velcro'];
 
 /** @type {import('monaco-editor/dev/vs/loader')} */
@@ -193,6 +194,9 @@ ReactDOM.render(
           });
 
           this.bundler = new Velcro.Bundler({ cache, resolver });
+          this.bundler.onAssetAdded(asset => {
+            console.log('onAssetAdded', asset.rootHref);
+          });
         }
 
         $postLink() {

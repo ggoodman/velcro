@@ -3,6 +3,7 @@ import { version as nodeLibsVersion } from '@velcro/node-libs/package.json';
 import { Resolver } from '@velcro/resolver';
 import { Base64 } from 'js-base64';
 import { Bundle } from 'magic-string';
+import { Emitter } from 'ts-primitives';
 
 import { isBareModuleSpecifier } from './util';
 import { resolveBareModuleToUnpkgWithDetails } from './unpkg';
@@ -32,17 +33,29 @@ const DEFAULT_SHIM_GLOBALS: { [key: string]: { spec: string; export?: string } }
 export class Bundler {
   private readonly aliases = new Map<string, string>();
   private readonly assetsByHref = new Map<string, Asset>();
+  private readonly assetsByRootHref = new Map<string, Set<Asset>>();
   private readonly aliasDependencies = new Map<string, Set<Asset>>();
   private readonly cache?: Bundler.Cache;
   private readonly pendingAdds = new Map<string, Promise<Asset>>();
   private readonly pendingResolves = new Map<string, Promise<Asset>>();
   private readonly resolver: Resolver;
 
+  private readonly onAssetAddedEmitter = new Emitter<Asset>();
+  private readonly onAssetRemovedEmitter = new Emitter<Asset>();
+
   static readonly schemaVersion: 1;
 
   constructor(options: Bundler.Options) {
     this.cache = options.cache;
     this.resolver = options.resolver;
+  }
+
+  get onAssetAdded() {
+    return this.onAssetAddedEmitter.event;
+  }
+
+  get onAssetRemoved() {
+    return this.onAssetRemovedEmitter.event;
   }
 
   /**
@@ -210,6 +223,7 @@ export class Bundler {
       }
 
       this.assetsByHref.delete(dependency.href);
+      this.onAssetRemovedEmitter.fire(dependency);
     }
 
     if (this.cache && alias) {
@@ -221,6 +235,25 @@ export class Bundler {
     }
 
     return true;
+  }
+
+  private addAsset(asset: Asset): void {
+    const hadAsset = this.assetsByHref.has(asset.href);
+
+    this.assetsByHref.set(asset.href, asset);
+
+    let assetsByRootHref = this.assetsByRootHref.get(asset.rootHref);
+
+    if (!assetsByRootHref) {
+      assetsByRootHref = new Set();
+      this.assetsByRootHref.set(asset.rootHref, assetsByRootHref);
+    }
+
+    assetsByRootHref.add(asset);
+
+    if (!hadAsset) {
+      this.onAssetAddedEmitter.fire(asset);
+    }
   }
 
   private async addUnresolved(queue: Queue, href: string, fromHref?: string): Promise<Asset> {
@@ -265,7 +298,7 @@ export class Bundler {
           asset = Asset.fromJSON(cachedAsset);
           cached = true;
 
-          this.assetsByHref.set(href, asset);
+          this.addAsset(asset);
 
           for (const dependency of asset.dependencies) {
             const promise = this.addResolved(queue, dependency.asset.href, dependency.asset.rootHref, true);
@@ -278,7 +311,8 @@ export class Bundler {
 
     if (!asset) {
       asset = new Asset(href, rootHref);
-      this.assetsByHref.set(href, asset);
+
+      this.addAsset(asset);
 
       const code = await this.readCode(href);
 
@@ -496,7 +530,7 @@ export namespace Bundler {
     Relative = 'relative',
   }
 
-  interface BareModuleResolveDetails {
+  export interface BareModuleResolveDetails {
     type: ResolveDetailsKind.BareModule;
     bareModule: {
       isBuiltIn: boolean;
