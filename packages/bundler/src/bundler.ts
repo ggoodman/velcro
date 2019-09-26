@@ -96,7 +96,7 @@ export class Bundler {
         throw new Error(`Invariant violation: asset is not loaded '${asset.href}'`);
       }
 
-      const magicString = asset.magicString.clone();
+      const magicString = asset.magicString;
 
       magicString.trim();
 
