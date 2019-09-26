@@ -49,21 +49,24 @@ export namespace Asset {
 
   export interface RequireDependency {
     type: DependencyKind.Require;
-    asset: Asset;
+    href: string;
+    rootHref: string;
     callee: { start: number; end: number };
     spec: { start: number; end: number; value: string };
   }
 
   export interface RequireResolveDependency {
     type: DependencyKind.RequireResolve;
-    asset: Asset;
+    href: string;
+    rootHref: string;
     callee: { start: number; end: number };
     spec: { start: number; end: number; value: string };
   }
 
   export interface InjectedGlobalDependency {
     type: DependencyKind.InjectedGlobal;
-    asset: Asset;
+    href: string;
+    rootHref: string;
     exportName?: string;
     references: { start: number; end: number }[];
     symbolName: string;

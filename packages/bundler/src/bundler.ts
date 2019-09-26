@@ -31,11 +31,8 @@ const DEFAULT_SHIM_GLOBALS: { [key: string]: { spec: string; export?: string } }
 };
 
 export class Bundler {
-  private readonly aliases = new Map<string, string>();
   private readonly assetsByHref = new Map<string, Asset>();
   private readonly assetsByRootHref = new Map<string, Set<Asset>>();
-  private readonly aliasDependencies = new Map<string, Set<Asset>>();
-  private readonly pendingAdds = new Map<string, Promise<Asset>>();
   private readonly pendingResolves = new Map<string, Promise<Asset>>();
   private readonly resolver: Resolver;
 
@@ -56,47 +53,60 @@ export class Bundler {
     return this.onAssetRemovedEmitter.event;
   }
 
-  /**
-   * Add an asset and its dependency tree to the bundle
-   *
-   * @param spec A resolvable asset that should be added
-   */
-  async add(spec: string, options: Bundler.AddOptions = {}): Promise<Asset | undefined> {
+  async generateBundleCode(entrypoints: string[], options: Bundler.BundleOptions = {}): Promise<string> {
+    if (!Array.isArray(entrypoints) || !entrypoints.length) {
+      throw new Error('Generating a bundle requires passing in an array of entrypoints');
+    }
     const queue = new Queue(options.onEnqueueAsset, options.onCompleteAsset);
-    const asset = await this.addUnresolved(queue, spec);
+    const addedAssets = await Promise.all(entrypoints.map(entrypoint => this.addUnresolved(queue, entrypoint)));
+    const entrypointsToAssets = {} as Record<string, Asset>;
 
-    try {
-      this.aliases.set(spec, asset.href);
-
-      await queue.wait();
-    } finally {
-      this.aliasDependencies.set(spec, new Set([asset, ...queue.assets]));
+    for (const idx in entrypoints) {
+      entrypointsToAssets[entrypoints[idx]] = addedAssets[idx];
     }
 
-    return asset;
-  }
+    await queue.wait();
 
-  generateBundleCode(options: { entrypoint?: string; sourceMap?: boolean } = {}): string {
-    if (this.pendingAdds.size || this.pendingResolves.size) {
-      throw new Error(`Unable to generate bundle code while assets are being loaded`);
-    }
-
-    if (options.entrypoint && !this.aliases.has(options.entrypoint)) {
-      throw new Error(`Unable to generate bundle with an unknown entrypoint '${options.entrypoint}'`);
-    }
-
+    const assetsToInclude = [...addedAssets];
+    const includedAssets = new Set() as Set<Asset>;
     const bundle = new Bundle({ separator: '\n' });
 
-    for (const [aliasFrom, aliasTo] of this.aliases) {
-      bundle.append(`Velcro.runtime.alias(${JSON.stringify(aliasFrom)}, ${JSON.stringify(aliasTo)});\n`);
-    }
+    while (assetsToInclude.length) {
+      const asset = assetsToInclude.shift()!;
 
-    for (const [, asset] of this.assetsByHref) {
+      if (includedAssets.has(asset)) {
+        continue;
+      }
+      includedAssets.add(asset);
+
+      for (const dependency of asset.dependencies) {
+        switch (dependency.type) {
+          case Asset.DependencyKind.InjectedGlobal:
+          case Asset.DependencyKind.Require:
+            const asset = this.assetsByHref.get(dependency.href);
+
+            if (!asset) {
+              throw new Error(`Invariant violation: Asset not loaded for '${dependency.href}'`);
+            }
+
+            assetsToInclude.push(asset);
+            continue;
+          case Asset.DependencyKind.RequireResolve:
+            // Nothing really to do for this
+            continue;
+          default:
+            throw new Error(`Invariant violation: Unknown dependency type '${(dependency as any).type}'`);
+        }
+      }
+
       if (!asset.magicString) {
         throw new Error(`Invariant violation: asset is not loaded '${asset.href}'`);
       }
 
-      const magicString = asset.magicString;
+      const magicString = asset.magicString.clone();
+
+      (magicString as any).intro = (asset.magicString as any).intro;
+      (magicString as any).outro = (asset.magicString as any).outro;
 
       magicString.trim();
 
@@ -106,16 +116,16 @@ export class Bundler {
       for (const dependency of asset.dependencies) {
         switch (dependency.type) {
           case Asset.DependencyKind.Require:
-            magicString.overwrite(dependency.spec.start, dependency.spec.end, JSON.stringify(dependency.asset.href));
+            magicString.overwrite(dependency.spec.start, dependency.spec.end, JSON.stringify(dependency.href));
             // magicString.overwrite(dependency.callee.start, dependency.callee.end, '__velcro_require');
             break;
           case Asset.DependencyKind.RequireResolve:
-            magicString.overwrite(dependency.spec.start, dependency.spec.end, JSON.stringify(dependency.asset.href));
+            magicString.overwrite(dependency.spec.start, dependency.spec.end, JSON.stringify(dependency.href));
             // magicString.overwrite(dependency.callee.start, dependency.callee.end, '__velcro_require_resolve');
             break;
           case Asset.DependencyKind.InjectedGlobal:
             magicString.prepend(
-              `const ${dependency.symbolName} = require(${JSON.stringify(dependency.asset.href)})${
+              `const ${dependency.symbolName} = require(${JSON.stringify(dependency.href)})${
                 dependency.exportName ? `.${dependency.exportName}` : ''
               };\n`
             );
@@ -143,8 +153,12 @@ export class Bundler {
       `(${createRuntime.toString()})(typeof globalThis === 'object' ? (globalThis.Velcro || (globalThis.Velcro = {})) : (this.Velcro || (this.Velcro = {})));\n`
     );
 
-    if (options.entrypoint) {
-      bundle.append(`Velcro.runtime.require(${JSON.stringify(options.entrypoint)});\n`);
+    if (options.requireEntrypoints) {
+      for (const entrypoint in entrypointsToAssets) {
+        const asset = entrypointsToAssets[entrypoint];
+
+        bundle.append(`Velcro.runtime.require(${JSON.stringify(asset.href)});\n`);
+      }
     }
 
     const bundleCode = bundle.toString();
@@ -157,7 +171,7 @@ export class Bundler {
         hires: false,
       });
 
-      sourceMap.file = `velcro://${options.entrypoint || 'root'}`;
+      sourceMap.file = `velcro://bundle.js`;
 
       // In case a source map seems to be self-referential, avoid crashing
       const seen = new Set<Asset>();
@@ -203,28 +217,22 @@ export class Bundler {
     return `${bundleCode}${sourceMapSuffix}`;
   }
 
-  async remove(href: string): Promise<boolean> {
-    const aliasDependencies = this.aliasDependencies.get(href);
+  async invalidate(href: string): Promise<boolean> {
+    const resolveResult = await this.resolveWithDetails(href);
 
-    if (!aliasDependencies) {
+    if (!resolveResult) {
       return false;
     }
 
-    this.aliasDependencies.delete(href);
-    this.aliases.delete(href);
+    const asset = this.assetsByHref.get(resolveResult.resolvedHref);
 
-    dependency: for (const dependency of aliasDependencies) {
-      for (const otherDependencies of this.aliasDependencies.values()) {
-        if (otherDependencies.has(dependency)) {
-          continue dependency;
-        }
-      }
+    if (asset) {
+      this.removeAsset(asset);
 
-      this.assetsByHref.delete(dependency.href);
-      this.onAssetRemovedEmitter.fire(dependency);
+      return true;
     }
 
-    return true;
+    return false;
   }
 
   private addAsset(asset: Asset): void {
@@ -309,7 +317,8 @@ export class Bundler {
           const dependencyAsset = await this.addUnresolved(queue, dependency.spec.value, href);
           asset!.dependencies.push({
             type: Asset.DependencyKind.Require,
-            asset: dependencyAsset,
+            href: dependencyAsset.href,
+            rootHref: dependencyAsset.rootHref,
             callee: dependency.callee,
             spec: dependency.spec,
           });
@@ -324,7 +333,8 @@ export class Bundler {
 
           asset!.dependencies.push({
             type: Asset.DependencyKind.RequireResolve,
-            asset: dependencyAsset,
+            href: dependencyAsset.href,
+            rootHref: dependencyAsset.rootHref,
             callee: dependency.callee,
             spec: dependency.spec,
           });
@@ -342,13 +352,23 @@ export class Bundler {
 
             asset!.dependencies.push({
               type: Asset.DependencyKind.InjectedGlobal,
-              asset: dependencyAsset,
+              href: dependencyAsset.href,
+              rootHref: dependencyAsset.rootHref,
               references,
               exportName: shim.export,
               symbolName,
             });
 
             return dependencyAsset;
+          });
+        }
+      }
+    } else {
+      // We already have an asset instance, let's make sure dependencies are OK
+      for (const dependency of asset.dependencies) {
+        if (!this.assetsByHref.has(dependency.href)) {
+          queue.add(async () => {
+            return this.addResolved(queue, dependency.href, dependency.rootHref);
           });
         }
       }
@@ -432,6 +452,13 @@ export namespace Bundler {
   export interface AddOptions {
     onEnqueueAsset?(): void;
     onCompleteAsset?(): void;
+  }
+
+  export interface BundleOptions {
+    onEnqueueAsset?(): void;
+    onCompleteAsset?(): void;
+    requireEntrypoints?: boolean;
+    sourceMap?: boolean;
   }
 
   export interface Options {

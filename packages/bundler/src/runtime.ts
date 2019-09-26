@@ -45,37 +45,13 @@ export function createRuntime(Velcro: typeof import('./')): { new (): IRuntime }
       this[aliasesSymbol][name] = id;
     }
 
-    import(
-      name: string,
-      options: { packageMain?: Array<'main' | 'browser'>; extensions?: string[]; sourceMap?: boolean } = {}
-    ) {
-      const Bundler = Velcro.Bundler;
-
-      if (!Bundler) {
-        throw new Error('Velcro.Bundler must be loaded for dynamic import');
-      }
-
-      const ResolverHostUnpkg = ((Velcro as unknown) as typeof import('@velcro/resolver-host-unpkg')).ResolverHostUnpkg;
-
-      if (!ResolverHostUnpkg) {
-        throw new Error('Velcro.ResolverHostUnpkg must be loaded for dynamic import');
-      }
-
-      const Resolver = ((Velcro as unknown) as typeof import('@velcro/resolver')).Resolver;
-
-      if (!Resolver) {
-        throw new Error('Velcro.Resolver must be loaded for dynamic import');
-      }
-
-      const resolverHost = new ResolverHostUnpkg();
-      const resolver = new Resolver(resolverHost, options);
-      const bundler = new Bundler({ resolver });
-
-      return bundler.add(name).then(() => {
-        const code = bundler.generateBundleCode({ sourceMap: options.sourceMap });
-        new Function(code)();
-
-        return this.require(name);
+    import(name: string) {
+      return new Promise((resolve, reject) => {
+        try {
+          return resolve(Velcro.runtime.require(name));
+        } catch (err) {
+          return reject(err);
+        }
       });
     }
 
