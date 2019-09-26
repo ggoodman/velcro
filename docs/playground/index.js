@@ -239,7 +239,7 @@ class Hello extends Component {
 }
 
 ReactDOM.render(
-  <Hello toWhat="World" />,
+  <Hello toWhat={ name } />,
   document.getElementById('root')
 );
             `.trim(),
