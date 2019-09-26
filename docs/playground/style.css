@@ -53,6 +53,7 @@ body {
   align-content: center;
   align-items: center;
   padding-left: 4px;
+  display: flex;
 }
 
 .file:hover {
@@ -72,6 +73,19 @@ body {
   color: #fff;
 }
 
+.create {
+  flex: 0 0 24px;
+  align-content: center;
+  align-items: center;
+  padding-left: 4px;
+  display: flex;
+}
+
+.create:hover {
+  background: #ccc;
+  cursor: pointer;
+}
+
 .file.focused .path {
 }
 
@@ -84,17 +98,43 @@ body {
 }
 
 .preview {
+  display: flex;
+  flex-direction: column;
+  position: relative;
 }
 
 .preview .iframe {
-  width: 100%;
+  flex: 1 1 100%;
   height: 100%;
   border: none;
 }
 
+.preview .iframe.loading {
+  display: none;
+}
+
 .preview .status {
-  margin: 1em 2em;
+  position: absolute;
+  z-index: 1;
+
+  right: 0;
+  bottom: 0;
+  left: 0;
+  padding: 1em 2em;
+  font-family: monospace;
   font-size: 16px;
+}
+
+.preview .status.error {
+  background-color: rgba(255, 0, 0, 0.5);
+  backdrop-filter: brightness(50%);
+  color: white;
+}
+
+.preview .status.info {
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: brightness(50%);
+  color: white;
 }
 
 .statusbar {

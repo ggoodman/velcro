@@ -3,18 +3,17 @@
     <div
       class="file"
       ng-class="{
-        active: $ctrl.activeModelPath == path,
-        focused: $ctrl.focusedModelPath == path,
+        active: $ctrl.activeModel == model,
+        focused: $ctrl.focusedModel == model,
       }"
-      ng-click="$ctrl.onClickPath(path)"
-      ng-repeat="(path, model) in $ctrl.models"
+      ng-click="$ctrl.onClickModel(model)"
+      ng-repeat="model in $ctrl.getModels()"
     >
-      <span class="path">{{ path }}</span>
+      <span class="path">{{ model.uri.path.slice(1) }}</span>
     </div>
+    <div class="create" ng-click="$ctrl.onClickCreate()">New file...</div>
   </div>
-  <div class="editor">
-    <div ng-if="$ctrl.error" class="error">{{ $ctrl.error.stack }}</div>
-  </div>
+  <div class="editor"></div>
   <div class="preview"></div>
   <div class="statusbar" ng-switch="$ctrl.state">
     <span ng-switch-when="building">Build progress: {{ $ctrl.completedAssets || 0 }} / {{ $ctrl.pendingAssets }}</span>

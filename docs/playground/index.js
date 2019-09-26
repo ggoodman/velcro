@@ -41,38 +41,164 @@ Loader(['vs/editor/editor.main'], function() {
     typeRoots: [`node_modules/@types`],
   });
 
-  const idbPromise = openDB('velcro', Velcro.Bundler.schemaVersion, {
-    async upgrade(db, oldVersion, newVersion, transaction) {
-      console.log('Upgrading cache from version %s to %s', oldVersion, newVersion);
+  class CachingHost extends Velcro.Resolver.Host {
+    /**
+     *
+     * @param {import('../../packages/resolver').Resolver.Host} host
+     */
+    constructor(host) {
+      super();
 
-      if (!oldVersion) {
-        db.createObjectStore(Velcro.Bundler.CacheSegmentKind.Asset);
-        db.createObjectStore(Velcro.Bundler.CacheSegmentKind.Resolve);
+      this.host = host;
+      /** @type {Promise<import('idb').IDBPDatabase | null>} */
+      this.idbPromise = openDB('velcro', Velcro.Bundler.schemaVersion, {
+        async upgrade(db, oldVersion, newVersion, transaction) {
+          console.log('Upgrading cache from version %s to %s', oldVersion, newVersion);
+
+          if (!oldVersion) {
+            db.createObjectStore('getCanonicalUrl');
+            db.createObjectStore('getResolveRoot');
+            db.createObjectStore('listEntries');
+            db.createObjectStore('readFileContent');
+          }
+
+          await transaction.objectStore('getCanonicalUrl').clear();
+          await transaction.objectStore('getResolveRoot').clear();
+          await transaction.objectStore('listEntries').clear();
+          await transaction.objectStore('readFileContent').clear();
+        },
+      }).catch(err => {
+        console.error(err, 'error opening IndexedDB');
+
+        return null;
+      });
+
+      /** @type {Map<string, ReturnType<import('../../packages/resolver').Resolver.Host['getCanonicalUrl']>>} */
+      this.inflightGetCanonicalUrl = new Map();
+      /** @type {Map<string, ReturnType<import('../../packages/resolver').Resolver.Host['getResolveRoot']>>} */
+      this.inflightGetResolveRoot = new Map();
+      /** @type {Map<string, ReturnType<import('../../packages/resolver').Resolver.Host['listEntries']>>} */
+      this.inflightListEntries = new Map();
+      /** @type {Map<string, ReturnType<import('../../packages/resolver').Resolver.Host['readFileContent']>>} */
+      this.inflightReadFileContent = new Map();
+    }
+
+    /**
+     * @template T
+     * @template C=unknown
+     * @param {string} href
+     * @param {() => Promise<T>} loadFn
+     * @param {Map<string, Promise<T>>} inflightMap
+     * @param {string} storeName
+     * @param {(result: T) => C} [serialize]
+     * @param {(cached: C) => T} [deserialize]
+     * @returns {Promise<T>}
+     */
+    async withCache(href, loadFn, inflightMap, storeName, serialize, deserialize) {
+      let idb = undefined;
+
+      try {
+        idb = await this.idbPromise;
+      } catch (err) {
+        // Error already logged
       }
 
-      await transaction.objectStore(Velcro.Bundler.CacheSegmentKind.Asset).clear();
-      await transaction.objectStore(Velcro.Bundler.CacheSegmentKind.Resolve).clear();
-    },
-  });
+      if (idb) {
+        try {
+          const cached = await idb.get(storeName, href);
 
-  /** @type {import('../../packages/bundler').Bundler.Cache} */
-  const cache = {
-    delete(record) {
-      return idbPromise.then(idb => {
-        return idb.delete(record.segment, record.id);
-      });
-    },
-    get(record) {
-      return idbPromise.then(idb => {
-        return idb.get(record.segment, record.id);
-      });
-    },
-    set(record, value) {
-      return idbPromise.then(idb => {
-        return idb.put(record.segment, value, record.id).then(() => undefined);
-      });
-    },
-  };
+          if (cached) {
+            return deserialize ? deserialize(cached) : cached;
+          }
+        } catch (err) {
+          console.error(err, 'error reading from cache');
+        }
+      }
+
+      let inflight = inflightMap.get(href);
+
+      if (!inflight) {
+        inflight = loadFn();
+        inflightMap.set(href, inflight);
+
+        (async () => {
+          try {
+            const result = await inflight;
+
+            if (idb) {
+              try {
+                await idb.put(storeName, serialize ? serialize(result) : result, href);
+              } catch (err) {
+                console.error(err, 'error writing to cache');
+              }
+            }
+          } finally {
+            inflightMap.delete(href);
+          }
+        })();
+      }
+
+      return inflight;
+    }
+
+    async getCanonicalUrl(resolver, url) {
+      const result = await this.withCache(
+        url.href,
+        () => this.host.getCanonicalUrl(resolver, url),
+        this.inflightGetCanonicalUrl,
+        'getCanonicalUrl',
+        url => url.href,
+        href => new URL(href)
+      );
+
+      return result;
+    }
+
+    async getResolveRoot(resolver, url) {
+      const result = await this.withCache(
+        url.href,
+        () => this.host.getResolveRoot(resolver, url),
+        this.inflightGetResolveRoot,
+        'getResolveRoot',
+        url => url.href,
+        href => new URL(href)
+      );
+
+      return result;
+    }
+
+    async listEntries(resolver, url) {
+      const result = await this.withCache(
+        url.href,
+        () => this.host.listEntries(resolver, url),
+        this.inflightListEntries,
+        'listEntries',
+        entries =>
+          entries.map(entry => ({
+            type: entry.type,
+            href: entry.url.href,
+          })),
+        cached =>
+          cached.map(entry => ({
+            type: entry.type,
+            url: new URL(entry.href),
+          }))
+      );
+
+      return result;
+    }
+
+    async readFileContent(resolver, url) {
+      const result = await this.withCache(
+        url.href,
+        () => this.host.readFileContent(resolver, url),
+        this.inflightReadFileContent,
+        'readFileContent'
+      );
+
+      return result;
+    }
+  }
 
   Angular.module('velcro', []).component('workbench', {
     templateUrl: './components/workbench.html',
@@ -92,20 +218,19 @@ Loader(['vs/editor/editor.main'], function() {
 
           this.pendingAssets = 0;
           this.completedAssets = 0;
-          /**
-           * @private
-           * @readonly
-           * @type {Record<string, import('monaco-editor').editor.ITextModel>}
-           **/
-          this.models = {};
           /** @type {'ready' | 'building' | 'failed' | 'built'} */
           this.state = 'ready';
 
+          /** @type {WeakMap<import('monaco-editor').editor.ITextModel, import('monaco-editor').editor.ICodeEditorViewState>} */
+          this.viewState = new WeakMap();
+
           const indexUri = Monaco.Uri.file('/index.js');
-          this.models[indexUri.fsPath] = Monaco.editor.createModel(
+          Monaco.editor.createModel(
             `
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
+
+import { name } from './name';
 
 class Hello extends Component {
   render() {
@@ -121,9 +246,17 @@ ReactDOM.render(
             'typescript',
             indexUri
           );
+          const nameUri = Monaco.Uri.file('/name.js');
+          Monaco.editor.createModel(
+            `
+export const name = 'World';
+            `.trim(),
+            'typescript',
+            nameUri
+          );
 
           const packageJsonUri = Monaco.Uri.file('/package.json');
-          this.models[packageJsonUri.fsPath] = Monaco.editor.createModel(
+          Monaco.editor.createModel(
             JSON.stringify(
               {
                 name: 'velcro-playground',
@@ -139,8 +272,6 @@ ReactDOM.render(
             packageJsonUri
           );
 
-          const ctrl = this;
-
           const unpkgHost = new Velcro.ResolverHostUnpkg();
 
           /** @type {import('../../packages/resolver').Resolver.Host} */
@@ -149,10 +280,10 @@ ReactDOM.render(
               return new URL('file:///');
             }
             async listEntries() {
-              return Object.keys(ctrl.models).map(path => {
+              return Monaco.editor.getModels().map(model => {
                 return {
                   type: Velcro.ResolvedEntryKind.File,
-                  url: new URL(`file://${path}`),
+                  url: new URL(model.uri.toString(true)),
                 };
               });
             }
@@ -165,16 +296,33 @@ ReactDOM.render(
             async readFileContent(_resolver, url) {
               const encoder = new TextEncoder();
               const uri = Monaco.Uri.file(url.pathname);
-              const model = ctrl.models[uri.fsPath];
+              const model = Monaco.editor.getModel(uri);
+
+              if (!model) {
+                throw new Error(`No file registered with uri '${url.href}`);
+              }
 
               if (model.getModeId() === 'typescript') {
                 const workerFactory = await Monaco.languages.typescript.getTypeScriptWorker();
                 const workerClient = await workerFactory(uri);
                 const uriStr = uri.toString(true);
-                const emitOutput = await workerClient.getEmitOutput(uriStr);
+                const [emitOutput, syntacticDiagnostics] = await Promise.all([
+                  workerClient.getEmitOutput(uriStr),
+                  workerClient.getSyntacticDiagnostics(uriStr),
+                ]);
 
                 if (emitOutput.emitSkipped) {
                   throw new Error(`Emit skipped when trying to load ${url}`);
+                }
+
+                if (syntacticDiagnostics.length) {
+                  const err = new Error(
+                    `Syntax error: ${syntacticDiagnostics[0].messageText} at ${url.pathname}:${
+                      syntacticDiagnostics[0].start
+                    }:${syntacticDiagnostics[0].length}`
+                  );
+
+                  throw err;
                 }
 
                 return encoder.encode(emitOutput.outputFiles[0].text);
@@ -184,34 +332,30 @@ ReactDOM.render(
             }
           })();
 
+          const cachedUnpkgHost = new CachingHost(unpkgHost);
           const memoryRoot = Monaco.Uri.file('/').toString(true);
           const resolverHost = new Velcro.ResolverHostCompound({
-            ['https://unpkg.com/']: unpkgHost,
+            ['https://unpkg.com/']: cachedUnpkgHost,
             [memoryRoot]: memoryHostWrapper,
           });
           const resolver = new Velcro.Resolver(resolverHost, {
-            packageMain: ['browser', 'main'],
+            packageMain: ['unpkg', 'browser', 'main'],
           });
 
-          this.bundler = new Velcro.Bundler({ cache, resolver });
-          this.bundler.onAssetAdded(asset => {
-            console.log('onAssetAdded', asset.rootHref);
-          });
+          this.bundler = new Velcro.Bundler({ resolver });
         }
 
         $postLink() {
           window.addEventListener(
             'message',
             e => {
-              this.withApply(() => {
-                this.error = e.data.payload;
-              });
+              this.showPreviewMessage(`${e.data.payload.name}: ${e.data.payload.message}`, 'error');
             },
             true
           );
 
           const editorDiv = this.el.children().children()[1];
-          const model = this.models[Monaco.Uri.file('/index.js').fsPath];
+          const model = Monaco.editor.getModel(Monaco.Uri.file('/index.js'));
 
           this.editor = Monaco.editor.create(editorDiv, {
             model: null,
@@ -222,79 +366,118 @@ ReactDOM.render(
 
           this.editor.onDidChangeModel(e => {
             this.withApply(() => {
-              this.activeModelPath = e.newModelUrl.fsPath;
+              this.activeModel = Monaco.editor.getModel(e.newModelUrl);
+
+              const viewState = this.viewState.get(this.activeModel);
+
+              if (viewState) {
+                this.editor.restoreViewState(viewState);
+              }
             });
           });
 
           this.editor.onDidBlurEditorText(() => {
             this.withApply(() => {
-              this.focusedModelPath = undefined;
+              this.focusedModel = undefined;
             });
+
+            this.viewState.set(this.editor.getModel(), this.editor.saveViewState());
           });
 
           this.editor.onDidFocusEditorText(() => {
             this.withApply(() => {
-              this.focusedModelPath = this.editor.getModel().uri.fsPath;
+              this.focusedModel = this.editor.getModel();
             });
           });
 
           this.editor.setModel(model);
           this.editor.focus();
 
-          for (const path in this.models) {
-            const model = this.models[path];
-
+          Monaco.editor.onDidCreateModel(model => {
             model.onDidChangeContent(e => {
-              if (this.debounceTimeout) {
-                clearTimeout(this.debounceTimeout);
+              if (this.refreshPreviewTimer) {
+                clearTimeout(this.refreshPreviewTimer);
               }
 
-              this.debounceTimeout = setTimeout(() => this.refreshPreview(), 1000);
+              this.refreshPreviewTimer = setTimeout(() => this.refreshPreview(), 1000);
+            });
+          });
+
+          for (const model of Monaco.editor.getModels()) {
+            model.onDidChangeContent(e => {
+              if (this.refreshPreviewTimer) {
+                clearTimeout(this.refreshPreviewTimer);
+              }
+
+              this.refreshPreviewTimer = setTimeout(() => this.refreshPreview(), 1000);
             });
           }
 
           this.refreshPreview();
         }
 
+        getModels() {
+          return Monaco.editor.getModels();
+        }
+
+        onClickCreate() {
+          const pathname = prompt('Filename:');
+
+          if (pathname) {
+            const model = Monaco.editor.createModel(
+              '',
+              pathname.endsWith('.js') ? 'typescript' : null,
+              Monaco.Uri.file(pathname)
+            );
+
+            this.editor.setModel(model);
+            this.editor.focus();
+          }
+        }
+
         /**
          *
-         * @param {string} path
+         * @param {import('monaco-editor').editor.ITextModel} model
          */
-        onClickPath(path) {
-          const model = this.models[path];
-
+        onClickModel(model) {
           if (model) {
             this.editor.setModel(model);
             this.editor.focus();
           }
         }
 
-        async refreshPreview() {
-          const start = Date.now();
-          console.time('refreshPreview');
-          if (this.previousIframe) {
-            this.previousIframe.remove();
-            this.previousIframe = undefined;
-          }
+        showPreviewMessage(message, className) {
+          const preview = this.el.children().children()[2];
 
           if (this.loadingIndicator) {
             this.loadingIndicator.remove();
             this.loadingIndicator = undefined;
           }
 
-          const preview = this.el.children().children()[2];
-          const iframe = document.createElement('iframe');
-          iframe.className = 'iframe';
-
-          this.loadingIndicator = document.createElement('pre');
-          this.loadingIndicator.className = 'status';
-          this.loadingIndicator.textContent = 'Loading...';
+          this.loadingIndicator = document.createElement('div');
+          this.loadingIndicator.classList.add('status', className);
+          this.loadingIndicator.textContent = message;
 
           preview.appendChild(this.loadingIndicator);
+        }
+
+        async refreshPreview() {
+          const start = Date.now();
+          console.time('refreshPreview');
+
+          if (this.refreshPreviewTimer) {
+            clearTimeout(this.refreshPreviewTimer);
+          }
+
+          this.showPreviewMessage('Rebuilding...', 'info');
+
+          const preview = this.el.children().children()[2];
+          const iframe = document.createElement('iframe');
+
+          iframe.classList.add('iframe', 'loading');
+          preview.classList.add('loading');
 
           try {
-            this.previousIframe = iframe;
-
             const entrypoint = Monaco.Uri.file('/index.js').toString(true);
 
             this.bundler.remove(entrypoint);
@@ -365,24 +548,55 @@ window.onerror = function(msg, url, lineNo, columnNo, err) {
             const htmlUrl = URL.createObjectURL(markup);
             iframe.src = htmlUrl;
 
-            this.loadingIndicator.remove();
-            this.loadingIndicator = undefined;
-
-            preview.appendChild(iframe);
-
             this.withApply(() => {
               this.state = 'built';
               this.buildTime = Date.now() - start;
             });
+
+            preview.appendChild(iframe);
+
+            iframe.onerror = err => {
+              this.showPreviewMessage(`Preview failed to load: ${typeof err === 'string' ? err : `<${err.type}>`}`);
+
+              iframe.remove();
+              preview.classList.remove('loading');
+
+              this.withApply(() => {
+                this.state = 'failed';
+              });
+
+              console.timeEnd('refreshPreview');
+            };
+            iframe.onload = () => {
+              if (this.previousIframe) {
+                this.previousIframe.remove();
+              }
+
+              this.previousIframe = iframe;
+
+              iframe.classList.remove('loading');
+              preview.classList.remove('loading');
+
+              if (this.loadingIndicator) {
+                this.loadingIndicator.remove();
+                this.loadingIndicator = undefined;
+              }
+
+              this.withApply(() => {
+                this.state = 'ready';
+              });
+
+              console.timeEnd('refreshPreview');
+            };
           } catch (err) {
-            this.loadingIndicator.textContent = `Loading failed: ${err.stack}`;
+            this.showPreviewMessage(`${err.name}: ${err.message}`, 'error');
 
             this.withApply(() => {
               this.state = 'failed';
             });
-          }
 
-          console.timeEnd('refreshPreview');
+            console.timeEnd('refreshPreview');
+          }
         }
 
         withApply(fn) {
