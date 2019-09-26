@@ -216,6 +216,8 @@ Loader(['vs/editor/editor.main'], function() {
           /** @type {import('angular').IScope} */
           this.scope = $scope;
 
+          this.invalidationQueue = Promise.resolve();
+
           this.pendingAssets = 0;
           this.completedAssets = 0;
           /** @type {'ready' | 'building' | 'failed' | 'built'} */
@@ -393,24 +395,30 @@ export const name = 'World';
           this.editor.setModel(model);
           this.editor.focus();
 
-          Monaco.editor.onDidCreateModel(model => {
+          /**
+           * @param {import('monaco-editor').editor.ITextModel} model
+           */
+          const onCreateModel = model => {
             model.onDidChangeContent(e => {
               if (this.refreshPreviewTimer) {
                 clearTimeout(this.refreshPreviewTimer);
               }
 
               this.refreshPreviewTimer = setTimeout(() => this.refreshPreview(), 1000);
+
+              this.invalidationQueue = this.invalidationQueue.then(() => {
+                return this.bundler.invalidate(model.uri.toString(false)).catch(err => {
+                  console.error(err, 'Invalidation failed');
+                  return false;
+                });
+              });
             });
-          });
+          };
+
+          Monaco.editor.onDidCreateModel(onCreateModel);
 
           for (const model of Monaco.editor.getModels()) {
-            model.onDidChangeContent(e => {
-              if (this.refreshPreviewTimer) {
-                clearTimeout(this.refreshPreviewTimer);
-              }
-
-              this.refreshPreviewTimer = setTimeout(() => this.refreshPreview(), 1000);
-            });
+            onCreateModel(model);
           }
 
           this.refreshPreview();
@@ -480,15 +488,13 @@ export const name = 'World';
           try {
             const entrypoint = Monaco.Uri.file('/index.js').toString(true);
 
-            this.bundler.remove(entrypoint);
-
             this.withApply(() => {
               this.pendingAssets = 0;
               this.completedAssets = 0;
               this.state = 'building';
             });
 
-            await this.bundler.add(entrypoint, {
+            const code = await this.bundler.generateBundleCode([entrypoint], {
               onCompleteAsset: () => {
                 this.withApply(() => {
                   this.completedAssets++;
@@ -499,6 +505,8 @@ export const name = 'World';
                   this.pendingAssets++;
                 });
               },
+              requireEntrypoints: true,
+              sourceMap: true,
             });
 
             const errorWatcher = new File(
@@ -518,7 +526,6 @@ window.onerror = function(msg, url, lineNo, columnNo, err) {
                 type: 'text/javascript',
               }
             );
-            const code = this.bundler.generateBundleCode({ entrypoint, sourceMap: true });
             const bundleFile = new File([code], entrypoint, {
               type: 'text/javascript',
             });
