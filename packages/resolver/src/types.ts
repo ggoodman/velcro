@@ -1,4 +1,4 @@
-export type PackageMainField = 'browser' | 'module' | 'jsnext:main' | 'main';
+export type PackageMainField = 'browser' | 'module' | 'jsnext:main' | 'main' | 'unpkg';
 
 export enum ResolvedEntryKind {
   Directory = 'directory',
@@ -20,6 +20,7 @@ export type PackageJson = {
   dependencies?: { [key: string]: string };
   devDependencies?: { [key: string]: string };
   peerDependencies?: { [key: string]: string };
+  unpkg?: string;
 };
 
 export function isValidPackageJson(json: unknown): json is PackageJson {
@@ -32,6 +33,7 @@ export function isValidPackageJson(json: unknown): json is PackageJson {
     !hasInvalidOptionalStringField(json as any, 'main') &&
     !hasInvalidOptionalStringField(json as any, 'module') &&
     !hasInvalidOptionalStringField(json as any, 'jsnext:main') &&
+    !hasInvalidOptionalStringField(json as any, 'unpkg') &&
     !hasInvalidDependenciesField(json as any, 'dependencies') &&
     !hasInvalidDependenciesField(json as any, 'devDependencies') &&
     !hasInvalidDependenciesField(json as any, 'peerDependencies')

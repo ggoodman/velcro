@@ -272,7 +272,7 @@ export class ResolverHostUnpkg extends Resolver.Host {
     const res = await fetch(href);
 
     if (!res.ok) {
-      throw new Error(`Error listing package contents for ${spec}`);
+      throw new Error(`Error listing package contents for ${spec}: ${res.status}`);
     }
 
     const json = await res.json();

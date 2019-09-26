@@ -12,7 +12,7 @@ import { Asset } from './asset';
 import { createRuntime } from './runtime';
 import { Queue } from './queue';
 
-const CACHE_KEY_SEPARATOR = '|';
+const RESOLVE_KEY_SEPARATOR = '|';
 
 const EMPTY_MODULE_HREF = new URL('velcro://@empty');
 const EMPTY_MODULE_CODE = 'module.exports = function(){};';
@@ -35,7 +35,6 @@ export class Bundler {
   private readonly assetsByHref = new Map<string, Asset>();
   private readonly assetsByRootHref = new Map<string, Set<Asset>>();
   private readonly aliasDependencies = new Map<string, Set<Asset>>();
-  private readonly cache?: Bundler.Cache;
   private readonly pendingAdds = new Map<string, Promise<Asset>>();
   private readonly pendingResolves = new Map<string, Promise<Asset>>();
   private readonly resolver: Resolver;
@@ -46,7 +45,6 @@ export class Bundler {
   static readonly schemaVersion: 1;
 
   constructor(options: Bundler.Options) {
-    this.cache = options.cache;
     this.resolver = options.resolver;
   }
 
@@ -84,7 +82,7 @@ export class Bundler {
     }
 
     if (options.entrypoint && !this.aliases.has(options.entrypoint)) {
-      throw new Error(`Unable to generate bundle with an unknown entrypoint ${options.entrypoint}`);
+      throw new Error(`Unable to generate bundle with an unknown entrypoint '${options.entrypoint}'`);
     }
 
     const bundle = new Bundle({ separator: '\n' });
@@ -95,7 +93,7 @@ export class Bundler {
 
     for (const [, asset] of this.assetsByHref) {
       if (!asset.magicString) {
-        throw new Error(`Invariant violation: asset is not loaded ${asset.href}`);
+        throw new Error(`Invariant violation: asset is not loaded '${asset.href}'`);
       }
 
       const magicString = asset.magicString.clone();
@@ -123,7 +121,9 @@ export class Bundler {
             );
             break;
           default:
-            throw new Error(`Invariant violation: Encountered unexpected dependency kind ${(dependency as any).type}`);
+            throw new Error(
+              `Invariant violation: Encountered unexpected dependency kind '${(dependency as any).type}'`
+            );
         }
       }
 
@@ -195,7 +195,7 @@ export class Bundler {
         false
       );
 
-      sourceMapSuffix = `\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${btoa(
+      sourceMapSuffix = `\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${Base64.encode(
         JSON.stringify(combinedMap)
       )}`;
     }
@@ -210,8 +210,6 @@ export class Bundler {
       return false;
     }
 
-    const alias = this.aliases.get(href);
-
     this.aliasDependencies.delete(href);
     this.aliases.delete(href);
 
@@ -224,14 +222,6 @@ export class Bundler {
 
       this.assetsByHref.delete(dependency.href);
       this.onAssetRemovedEmitter.fire(dependency);
-    }
-
-    if (this.cache && alias) {
-      await this.cache.delete({
-        id: alias,
-        schemaVersion: Bundler.schemaVersion,
-        segment: Bundler.CacheSegmentKind.Asset,
-      });
     }
 
     return true;
@@ -256,8 +246,22 @@ export class Bundler {
     }
   }
 
+  private removeAsset(asset: Asset): void {
+    const hadAsset = this.assetsByHref.delete(asset.href);
+
+    const assetsByRootHref = this.assetsByRootHref.get(asset.rootHref);
+
+    if (assetsByRootHref) {
+      assetsByRootHref.delete(asset);
+    }
+
+    if (!hadAsset) {
+      this.onAssetRemovedEmitter.fire(asset);
+    }
+  }
+
   private async addUnresolved(queue: Queue, href: string, fromHref?: string): Promise<Asset> {
-    const resolveKey = `${href}${CACHE_KEY_SEPARATOR}${fromHref}`;
+    const resolveKey = `${href}${RESOLVE_KEY_SEPARATOR}${fromHref}`;
 
     let pendingResolve = this.pendingResolves.get(resolveKey);
 
@@ -276,120 +280,78 @@ export class Bundler {
   private async addResolving(queue: Queue, href: string, fromHref?: string): Promise<Asset> {
     const resolveResult = await this.resolveWithDetails(href, fromHref);
 
-    return this.addResolved(queue, resolveResult.resolvedHref, resolveResult.rootHref, resolveResult.cacheable);
+    return this.addResolved(queue, resolveResult.resolvedHref, resolveResult.rootHref);
   }
 
-  private async addResolved(queue: Queue, href: string, rootHref: string, cacheable: boolean): Promise<Asset> {
-    const cacheRecord: Bundler.CacheRecord<Bundler.CacheSegmentKind.Asset> = {
-      id: href,
-      schemaVersion: Bundler.schemaVersion,
-      segment: Bundler.CacheSegmentKind.Asset,
-    };
-    const dependencyPromises = [] as Promise<Asset>[];
-
+  private async addResolved(queue: Queue, href: string, rootHref: string): Promise<Asset> {
     let asset = this.assetsByHref.get(href);
-    let cached = false;
-
-    if (!asset) {
-      if (this.cache) {
-        const cachedAsset = await this.cache.get(cacheRecord);
-
-        if (cachedAsset) {
-          asset = Asset.fromJSON(cachedAsset);
-          cached = true;
-
-          this.addAsset(asset);
-
-          for (const dependency of asset.dependencies) {
-            const promise = this.addResolved(queue, dependency.asset.href, dependency.asset.rootHref, true);
-
-            queue.add(promise);
-          }
-        }
-      }
-    }
 
     if (!asset) {
       asset = new Asset(href, rootHref);
 
       this.addAsset(asset);
 
-      const code = await this.readCode(href);
+      try {
+        const code = await this.readCode(href);
 
-      asset.setCode(code);
+        asset.setCode(code);
+      } catch (err) {
+        this.removeAsset(asset);
+
+        throw err;
+      }
 
       const parser = getParserForFile(href);
       const parsedFile = parser.parse(href, asset.magicString!);
 
       for (const dependency of parsedFile.requireDependencies) {
-        dependencyPromises.push(
-          (async () => {
-            const dependencyAsset = await this.addUnresolved(queue, dependency.spec.value, href);
+        queue.add(async () => {
+          const dependencyAsset = await this.addUnresolved(queue, dependency.spec.value, href);
+          asset!.dependencies.push({
+            type: Asset.DependencyKind.Require,
+            asset: dependencyAsset,
+            callee: dependency.callee,
+            spec: dependency.spec,
+          });
 
-            asset!.dependencies.push({
-              type: Asset.DependencyKind.Require,
-              asset: dependencyAsset,
-              callee: dependency.callee,
-              spec: dependency.spec,
-            });
-
-            return dependencyAsset;
-          })()
-        );
+          return dependencyAsset;
+        });
       }
 
       for (const dependency of parsedFile.requireResolveDependencies) {
-        dependencyPromises.push(
-          (async () => {
-            const dependencyAsset = await this.addUnresolved(queue, dependency.spec.value, href);
+        queue.add(async () => {
+          const dependencyAsset = await this.addUnresolved(queue, dependency.spec.value, href);
 
-            asset!.dependencies.push({
-              type: Asset.DependencyKind.RequireResolve,
-              asset: dependencyAsset,
-              callee: dependency.callee,
-              spec: dependency.spec,
-            });
+          asset!.dependencies.push({
+            type: Asset.DependencyKind.RequireResolve,
+            asset: dependencyAsset,
+            callee: dependency.callee,
+            spec: dependency.spec,
+          });
 
-            return dependencyAsset;
-          })()
-        );
+          return dependencyAsset;
+        });
       }
 
       for (const [symbolName, references] of parsedFile.unboundSymbols) {
         const shim = DEFAULT_SHIM_GLOBALS[symbolName];
 
         if (shim) {
-          dependencyPromises.push(
-            (async () => {
-              const dependencyAsset = await this.addUnresolved(queue, shim.spec, href);
+          queue.add(async () => {
+            const dependencyAsset = await this.addUnresolved(queue, shim.spec, href);
 
-              asset!.dependencies.push({
-                type: Asset.DependencyKind.InjectedGlobal,
-                asset: dependencyAsset,
-                references,
-                exportName: shim.export,
-                symbolName,
-              });
+            asset!.dependencies.push({
+              type: Asset.DependencyKind.InjectedGlobal,
+              asset: dependencyAsset,
+              references,
+              exportName: shim.export,
+              symbolName,
+            });
 
-              return dependencyAsset;
-            })()
-          );
+            return dependencyAsset;
+          });
         }
       }
-
-      queue.add(...dependencyPromises);
-    }
-
-    if (this.cache && cacheable && !cached) {
-      const dependenciesReadyPromise: Promise<unknown> = dependencyPromises.length
-        ? Promise.all(dependencyPromises)
-        : Promise.resolve();
-
-      dependenciesReadyPromise.then(() => {
-        this.cache!.set(cacheRecord, asset!.toJSON()).catch(err => {
-          console.error({ cacheRecord, err }, 'Failed storing cache record');
-        });
-      });
     }
 
     return asset;
@@ -407,32 +369,17 @@ export class Bundler {
   }
 
   private async resolveWithDetails(uri: string, fromUri?: string): Promise<Bundler.ResolveDetails> {
-    const id = `${uri}${CACHE_KEY_SEPARATOR}${fromUri}`;
-    const cacheRecord: Bundler.CacheRecord<Bundler.CacheSegmentKind.Resolve> = {
-      id,
-      schemaVersion: Bundler.schemaVersion,
-      segment: Bundler.CacheSegmentKind.Resolve,
-    } as const;
-
-    if (this.cache) {
-      const cached = await this.cache.get(cacheRecord);
-
-      if (cached) {
-        return cached;
-      }
-    }
-
     let resolved: Bundler.ResolveDetails;
 
     if (isBareModuleSpecifier(uri)) {
       const bareModuleResolveResult = await resolveBareModuleToUnpkgWithDetails(this.resolver, uri, fromUri);
 
       if (!bareModuleResolveResult.stableUrl) {
-        throw new Error(`Failed to resolve bare module ${uri} from ${fromUri || '@root'} to a stable url`);
+        throw new Error(`Failed to resolve bare module '${uri}' from '${fromUri || '@root'}' to a stable url`);
       }
 
       if (!bareModuleResolveResult.stableRootUrl) {
-        throw new Error(`Failed to resolve bare module ${uri} from ${fromUri || '@root'} to a stable root url`);
+        throw new Error(`Failed to resolve bare module '${uri}' from '${fromUri || '@root'}' to a stable root url`);
       }
 
       const resolvedHref = bareModuleResolveResult.resolvedUrl
@@ -446,7 +393,6 @@ export class Bundler {
           version: bareModuleResolveResult.bareModule.version,
           versionSpec: bareModuleResolveResult.bareModule.versionSpec,
         },
-        cacheable: bareModuleResolveResult.cacheable,
         ignored: bareModuleResolveResult.ignored,
         resolvedHref,
         rootHref: bareModuleResolveResult.rootUrl.href,
@@ -470,19 +416,12 @@ export class Bundler {
 
       resolved = {
         type: Bundler.ResolveDetailsKind.Relative,
-        cacheable: resolveResult.cacheable,
         ignored: resolveResult.ignored,
         resolvedHref,
         rootHref,
         stableHref: resolvedHref,
         stableRootHref: rootHref,
       };
-    }
-
-    if (this.cache && resolved.cacheable) {
-      this.cache.set(cacheRecord, resolved).catch(err => {
-        console.error({ cacheRecord, err }, 'Failed storing cache record');
-      });
     }
 
     return resolved;
@@ -495,33 +434,7 @@ export namespace Bundler {
     onCompleteAsset?(): void;
   }
 
-  export interface Cache {
-    delete(record: CacheRecord<CacheSegmentKind>): Promise<void>;
-
-    get(record: CacheRecord<CacheSegmentKind.Asset>): Promise<Asset.AsObject | undefined>;
-    set(record: CacheRecord<CacheSegmentKind.Asset>, resolveDetails: Asset.AsObject): Promise<void>;
-
-    get(record: CacheRecord<CacheSegmentKind.Resolve>): Promise<ResolveDetails | undefined>;
-    set(record: CacheRecord<CacheSegmentKind.Resolve>, resolveDetails: ResolveDetails): Promise<void>;
-  }
-
-  export interface CacheRecord<TSegment extends CacheSegment = CacheSegment> {
-    id: string;
-    /** The version (or generation) of the cache */
-    schemaVersion: number;
-    /** The cache should support storage and retrieval of different segments */
-    segment: TSegment;
-  }
-
-  export enum CacheSegmentKind {
-    Asset = 'asset',
-    Resolve = 'resolve',
-  }
-
-  export type CacheSegment = CacheSegmentKind.Asset | CacheSegmentKind.Resolve;
-
   export interface Options {
-    cache?: Cache;
     resolver: Resolver;
   }
 
@@ -537,7 +450,6 @@ export namespace Bundler {
       versionSpec?: string;
       version?: string;
     };
-    cacheable: boolean;
     ignored: boolean;
     resolvedHref: string;
     rootHref: string;
@@ -547,7 +459,6 @@ export namespace Bundler {
 
   interface RelativeResolveDetails {
     type: ResolveDetailsKind.Relative;
-    cacheable: boolean;
     ignored: boolean;
     resolvedHref: string;
     rootHref: string;

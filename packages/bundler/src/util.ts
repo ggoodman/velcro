@@ -70,7 +70,7 @@ export function parseBareModuleSpec(spec: string): BareModuleSpec {
   const parsed = maybeParseBareModuleSpec(spec);
 
   if (!parsed) {
-    throw new Error(`Unable to parse unexpected unpkg url: ${spec}`);
+    throw new Error(`Unable to parse unexpected unpkg url: '${spec}'`);
   }
 
   return parsed;

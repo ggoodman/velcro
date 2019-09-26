@@ -12,7 +12,7 @@ export class Queue {
     return this.pendingCount;
   }
 
-  add(...jobs: Promise<Asset | undefined>[]) {
+  add(...jobs: (() => Promise<Asset | undefined>)[]) {
     for (const job of jobs) {
       this.pendingCount++;
 
@@ -20,7 +20,7 @@ export class Queue {
         this.onEnqueue();
       }
 
-      Promise.resolve(job).then(
+      job().then(
         asset => {
           this.pendingCount--;
 
@@ -50,8 +50,6 @@ export class Queue {
           }
 
           this.releaseWithError(err);
-
-          throw err;
         }
       );
     }
