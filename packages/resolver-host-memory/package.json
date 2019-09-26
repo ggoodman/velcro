@@ -31,7 +31,7 @@
   "scripts": {
     "build": "rollup -c",
     "prepack": "npm run build",
-    "test": "lab -fSv --transform ./test/lib/typescript.js"
+    "test": "lab -fSv --globals globalThis --transform ./test/lib/typescript.js"
   },
   "devDependencies": {
     "@hapi/code": "^6.0.0",
