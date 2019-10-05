@@ -1,3 +1,3 @@
 'use strict';
 
-module.exports = require('globalthis/polyfill');
+module.exports = require('globalthis/polyfill')();
