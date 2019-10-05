@@ -36,7 +36,7 @@
     "buffer": "5.2.1",
     "crypto-browserify": "3.12.0",
     "events": "3.0.0",
-    "memory-fs": "^0.4.1",
+    "memfs": "^2.15.5",
     "node-libs-browser": "^2.2.0",
     "os-browserify": "^0.3.0",
     "querystring": "^0.2.0",

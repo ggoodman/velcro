@@ -1,3 +1,3 @@
 'use strict';
 
-module.exports = require('memory-fs');
+module.exports = require('memfs');
