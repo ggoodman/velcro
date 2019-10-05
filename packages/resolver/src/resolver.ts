@@ -243,6 +243,8 @@ export class Resolver {
   }
 
   public async readParentPackageJson(url: URL): Promise<{ packageJson: PackageJson; url: URL } | undefined> {
+    url = await this.host.getCanonicalUrl(this, url);
+
     const hostRootUrl = await this.host.getResolveRoot(this, url);
     const hostRootHref = ensureTrailingSlash(hostRootUrl.href);
     const containingDirUrl = new URL(ensureTrailingSlash(dirname(url.pathname)), url);
@@ -271,9 +273,7 @@ export class Resolver {
           return { packageJson, url: packageJsonEntry.url };
         } catch (err) {
           console.warn(
-            `Error reading the parent package manifest for ${url.href} from ${packageJsonEntry.url.href}: ${
-              err.message
-            }`
+            `Error reading the parent package manifest for ${url.href} from ${packageJsonEntry.url.href}: ${err.message}`
           );
         }
       }

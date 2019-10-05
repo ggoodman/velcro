@@ -1,4 +1,4 @@
-export class ExtendableError extends Error {
+class ExtendableError extends Error {
   constructor(message: string) {
     super(message);
 
@@ -13,7 +13,7 @@ export class ExtendableError extends Error {
 }
 
 export class EntryNotFoundError extends ExtendableError {
-  constructor(url: URL) {
+  constructor(public readonly url: URL) {
     super(`Not found ${url.href}`);
   }
 }
