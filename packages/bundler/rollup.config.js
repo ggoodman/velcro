@@ -24,6 +24,36 @@ module.exports = [
         format: 'umd',
         sourcemap: true,
       },
+    ],
+    plugins: [
+      RollupPluginJson(),
+      RollupPluginTypescript({
+        check: true,
+        tsconfig: resolve(__dirname, './tsconfig.json'),
+        typescript: Typescript,
+        tsconfigOverride: {
+          compilerOptions: {
+            module: 'esnext',
+            rootDir: './src',
+            sourceMap: true,
+          },
+          exclude: ['./test'],
+        },
+        objectHashIgnoreUnknownHack: true,
+      }),
+      RollupPluginNodeResolve(),
+      RollupPluginCommonJs(),
+      // RollupPluginVisualizer({
+      //   open: true,
+      //   // sour÷cemap: true,
+      //   template: 'treemap',
+      // }),
+    ],
+  },
+  {
+    external: ['module'],
+    input: resolve(__dirname, 'src/index.ts'),
+    output: [
       {
         file: resolve(__dirname, pkg.main),
         format: 'cjs',
@@ -51,8 +81,6 @@ module.exports = [
         },
         objectHashIgnoreUnknownHack: true,
       }),
-      RollupPluginNodeResolve(),
-      RollupPluginCommonJs(),
       // RollupPluginVisualizer({
       //   open: true,
       //   // sour÷cemap: true,

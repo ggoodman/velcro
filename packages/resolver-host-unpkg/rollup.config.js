@@ -1,3 +1,5 @@
+'use strict';
+
 const { resolve } = require('path');
 
 const RollupPluginNodeResolve = require('rollup-plugin-node-resolve');
@@ -17,6 +19,27 @@ module.exports = [
         file: resolve(__dirname, pkg.browser),
         format: 'umd',
       },
+    ],
+    plugins: [
+      RollupPluginTypescript({
+        check: true,
+        tsconfig: resolve(__dirname, './tsconfig.json'),
+        typescript: Typescript,
+        tsconfigOverride: {
+          compilerOptions: {
+            module: 'esnext',
+            rootDir: './src',
+          },
+          exclude: ['./test'],
+        },
+      }),
+      RollupPluginNodeResolve(),
+      RollupPluginCommonJs(),
+    ],
+  },
+  {
+    input: resolve(__dirname, 'src/index.ts'),
+    output: [
       {
         file: resolve(__dirname, pkg.main),
         format: 'cjs',
@@ -41,8 +64,6 @@ module.exports = [
           exclude: ['./test'],
         },
       }),
-      RollupPluginNodeResolve(),
-      RollupPluginCommonJs(),
     ],
   },
 ];
