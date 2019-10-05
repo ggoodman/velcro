@@ -53,6 +53,7 @@ export namespace Asset {
     rootHref: string;
     callee: { start: number; end: number };
     spec: { start: number; end: number; value: string };
+    value: string;
   }
 
   export interface RequireResolveDependency {
@@ -61,6 +62,7 @@ export namespace Asset {
     rootHref: string;
     callee: { start: number; end: number };
     spec: { start: number; end: number; value: string };
+    value: string;
   }
 
   export interface InjectedGlobalDependency {
@@ -70,6 +72,7 @@ export namespace Asset {
     exportName?: string;
     references: { start: number; end: number }[];
     symbolName: string;
+    value: string;
   }
 
   export type Dependency = RequireDependency | RequireResolveDependency | InjectedGlobalDependency;

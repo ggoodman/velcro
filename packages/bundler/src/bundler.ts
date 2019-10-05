@@ -1,6 +1,6 @@
 import remapping from '@ampproject/remapping';
 import { version as nodeLibsVersion } from '@velcro/node-libs/package.json';
-import { Resolver } from '@velcro/resolver';
+import { EntryNotFoundError, Resolver } from '@velcro/resolver';
 import { Base64 } from 'js-base64';
 import { Bundle } from 'magic-string';
 import { Emitter } from 'ts-primitives';
@@ -11,6 +11,7 @@ import { parseFile } from './parser';
 import { Asset } from './asset';
 import { createRuntime } from './runtime';
 import { Queue } from './queue';
+import { ResolveError } from './error';
 
 const RESOLVE_KEY_SEPARATOR = '|';
 
@@ -217,14 +218,36 @@ export class Bundler {
     return `${bundleCode}${sourceMapSuffix}`;
   }
 
-  async invalidate(href: string): Promise<boolean> {
-    const resolveResult = await this.resolveWithDetails(href);
+  async invalidate(spec: string): Promise<boolean> {
+    let asset = this.assetsByHref.get(spec);
 
-    if (!resolveResult) {
-      return false;
+    if (!asset) {
+      // We can't use Bundler::resolveWithDetails() because that will throw
+      // when a module isn't found. We just want to attempt to resolve and
+      // return true / false accordingly.
+      let resolveResult: { resolvedUrl?: URL } | undefined = undefined;
+
+      try {
+        if (isBareModuleSpecifier(spec)) {
+          resolveResult = await resolveBareModuleToUnpkgWithDetails(this.resolver, spec);
+        } else {
+          const combinedUri = new URL(spec);
+          resolveResult = await this.resolver.resolveWithDetails(combinedUri);
+        }
+      } catch (err) {
+        if (err instanceof EntryNotFoundError) {
+          return false;
+        }
+
+        throw err;
+      }
+
+      if (!resolveResult || !resolveResult.resolvedUrl) {
+        return false;
+      }
+
+      asset = this.assetsByHref.get(resolveResult.resolvedUrl.href);
     }
-
-    const asset = this.assetsByHref.get(resolveResult.resolvedHref);
 
     if (asset) {
       this.removeAsset(asset);
@@ -263,7 +286,7 @@ export class Bundler {
       assetsByRootHref.delete(asset);
     }
 
-    if (!hadAsset) {
+    if (hadAsset) {
       this.onAssetRemovedEmitter.fire(asset);
     }
   }
@@ -280,6 +303,12 @@ export class Bundler {
 
     try {
       return await pendingResolve;
+    } catch (err) {
+      if (err instanceof EntryNotFoundError) {
+        throw new ResolveError(href, fromHref);
+      }
+
+      throw err;
     } finally {
       this.pendingResolves.delete(resolveKey);
     }
@@ -321,6 +350,7 @@ export class Bundler {
             rootHref: dependencyAsset.rootHref,
             callee: dependency.callee,
             spec: dependency.spec,
+            value: dependency.spec.value,
           });
 
           return dependencyAsset;
@@ -337,6 +367,7 @@ export class Bundler {
             rootHref: dependencyAsset.rootHref,
             callee: dependency.callee,
             spec: dependency.spec,
+            value: dependency.spec.value,
           });
 
           return dependencyAsset;
@@ -357,6 +388,7 @@ export class Bundler {
               references,
               exportName: shim.export,
               symbolName,
+              value: `${shim.spec}${shim.export ? `[${JSON.stringify(shim.export)}]` : ''}`,
             });
 
             return dependencyAsset;
@@ -364,12 +396,11 @@ export class Bundler {
         }
       }
     } else {
+      const existingAsset = asset;
       // We already have an asset instance, let's make sure dependencies are OK
-      for (const dependency of asset.dependencies) {
+      for (const dependency of existingAsset.dependencies) {
         if (!this.assetsByHref.has(dependency.href)) {
-          queue.add(async () => {
-            return this.addResolved(queue, dependency.href, dependency.rootHref);
-          });
+          queue.add(async () => this.addUnresolved(queue, dependency.value, existingAsset.href));
         }
       }
     }
