@@ -14,7 +14,6 @@ const pkg = require('./package.json');
 
 module.exports = [
   {
-    external: ['module'],
     input: resolve(__dirname, 'src/index.ts'),
     output: [
       {
@@ -25,6 +24,7 @@ module.exports = [
         sourcemap: true,
       },
     ],
+    external: ['module'],
     plugins: [
       RollupPluginJson(),
       RollupPluginTypescript({
@@ -51,7 +51,6 @@ module.exports = [
     ],
   },
   {
-    external: ['module'],
     input: resolve(__dirname, 'src/index.ts'),
     output: [
       {
@@ -64,6 +63,15 @@ module.exports = [
         format: 'esm',
         sourcemap: true,
       },
+    ],
+    external: [
+      '@ampproject/remapping',
+      '@velcro/resolver',
+      'acorn',
+      'js-base64',
+      'magic-string',
+      'module',
+      'ts-primitives',
     ],
     plugins: [
       RollupPluginJson(),
@@ -89,7 +97,6 @@ module.exports = [
     ],
   },
   {
-    external: ['module'],
     input: resolve(__dirname, 'src/index.ts'),
     output: [
       {
@@ -100,6 +107,7 @@ module.exports = [
         sourcemap: true,
       },
     ],
+    external: ['module'],
     plugins: [
       RollupPluginJson(),
       RollupPluginTypescript({

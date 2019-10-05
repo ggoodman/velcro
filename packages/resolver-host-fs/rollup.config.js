@@ -51,6 +51,7 @@ module.exports = [
         sourcemap: true,
       },
     ],
+    external: ['@velcro/resolver'],
     plugins: [
       RollupPluginTypescript({
         check: true,

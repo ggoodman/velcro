@@ -51,6 +51,7 @@ module.exports = [
         sourcemap: true,
       },
     ],
+    external: ['@velcro/decoder', '@velcro/resolver', 'lru-cache', 'semver'],
     plugins: [
       RollupPluginTypescript({
         check: true,
