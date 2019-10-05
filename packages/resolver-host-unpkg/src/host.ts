@@ -131,7 +131,7 @@ export class ResolverHostUnpkg extends Resolver.Host {
     const fetch = this.fetch;
     const promise = fetch(href, { redirect: 'follow' }).then(res => {
       if (!res.ok) {
-        return Promise.reject(new Error(`Error reading file content for ${href}: ${res.status}`));
+        throw new Error(`Error reading file content for ${href}: ${res.status}`);
       }
 
       return res.arrayBuffer();
