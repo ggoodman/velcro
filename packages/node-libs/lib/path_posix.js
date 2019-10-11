@@ -432,4 +432,3 @@ function _removeDuplicateSeps(p) {
 exports._removeDuplicateSeps = _removeDuplicateSeps;
 // The platform-specific path delimiter. BrowserFS uses `:`.
 exports.delimiter = ':';
-//# sourceMappingURL=posix_path.js.map
