@@ -2,7 +2,7 @@ import remapping from '@ampproject/remapping';
 import { version as nodeLibsVersion } from '@velcro/node-libs/package.json';
 import { EntryNotFoundError, Resolver } from '@velcro/resolver';
 import { Base64 } from 'js-base64';
-import { Bundle } from 'magic-string';
+import { Bundle } from '@velcro/magic-string';
 import { Emitter } from 'ts-primitives';
 
 import { isBareModuleSpecifier } from './util';
@@ -106,11 +106,6 @@ export class Bundler {
 
       const magicString = asset.magicString.clone();
 
-      (magicString as any).intro = (asset.magicString as any).intro;
-      (magicString as any).outro = (asset.magicString as any).outro;
-
-      magicString.trim();
-
       // We'll replace each dependency string with the resolved stable href. The stable href doesn't require any
       // information about where it is being resolved from, so it is useful as a long-term pointer whose target
       // can change over time
@@ -168,7 +163,7 @@ export class Bundler {
 
     if (options.sourceMap) {
       const sourceMap = bundle.generateMap({
-        includeContent: false,
+        includeContent: options.includeSourceContent,
         hires: false,
       });
 
@@ -486,6 +481,7 @@ export namespace Bundler {
   }
 
   export interface BundleOptions {
+    includeSourceContent?: boolean | ((source: { filename: string | null; content: string }) => boolean);
     onEnqueueAsset?(): void;
     onCompleteAsset?(): void;
     requireEntrypoints?: boolean;
@@ -528,6 +524,56 @@ export namespace Bundler {
 }
 
 function getParserForFile(uri: string): { parse: typeof parseFile } {
+  if (uri.endsWith('.css')) {
+    return {
+      parse: (_uri, magicString): ReturnType<typeof parseFile> => {
+        const cssCode = magicString.original;
+        const BACKSLASH = '\\'.charCodeAt(0);
+        const SINGLE_QUOTE = "'".charCodeAt(0);
+        const NL = '\n'.charCodeAt(0);
+        const CR = '\r'.charCodeAt(0);
+
+        let escaped = false;
+
+        for (let i = 0; i < cssCode.length; i++) {
+          const char = cssCode.charCodeAt(i);
+
+          if (char === BACKSLASH) {
+            escaped = !escaped;
+            continue;
+          }
+
+          if (!escaped) {
+            // Escape certain characters (if not already escaped)
+            switch (char) {
+              case CR:
+              case NL:
+              case SINGLE_QUOTE:
+                magicString.prependRight(i, '\\');
+                break;
+            }
+          }
+
+          escaped = false;
+        }
+
+        magicString.prepend(
+          'var styleTag = document.createElement("style");styleTag.type = "text/css";styleTag.innerHTML = \''
+        );
+        magicString.append('\';document.getElementsByTagName("head")[0].appendChild(styleTag);');
+
+        var styleTag = document.createElement('style');
+        styleTag.textContent;
+
+        return {
+          requireDependencies: [],
+          requireResolveDependencies: [],
+          unboundSymbols: new Map(),
+        };
+      },
+    };
+  }
+
   if (uri.endsWith('.json')) {
     return {
       parse: (_uri, magicString): ReturnType<typeof parseFile> => {

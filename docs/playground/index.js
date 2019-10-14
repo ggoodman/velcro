@@ -233,10 +233,11 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
 import { name } from './name';
+import './style.css';
 
 class Hello extends Component {
   render() {
-    return <div>Hello {this.props.toWhat}</div>;
+    return <div className="red">Hello {this.props.toWhat}</div>;
   }
 }
 
@@ -255,6 +256,16 @@ export const name = 'World';
             `.trim(),
             'typescript',
             nameUri
+          );
+          const styleUri = Monaco.Uri.file('/style.css');
+          Monaco.editor.createModel(
+            `
+.red {
+  color: red;
+}
+            `.trim(),
+            undefined,
+            styleUri
           );
 
           const packageJsonUri = Monaco.Uri.file('/package.json');
@@ -319,9 +330,7 @@ export const name = 'World';
 
                 if (syntacticDiagnostics.length) {
                   const err = new Error(
-                    `Syntax error: ${syntacticDiagnostics[0].messageText} at ${url.pathname}:${
-                      syntacticDiagnostics[0].start
-                    }:${syntacticDiagnostics[0].length}`
+                    `Syntax error: ${syntacticDiagnostics[0].messageText} at ${url.pathname}:${syntacticDiagnostics[0].start}:${syntacticDiagnostics[0].length}`
                   );
 
                   throw err;
@@ -495,6 +504,15 @@ export const name = 'World';
             });
 
             const code = await this.bundler.generateBundleCode([entrypoint], {
+              includeSourceContent(source) {
+                console.log('includeSourcecontent', source.filename);
+
+                if (source.filename && source.filename.startsWith('https://unpkg.com/')) {
+                  return false;
+                }
+
+                return !Velcro.getSourceMappingUrl(source.content);
+              },
               onCompleteAsset: () => {
                 this.withApply(() => {
                   this.completedAssets++;
@@ -529,31 +547,22 @@ window.onerror = function(msg, url, lineNo, columnNo, err) {
             const bundleFile = new File([code], entrypoint, {
               type: 'text/javascript',
             });
-            const markup = new File(
-              [
-                `
-      <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta http-equiv="X-UA-Compatible" content="ie=edge">
-      <title>Document</title>
-      <script src="${URL.createObjectURL(errorWatcher)}"></script>
-    </head>
-    <body>
-      <div id="root"></div>
-      <script src="${URL.createObjectURL(bundleFile)}"></script>
-    </body>
-    </html>`,
-              ],
-              Monaco.Uri.file('/index.html').toString(true),
-              {
-                type: 'text/html',
-              }
-            );
-            const htmlUrl = URL.createObjectURL(markup);
-            iframe.src = htmlUrl;
+            const markup = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <script src="${URL.createObjectURL(errorWatcher)}"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="${URL.createObjectURL(bundleFile)}"></script>
+</body>
+</html>`;
+            iframe.srcdoc = markup;
 
             this.withApply(() => {
               this.state = 'built';

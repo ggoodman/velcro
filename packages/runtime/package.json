@@ -62,6 +62,7 @@
   "dependencies": {
     "@types/hapi__code": "^5.3.0",
     "@velcro/decoder": "^0.15.0",
+    "@velcro/magic-string": "^0.25.2",
     "@velcro/node-libs": "^0.15.2",
     "@velcro/resolver": "^0.15.0",
     "@velcro/resolver-host-compound": "^0.15.0",
@@ -69,8 +70,7 @@
     "@velcro/resolver-host-memory": "^0.15.0",
     "@velcro/resolver-host-unpkg": "^0.15.0",
     "acorn": "^6.1.1",
-    "idb": "^4.0.3",
-    "magic-string": "^0.25.2"
+    "idb": "^4.0.3"
   },
   "prettier": {
     "printWidth": 120,

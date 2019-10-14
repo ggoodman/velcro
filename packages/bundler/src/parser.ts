@@ -28,7 +28,7 @@ import {
   isNodeWithStartAndEnd,
   NodeWithStartAndEnd,
 } from './ast';
-import MagicString from 'magic-string';
+import MagicString from '@velcro/magic-string';
 
 // const whitespaceRx = /^\s*$/m;
 

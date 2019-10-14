@@ -1,4 +1,4 @@
-import MagicString from 'magic-string';
+import MagicString from '@velcro/magic-string';
 import { getSourceMappingUrl } from './util';
 
 export class Asset {
