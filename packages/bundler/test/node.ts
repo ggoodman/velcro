@@ -2,11 +2,11 @@ import * as Vm from 'vm';
 
 import { expect } from '@hapi/code';
 import { script } from '@hapi/lab';
-import { fetch } from 'fetch-h2';
+import { AbortController, fetch } from 'fetch-h2';
 
 import { name } from '../package.json';
 import * as Velcro from '../dist/dist-main';
-import { Resolver } from '@velcro/resolver';
+import { Resolver, CanceledError } from '@velcro/resolver';
 import { ResolverHostUnpkg } from '@velcro/resolver-host-unpkg';
 
 export const lab = script({ cli: { globals: 'Velcro' } });
@@ -29,6 +29,25 @@ describe(`${name} in node`, { timeout: 200000 }, () => {
 
       expect(React).to.exist();
       expect(React.createElement).to.be.a.function();
+    });
+
+    it('will support cancellation', async () => {
+      const resolverHost = new ResolverHostUnpkg({
+        AbortController,
+        fetch,
+      });
+      const resolver = new Resolver(resolverHost, { packageMain: ['browser', 'main'] });
+      const bundler = new Velcro.Bundler({ resolver });
+      const tokenSource = new Velcro.CancellationTokenSource();
+
+      tokenSource.cancel();
+
+      const bundlePromise = bundler.generateBundleCode(['react@16'], {
+        requireEntrypoints: true,
+        sourceMap: true,
+        token: tokenSource.token,
+      });
+      await expect(Promise.resolve(bundlePromise)).to.reject(CanceledError, 'Canceled');
     });
 
     it('will load create-hash@1.2 and this code will be executable', async () => {

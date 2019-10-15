@@ -1,6 +1,6 @@
-import { Decoder } from '@velcro/decoder';
-
-import { PackageMainField, ResolvedEntry, ResolvedEntryKind, PackageJson } from './types';
+import { CancellationToken, CancellationTokenSource } from './cancellation';
+import { Decoder } from './decoder';
+import { PackageMainField, ResolvedEntry, ResolvedEntryKind, PackageJson, ResolveDetails } from './types';
 import {
   parseBufferAsPackageJson,
   dirname,
@@ -11,6 +11,8 @@ import {
   extname,
 } from './util';
 import { EntryNotFoundError } from './error';
+import { ResolverHost } from './host';
+import { CanceledError } from 'ts-primitives';
 
 const TRAILING_SLASH_RX = /\/?$/;
 
@@ -21,7 +23,10 @@ interface ResolverOptions {
 
 interface ResolverResolveOptions extends ResolverOptions {
   ignoreBrowserOverrides?: boolean;
+  token?: CancellationToken;
 }
+
+interface NormalizedResolveOptions extends Required<ResolverResolveOptions> {}
 
 export class Resolver {
   public static readonly defaultExtensions: ReadonlyArray<string> = [
@@ -40,22 +45,12 @@ export class Resolver {
 
   public readonly decoder = new Decoder();
 
-  constructor(public readonly host: Resolver.Host, options: ResolverOptions = {}) {
+  constructor(public readonly host: ResolverHost, options: ResolverOptions = {}) {
     this.extensions = Array.from(options.extensions || Resolver.defaultExtensions);
     this.packageMain = options.packageMain || ['main'];
   }
 
-  async resolve(url: URL | string): Promise<URL | false | undefined> {
-    const result = await this.resolveWithDetails(url);
-
-    if (result.ignored) {
-      return false;
-    }
-
-    return result.resolvedUrl;
-  }
-
-  async resolveWithDetails(url: URL | string): Promise<Resolver.ResolveDetails> {
+  async resolve(url: URL | string, options: Partial<ResolverResolveOptions> = {}): Promise<ResolveDetails> {
     if (!(url instanceof URL)) {
       try {
         url = new URL(url);
@@ -64,17 +59,41 @@ export class Resolver {
       }
     }
 
-    const optionsWithDefaults: Required<ResolverResolveOptions> = {
-      extensions: this.extensions,
-      ignoreBrowserOverrides: false,
-      packageMain: this.packageMain,
+    let token = options.token;
+
+    if (!token) {
+      const tokenSource = new CancellationTokenSource();
+
+      token = tokenSource.token;
+    }
+
+    const optionsWithDefaults: NormalizedResolveOptions = {
+      extensions: options.extensions || this.extensions,
+      ignoreBrowserOverrides:
+        typeof options.ignoreBrowserOverrides === 'undefined' ? false : options.ignoreBrowserOverrides,
+      packageMain: options.packageMain || this.packageMain,
+      token,
     };
 
-    const canonicalUrlPromise = this.host.getCanonicalUrl ? this.host.getCanonicalUrl(this, url) : Promise.resolve(url);
+    const canonicalUrlPromise = this.host.getCanonicalUrl
+      ? this.host.getCanonicalUrl(this, url, { token })
+      : Promise.resolve(url);
+
+    if (token.isCancellationRequested) {
+      throw new CanceledError('Canceled');
+    }
 
     // To figure out if the url should be resolved as a file or as a directory, we need to first canonicalize the url
     // if the host supports this and resolve the root url for the given asset.
-    const [canonicalUrl, rootUrl] = await Promise.all([canonicalUrlPromise, this.host.getResolveRoot(this, url)]);
+    const [canonicalUrl, rootUrl] = await Promise.all([
+      canonicalUrlPromise,
+      this.host.getResolveRoot(this, url, { token }),
+    ]);
+
+    if (token.isCancellationRequested) {
+      throw new CanceledError('Canceled');
+    }
+
     const rootHref = rootUrl.href;
     const rootHrefWithoutTrailingSlash = rootHref.replace(TRAILING_SLASH_RX, '');
     const canonicalHref = canonicalUrl.href;
@@ -88,10 +107,11 @@ export class Resolver {
         ? await this.resolveAsDirectory(canonicalUrl, optionsWithDefaults)
         : await this.resolveAsFile(canonicalUrl, optionsWithDefaults);
 
-    const cacheable = resolvedUrl ? await this.host.isCacheable(this, resolvedUrl) : false;
+    if (token.isCancellationRequested) {
+      throw new CanceledError('Canceled');
+    }
 
     return {
-      cacheable,
       ignored: resolvedUrl === false,
       resolvedUrl: resolvedUrl || undefined,
       rootUrl,
@@ -106,12 +126,15 @@ export class Resolver {
    *
    * The outcome of this process will then be resolved as if it were a file.
    */
-  private async resolveAsDirectory(
-    url: URL,
-    options: Required<ResolverResolveOptions>
-  ): Promise<URL | false | undefined> {
-    const rootUrl = await this.host.getResolveRoot(this, url);
-    const entries = await this.host.listEntries(this, url);
+  private async resolveAsDirectory(url: URL, options: NormalizedResolveOptions): Promise<URL | false | undefined> {
+    const [rootUrl, entries] = await Promise.all([
+      this.host.getResolveRoot(this, url, { token: options.token }),
+      this.host.listEntries(this, url, { token: options.token }),
+    ]);
+
+    if (options.token.isCancellationRequested) {
+      throw new CanceledError('Canceled');
+    }
 
     let mainPathname = 'index';
 
@@ -119,7 +142,12 @@ export class Resolver {
     const packageJsonEntry = entries.find(entry => basename(entry.url.pathname) === 'package.json');
 
     if (packageJsonEntry) {
-      const packageJsonContent = await this.host.readFileContent(this, packageJsonEntry.url);
+      const packageJsonContent = await this.host.readFileContent(this, packageJsonEntry.url, { token: options.token });
+
+      if (options.token.isCancellationRequested) {
+        throw new CanceledError('Canceled');
+      }
+
       const packageJson = parseBufferAsPackageJson(this.decoder, packageJsonContent, url.href);
 
       for (const packageMain of this.packageMain) {
@@ -143,18 +171,28 @@ export class Resolver {
    * 2. Look for an exact file match or a file match with one of the supplied extensions
    * 3. Look for a matching child directory and attempt to resolve that as a directory
    */
-  private async resolveAsFile(url: URL, options: Required<ResolverResolveOptions>): Promise<URL | false | undefined> {
+  private async resolveAsFile(url: URL, options: NormalizedResolveOptions): Promise<URL | false | undefined> {
     if (url.pathname === '' || url.pathname === '/') {
       throw new TypeError(`Unable to resolve the root as a file: ${url.href}`);
     }
 
-    const rootUrl = await this.host.getResolveRoot(this, url);
+    const rootUrl = await this.host.getResolveRoot(this, url, { token: options.token });
+
+    if (options.token.isCancellationRequested) {
+      throw new CanceledError('Canceled');
+    }
+
     // The parent package.json is only interesting if we are going to look at the `browser`
     // field and then consider browser mapping overrides in there.
     const parentPackageJson =
       this.packageMain.includes('browser') && !options.ignoreBrowserOverrides
-        ? await this.readParentPackageJson(url)
+        ? await this.readParentPackageJson(url, { token: options.token })
         : undefined;
+
+    if (options.token.isCancellationRequested) {
+      throw new CanceledError('Canceled');
+    }
+
     const browserOverrides = new Map<string, URL | false>();
 
     if (parentPackageJson && typeof parentPackageJson.packageJson.browser === 'object') {
@@ -185,7 +223,12 @@ export class Resolver {
 
     const containingUrl = new URL(ensureTrailingSlash(dirname(url.pathname)), rootUrl);
     const filename = basename(url.pathname);
-    const entries = await this.host.listEntries(this, containingUrl);
+    const entries = await this.host.listEntries(this, containingUrl, { token: options.token });
+
+    if (options.token.isCancellationRequested) {
+      throw new CanceledError('Canceled');
+    }
+
     const entryDirectoryMap = new Map<string, ResolvedEntry>();
     const entryFileMap = new Map<string, ResolvedEntry>();
 
@@ -242,10 +285,22 @@ export class Resolver {
     throw new EntryNotFoundError(url);
   }
 
-  public async readParentPackageJson(url: URL): Promise<{ packageJson: PackageJson; url: URL } | undefined> {
-    url = await this.host.getCanonicalUrl(this, url);
+  public async readParentPackageJson(
+    url: URL,
+    options: { token?: CancellationToken } = {}
+  ): Promise<{ packageJson: PackageJson; url: URL } | undefined> {
+    url = await this.host.getCanonicalUrl(this, url, { token: options.token });
 
-    const hostRootUrl = await this.host.getResolveRoot(this, url);
+    if (options.token && options.token.isCancellationRequested) {
+      throw new CanceledError('Canceled');
+    }
+
+    const hostRootUrl = await this.host.getResolveRoot(this, url, { token: options.token });
+
+    if (options.token && options.token.isCancellationRequested) {
+      throw new CanceledError('Canceled');
+    }
+
     const hostRootHref = ensureTrailingSlash(hostRootUrl.href);
     const containingDirUrl = new URL(ensureTrailingSlash(dirname(url.pathname)), url);
 
@@ -255,7 +310,12 @@ export class Resolver {
         return undefined;
       }
 
-      const entries = await this.host.listEntries(this, dir);
+      const entries = await this.host.listEntries(this, dir, { token: options.token });
+
+      if (options.token && options.token.isCancellationRequested) {
+        throw new CanceledError('Canceled');
+      }
+
       const packageJsonEntry = entries.find(
         entry => entry.type === ResolvedEntryKind.File && entry.url.pathname.endsWith('/package.json')
       );
@@ -263,7 +323,14 @@ export class Resolver {
       if (packageJsonEntry) {
         // Found! Let's try to parse
         try {
-          const parentPackageJsonContent = await this.host.readFileContent(this, packageJsonEntry.url);
+          const parentPackageJsonContent = await this.host.readFileContent(this, packageJsonEntry.url, {
+            token: options.token,
+          });
+
+          if (options.token && options.token.isCancellationRequested) {
+            throw new CanceledError('Canceled');
+          }
+
           const packageJson = parseBufferAsPackageJson(
             this.decoder,
             parentPackageJsonContent,
@@ -298,44 +365,4 @@ export class Resolver {
     extname,
     resolve,
   };
-}
-
-export namespace Resolver {
-  export abstract class Host {
-    /**
-     * Get the canonical url for this resource
-     *
-     * This might involve traversing symlinks or following redirects. The idea is to provide
-     * an optional mechanism for hosts dereference links to the canonical form.
-     */
-    getCanonicalUrl(_resolver: Resolver, url: URL): Promise<URL> {
-      return Promise.resolve(url);
-    }
-
-    /**
-     * Get the URL that should be treated as the resolution root for this host
-     */
-    abstract getResolveRoot(resolver: Resolver, url: URL): Promise<URL>;
-
-    isCacheable(_resolver: Resolver, _url: URL): Promise<boolean> {
-      return Promise.resolve(true);
-    }
-
-    /**
-     * List the entries that are children of the given url, assuming this refers to a directory
-     */
-    abstract listEntries(resolver: Resolver, url: URL): Promise<ResolvedEntry[]>;
-
-    /**
-     * Read the content of a url as a file and produce a buffer
-     */
-    abstract readFileContent(resolver: Resolver, url: URL): Promise<ArrayBuffer>;
-  }
-
-  export interface ResolveDetails {
-    cacheable: boolean;
-    ignored: boolean;
-    resolvedUrl?: URL;
-    rootUrl: URL;
-  }
 }

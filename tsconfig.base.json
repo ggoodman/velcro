@@ -1,20 +1,19 @@
 {
   "compilerOptions": {
+    "composite": true,
     "declaration": true,
+    "declarationMap": true,
     "downlevelIteration": true,
     "esModuleInterop": true,
-    "importHelpers": false,
-    "lib": ["es2018", "dom"],
+    "lib": ["es2018"],
     "module": "commonjs",
     "moduleResolution": "node",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "resolveJsonModule": true,
-    "rootDir": ".",
-    "skipLibCheck": true,
+    "rootDir": "./",
+    "sourceMap": true,
     "strict": true,
     "target": "es2018"
-  },
-  "include": ["src", "test"],
-  "exclude": ["node_modules/@types/node"]
+  }
 }

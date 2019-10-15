@@ -1,5 +1,11 @@
 export type PackageMainField = 'browser' | 'module' | 'jsnext:main' | 'main' | 'unpkg';
 
+export interface ResolveDetails {
+  ignored: boolean;
+  resolvedUrl?: URL;
+  rootUrl: URL;
+}
+
 export enum ResolvedEntryKind {
   Directory = 'directory',
   File = 'file',

@@ -19,10 +19,10 @@ describe(name, () => {
       fs: Fs,
     });
     const resolver = new Resolver(host);
-    const resolved = await resolver.resolve(href);
+    const result = await resolver.resolve(href);
 
-    expect(resolved).to.be.an.instanceOf(URL);
-    expect(resolved!.href).to.equal(`file://${resolve(__dirname, '../', main)}`);
+    expect(result.resolvedUrl).to.be.an.instanceOf(URL);
+    expect(result.resolvedUrl!.href).to.equal(`file://${resolve(__dirname, '../', main)}`);
   });
 
   it('will resolve a module entrypoint with the browser field', async () => {
@@ -33,9 +33,9 @@ describe(name, () => {
     const resolver = new Resolver(host, {
       packageMain: ['browser', 'main'],
     });
-    const resolved = await resolver.resolve(href);
+    const result = await resolver.resolve(href);
 
-    expect(resolved).to.be.an.instanceOf(URL);
-    expect(resolved!.href).to.equal(`file://${resolve(__dirname, '../', browserMain)}`);
+    expect(result.resolvedUrl).to.be.an.instanceOf(URL);
+    expect(result.resolvedUrl!.href).to.equal(`file://${resolve(__dirname, '../', browserMain)}`);
   });
 });

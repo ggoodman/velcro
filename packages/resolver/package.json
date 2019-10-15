@@ -36,6 +36,7 @@
     "@hapi/code": "^6.0.0",
     "@hapi/lab": "^20.2.2",
     "@types/fs-extra": "^5.0.5",
+    "@types/hapi__code": "^5.3.0",
     "@types/lab": "^11.1.0",
     "@types/node": "^11.11.3",
     "@types/puppeteer": "^1.12.3",
@@ -51,15 +52,14 @@
     "tslib": "^1.9.3",
     "typescript": "^3.3.3333"
   },
-  "dependencies": {
-    "@types/hapi__code": "^5.3.0",
-    "@velcro/decoder": "^0.15.0"
-  },
   "prettier": {
     "printWidth": 120,
     "singleQuote": true,
     "tabWidth": 2,
     "trailingComma": "es5"
   },
-  "gitHead": "3feff59c20139f54f2adb40d5428357d4e1e7e0b"
+  "gitHead": "3feff59c20139f54f2adb40d5428357d4e1e7e0b",
+  "dependencies": {
+    "ts-primitives": "^1.1.0"
+  }
 }

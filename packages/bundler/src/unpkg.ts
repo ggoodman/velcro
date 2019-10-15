@@ -1,7 +1,7 @@
 import { version as nodeLibsVersion } from '@velcro/node-libs/package.json';
 import { Resolver } from '@velcro/resolver';
+import { CancellationToken } from 'ts-primitives';
 
-import { BareModuleResolver } from './types';
 import { parseBareModuleSpec } from './util';
 
 const BARE_MODULE_PREFIX = 'https://unpkg.com/';
@@ -48,17 +48,12 @@ const NODE_CORE_SHIMS = [
 NODE_CORE_SHIMS['string_decoder'] = 'string_decoder@1.2.0';
 NODE_CORE_SHIMS['punycode'] = 'punycode@2.1.1';
 
-export const resolveBareModuleToUnpkg: BareModuleResolver = async (
+export const resolveBareModuleToUnpkgWithDetails = async (
   resolver: Resolver,
   href: string,
-  parentHref?: string
+  parentHref: string | undefined,
+  { token }: { token?: CancellationToken } = {}
 ) => {
-  const resolveResult = await resolveBareModuleToUnpkgWithDetails(resolver, href, parentHref);
-
-  return resolveResult.resolvedUrl ? resolveResult.resolvedUrl.href : undefined;
-};
-
-export const resolveBareModuleToUnpkgWithDetails = async (resolver: Resolver, href: string, parentHref?: string) => {
   const parsedSpec = parseBareModuleSpec(href);
   const details = { bareModule: {}, resolvedUrl: undefined } as {
     bareModule: {
@@ -94,7 +89,7 @@ export const resolveBareModuleToUnpkgWithDetails = async (resolver: Resolver, hr
       );
     }
 
-    const parentPackageInfo = await resolver.readParentPackageJson(parentUrl);
+    const parentPackageInfo = await resolver.readParentPackageJson(parentUrl, { token });
 
     if (parentPackageInfo) {
       const consolidatedDependencies = {
@@ -139,7 +134,7 @@ export const resolveBareModuleToUnpkgWithDetails = async (resolver: Resolver, hr
   if (unresolvedHref && resolvedSpecRoot) {
     const stableUrl = new URL(unresolvedHref);
     const stableRootUrl = new URL(resolvedSpecRoot);
-    const resolveResult = await resolver.resolveWithDetails(stableUrl);
+    const resolveResult = await resolver.resolve(stableUrl, { token });
 
     details.ignored = resolveResult.ignored;
     details.stableRootUrl = stableRootUrl;
@@ -153,7 +148,7 @@ export const resolveBareModuleToUnpkgWithDetails = async (resolver: Resolver, hr
   }
 
   if (details.resolvedUrl) {
-    const packageInfo = await resolver.readParentPackageJson(details.resolvedUrl);
+    const packageInfo = await resolver.readParentPackageJson(details.resolvedUrl, { token });
 
     if (packageInfo) {
       details.bareModule.version = packageInfo.packageJson.version;
