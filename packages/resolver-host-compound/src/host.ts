@@ -1,6 +1,6 @@
-import { Resolver, ResolverHost } from '@velcro/resolver';
+import { Resolver, AbstractResolverHost, ResolverHost } from '@velcro/resolver';
 
-export class ResolverHostCompound extends ResolverHost {
+export class ResolverHostCompound extends AbstractResolverHost {
   private readonly hosts = new Map<string, ResolverHost>();
   constructor(hosts: Record<string, ResolverHost>) {
     super();

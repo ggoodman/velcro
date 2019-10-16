@@ -1,12 +1,13 @@
 import {
+  AbstractResolverHost,
   ResolvedEntry,
   ResolvedEntryKind,
   Resolver,
   util,
   PackageJson,
-  ResolverHost,
   CancellationToken,
   CanceledError,
+  ResolverHost,
 } from '@velcro/resolver';
 import LRU from 'lru-cache';
 import { satisfies, validRange } from 'semver';
@@ -23,7 +24,7 @@ interface UnpkgPackageHostOptions {
   fetch?: CustomFetch;
 }
 
-export class ResolverHostUnpkg extends ResolverHost {
+export class ResolverHostUnpkg extends AbstractResolverHost {
   private readonly AbortController?: typeof AbortController;
   private readonly contentCache = new LRU<string, ArrayBuffer>({
     length(buf) {

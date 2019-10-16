@@ -11,7 +11,7 @@ import {
   extname,
 } from './util';
 import { EntryNotFoundError } from './error';
-import { ResolverHost } from './host';
+import { ResolverHost } from './resolver_host';
 import { CanceledError } from 'ts-primitives';
 
 const TRAILING_SLASH_RX = /\/?$/;
