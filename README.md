@@ -2,40 +2,53 @@
 
 Velcro is a suite of packages designed to bridge the runtime gap between browser development and the node package ecosystem.
 
-The CommonJS module system used by node.js and bundlers like Webpack presents serious challenges for anyone looking to build tooling. Consider the code `require('./path')`; to determine the canonical path of this asset, you need to respect the [Node Module Resolution Algorithm](https://nodejs.org/api/modules.html#modules_all_together). Further, since you might be running this in the browser, you may want to respect the [Package Browser Field Spec](https://github.com/defunctzombie/package-browser-field-spec). Of course, there are modules like [resolve](https://www.npmjs.com/package/resolve) that do this for you (and quite nicely, I might add), these always force trade-offs like: loss of support for the `browser` spec, or a hard dependency on node's built-in `fs` module. What about the wackiness of nested `package.json` files and the million other edge cases?
+The CommonJS module system used by Node.js presents serious challenges for anyone looking to build tooling. Consider the code `require('./path')`; to determine the canonical path of this asset, you need to respect the [Node Module Resolution Algorithm](https://nodejs.org/api/modules.html#modules_all_together). Further, since you might be running this in the browser, you may want to respect the [Package Browser Field Spec](https://github.com/defunctzombie/package-browser-field-spec). Of course, there are modules like [resolve](https://www.npmjs.com/package/resolve) that do this for you (and quite nicely, I might add), these always force trade-offs like: loss of support for the `browser` spec, or a hard dependency on node's built-in `fs` module. What about the wackiness of nested `package.json` files and the million other edge cases?
 
-Velcro defines a generic `ResolverHost` interface that exposes the minimal set of operations required to perform node module resolution across a wide variety of hosts (like [unpkg.com](https://unpkg.com) or [BrowserFs](https://www.npmjs.com/package/browserfs)). Further, the interface is designed such that these hosts can be composed in different ways to provide things like:
+Velcro defines a generic `ResolverHost` interface that defines the minimal set of operations required to perform node module resolution across a wide variety of abstract hosts (like [unpkg.com](https://unpkg.com) or [BrowserFs](https://www.npmjs.com/package/browserfs)). Further, the interface is designed such that these hosts can be composed in different ways to provide things like:
 
 - Caching
 - Composition (different prefixes relate to different child hosts)
 - Logging
 
-The `ResolverHost` interface looks like this:
+The [`ResolverHost`](packages/resolver/src/host.ts) interface looks like this:
 
-```ts
-export abstract class ResolverHost {
+```typescript
+interface ResolverHost {
   /**
    * Get the canonical url for this resource
    *
    * This might involve traversing symlinks or following redirects. The idea is to provide
-   * an optional mechanism for hosts dereference links to the canonical form.
+   * an optional mechanism for hosts dereference links to the canonical form. Custom
+   * `ResolverHost` that extend `AbstractResolverHost` can omit this operation and will be
+   * provided with an identify function implementation.
    */
-  getCanonicalUrl?(_resolver: Resolver, url: URL): Promise<URL>
+  getCanonicalUrl(_resolver: Resolver, url: URL): Promise<URL>;
 
   /**
    * Get the URL that should be treated as the resolution root for this host
+   *
+   * For example, for the `@velcro/resolver`
    */
-  abstract getResolveRoot(resolver: Resolver, url: URL): Promise<URL>;
+  getResolveRoot(resolver: Resolver, url: URL): Promise<URL>;
 
   /**
    * List the entries that are children of the given url, assuming this refers to a directory
    */
-  abstract listEntries(resolver: Resolver, url: URL): Promise<ResolvedEntry[]>;
+  listEntries(resolver: Resolver, url: URL): Promise<ResolvedEntry[]>;
 
   /**
    * Read the content of a url as a file and produce a buffer
    */
-  abstract readFileContent(resolver: Resolver, url: URL): Promise<ArrayBuffer>;
+  readFileContent(resolver: Resolver, url: URL): Promise<ArrayBuffer>;
+}
+```
+
+Given such a `ResolverHost`, we can create a `Resolver` whose API looks like this:
+
+```typescript
+interface Resolver {
+  public readonly decoder: Decoder;
+  public readonly host: ResolverHost;
 }
 ```
 
