@@ -1,3 +1,10 @@
 {
-  "plugins": ["emotion"]
+  "plugins": [
+    [
+      "emotion",
+      {
+        "instances": ["emotion", "./src/lib/styled.ts"]
+      }
+    ]
+  ]
 }
