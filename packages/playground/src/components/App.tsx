@@ -8,9 +8,13 @@ import Sidebar from './Sidebar';
 import { EditorContext } from '../lib/context';
 import { useFocusedModelWithEditor } from '../lib/hooks';
 
-const App: React.FC<{ className?: string; project: Record<string, string> }> = ({ className, project }) => {
+const App: React.FC<{ className?: string; initialPath: string; project: Record<string, string> }> = ({
+  className,
+  initialPath,
+  project,
+}) => {
   const [editor, setEditor] = useState<Monaco.editor.IStandaloneCodeEditor | null>(null);
-  const [, focusEditor] = useFocusedModelWithEditor(editor);
+  const [, focusModel] = useFocusedModelWithEditor(editor);
 
   useEffect(() => {
     for (const pathname in project) {
@@ -28,19 +32,19 @@ const App: React.FC<{ className?: string; project: Record<string, string> }> = (
     };
   }, [project]);
 
-  const onSetEditor = (editor: Monaco.editor.IStandaloneCodeEditor) => {
-    const models = Monaco.editor.getModels();
+  useEffect(() => {
+    if (editor) {
+      const model = Monaco.editor.getModel(Monaco.Uri.file(initialPath));
 
-    setEditor(editor);
-
-    focusEditor(models[0]);
-  };
+      focusModel(model);
+    }
+  }, [editor, focusModel, initialPath]);
 
   return (
     <div className={className}>
       <EditorContext.Provider value={editor}>
         <Sidebar></Sidebar>
-        <Editor onSetEditor={onSetEditor}></Editor>
+        <Editor onSetEditor={setEditor}></Editor>
         <Preview></Preview>
       </EditorContext.Provider>
     </div>
