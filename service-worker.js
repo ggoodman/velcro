@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "/velcro/precache-manifest.e6b0a2507ae561145b0470141cbb40d7.js"
+  "/velcro/precache-manifest.b830ad05a7fd15416519b8bbc284b4c3.js"
 );
 
 self.addEventListener('message', (event) => {

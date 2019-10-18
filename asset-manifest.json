@@ -2,13 +2,13 @@
   "files": {
     "static/js/0.927334da.chunk.js": "/velcro/static/js/0.927334da.chunk.js",
     "static/js/0.927334da.chunk.js.map": "/velcro/static/js/0.927334da.chunk.js.map",
-    "main.js": "/velcro/static/js/main.9c9b9869.chunk.js",
-    "main.js.map": "/velcro/static/js/main.9c9b9869.chunk.js.map",
+    "main.js": "/velcro/static/js/main.97d2be44.chunk.js",
+    "main.js.map": "/velcro/static/js/main.97d2be44.chunk.js.map",
     "runtime-main.js": "/velcro/static/js/runtime-main.60026c7b.js",
     "runtime-main.js.map": "/velcro/static/js/runtime-main.60026c7b.js.map",
     "static/css/3.c276892b.chunk.css": "/velcro/static/css/3.c276892b.chunk.css",
-    "static/js/3.a3c55090.chunk.js": "/velcro/static/js/3.a3c55090.chunk.js",
-    "static/js/3.a3c55090.chunk.js.map": "/velcro/static/js/3.a3c55090.chunk.js.map",
+    "static/js/3.e5f7af93.chunk.js": "/velcro/static/js/3.e5f7af93.chunk.js",
+    "static/js/3.e5f7af93.chunk.js.map": "/velcro/static/js/3.e5f7af93.chunk.js.map",
     "static/js/4.0906a257.chunk.js": "/velcro/static/js/4.0906a257.chunk.js",
     "static/js/4.0906a257.chunk.js.map": "/velcro/static/js/4.0906a257.chunk.js.map",
     "static/js/5.fca522a0.chunk.js": "/velcro/static/js/5.fca522a0.chunk.js",
@@ -140,7 +140,7 @@
     "index.html": "/velcro/index.html",
     "json.worker.js": "/velcro/json.worker.js",
     "json.worker.js.map": "/velcro/json.worker.js.map",
-    "precache-manifest.e6b0a2507ae561145b0470141cbb40d7.js": "/velcro/precache-manifest.e6b0a2507ae561145b0470141cbb40d7.js",
+    "precache-manifest.b830ad05a7fd15416519b8bbc284b4c3.js": "/velcro/precache-manifest.b830ad05a7fd15416519b8bbc284b4c3.js",
     "service-worker.js": "/velcro/service-worker.js",
     "static/css/3.c276892b.chunk.css.map": "/velcro/static/css/3.c276892b.chunk.css.map",
     "typescript.worker.js": "/velcro/typescript.worker.js",
@@ -149,7 +149,7 @@
   "entrypoints": [
     "static/js/runtime-main.60026c7b.js",
     "static/css/3.c276892b.chunk.css",
-    "static/js/3.a3c55090.chunk.js",
-    "static/js/main.9c9b9869.chunk.js"
+    "static/js/3.e5f7af93.chunk.js",
+    "static/js/main.97d2be44.chunk.js"
   ]
 }
