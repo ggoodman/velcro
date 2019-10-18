@@ -1,25 +1,50 @@
 import styled from '@emotion/styled/macro';
 import * as Monaco from 'monaco-editor';
-import React from 'react';
-import { useFocusedModel, useDirectory, EntryKind } from '../lib/hooks';
+import React, { useContext, useRef } from 'react';
+import { useDirectory, EntryKind } from '../lib/hooks';
+import { useActiveModel, EditorManagerContext } from '../lib/EditorManager';
 
-const Entry = styled.div<{ focused: boolean }>`
-  background-color: ${props => (props.focused ? 'yellow' : 'inherit')};
+const Entry = styled.div<{ modelFocused: boolean }>`
+  background-color: ${props => (props.modelFocused ? '#008cba' : 'inherit')};
+  text-decoration: none;
+  color: ${props => (props.modelFocused ? '#fff' : '#262626')};
+
+  height: 25px;
+  padding: 0 0 0 8px;
+  display: flex;
+  align-items: center;
+
+  ${props =>
+    props.modelFocused
+      ? {
+          ':hover': {
+            color: '#f5f5f5',
+            cursor: 'pointer',
+          },
+        }
+      : {
+          ':hover': {
+            backgroundColor: '#eee',
+            color: '#262626',
+            cursor: 'pointer',
+          },
+        }}
 `;
 
 const SidebarFile: React.FC<{ className?: string; model: Monaco.editor.ITextModel }> = ({ className, model }) => {
-  const [focusedModel, focusModel] = useFocusedModel();
+  const activeModel = useActiveModel();
+  const editorManager = useContext(EditorManagerContext);
 
   return (
-    <Entry className={className} focused={model === focusedModel} onClick={() => focusModel(model)}>
+    <Entry className={className} modelFocused={model === activeModel} onClick={() => editorManager.focusModel(model)}>
       {model.uri.fsPath.slice(1)}
     </Entry>
   );
 };
 
 const Sidebar: React.FC<{ className?: string }> = props => {
-  const rootDir = Monaco.Uri.file('/');
-  const entries = useDirectory(rootDir);
+  const rootDir = useRef(Monaco.Uri.file('/'));
+  const entries = useDirectory(rootDir.current);
 
   return (
     <div className={props.className}>
@@ -36,4 +61,7 @@ const Sidebar: React.FC<{ className?: string }> = props => {
   );
 };
 
-export default styled(Sidebar)``;
+export default styled(Sidebar)`
+  display: flex;
+  flex-direction: column;
+`;

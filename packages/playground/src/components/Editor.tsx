@@ -1,28 +1,30 @@
 import styled from '@emotion/styled/macro';
-import * as Monaco from 'monaco-editor';
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useContext } from 'react';
+import { EditorManagerContext } from '../lib/EditorManager';
 
 const Editor: React.FC<{
   className?: string;
-  onSetEditor(editor: Monaco.editor.IStandaloneCodeEditor): void;
-}> = ({ className, onSetEditor }) => {
+}> = ({ className }) => {
   const el = useRef<HTMLDivElement | null>(null);
+  const editorManager = useContext(EditorManagerContext);
 
   useEffect(() => {
     if (!el.current) {
       return;
     }
 
-    const newEditor = Monaco.editor.create(el.current, {
-      model: null,
-    });
+    const editor = editorManager.mount(el.current);
 
-    onSetEditor(newEditor);
+    return () => {
+      editor.dispose();
+    };
+  }, [editorManager, el]);
 
-    return () => newEditor.dispose();
-  }, [el, onSetEditor]);
-
-  return <div className={className} ref={el}></div>;
+  return (
+    <div className={className} ref={el}>
+      <div></div>
+    </div>
+  );
 };
 
 export default styled(Editor)``;

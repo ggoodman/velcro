@@ -11,13 +11,16 @@
     "@types/react-dom": "16.9.2",
     "@velcro/bundler": "^0.15.2",
     "@velcro/resolver": "^0.15.0",
+    "@velcro/resolver-host-compound": "^0.15.0",
     "@velcro/resolver-host-unpkg": "^0.15.0",
+    "idb": "^4.0.5",
     "modern-css-reset": "^1.0.4",
     "react": "^16.10.2",
     "react-dom": "^16.10.2",
     "react-scripts": "3.2.0",
+    "reakit": "^1.0.0-beta.9",
     "ts-primitives": "^1.1.0",
-    "typescript": "3.6.4"
+    "typescript": "^3.7.0-dev.20191018"
   },
   "scripts": {
     "start": "react-app-rewired start",
