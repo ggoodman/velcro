@@ -17,7 +17,7 @@ export type ResolvedEntry = {
 };
 
 export type PackageJson = {
-  name: string;
+  name?: string;
   version?: string;
   browser?: string | { [key: string]: false | string };
   main?: string;
@@ -33,7 +33,7 @@ export function isValidPackageJson(json: unknown): json is PackageJson {
   return (
     typeof json === 'object' &&
     json !== null &&
-    !hasInvalidRequiredStringField(json as any, 'name') &&
+    !hasInvalidOptionalStringField(json as any, 'name') &&
     !hasInvalidOptionalStringField(json as any, 'version') &&
     !hasInvalidBrowserField(json as any) &&
     !hasInvalidOptionalStringField(json as any, 'main') &&
@@ -66,10 +66,6 @@ function hasInvalidBrowserField(json: any) {
   }
 
   return error;
-}
-
-function hasInvalidRequiredStringField(json: any, field: string) {
-  return typeof json[field] !== 'string';
 }
 
 function hasInvalidOptionalStringField(json: any, field: string) {
