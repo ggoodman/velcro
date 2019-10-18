@@ -49,5 +49,6 @@
     "emotion-theming": "^10.0.19",
     "monaco-editor-webpack-plugin": "^1.7.0",
     "react-app-rewired": "^2.1.3"
-  }
+  },
+  "homepage": "https://ggoodman.github.io/velcro"
 }
