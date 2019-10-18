@@ -8,6 +8,18 @@ interface Message {
   text: string;
 }
 
+const PreviewProgress = styled.div<{ completed: number; pending: number }>`
+  z-index: 1;
+  position: absolute;
+  top: 0;
+  width: ${props =>
+    props.pending || props.completed
+      ? `${Math.round((100 * props.completed) / (props.completed + props.pending))}%`
+      : 0};
+  left: 0;
+  height: ${props => (props.pending || props.completed ? '2px' : '0')};
+  background-color: #008cba;
+`;
 const PreviewIframeWrap = styled.div`
   position: relative;
   overflow: hidden;
@@ -58,6 +70,7 @@ const Preview: React.FC<{ className?: string }> = props => {
   const previewIframeRef = useRef<HTMLIFrameElement | null>(null);
   const editorManager = useContext(EditorManagerContext);
   const [messages, setMessages] = useState([] as Message[]);
+  const [buildProgress, setBuildProgress] = useState({ pending: 0, completed: 0 });
 
   useEffect(() => {
     const disposable = new DisposableStore();
@@ -103,6 +116,16 @@ const Preview: React.FC<{ className?: string }> = props => {
         const resolvedEntrypointHref = resolvedEntrypoint.resolvedUrl.href;
 
         const bundle = await editorManager.bundler.generateBundleCode([resolvedEntrypointHref], {
+          onCompleteAsset: () =>
+            setBuildProgress(buildProgress => ({
+              completed: buildProgress.completed + 1,
+              pending: buildProgress.pending,
+            })),
+          onEnqueueAsset: () =>
+            setBuildProgress(buildProgress => ({
+              completed: buildProgress.completed,
+              pending: buildProgress.pending + 1,
+            })),
           sourceMap: true,
           requireEntrypoints: true,
           token,
@@ -180,6 +203,8 @@ window.parent.postMessage({ type: 'error', payload }, '*');
         }
       } catch (err) {
         setMessages(messages => [...messages, { text: err.message }]);
+      } finally {
+        setBuildProgress({ pending: 0, completed: 0 });
       }
     };
 
@@ -235,6 +260,8 @@ window.parent.postMessage({ type: 'error', payload }, '*');
 
   return (
     <PreviewWrap className={props.className}>
+      <PreviewProgress completed={buildProgress.completed} pending={buildProgress.pending}></PreviewProgress>
+      {previewIframeRef.current ? null : 'Building the preview...'}
       <PreviewIframeWrap ref={previewWrapRef}></PreviewIframeWrap>
       <PreviewMessages>
         {messages.map((message, idx) => (
