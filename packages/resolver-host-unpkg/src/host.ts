@@ -1,27 +1,37 @@
-import { Decoder } from '@velcro/decoder';
-import { ResolvedEntry, ResolvedEntryKind, Resolver, util, PackageJson } from '@velcro/resolver';
+import {
+  AbstractResolverHost,
+  ResolvedEntry,
+  ResolvedEntryKind,
+  Resolver,
+  util,
+  PackageJson,
+  CancellationToken,
+  CanceledError,
+  ResolverHost,
+} from '@velcro/resolver';
 import LRU from 'lru-cache';
 import { satisfies, validRange } from 'semver';
 
 import { EntryNotFoundError } from './error';
 import { BareModuleSpec, Directory, Spec, CustomFetch, isValidDirectory } from './types';
-import { parseUnpkgUrl } from './util';
+import { parseUnpkgUrl, signalFromCancellationToken } from './util';
 
 const UNPKG_PROTOCOL = 'https:';
 const UNPKG_HOST = 'unpkg.com';
 
 interface UnpkgPackageHostOptions {
+  AbortController?: typeof AbortController;
   fetch?: CustomFetch;
 }
 
-export class ResolverHostUnpkg extends Resolver.Host {
+export class ResolverHostUnpkg extends AbstractResolverHost {
+  private readonly AbortController?: typeof AbortController;
   private readonly contentCache = new LRU<string, ArrayBuffer>({
     length(buf) {
       return buf.byteLength;
     },
     max: 1024 * 1024 * 5,
   });
-  private readonly decoder = new Decoder();
   private readonly fetch: CustomFetch;
   private readonly inflightContentRequests = new Map<string, Promise<ArrayBuffer>>();
   private readonly packageLock = new Map<string, Promise<any>>();
@@ -37,45 +47,54 @@ export class ResolverHostUnpkg extends Resolver.Host {
       );
     }
 
-    this.fetch = options.fetch || ((input: RequestInfo, init?: RequestInit | undefined) => fetch(input, init));
+    this.AbortController = options.AbortController;
+    this.fetch = options.fetch || ((input: RequestInfo, init?: RequestInit) => fetch(input, init));
   }
 
-  async getCanonicalUrl(resolver: Resolver, url: URL) {
+  async getCanonicalUrl(resolver: Resolver, url: URL, { token }: { token?: CancellationToken } = {}) {
     if (url.protocol !== UNPKG_PROTOCOL || url.hostname !== UNPKG_HOST) {
       throw new Error(`Unable to list non-unpkg entries for ${url.href}`);
     }
 
     const unresolvedSpec = parseUnpkgUrl(url);
-    const packageJson = await this.readPackageJsonWithCache(resolver, unresolvedSpec);
+    const packageJson = await this.readPackageJsonWithCache(resolver, unresolvedSpec, { token });
 
     return new URL(
       `${UNPKG_PROTOCOL}//${UNPKG_HOST}/${packageJson.name}@${packageJson.version}${unresolvedSpec.pathname}`
     );
   }
 
-  async getResolveRoot(resolver: Resolver, url: URL): Promise<URL> {
+  async getResolveRoot(resolver: Resolver, url: URL, { token }: { token?: CancellationToken } = {}): Promise<URL> {
     if (url.protocol !== UNPKG_PROTOCOL || url.hostname !== UNPKG_HOST) {
       throw new Error(`Unable to list non-unpkg entries for ${url.href}`);
     }
 
     const unresolvedSpec = parseUnpkgUrl(url);
-    const packageJson = await this.readPackageJsonWithCache(resolver, unresolvedSpec);
+    const packageJson = await this.readPackageJsonWithCache(resolver, unresolvedSpec, { token });
 
     return new URL(`${UNPKG_PROTOCOL}//${UNPKG_HOST}/${packageJson.name}@${packageJson.version}/`);
   }
 
-  async listEntries(resolver: Resolver, url: URL): Promise<ResolvedEntry[]> {
+  async listEntries(
+    resolver: Resolver,
+    url: URL,
+    { token }: { token?: CancellationToken } = {}
+  ): Promise<ResolvedEntry[]> {
     if (url.protocol !== UNPKG_PROTOCOL || url.hostname !== UNPKG_HOST) {
       throw new Error(`Unable to list non-unpkg entries for ${url.href}`);
     }
 
-    const rootUrl = await resolver.host.getResolveRoot(resolver, url);
+    const rootUrl = await resolver.host.getResolveRoot(resolver, url, { token });
     const unresolvedSpec = parseUnpkgUrl(url);
-    const packageJson = await this.readPackageJsonWithCache(resolver, unresolvedSpec);
+    const packageJson = await this.readPackageJsonWithCache(resolver, unresolvedSpec, { token });
 
     url.pathname = `/${packageJson.name}@${packageJson.version}${unresolvedSpec.pathname}`;
 
-    let parentEntry: Directory | undefined = await this.readPackageEntriesWithCache(parseUnpkgUrl(url));
+    let parentEntry: Directory | undefined = await this.readPackageEntriesWithCache(parseUnpkgUrl(url), { token });
+
+    if (token && token.isCancellationRequested) {
+      throw new CanceledError('Canceled');
+    }
 
     const traversalSegments = unresolvedSpec.pathname.split('/').filter(Boolean);
 
@@ -107,7 +126,7 @@ export class ResolverHostUnpkg extends Resolver.Host {
     });
   }
 
-  async readFileContent(_: Resolver, url: URL): Promise<ArrayBuffer> {
+  async readFileContent(_: Resolver, url: URL, { token }: { token?: CancellationToken } = {}): Promise<ArrayBuffer> {
     if (url.protocol !== UNPKG_PROTOCOL || url.hostname !== UNPKG_HOST) {
       throw new Error(`Unable to read file contents for non-unpkg entries for ${url.href}`);
     }
@@ -128,19 +147,29 @@ export class ResolverHostUnpkg extends Resolver.Host {
     }
 
     // console.log('[MISS] readFileContent(%s)', href);
+    const signal = signalFromCancellationToken(token, this.AbortController);
     const fetch = this.fetch;
-    const promise = fetch(href, { redirect: 'follow' }).then(res => {
-      if (!res.ok) {
-        throw new Error(`Error reading file content for ${href}: ${res.status}`);
-      }
+    const promise = fetch(href, { redirect: 'follow', signal })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`Error reading file content for ${href}: ${res.status}`);
+        }
 
-      return res.arrayBuffer();
-    });
+        return res.arrayBuffer();
+      })
+      .catch(err => {
+        if (err.name === 'AbortError') {
+          throw new CanceledError('Canceled');
+        }
+
+        throw err;
+      });
 
     this.inflightContentRequests.set(href, promise);
 
     try {
       const buf = await promise;
+
       this.contentCache.set(href, buf);
 
       return buf;
@@ -149,7 +178,10 @@ export class ResolverHostUnpkg extends Resolver.Host {
     }
   }
 
-  private async readPackageEntriesWithCache(spec: Spec): Promise<Directory> {
+  private async readPackageEntriesWithCache(
+    spec: Spec,
+    { token }: { token?: CancellationToken } = {}
+  ): Promise<Directory> {
     const lockKey = `entries:${spec.name}`;
     const lock = this.packageLock.get(lockKey);
 
@@ -186,7 +218,7 @@ export class ResolverHostUnpkg extends Resolver.Host {
     }
 
     // console.log('[MISS] readPackageEntriesWithCache(%s)', spec.spec);
-    const promise = this.readPackageEntries(spec.spec);
+    const promise = this.readPackageEntries(spec.spec, { token });
 
     this.packageLock.set(lockKey, promise);
     const packageEntries = await promise;
@@ -197,7 +229,11 @@ export class ResolverHostUnpkg extends Resolver.Host {
     return packageEntries;
   }
 
-  private async readPackageJsonWithCache(resolver: Resolver, spec: Spec): Promise<PackageJson> {
+  private async readPackageJsonWithCache(
+    resolver: Resolver,
+    spec: Spec,
+    { token }: { token?: CancellationToken } = {}
+  ): Promise<PackageJson> {
     const lockKey = `packageJson:${spec.spec}`;
     const lock = this.packageLock.get(lockKey);
 
@@ -232,7 +268,7 @@ export class ResolverHostUnpkg extends Resolver.Host {
     }
 
     // console.log('[MISS] readPackageJsonWithCache(%s)', spec.spec);
-    const promise = this.readPackageJson(resolver, spec.spec);
+    const promise = this.readPackageJson(resolver, spec.spec, { token });
 
     this.packageLock.set(lockKey, promise);
     const packageJson = await promise;
@@ -247,16 +283,20 @@ export class ResolverHostUnpkg extends Resolver.Host {
     return packageJson;
   }
 
-  private async readPackageJson(resolver: Resolver, spec: string): Promise<PackageJson> {
+  private async readPackageJson(
+    resolver: Resolver,
+    spec: string,
+    { token }: { token?: CancellationToken } = {}
+  ): Promise<PackageJson> {
     // console.log('readPackageJson(%s)', spec);
 
     const href = `${UNPKG_PROTOCOL}//${UNPKG_HOST}/${spec}/package.json`;
-    const content = await this.readFileContent(resolver, new URL(href));
+    const content = await this.readFileContent(resolver, new URL(href), { token });
 
     let manifest: PackageJson;
 
     try {
-      manifest = util.parseBufferAsPackageJson(this.decoder, content, spec);
+      manifest = util.parseBufferAsPackageJson(resolver.decoder, content, spec);
     } catch (err) {
       throw new Error(`Error parsing manifest as json for package ${spec}: ${err.message}`);
     }
@@ -264,12 +304,19 @@ export class ResolverHostUnpkg extends Resolver.Host {
     return manifest;
   }
 
-  private async readPackageEntries(spec: string): Promise<Directory> {
+  private async readPackageEntries(spec: string, { token }: { token?: CancellationToken } = {}): Promise<Directory> {
     // console.log('readPackageEntries(%s)', spec);
 
     const href = `${UNPKG_PROTOCOL}//${UNPKG_HOST}/${spec}/?meta`;
+    const signal = signalFromCancellationToken(token, this.AbortController);
     const fetch = this.fetch;
-    const res = await fetch(href);
+    const res = await fetch(href, { signal }).catch(err => {
+      if (err.name === 'AbortError') {
+        throw new CanceledError('Canceled');
+      }
+
+      throw err;
+    });
 
     if (!res.ok) {
       throw new Error(`Error listing package contents for ${spec}: ${res.status}`);
@@ -284,7 +331,7 @@ export class ResolverHostUnpkg extends Resolver.Host {
     return json;
   }
 
-  static resolveBareModule(_: Resolver.Host, spec: BareModuleSpec) {
+  static resolveBareModule(_: ResolverHost, spec: BareModuleSpec) {
     return new URL(`${UNPKG_PROTOCOL}//${UNPKG_HOST}/${spec.name}@${spec.spec}${spec.pathname}`);
   }
 }

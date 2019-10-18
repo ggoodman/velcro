@@ -2,7 +2,7 @@ import { ResolvedEntryKind } from '@velcro/resolver';
 
 export type CustomFetch = (
   url: string,
-  options?: Pick<RequestInit, 'redirect'>
+  options?: Pick<RequestInit, 'redirect' | 'signal'>
 ) => Promise<Pick<Response, 'arrayBuffer' | 'json' | 'ok' | 'status'>>;
 
 export type BareModuleSpec = {

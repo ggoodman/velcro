@@ -6,6 +6,8 @@
   "main": "index.js",
   "scripts": {
     "build": "rollup -c",
+    "predeploy": "cd packages/playground && npm run build",
+    "deploy": "gh-pages -d packages/playground/build",
     "test": "lerna run test"
   },
   "repository": {
@@ -24,12 +26,16 @@
     "react-dom": "^16.9.0",
     "rollup": "^1.21.4",
     "serve": "^11.1.0",
-    "typescript": "^3.6.3"
+    "typescript": "^3.7.0-dev.20191018"
   },
   "prettier": {
     "printWidth": 120,
     "singleQuote": true,
     "tabWidth": 2,
     "trailingComma": "es5"
-  }
+  },
+  "dependencies": {
+    "gh-pages": "^2.1.1"
+  },
+  "homepage": "https://ggoodman.github.io/velcro"
 }

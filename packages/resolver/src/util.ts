@@ -1,4 +1,4 @@
-import { Decoder } from '@velcro/decoder';
+import { Decoder } from './decoder';
 import { isValidPackageJson, PackageJson } from './types';
 
 const CHAR_DOT = 46; /* . */

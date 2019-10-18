@@ -48,7 +48,7 @@
     "rollup-plugin-node-resolve": "^4.0.1",
     "rollup-plugin-typescript2": "^0.20.1",
     "tslib": "^1.9.3",
-    "typescript": "^3.3.3333"
+    "typescript": "^3.7.0-dev.20191018"
   },
   "dependencies": {
     "@types/hapi__code": "^5.3.0",

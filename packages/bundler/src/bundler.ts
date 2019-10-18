@@ -1,9 +1,15 @@
 import remapping from '@ampproject/remapping';
 import { version as nodeLibsVersion } from '@velcro/node-libs/package.json';
-import { EntryNotFoundError, Resolver } from '@velcro/resolver';
+import {
+  CanceledError,
+  CancellationToken,
+  CancellationTokenSource,
+  EntryNotFoundError,
+  Resolver,
+} from '@velcro/resolver';
 import { Base64 } from 'js-base64';
 import { Bundle } from 'magic-string';
-import { Emitter } from 'ts-primitives';
+import { Emitter, Event } from 'ts-primitives';
 
 import { isBareModuleSpecifier } from './util';
 import { resolveBareModuleToUnpkgWithDetails } from './unpkg';
@@ -32,10 +38,11 @@ const DEFAULT_SHIM_GLOBALS: { [key: string]: { spec: string; export?: string } }
 };
 
 export class Bundler {
+  readonly resolver: Resolver;
+
   private readonly assetsByHref = new Map<string, Asset>();
   private readonly assetsByRootHref = new Map<string, Set<Asset>>();
   private readonly pendingResolves = new Map<string, Promise<Asset>>();
-  private readonly resolver: Resolver;
 
   private readonly onAssetAddedEmitter = new Emitter<Asset>();
   private readonly onAssetRemovedEmitter = new Emitter<Asset>();
@@ -46,20 +53,42 @@ export class Bundler {
     this.resolver = options.resolver;
   }
 
-  get onAssetAdded() {
+  get onAssetAdded(): Event<Asset> {
     return this.onAssetAddedEmitter.event;
   }
 
-  get onAssetRemoved() {
+  get onAssetRemoved(): Event<Asset> {
     return this.onAssetRemovedEmitter.event;
+  }
+
+  dispose() {
+    this.onAssetAddedEmitter.dispose();
+    this.onAssetRemovedEmitter.dispose();
+    this.assetsByHref.clear();
+    this.assetsByRootHref.clear();
+    this.pendingResolves.clear();
   }
 
   async generateBundleCode(entrypoints: string[], options: Bundler.BundleOptions = {}): Promise<string> {
     if (!Array.isArray(entrypoints) || !entrypoints.length) {
       throw new Error('Generating a bundle requires passing in an array of entrypoints');
     }
-    const queue = new Queue(options.onEnqueueAsset, options.onCompleteAsset);
-    const addedAssets = await Promise.all(entrypoints.map(entrypoint => this.addUnresolved(queue, entrypoint)));
+    const token = options.token || new CancellationTokenSource().token;
+    const onCancellation = () => {
+      this.pendingResolves.clear();
+    };
+
+    if (token.isCancellationRequested) {
+      onCancellation();
+      throw new CanceledError('Canceled');
+    } else {
+      token.onCancellationRequested(onCancellation);
+    }
+
+    const queue = new Queue(token, options.onEnqueueAsset, options.onCompleteAsset);
+    const addedAssets = await Promise.all(
+      entrypoints.map(entrypoint => this.addUnresolved(queue, entrypoint, undefined, { token }))
+    );
     const entrypointsToAssets = {} as Record<string, Asset>;
 
     for (const idx in entrypoints) {
@@ -218,7 +247,7 @@ export class Bundler {
     return `${bundleCode}${sourceMapSuffix}`;
   }
 
-  async invalidate(spec: string): Promise<boolean> {
+  async invalidate(spec: string, { token }: { token?: CancellationToken } = {}): Promise<boolean> {
     let asset = this.assetsByHref.get(spec);
 
     if (!asset) {
@@ -229,10 +258,10 @@ export class Bundler {
 
       try {
         if (isBareModuleSpecifier(spec)) {
-          resolveResult = await resolveBareModuleToUnpkgWithDetails(this.resolver, spec);
+          resolveResult = await resolveBareModuleToUnpkgWithDetails(this.resolver, spec, undefined, { token });
         } else {
           const combinedUri = new URL(spec);
-          resolveResult = await this.resolver.resolveWithDetails(combinedUri);
+          resolveResult = await this.resolver.resolve(combinedUri, { token });
         }
       } catch (err) {
         if (err instanceof EntryNotFoundError) {
@@ -291,13 +320,18 @@ export class Bundler {
     }
   }
 
-  private async addUnresolved(queue: Queue, href: string, fromHref?: string): Promise<Asset> {
+  private async addUnresolved(
+    queue: Queue,
+    href: string,
+    fromHref: string | undefined,
+    { token }: { token: CancellationToken }
+  ): Promise<Asset> {
     const resolveKey = `${href}${RESOLVE_KEY_SEPARATOR}${fromHref}`;
 
     let pendingResolve = this.pendingResolves.get(resolveKey);
 
     if (!pendingResolve) {
-      pendingResolve = this.addResolving(queue, href, fromHref);
+      pendingResolve = this.addResolving(queue, href, fromHref, { token });
       this.pendingResolves.set(resolveKey, pendingResolve);
     }
 
@@ -314,13 +348,23 @@ export class Bundler {
     }
   }
 
-  private async addResolving(queue: Queue, href: string, fromHref?: string): Promise<Asset> {
-    const resolveResult = await this.resolveWithDetails(href, fromHref);
+  private async addResolving(
+    queue: Queue,
+    href: string,
+    fromHref: string | undefined,
+    { token }: { token: CancellationToken }
+  ): Promise<Asset> {
+    const resolveResult = await this.resolveWithDetails(href, fromHref, { token });
 
-    return this.addResolved(queue, resolveResult.resolvedHref, resolveResult.rootHref);
+    return this.addResolved(queue, resolveResult.resolvedHref, resolveResult.rootHref, { token });
   }
 
-  private async addResolved(queue: Queue, href: string, rootHref: string): Promise<Asset> {
+  private async addResolved(
+    queue: Queue,
+    href: string,
+    rootHref: string,
+    { token }: { token: CancellationToken }
+  ): Promise<Asset> {
     let asset = this.assetsByHref.get(href);
 
     if (!asset) {
@@ -329,7 +373,11 @@ export class Bundler {
       this.addAsset(asset);
 
       try {
-        const code = await this.readCode(href);
+        const code = await this.readCode(href, { token });
+
+        if (token.isCancellationRequested) {
+          throw new CanceledError('Canceled');
+        }
 
         asset.setCode(code);
       } catch (err) {
@@ -343,7 +391,7 @@ export class Bundler {
 
       for (const dependency of parsedFile.requireDependencies) {
         queue.add(async () => {
-          const dependencyAsset = await this.addUnresolved(queue, dependency.spec.value, href);
+          const dependencyAsset = await this.addUnresolved(queue, dependency.spec.value, href, { token });
           asset!.dependencies.push({
             type: Asset.DependencyKind.Require,
             href: dependencyAsset.href,
@@ -359,7 +407,7 @@ export class Bundler {
 
       for (const dependency of parsedFile.requireResolveDependencies) {
         queue.add(async () => {
-          const dependencyAsset = await this.addUnresolved(queue, dependency.spec.value, href);
+          const dependencyAsset = await this.addUnresolved(queue, dependency.spec.value, href, { token });
 
           asset!.dependencies.push({
             type: Asset.DependencyKind.RequireResolve,
@@ -379,7 +427,7 @@ export class Bundler {
 
         if (shim) {
           queue.add(async () => {
-            const dependencyAsset = await this.addUnresolved(queue, shim.spec, href);
+            const dependencyAsset = await this.addUnresolved(queue, shim.spec, href, { token });
 
             asset!.dependencies.push({
               type: Asset.DependencyKind.InjectedGlobal,
@@ -400,7 +448,7 @@ export class Bundler {
       // We already have an asset instance, let's make sure dependencies are OK
       for (const dependency of existingAsset.dependencies) {
         if (!this.assetsByHref.has(dependency.href)) {
-          queue.add(async () => this.addUnresolved(queue, dependency.value, existingAsset.href));
+          queue.add(async () => this.addUnresolved(queue, dependency.value, existingAsset.href, { token }));
         }
       }
     }
@@ -408,22 +456,26 @@ export class Bundler {
     return asset;
   }
 
-  private async readCode(uri: string): Promise<string> {
+  private async readCode(uri: string, { token }: { token: CancellationToken }): Promise<string> {
     if (uri === EMPTY_MODULE_HREF.href) {
       return EMPTY_MODULE_CODE;
     }
 
-    const buf = await this.resolver.host.readFileContent(this.resolver, new URL(uri));
+    const buf = await this.resolver.host.readFileContent(this.resolver, new URL(uri), { token });
     const code = this.resolver.decoder.decode(buf);
 
     return code;
   }
 
-  private async resolveWithDetails(uri: string, fromUri?: string): Promise<Bundler.ResolveDetails> {
+  private async resolveWithDetails(
+    uri: string,
+    fromUri: string | undefined,
+    { token }: { token: CancellationToken }
+  ): Promise<Bundler.ResolveDetails> {
     let resolved: Bundler.ResolveDetails;
 
     if (isBareModuleSpecifier(uri)) {
-      const bareModuleResolveResult = await resolveBareModuleToUnpkgWithDetails(this.resolver, uri, fromUri);
+      const bareModuleResolveResult = await resolveBareModuleToUnpkgWithDetails(this.resolver, uri, fromUri, { token });
 
       if (!bareModuleResolveResult.stableUrl) {
         throw new Error(`Failed to resolve bare module '${uri}' from '${fromUri || '@root'}' to a stable url`);
@@ -452,7 +504,7 @@ export class Bundler {
       };
     } else {
       const combinedUri = new URL(uri, fromUri);
-      const resolveResult = await this.resolver.resolveWithDetails(combinedUri);
+      const resolveResult = await this.resolver.resolve(combinedUri);
 
       let resolvedUri: URL;
 
@@ -490,6 +542,7 @@ export namespace Bundler {
     onCompleteAsset?(): void;
     requireEntrypoints?: boolean;
     sourceMap?: boolean;
+    token?: CancellationToken;
   }
 
   export interface Options {

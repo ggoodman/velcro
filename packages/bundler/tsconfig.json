@@ -1,28 +1,11 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "declaration": true,
-    "downlevelIteration": true,
-    "esModuleInterop": true,
-    "importHelpers": false,
+    "allowJs": true,
+    "composite": true,
     "lib": ["es2018", "dom"],
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "resolveJsonModule": true,
-    "rootDir": ".",
-    "skipLibCheck": true,
-    "strict": true,
-    "target": "es2018"
+    "outDir": "./dist"
   },
-  "include": ["src", "test"],
-  "exclude": ["node_modules/@types/node"],
-  "references": [
-    {
-      "path": "../../packages/resolver"
-    },
-    {
-      "path": "../../packages/node-libs"
-    }
-  ]
+  "include": ["./package.json", "./src"],
+  "references": [{ "path": "../resolver" }, { "path": "../node-libs" }]
 }

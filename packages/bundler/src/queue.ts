@@ -1,3 +1,5 @@
+import { CanceledError, CancellationToken } from '@velcro/resolver';
+
 import { Asset } from './asset';
 
 export class Queue {
@@ -6,7 +8,7 @@ export class Queue {
   private readonly resolvedPromise = Promise.resolve();
   private readonly waiters = [] as { resolve: (assets: Set<Asset>) => void; reject: (err: Error) => void }[];
 
-  constructor(private onEnqueue?: () => void, private onComplete?: () => void) {}
+  constructor(private token: CancellationToken, private onEnqueue?: () => void, private onComplete?: () => void) {}
 
   get size() {
     return this.pendingCount;
@@ -32,6 +34,10 @@ export class Queue {
             this.assets.add(asset);
           }
 
+          if (this.token.isCancellationRequested) {
+            return this.releaseWithError(new CanceledError('Canceled'));
+          }
+
           if (this.pendingCount < 0) {
             throw new Error(`Invariant violation: queue pending count fell below 0`);
           }
@@ -47,6 +53,10 @@ export class Queue {
 
           if (this.onComplete) {
             this.onComplete();
+          }
+
+          if (this.token.isCancellationRequested) {
+            return this.releaseWithError(new CanceledError('Canceled'));
           }
 
           this.releaseWithError(err);
