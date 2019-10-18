@@ -38,10 +38,11 @@ const DEFAULT_SHIM_GLOBALS: { [key: string]: { spec: string; export?: string } }
 };
 
 export class Bundler {
+  readonly resolver: Resolver;
+
   private readonly assetsByHref = new Map<string, Asset>();
   private readonly assetsByRootHref = new Map<string, Set<Asset>>();
   private readonly pendingResolves = new Map<string, Promise<Asset>>();
-  private readonly resolver: Resolver;
 
   private readonly onAssetAddedEmitter = new Emitter<Asset>();
   private readonly onAssetRemovedEmitter = new Emitter<Asset>();
