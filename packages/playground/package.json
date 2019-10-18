@@ -1,6 +1,6 @@
 {
   "name": "playground",
-  "version": "0.1.0",
+  "version": "0.16.0",
   "private": true,
   "dependencies": {
     "@emotion/core": "^10.0.21",
@@ -9,10 +9,10 @@
     "@types/node": "12.11.1",
     "@types/react": "16.9.9",
     "@types/react-dom": "16.9.2",
-    "@velcro/bundler": "^0.15.2",
-    "@velcro/resolver": "^0.15.0",
-    "@velcro/resolver-host-compound": "^0.15.0",
-    "@velcro/resolver-host-unpkg": "^0.15.0",
+    "@velcro/bundler": "^0.16.0",
+    "@velcro/resolver": "^0.16.0",
+    "@velcro/resolver-host-compound": "^0.16.0",
+    "@velcro/resolver-host-unpkg": "^0.16.0",
     "idb": "^4.0.5",
     "modern-css-reset": "^1.0.4",
     "react": "^16.10.2",
