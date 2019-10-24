@@ -32,6 +32,8 @@ import MagicString from 'magic-string';
 
 // const whitespaceRx = /^\s*$/m;
 
+export type UnresolvedDependencies = ReturnType<typeof parseFile>;
+
 export function parseFile(uri: string, magicString: MagicString) {
   const ctx: DependencyVisitorContext = {
     unboundSymbols: new Map(),

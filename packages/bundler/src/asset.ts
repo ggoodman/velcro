@@ -1,8 +1,12 @@
 import MagicString from 'magic-string';
 import { getSourceMappingUrl } from './util';
+import { UnresolvedDependencies, parseFile } from './parser';
 
 export class Asset {
   readonly dependencies = [] as Asset.Dependency[];
+  readonly unresolvedDependencies = {} as UnresolvedDependencies;
+
+  readonly deps = new Map<Asset.Dependency, Asset>();
 
   magicString?: MagicString;
   sourceMappingUrl?: string;
@@ -15,6 +19,13 @@ export class Asset {
       indentExclusionRanges: [],
     });
     this.sourceMappingUrl = getSourceMappingUrl(code);
+
+    const parser = getParserForAsset(this);
+    const dependencies = parser.parse(this.href, this.magicString);
+
+    this.unresolvedDependencies.requireDependencies = dependencies.requireDependencies;
+    this.unresolvedDependencies.requireResolveDependencies = dependencies.requireResolveDependencies;
+    this.unresolvedDependencies.unboundSymbols = dependencies.unboundSymbols;
   }
 
   toJSON() {
@@ -76,4 +87,24 @@ export namespace Asset {
   }
 
   export type Dependency = RequireDependency | RequireResolveDependency | InjectedGlobalDependency;
+}
+
+function getParserForAsset(asset: Asset): { parse: typeof parseFile } {
+  if (asset.href.endsWith('.json')) {
+    return {
+      parse: (_uri, magicString): ReturnType<typeof parseFile> => {
+        magicString.prepend('module.exports = ');
+
+        return {
+          requireDependencies: [],
+          requireResolveDependencies: [],
+          unboundSymbols: new Map(),
+        };
+      },
+    };
+  }
+
+  return {
+    parse: parseFile,
+  };
 }
