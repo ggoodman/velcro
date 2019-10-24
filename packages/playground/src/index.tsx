@@ -45,8 +45,6 @@ ReactDOM.render(
   'name.js':
     `
 export const name = 'World';
-
-throw new Error('Test');
     `.trim() + '\n',
 };
 
