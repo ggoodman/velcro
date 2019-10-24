@@ -339,6 +339,10 @@ export class Resolver {
 
           return { packageJson, url: packageJsonEntry.url };
         } catch (err) {
+          if (err instanceof CanceledError || (err && err.name === 'CanceledError')) {
+            throw err;
+          }
+
           console.warn(
             `Error reading the parent package manifest for ${url.href} from ${packageJsonEntry.url.href}: ${err.message}`
           );
