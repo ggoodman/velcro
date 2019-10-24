@@ -12,7 +12,20 @@ const Entry = styled.div<{ modelFocused: boolean }>`
   height: 25px;
   padding: 0 0 0 8px;
   display: flex;
+  flex-direction: row;
   align-items: center;
+
+  & > span {
+    flex: 1;
+  }
+
+  & > button {
+    display: none;
+  }
+
+  &:hover > button {
+    display: block;
+  }
 
   ${props =>
     props.modelFocused
@@ -31,13 +44,38 @@ const Entry = styled.div<{ modelFocused: boolean }>`
         }}
 `;
 
+const CreateEntry = styled.div`
+  text-decoration: none;
+  color: '#262626';
+
+  height: 25px;
+  padding: 0 0 0 8px;
+  display: flex;
+  align-items: center;
+
+  :hover {
+    background-color: #eee;
+    cursor: pointer;
+  }
+`;
+
+const SidebarFileDelete = styled.button`
+  border: none;
+  background: none;
+`;
+
 const SidebarFile: React.FC<{ className?: string; model: Monaco.editor.ITextModel }> = ({ className, model }) => {
   const activeModel = useActiveModel();
   const editorManager = useContext(EditorManagerContext);
 
+  const onClickDelete = () => {
+    model.dispose();
+  };
+
   return (
-    <Entry className={className} modelFocused={model === activeModel} onClick={() => editorManager.focusModel(model)}>
-      {model.uri.fsPath.slice(1)}
+    <Entry className={className} modelFocused={model === activeModel}>
+      <span onClick={() => editorManager.focusModel(model)}>{model.uri.fsPath.slice(1)}</span>
+      <SidebarFileDelete onClick={() => onClickDelete()}>❌</SidebarFileDelete>
     </Entry>
   );
 };
@@ -45,6 +83,15 @@ const SidebarFile: React.FC<{ className?: string; model: Monaco.editor.ITextMode
 const Sidebar: React.FC<{ className?: string }> = props => {
   const rootDir = useRef(Monaco.Uri.file('/'));
   const entries = useDirectory(rootDir.current);
+  const editorManager = useContext(EditorManagerContext);
+
+  const onClickCreate = () => {
+    const filename = prompt('Filename?');
+
+    if (filename) {
+      editorManager.createModel(filename);
+    }
+  };
 
   return (
     <div className={props.className}>
@@ -52,11 +99,10 @@ const Sidebar: React.FC<{ className?: string }> = props => {
         entry.type === EntryKind.Directory ? (
           <div>{entry.uri.fsPath.slice(1)}</div>
         ) : (
-          <SidebarFile key={entry.uri.toString(true)} model={entry.model}>
-            {entry.uri.fsPath.slice(1)}
-          </SidebarFile>
+          <SidebarFile key={entry.uri.toString(true)} model={entry.model}></SidebarFile>
         )
       )}
+      <CreateEntry onClick={() => onClickCreate()}>Create...</CreateEntry>
     </div>
   );
 };

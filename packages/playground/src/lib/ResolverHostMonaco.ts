@@ -6,7 +6,8 @@ import { InvariantError, TimeoutError, TranspileError, Diagnostic } from './erro
 
 const LANGUAGE_TYPESCRIPT = 'typescript';
 const MAX_TRANSPILE_ATTEMPTS = 3;
-const TRANSPILE_TIMEOUT = 500;
+const TRANSPILE_TIMEOUT = 2000;
+const TRANSPILE_TIMEOUT_BACKOFF = 500;
 
 type Model = Monaco.editor.ITextModel;
 
@@ -136,12 +137,15 @@ export class ResolverHostMonaco extends AbstractResolverHost {
           return code;
         } catch (err) {
           if (err instanceof TimeoutError) {
+            await timeout(TRANSPILE_TIMEOUT_BACKOFF * Math.pow(2, attempt));
             continue;
           }
 
           throw err;
         }
       }
+
+      throw new TimeoutError(`Timed out while trying to transpile '${href}'`);
     }
 
     return model.getValue();
@@ -180,7 +184,7 @@ function raceTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   return Promise.race([
     promise,
     timeout(timeoutMs).then(() => {
-      throw new TimeoutError();
+      return Promise.reject(new TimeoutError());
     }),
   ]);
 }

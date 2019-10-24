@@ -1,6 +1,8 @@
 import { Bundler } from '@velcro/bundler';
 import { Resolver, AbstractResolverHost, ResolverHost } from '@velcro/resolver';
 import { openDB } from 'idb';
+import { timeout } from 'ts-primitives';
+import { TimeoutError } from './error';
 
 export class ResolverHostWithCache extends AbstractResolverHost {
   private readonly idbPromise = openDB('velcro', Bundler.schemaVersion, {
@@ -25,13 +27,19 @@ export class ResolverHostWithCache extends AbstractResolverHost {
     return null;
   });
 
+  private readonly hostTimeout: number;
+  private readonly idbTimeout: number;
+
   private readonly inflightGetCanonicalUrl = new Map<string, ReturnType<ResolverHost['getCanonicalUrl']>>();
   private readonly inflightGetResolveRoot = new Map<string, ReturnType<ResolverHost['getResolveRoot']>>();
   private readonly inflightListEntries = new Map<string, ReturnType<ResolverHost['listEntries']>>();
   private readonly inflightReadFileContent = new Map<string, ReturnType<ResolverHost['readFileContent']>>();
 
-  constructor(readonly host: ResolverHost) {
+  constructor(readonly host: ResolverHost, { idbTimeout = 1000, hostTimeout = 10000 } = {}) {
     super();
+
+    this.hostTimeout = hostTimeout;
+    this.idbTimeout = idbTimeout;
   }
 
   private async withCache<T, C = unknown>(
@@ -42,54 +50,37 @@ export class ResolverHostWithCache extends AbstractResolverHost {
     serialize?: (result: T) => C,
     deserialize?: (cached: C) => T
   ): Promise<T> {
-    let idb = undefined;
-
-    try {
-      idb = await withTimeout(1000, this.idbPromise, `this.idbPromise`);
-    } catch (err) {
-      // Error already logged
-    }
+    const idb = await withTimeout(this.idbTimeout, this.idbPromise, `this.idbPromise`).catch(_ => undefined);
 
     if (idb) {
-      try {
-        const cached = await withTimeout(1000, idb.get(storeName, href), `idb.get(${storeName}, ${href})`);
+      const cached = await withTimeout(
+        this.idbTimeout,
+        idb.get(storeName, href),
+        `idb.get(${storeName}, ${href})`
+      ).catch(_ => undefined);
 
-        if (cached) {
-          return deserialize ? deserialize(cached) : cached;
-        }
-      } catch (err) {
-        console.error(err, 'error reading from cache');
+      if (cached) {
+        return deserialize ? deserialize(cached) : cached;
       }
     }
 
     let inflight = inflightMap.get(href);
 
     if (!inflight) {
-      inflight = loadFn();
+      inflight = withTimeout(this.hostTimeout, loadFn(), `Timed out on operation '${storeName}' for '${href}'`);
       inflightMap.set(href, inflight);
 
       // Make sure we don't get an uncaught rejection
-      inflight.catch(err => undefined);
-
-      (async () => {
-        try {
-          const result = await withTimeout(1000, inflight, `await inflight(${href})`);
-
+      inflight
+        .then(result => {
           if (idb) {
-            try {
-              await withTimeout(
-                1000,
-                idb.put(storeName, serialize ? serialize(result) : result, href),
-                `idb.put(${storeName}, ${href})`
-              );
-            } catch (err) {
-              console.error(err, 'error writing to cache');
-            }
+            idb.put(storeName, serialize ? serialize(result) : result, href).catch(_ => undefined);
           }
-        } finally {
+        })
+        .catch(_ => undefined)
+        .then(() => {
           inflightMap.delete(href);
-        }
-      })();
+        });
     }
 
     return inflight;
@@ -143,25 +134,26 @@ export class ResolverHostWithCache extends AbstractResolverHost {
   }
 
   async readFileContent(resolver: Resolver, url: URL) {
-    const result = await this.withCache(
-      url.href,
-      () => this.host.readFileContent(resolver, url),
-      this.inflightReadFileContent,
-      'readFileContent'
-    );
+    try {
+      const result = await this.withCache(
+        url.href,
+        () => this.host.readFileContent(resolver, url),
+        this.inflightReadFileContent,
+        'readFileContent'
+      );
 
-    return result;
+      return result;
+    } catch (err) {
+      throw err;
+    }
   }
 }
 
-async function withTimeout<T>(duration: number, promise: Promise<T>, message: string) {
-  const timeout = setTimeout(() => {
-    console.warn(`Timed out after ${duration}ms on: ${message}`);
-  }, duration);
-
-  try {
-    return await promise;
-  } finally {
-    clearTimeout(timeout);
-  }
+function withTimeout<T>(duration: number, promise: Promise<T>, message: string) {
+  return Promise.race([
+    promise,
+    timeout(duration).then(() => {
+      return Promise.reject(new TimeoutError(message));
+    }),
+  ]);
 }

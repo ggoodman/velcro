@@ -1,24 +1,29 @@
 import styled from '@emotion/styled/macro';
+import { base64, getSourceMappingUrl, runtime } from '@velcro/bundler';
 import * as Monaco from 'monaco-editor';
 import React, { useEffect, useRef, useContext, useState } from 'react';
+import { decode, SourceMapMappings } from 'sourcemap-codec';
 import { Delayer, Throttler, DisposableStore, CancellationTokenSource } from 'ts-primitives';
 import { EditorManagerContext } from '../lib/EditorManager';
+import { CallSite, CallSiteOptions } from '../lib/CallSite';
 
-interface Message {
+interface MessageLine {
+  isInternal: boolean;
   text: string;
 }
+interface Message {
+  lines: MessageLine[];
+}
 
-const PreviewProgress = styled.div<{ completed: number; pending: number }>`
+const PreviewProgress = styled.div<{ completed: number; total: number }>`
   z-index: 1;
   position: absolute;
   top: 0;
-  width: ${props =>
-    props.pending || props.completed
-      ? `${Math.round((100 * props.completed) / (props.completed + props.pending))}%`
-      : 0};
+  width: ${props => (props.total ? `${Math.round((100 * props.completed) / props.total)}%` : 0)};
   left: 0;
-  height: ${props => (props.pending || props.completed ? '2px' : '0')};
+  height: ${props => (props.total ? '2px' : '0')};
   background-color: #008cba;
+  transition: width 0.5s 0s cubic-bezier(0.455, 0.03, 0.515, 0.955);
 `;
 const PreviewIframeWrap = styled.div`
   position: relative;
@@ -43,13 +48,19 @@ const PreviewWrap = styled.div`
     left: 0;
   }
 `;
-const PreviewMessageError = styled.div`
+const PreviewMessageError = styled.ul`
+  margin: 0;
   padding: 1em 2em;
   font-family: monospace;
   font-size: 16px;
   background-color: rgba(255, 0, 0, 0.5);
   backdrop-filter: brightness(50%);
   color: white;
+  list-style: none;
+`;
+const PreviewMessageErrorText = styled.li<{ isInternal: boolean }>`
+  white-space: pre-wrap;
+  opacity: ${props => (props.isInternal ? 0.7 : 1.0)};
 `;
 const PreviewMessages = styled.div`
   z-index: 1;
@@ -60,8 +71,17 @@ const PreviewMessages = styled.div`
   display: flex;
   flex-direction: column-reverse;
 `;
+const PreviewMessageLine: React.FC<{ line: MessageLine }> = ({ line }) => {
+  return <PreviewMessageErrorText isInternal={line.isInternal}>{line.text}</PreviewMessageErrorText>;
+};
 const PreviewMessage: React.FC<{ message: Message }> = ({ message }) => {
-  return <PreviewMessageError>{message.text}</PreviewMessageError>;
+  return message.lines.length ? (
+    <PreviewMessageError>
+      {message.lines.map((line, i) => (
+        <PreviewMessageLine key={i} line={line}></PreviewMessageLine>
+      ))}
+    </PreviewMessageError>
+  ) : null;
 };
 
 const Preview: React.FC<{ className?: string }> = props => {
@@ -70,7 +90,7 @@ const Preview: React.FC<{ className?: string }> = props => {
   const previewIframeRef = useRef<HTMLIFrameElement | null>(null);
   const editorManager = useContext(EditorManagerContext);
   const [messages, setMessages] = useState([] as Message[]);
-  const [buildProgress, setBuildProgress] = useState({ pending: 0, completed: 0 });
+  const [buildProgress, setBuildProgress] = useState({ completed: 0, total: 0 });
 
   useEffect(() => {
     const disposable = new DisposableStore();
@@ -99,6 +119,10 @@ const Preview: React.FC<{ className?: string }> = props => {
 
       invalidations.current.clear();
 
+      setBuildProgress({ completed: 0, total: 0 });
+
+      let building = true;
+
       try {
         await Promise.all(
           toInvalidate.map(spec => {
@@ -116,38 +140,37 @@ const Preview: React.FC<{ className?: string }> = props => {
         const resolvedEntrypointHref = resolvedEntrypoint.resolvedUrl.href;
 
         const bundle = await editorManager.bundler.generateBundleCode([resolvedEntrypointHref], {
-          onCompleteAsset: () =>
-            setBuildProgress(buildProgress => ({
-              completed: buildProgress.completed + 1,
-              pending: buildProgress.pending,
-            })),
-          onEnqueueAsset: () =>
-            setBuildProgress(buildProgress => ({
-              completed: buildProgress.completed,
-              pending: buildProgress.pending + 1,
-            })),
+          dependencies: {
+            'error-stack-parser': '^2.0.4',
+          },
+          onCompleteAsset: () => {
+            if (building) {
+              setBuildProgress(buildProgress => {
+                return {
+                  completed: buildProgress.completed + 1,
+                  total: buildProgress.total,
+                };
+              });
+            }
+          },
+          onEnqueueAsset: () => {
+            if (building) {
+              setBuildProgress(buildProgress => {
+                return {
+                  completed: buildProgress.completed,
+                  total: buildProgress.total + 1,
+                };
+              });
+            }
+          },
           sourceMap: true,
           requireEntrypoints: true,
           token,
         });
 
-        const errorWatcher = new File(
-          [
-            `
-window.onerror = function(msg, url, lineNo, columnNo, err) {
-const payload = { url, lineNo, columnNo, name: err.name };
-for (const key of Object.getOwnPropertyNames(err)) {
-payload[key] = err[key];
-}
-window.parent.postMessage({ type: 'error', payload }, '*');
-}
-      `,
-          ],
-          'watcher.js',
-          {
-            type: 'text/javascript',
-          }
-        );
+        const errorWatcher = new File([`(${createRuntime.toString()})();`], 'watcher.js', {
+          type: 'text/javascript',
+        });
         const bundleFile = new File([bundle], resolvedEntrypointHref, {
           type: 'text/javascript',
         });
@@ -202,9 +225,18 @@ window.parent.postMessage({ type: 'error', payload }, '*');
           throw err;
         }
       } catch (err) {
-        setMessages(messages => [...messages, { text: err.message }]);
+        if (err && err.name !== 'CanceledError') {
+          setMessages(messages => [...messages, { lines: [{ isInternal: false, text: err.message }] }]);
+        }
       } finally {
-        setBuildProgress({ pending: 0, completed: 0 });
+        if (tokenSource) {
+          tokenSource.cancel();
+          tokenSource.dispose();
+        }
+
+        building = false;
+
+        setBuildProgress({ completed: 0, total: 0 });
       }
     };
 
@@ -238,9 +270,139 @@ window.parent.postMessage({ type: 'error', payload }, '*');
 
     disposable.add(
       (() => {
-        const onMessage = (e: MessageEvent) => {
-          if (e.data && e.data.type === 'error' && e.data.payload && e.data.payload.message) {
-            setMessages(messages => [...messages, { text: e.data.payload.message }]);
+        const onMessage = async (e: MessageEvent) => {
+          console.log('message event', e.data);
+          if (e.data && e.data.type === 'error' && e.data.payload) {
+            const readCache = new Map<string, { code: string; sourceMap?: any }>();
+
+            const read = async (href: string): Promise<string> => {
+              let code: string;
+
+              if (href.startsWith('blob:')) {
+                code = await fetch(href).then(res => res.text());
+              } else if (href.startsWith('data:')) {
+                const match = href.match(/^data:[^;]+;(?:charset=([^;]+);)?(?:(base64),)?(.*)$/);
+
+                if (!match) {
+                  throw new Error(`Unexpected data URI: '${href}'`);
+                }
+
+                code = match[3];
+
+                if (match[2].toLowerCase() === 'base64') {
+                  code = base64.decode(code);
+                }
+              } else {
+                const buf = await editorManager.bundler.resolver.host.readFileContent(
+                  editorManager.bundler.resolver,
+                  new URL(href)
+                );
+                code = editorManager.bundler.resolver.decoder.decode(buf);
+              }
+
+              return code;
+            };
+
+            const readSource = async (href: string): Promise<{ code: string; sourceMap?: MappedSourceMap }> => {
+              if (readCache.has(href)) {
+                return readCache.get(href) as { code: string; sourceMap?: MappedSourceMap };
+              }
+
+              const code = await read(href);
+              const sourceMappingUrl = getSourceMappingUrl(code);
+              let sourceMap: any = undefined;
+
+              if (sourceMappingUrl) {
+                const sourceMapText = await read(sourceMappingUrl);
+                sourceMap = JSON.parse(sourceMapText);
+
+                if (sourceMap.mappings) {
+                  sourceMap.mappings = decode(sourceMap.mappings);
+                }
+              }
+
+              const result = { code, sourceMap };
+
+              readCache.set(href, result);
+
+              return result;
+            };
+
+            let frames = [] as CallSite[];
+
+            if (Array.isArray(e.data.payload.frames)) {
+              try {
+                frames = await Promise.all(
+                  e.data.payload.frames.map(async (frameOptions: CallSiteOptions) => {
+                    let frame = new CallSite(frameOptions);
+                    const href = frame.getFileName();
+                    const line = frame.getLineNumber();
+                    const column = frame.getColumnNumber();
+
+                    if (href && line && Number.isInteger(line) && column && Number.isInteger(column)) {
+                      const result = await readSource(href);
+
+                      if (!result.sourceMap) {
+                        return frame.with({
+                          isInternal: true,
+                        });
+                      }
+
+                      const mappings = result.sourceMap.mappings[line - 1];
+
+                      if (!mappings || !mappings.length) {
+                        return frame.with({
+                          isInternal: true,
+                        });
+                      }
+
+                      let mapping = mappings[0];
+
+                      for (let i = 1; i < mappings.length; i++) {
+                        const sourceColumn = mappings[i][0];
+
+                        if (sourceColumn > column) {
+                          break;
+                        }
+
+                        mapping = mappings[i];
+                      }
+
+                      // We should now have the 'right' mapping
+
+                      // [ generatedCodeColumn, sourceIndex, sourceCodeLine, sourceCodeColumn, nameIndex ]
+                      const sourceFileIndex = mapping[1];
+                      const sourceFile =
+                        sourceFileIndex !== undefined ? result.sourceMap.sources[sourceFileIndex] : undefined;
+                      const sourceLine = mapping[2];
+                      const sourceColumn = mapping[3];
+
+                      if (sourceLine === undefined || sourceFile === undefined) {
+                        return frame.with({
+                          isInternal: true,
+                        });
+                      }
+
+                      return frame.with({
+                        isInternal: false,
+                        columnNumber: sourceColumn,
+                        lineNumber: sourceLine + 1, // the mappings are 0-indexed
+                        fileName: sourceFile.replace(/^file:\/\/\//, ''),
+                      });
+                    }
+
+                    return frame;
+                  })
+                );
+              } catch (err) {
+                console.warn({ err, trace: e.data.payload.frames }, 'Error resolving source locations for stack trace');
+              }
+
+              console.log('frames', frames);
+              console.log('stack', frames.map(frame => frame.toString()).join('\n'));
+            }
+
+            setMessages(messages => [...messages, { lines: CallSite.prepareStackTrace(e.data.payload, frames) }]);
           }
         };
 
@@ -260,7 +422,7 @@ window.parent.postMessage({ type: 'error', payload }, '*');
 
   return (
     <PreviewWrap className={props.className}>
-      <PreviewProgress completed={buildProgress.completed} pending={buildProgress.pending}></PreviewProgress>
+      <PreviewProgress completed={buildProgress.completed} total={buildProgress.total}></PreviewProgress>
       {previewIframeRef.current ? null : 'Building the preview...'}
       <PreviewIframeWrap ref={previewWrapRef}></PreviewIframeWrap>
       <PreviewMessages>
@@ -273,3 +435,56 @@ window.parent.postMessage({ type: 'error', payload }, '*');
 };
 
 export default styled(Preview)``;
+
+declare var Velcro: { runtime: typeof runtime };
+
+function createRuntime() {
+  window.onerror = function(_msg, url, lineNo, columnNo, err) {
+    if (!(err instanceof Error)) {
+      err = Object.assign(new Error(String(err) || 'Unknown error'), { name: 'UnknownError' });
+    }
+
+    let frames: CallSiteOptions[] | undefined = undefined;
+
+    try {
+      const parser = Velcro.runtime.require('error-stack-parser') as typeof import('error-stack-parser');
+
+      frames = parser.parse(err).map(frame => {
+        const callsite: CallSiteOptions = {
+          columnNumber: frame.getColumnNumber(),
+          functionName: frame.getFunctionName(),
+          fileName: frame.getFileName(),
+          isConstructor: frame.getIsConstructor(),
+          isEval: frame.getIsEval(),
+          isNative: frame.getIsNative(),
+          isToplevel: frame.getIsToplevel(),
+          lineNumber: frame.getLineNumber(),
+        };
+
+        return callsite;
+      });
+    } catch (_) {
+      // Swallow this
+    }
+
+    const payload = { frames, url, lineNo, columnNo, name: err.name } as Record<
+      string,
+      string | CallSiteOptions[] | number
+    >;
+
+    for (const key of Object.getOwnPropertyNames(err)) {
+      payload[key] = (err as any)[key];
+    }
+
+    window.parent.postMessage({ type: 'error', payload }, '*');
+  };
+}
+
+interface MappedSourceMap {
+  file?: string;
+  mappings: SourceMapMappings;
+  names: string[];
+  sources: string[];
+  sourcesContent: string[];
+  version: 3;
+}

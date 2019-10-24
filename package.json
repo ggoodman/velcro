@@ -8,6 +8,7 @@
     "build": "rollup -c",
     "predeploy": "cd packages/playground && npm run build",
     "deploy": "gh-pages -d packages/playground/build",
+    "start": "cd packages/playground && npm run start",
     "test": "lerna run test"
   },
   "repository": {

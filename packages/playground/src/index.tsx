@@ -1,31 +1,39 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import 'modern-css-reset';
+// import 'modern-css-reset';
 
 import App from './components/App';
 import * as serviceWorker from './serviceWorker';
 import styled from '@emotion/styled';
 
 const project = {
-  'package.json': JSON.stringify(
-    {
-      dependencies: {
-        react: '^16.9.0',
-        'react-dom': '^16.9.0',
+  'package.json':
+    JSON.stringify(
+      {
+        dependencies: {
+          '@emotion/styled': '^10.0.17',
+          react: '^16.9.0',
+          'react-dom': '^16.9.0',
+        },
       },
-    },
-    null,
-    2
-  ),
-  'index.jsx': `
+      null,
+      2
+    ) + '\n',
+  'index.jsx':
+    `
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
+import styled from '@emotion/styled';
 
 import { name } from './name';
 
+const Red = styled.div\`
+  color: green;
+\`;
+
 class Hello extends Component {
   render() {
-    return <div>Hello {this.props.toWhat}</div>;
+    return <Red>Hello {this.props.toWhat}</Red>;
   }
 }
 
@@ -33,10 +41,13 @@ ReactDOM.render(
   <Hello toWhat={ name } />,
   document.getElementById('root')
 );
-    `.trim(),
-  'name.js': `
+      `.trim() + '\n',
+  'name.js':
+    `
 export const name = 'World';
-    `.trim(),
+
+throw new Error('Test');
+    `.trim() + '\n',
 };
 
 const AppWrap = styled.div`
@@ -55,9 +66,10 @@ const AppWrap = styled.div`
 
   ${App} {
     flex: 0 0 80vh;
-    width: 60vw;
+    width: 80vw;
     background: white;
     box-shadow: 0 19px 38px rgba(0, 0, 0, 0.3), 0 15px 12px rgba(0, 0, 0, 0.22);
+    max-height: 90vh;
   }
 `;
 
