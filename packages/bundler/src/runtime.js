@@ -13,6 +13,7 @@ export function createRuntime(Velcro) {
     this[aliasesSymbol] = Object.create(null);
     this[modulesSymbol] = Object.create(null);
     this[registrySymbol] = Object.create(null);
+    this[Symbol.toStringTag] = 'Module';
 
     const self = this;
 
@@ -86,7 +87,7 @@ export function createRuntime(Velcro) {
   };
 
   Runtime.prototype.require = function(id) {
-    return this.root.require(id);
+    return this.root.require(this[aliasesSymbol][id] || id);
   };
 
   function Module(id, runtime) {
