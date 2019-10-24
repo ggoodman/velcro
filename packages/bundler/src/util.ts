@@ -8,7 +8,7 @@ interface BareModuleSpec {
   pathname: string;
 }
 
-export class Deferred<T = unknown> {
+export class Deferred<T = void> {
   public readonly promise: Promise<T>;
   private promiseResolve!: (value: T | PromiseLike<T>) => void;
   private promiseReject!: (reason?: any) => void;
@@ -78,27 +78,17 @@ export function parseBareModuleSpec(spec: string): BareModuleSpec {
 
 // this looks ridiculous, but it prevents sourcemap tooling from mistaking
 // this for an actual sourceMappingURL
-let SOURCEMAPPING_URL = 'sourceMa';
-SOURCEMAPPING_URL += 'ppingURL';
 
 export function getSourceMappingUrl(str: string) {
-  // assume we want the last occurence
-  const index = str.lastIndexOf(`${SOURCEMAPPING_URL}=`);
+  const re = /(?:\/\/[@#][\s]*(?:source)MappingURL=([^\s'"]+)[\s]*$)|(?:\/\*[@#][\s]*(?:source)MappingURL=([^\s*'"]+)[\s]*(?:\*\/)[\s]*$)/gm;
+  // Keep executing the search to find the *last* sourceMappingURL to avoid
+  // picking up sourceMappingURLs from comments, strings, etc.
+  let lastMatch: RegExpExecArray | null = null;
+  let match: RegExpExecArray | null;
 
-  if (index === -1) {
-    return undefined;
-  }
+  while ((match = re.exec(str))) lastMatch = match;
 
-  const substring = str.substring(index + 17);
-  const match = /^[^\r\n]+/.exec(substring);
+  if (!lastMatch) return undefined;
 
-  let url = match ? match[0] : undefined;
-
-  // possibly a better way to do this, but we don't want to exclude whitespace
-  // from the sourceMappingURL because it might not have been correctly encoded
-  if (url && url.slice(-2) === '*/') {
-    url = url.slice(0, -2).trim();
-  }
-
-  return url;
+  return lastMatch[1];
 }
