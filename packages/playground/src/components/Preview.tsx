@@ -1,5 +1,5 @@
 import styled from '@emotion/styled/macro';
-import { base64, getSourceMappingUrl, runtime } from '@velcro/bundler';
+import { base64, getSourceMappingUrl, runtime, CanceledError } from '@velcro/bundler';
 import * as Monaco from 'monaco-editor';
 import React, { useEffect, useRef, useContext, useState } from 'react';
 import { decode, SourceMapMappings } from 'sourcemap-codec';
@@ -36,6 +36,8 @@ const PreviewIframeWrap = styled.div`
     bottom: 0;
     left: 0;
     border: none;
+    width: 100%;
+    height: 100%;
   }
 `;
 const PreviewWrap = styled.div`
@@ -225,7 +227,7 @@ const Preview: React.FC<{ className?: string }> = props => {
           throw err;
         }
       } catch (err) {
-        if (err && err.name !== 'CanceledError') {
+        if (!(err instanceof CanceledError) && (err && err.name !== 'CanceledError')) {
           setMessages(messages => [...messages, { lines: [{ isInternal: false, text: err.message }] }]);
         }
       } finally {

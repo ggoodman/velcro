@@ -51,5 +51,6 @@
     "customize-cra": "^0.8.0",
     "monaco-editor-webpack-plugin": "^1.7.0",
     "react-app-rewired": "^2.1.4"
-  }
+  },
+  "homepage": "https://ggoodman.github.io/velcro"
 }

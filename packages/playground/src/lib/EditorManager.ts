@@ -55,7 +55,6 @@ export class EditorManager implements IDisposable {
       inlineSources: true,
       isolatedModules: false,
       jsx: Monaco.languages.typescript.JsxEmit.React,
-      jsxFactory: 'React.createElement',
       lib: ['dom'],
       module: Monaco.languages.typescript.ModuleKind.CommonJS,
       moduleResolution: Monaco.languages.typescript.ModuleResolutionKind.NodeJs,
