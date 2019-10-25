@@ -3,7 +3,7 @@ import { version as nodeLibsVersion } from '@velcro/node-libs/package.json';
 import { CancellationToken, CancellationTokenSource, EntryNotFoundError, Resolver } from '@velcro/resolver';
 import { Base64 } from 'js-base64';
 import { Bundle } from 'magic-string';
-import { Emitter, Event } from 'ts-primitives';
+import { Emitter, Event, CanceledError } from 'ts-primitives';
 
 import { isBareModuleSpecifier, Deferred } from './util';
 import { resolveBareModuleToUnpkgWithDetails } from './unpkg';
@@ -280,6 +280,13 @@ export class Bundler {
       }
     }
 
+    // Yield to event loop
+    await new Promise(resolve => setTimeout(resolve, 0));
+
+    if (token.isCancellationRequested) {
+      throw new CanceledError('Canceled');
+    }
+
     const bundleCode = bundle.toString();
 
     let sourceMapSuffix = '';
@@ -291,6 +298,13 @@ export class Bundler {
       });
 
       sourceMap.file = `velcro://bundle.js`;
+
+      // Yield to event loop
+      await new Promise(resolve => setTimeout(resolve, 0));
+
+      if (token.isCancellationRequested) {
+        throw new CanceledError('Canceled');
+      }
 
       // In case a source map seems to be self-referential, avoid crashing
       const seen = new Set<Asset>();
