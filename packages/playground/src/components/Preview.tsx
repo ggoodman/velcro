@@ -1,11 +1,9 @@
 import styled from '@emotion/styled/macro';
-import { base64, getSourceMappingUrl, runtime, CanceledError } from '@velcro/bundler';
+import { runtime, CanceledError } from '@velcro/bundler';
 import * as Monaco from 'monaco-editor';
 import React, { useEffect, useRef, useContext, useState } from 'react';
-import { decode, SourceMapMappings } from 'sourcemap-codec';
 import { Delayer, Throttler, DisposableStore, CancellationTokenSource } from 'ts-primitives';
 import { EditorManagerContext } from '../lib/EditorManager';
-import { CallSite, CallSiteOptions } from '../lib/CallSite';
 
 interface MessageLine {
   isInternal: boolean;
@@ -140,11 +138,35 @@ const Preview: React.FC<{ className?: string }> = props => {
         }
 
         const resolvedEntrypointHref = resolvedEntrypoint.resolvedUrl.href;
+        const errorOverlayBundle = await editorManager.bundler.generateBundleCode([], {
+          dependencies: {
+            'react-error-overlay': '^6.0.3',
+          },
+          onCompleteAsset: () => {
+            if (building) {
+              setBuildProgress(buildProgress => {
+                return {
+                  completed: buildProgress.completed + 1,
+                  total: buildProgress.total,
+                };
+              });
+            }
+          },
+          onEnqueueAsset: () => {
+            if (building) {
+              setBuildProgress(buildProgress => {
+                return {
+                  completed: buildProgress.completed,
+                  total: buildProgress.total + 1,
+                };
+              });
+            }
+          },
+          sourceMap: true,
+          token,
+        });
 
         const bundle = await editorManager.bundler.generateBundleCode([resolvedEntrypointHref], {
-          dependencies: {
-            'error-stack-parser': '^2.0.4',
-          },
           onCompleteAsset: () => {
             if (building) {
               setBuildProgress(buildProgress => {
@@ -170,7 +192,7 @@ const Preview: React.FC<{ className?: string }> = props => {
           token,
         });
 
-        const errorWatcher = new File([`(${createRuntime.toString()})();`], 'watcher.js', {
+        const errorWatcher = new File([`${errorOverlayBundle}\n(${createBundleRuntime.toString()})();`], 'watcher.js', {
           type: 'text/javascript',
         });
         const bundleFile = new File([bundle], resolvedEntrypointHref, {
@@ -273,139 +295,157 @@ const Preview: React.FC<{ className?: string }> = props => {
     disposable.add(
       (() => {
         const onMessage = async (e: MessageEvent) => {
-          console.log('message event', e.data);
-          if (e.data && e.data.type === 'error' && e.data.payload) {
-            const readCache = new Map<string, { code: string; sourceMap?: any }>();
-
-            const read = async (href: string): Promise<string> => {
-              let code: string;
-
-              if (href.startsWith('blob:')) {
-                code = await fetch(href).then(res => res.text());
-              } else if (href.startsWith('data:')) {
-                const match = href.match(/^data:[^;]+;(?:charset=([^;]+);)?(?:(base64),)?(.*)$/);
-
-                if (!match) {
-                  throw new Error(`Unexpected data URI: '${href}'`);
-                }
-
-                code = match[3];
-
-                if (match[2].toLowerCase() === 'base64') {
-                  code = base64.decode(code);
-                }
-              } else {
-                const buf = await editorManager.bundler.resolver.host.readFileContent(
-                  editorManager.bundler.resolver,
-                  new URL(href)
-                );
-                code = editorManager.bundler.resolver.decoder.decode(buf);
-              }
-
-              return code;
-            };
-
-            const readSource = async (href: string): Promise<{ code: string; sourceMap?: MappedSourceMap }> => {
-              if (readCache.has(href)) {
-                return readCache.get(href) as { code: string; sourceMap?: MappedSourceMap };
-              }
-
-              const code = await read(href);
-              const sourceMappingUrl = getSourceMappingUrl(code);
-              let sourceMap: any = undefined;
-
-              if (sourceMappingUrl) {
-                const sourceMapText = await read(sourceMappingUrl);
-                sourceMap = JSON.parse(sourceMapText);
-
-                if (sourceMap.mappings) {
-                  sourceMap.mappings = decode(sourceMap.mappings);
-                }
-              }
-
-              const result = { code, sourceMap };
-
-              readCache.set(href, result);
-
-              return result;
-            };
-
-            let frames = [] as CallSite[];
-
-            if (Array.isArray(e.data.payload.frames)) {
-              try {
-                frames = await Promise.all(
-                  e.data.payload.frames.map(async (frameOptions: CallSiteOptions) => {
-                    let frame = new CallSite(frameOptions);
-                    const href = frame.getFileName();
-                    const line = frame.getLineNumber();
-                    const column = frame.getColumnNumber();
-
-                    if (href && line && Number.isInteger(line) && column && Number.isInteger(column)) {
-                      const result = await readSource(href);
-
-                      if (!result.sourceMap) {
-                        return frame.with({
-                          isInternal: true,
-                        });
-                      }
-
-                      const mappings = result.sourceMap.mappings[line - 1];
-
-                      if (!mappings || !mappings.length) {
-                        return frame.with({
-                          isInternal: true,
-                        });
-                      }
-
-                      let mapping = mappings[0];
-
-                      for (let i = 1; i < mappings.length; i++) {
-                        const sourceColumn = mappings[i][0];
-
-                        if (sourceColumn > column) {
-                          break;
-                        }
-
-                        mapping = mappings[i];
-                      }
-
-                      // We should now have the 'right' mapping
-
-                      // [ generatedCodeColumn, sourceIndex, sourceCodeLine, sourceCodeColumn, nameIndex ]
-                      const sourceFileIndex = mapping[1];
-                      const sourceFile =
-                        sourceFileIndex !== undefined ? result.sourceMap.sources[sourceFileIndex] : undefined;
-                      const sourceLine = mapping[2];
-                      const sourceColumn = mapping[3];
-
-                      if (sourceLine === undefined || sourceFile === undefined) {
-                        return frame.with({
-                          isInternal: true,
-                        });
-                      }
-
-                      return frame.with({
-                        isInternal: false,
-                        columnNumber: sourceColumn,
-                        lineNumber: sourceLine + 1, // the mappings are 0-indexed
-                        fileName: sourceFile.replace(/^file:\/\/\//, ''),
-                      });
-                    }
-
-                    return frame;
-                  })
-                );
-              } catch (err) {
-                console.warn({ err, trace: e.data.payload.frames }, 'Error resolving source locations for stack trace');
-              }
-
-              console.log('frames', frames);
-              console.log('stack', frames.map(frame => frame.toString()).join('\n'));
-            }
-
-            setMessages(messages => [...messages, { lines: CallSite.prepareStackTrace(e.data.payload, frames) }]);
+          if (!e.data || typeof e.data.type !== 'string' || !e.data.payload) {
+            return;
           }
+
+          switch (e.data.type) {
+            case 'error_open': {
+              debugger;
+              if (!editorManager.editor) {
+                return;
+              }
+
+              editorManager.focusHref(e.data.payload.fileName, {
+                lineNumber: e.data.payload.lineNumber ? e.data.payload.lineNumber - 1 : undefined,
+              });
+              break;
+            }
+          }
+
+          // console.log('message event', e.data);
+          // if (e.data && e.data.type === 'error' && e.data.payload) {
+          //   const readCache = new Map<string, { code: string; sourceMap?: any }>();
+
+          //   const read = async (href: string): Promise<string> => {
+          //     let code: string;
+
+          //     if (href.startsWith('blob:')) {
+          //       code = await fetch(href).then(res => res.text());
+          //     } else if (href.startsWith('data:')) {
+          //       const match = href.match(/^data:[^;]+;(?:charset=([^;]+);)?(?:(base64),)?(.*)$/);
+
+          //       if (!match) {
+          //         throw new Error(`Unexpected data URI: '${href}'`);
+          //       }
+
+          //       code = match[3];
+
+          //       if (match[2].toLowerCase() === 'base64') {
+          //         code = base64.decode(code);
+          //       }
+          //     } else {
+          //       const buf = await editorManager.bundler.resolver.host.readFileContent(
+          //         editorManager.bundler.resolver,
+          //         new URL(href)
+          //       );
+          //       code = editorManager.bundler.resolver.decoder.decode(buf);
+          //     }
+
+          //     return code;
+          //   };
+
+          //   const readSource = async (href: string): Promise<{ code: string; sourceMap?: MappedSourceMap }> => {
+          //     if (readCache.has(href)) {
+          //       return readCache.get(href) as { code: string; sourceMap?: MappedSourceMap };
+          //     }
+
+          //     const code = await read(href);
+          //     const sourceMappingUrl = getSourceMappingUrl(code);
+          //     let sourceMap: any = undefined;
+
+          //     if (sourceMappingUrl) {
+          //       const sourceMapText = await read(sourceMappingUrl);
+          //       sourceMap = JSON.parse(sourceMapText);
+
+          //       if (sourceMap.mappings) {
+          //         sourceMap.mappings = decode(sourceMap.mappings);
+          //       }
+          //     }
+
+          //     const result = { code, sourceMap };
+
+          //     readCache.set(href, result);
+
+          //     return result;
+          //   };
+
+          //   let frames = [] as CallSite[];
+
+          //   if (Array.isArray(e.data.payload.frames)) {
+          //     try {
+          //       frames = await Promise.all(
+          //         e.data.payload.frames.map(async (frameOptions: CallSiteOptions) => {
+          //           let frame = new CallSite(frameOptions);
+          //           const href = frame.getFileName();
+          //           const line = frame.getLineNumber();
+          //           const column = frame.getColumnNumber();
+
+          //           if (href && line && Number.isInteger(line) && column && Number.isInteger(column)) {
+          //             const result = await readSource(href);
+
+          //             if (!result.sourceMap) {
+          //               return frame.with({
+          //                 isInternal: true,
+          //               });
+          //             }
+
+          //             const mappings = result.sourceMap.mappings[line - 1];
+
+          //             if (!mappings || !mappings.length) {
+          //               return frame.with({
+          //                 isInternal: true,
+          //               });
+          //             }
+
+          //             let mapping = mappings[0];
+
+          //             for (let i = 1; i < mappings.length; i++) {
+          //               const sourceColumn = mappings[i][0];
+
+          //               if (sourceColumn > column) {
+          //                 break;
+          //               }
+
+          //               mapping = mappings[i];
+          //             }
+
+          //             // We should now have the 'right' mapping
+
+          //             // [ generatedCodeColumn, sourceIndex, sourceCodeLine, sourceCodeColumn, nameIndex ]
+          //             const sourceFileIndex = mapping[1];
+          //             const sourceFile =
+          //               sourceFileIndex !== undefined ? result.sourceMap.sources[sourceFileIndex] : undefined;
+          //             const sourceLine = mapping[2];
+          //             const sourceColumn = mapping[3];
+
+          //             if (sourceLine === undefined || sourceFile === undefined) {
+          //               return frame.with({
+          //                 isInternal: true,
+          //               });
+          //             }
+
+          //             return frame.with({
+          //               isInternal: false,
+          //               columnNumber: sourceColumn,
+          //               lineNumber: sourceLine + 1, // the mappings are 0-indexed
+          //               fileName: sourceFile.replace(/^file:\/\/\//, ''),
+          //             });
+          //           }
+
+          //           return frame;
+          //         })
+          //       );
+          //     } catch (err) {
+          //       console.warn({ err, trace: e.data.payload.frames }, 'Error resolving source locations for stack trace');
+          //     }
+
+          //     console.log('frames', frames);
+          //     console.log('stack', frames.map(frame => frame.toString()).join('\n'));
+          //   }
+
+          //   setMessages(messages => [...messages, { lines: CallSite.prepareStackTrace(e.data.payload, frames) }]);
+          // }
         };
 
         window.addEventListener('message', onMessage);
@@ -420,7 +460,7 @@ const Preview: React.FC<{ className?: string }> = props => {
     queueRefreshPreview([]);
 
     return () => disposable.dispose();
-  }, [editorManager.bundler, invalidations]);
+  }, [editorManager.bundler, editorManager, invalidations]);
 
   return (
     <PreviewWrap className={props.className}>
@@ -440,53 +480,14 @@ export default styled(Preview)``;
 
 declare var Velcro: { runtime: typeof runtime };
 
-function createRuntime() {
-  window.onerror = function(_msg, url, lineNo, columnNo, err) {
-    if (!(err instanceof Error)) {
-      err = Object.assign(new Error(String(err) || 'Unknown error'), { name: 'UnknownError' });
-    }
+function createBundleRuntime(filename?: string) {
+  const ReactErrorOverlay = Velcro.runtime.require('react-error-overlay') as typeof import('react-error-overlay');
 
-    let frames: CallSiteOptions[] | undefined = undefined;
-
-    try {
-      const parser = Velcro.runtime.require('error-stack-parser') as typeof import('error-stack-parser');
-
-      frames = parser.parse(err).map(frame => {
-        const callsite: CallSiteOptions = {
-          columnNumber: frame.getColumnNumber(),
-          functionName: frame.getFunctionName(),
-          fileName: frame.getFileName(),
-          isConstructor: frame.getIsConstructor(),
-          isEval: frame.getIsEval(),
-          isNative: frame.getIsNative(),
-          isToplevel: frame.getIsToplevel(),
-          lineNumber: frame.getLineNumber(),
-        };
-
-        return callsite;
-      });
-    } catch (_) {
-      // Swallow this
-    }
-
-    const payload = { frames, url, lineNo, columnNo, name: err.name } as Record<
-      string,
-      string | CallSiteOptions[] | number
-    >;
-
-    for (const key of Object.getOwnPropertyNames(err)) {
-      payload[key] = (err as any)[key];
-    }
-
-    window.parent.postMessage({ type: 'error', payload }, '*');
-  };
-}
-
-interface MappedSourceMap {
-  file?: string;
-  mappings: SourceMapMappings;
-  names: string[];
-  sources: string[];
-  sourcesContent: string[];
-  version: 3;
+  ReactErrorOverlay.setEditorHandler(err => {
+    window.parent.postMessage({ type: 'error_open', payload: err }, '*');
+  });
+  ReactErrorOverlay.startReportingRuntimeErrors({
+    onError: () => console.log('onError?'),
+    filename,
+  });
 }

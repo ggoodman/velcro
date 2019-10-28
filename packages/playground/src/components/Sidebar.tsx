@@ -1,6 +1,8 @@
 import styled from '@emotion/styled/macro';
 import * as Monaco from 'monaco-editor';
 import React, { useContext, useRef } from 'react';
+import { Button } from 'reakit/Button';
+import { Tooltip, TooltipReference, useTooltipState } from 'reakit/Tooltip';
 import { useDirectory, EntryKind } from '../lib/hooks';
 import { useActiveModel, EditorManagerContext } from '../lib/EditorManager';
 
@@ -59,14 +61,30 @@ const CreateEntry = styled.div`
   }
 `;
 
-const SidebarFileDelete = styled.button`
+const SidebarFileDelete = styled(Button)`
   border: none;
   background: none;
+
+  :hover {
+    cursor: pointer;
+  }
+`;
+
+const StyledTooltip = styled.div`
+  font-family: Open Sans, Helvetica Neue, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  background-color: #333;
+  color: #fff;
+  border-radius: 4px;
+  opacity: 0.9;
+  padding: 0.2em 0.4em;
 `;
 
 const SidebarFile: React.FC<{ className?: string; model: Monaco.editor.ITextModel }> = ({ className, model }) => {
   const activeModel = useActiveModel();
   const editorManager = useContext(EditorManagerContext);
+  const tooltip = useTooltipState({ gutter: 0 });
 
   const onClickDelete = () => {
     model.dispose();
@@ -75,7 +93,14 @@ const SidebarFile: React.FC<{ className?: string; model: Monaco.editor.ITextMode
   return (
     <Entry className={className} modelFocused={model === activeModel}>
       <span onClick={() => editorManager.focusModel(model)}>{model.uri.fsPath.slice(1)}</span>
-      <SidebarFileDelete onClick={() => onClickDelete()}>❌</SidebarFileDelete>
+      <TooltipReference {...tooltip} as={SidebarFileDelete} onClick={() => onClickDelete()}>
+        <span role="img" aria-label="Delete file">
+          ❌
+        </span>
+      </TooltipReference>
+      <Tooltip {...tooltip} as={StyledTooltip}>
+        Delete file
+      </Tooltip>
     </Entry>
   );
 };

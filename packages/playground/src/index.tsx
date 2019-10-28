@@ -13,6 +13,7 @@ const project = {
         dependencies: {
           '@emotion/core': '^10.0.17',
           '@emotion/styled': '^10.0.17',
+          'github-markdown-css': '^3.0.1',
           react: '^16.9.0',
           'react-dom': '^16.9.0',
         },
@@ -28,8 +29,7 @@ export const Explanation = () => <>
   <section>
     <h2>What is this?</h2>
     <p>
-      This is a demo of bundling and serving a browser-based sandbox fully from the browser.
-      Try it. Go offline, and reload... I dare you.
+      This is a demo of bundling and serving a browser-based sandbox fully from the browser. <strong>There are <em>no</em> servers involved</strong> except the static server hosting this demo and <a href="https://unpkg.com" target="_blank" rel="noopener">unpkg.com</a>. All module resolution, transpilation and bundling is happening in the browser.
     </p>
     <p>
       Try it. Go offline, and reload...
@@ -55,31 +55,20 @@ export const Explanation = () => <>
     `
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
-import { Global, css } from '@emotion/core';
-import styled from '@emotion/styled';
+
+import 'github-markdown-css';
+import './style.css';
 
 import { Explanation } from './explanation';
 import { name } from './name';
 
-const Red = styled.h1\`
-  color: #fff5f5;
-  font-size: 64px;
-\`;
-
 class Hello extends Component {
   render() {
-    return <>
-      <Global styles={css\`
-        body {
-          background-color: #6c6666;
-          color: #f5f5f5;
-          font-family: Open Sans, Helvetica Neue, Helvetica, Arial, sans-serif;
-          padding: 1em 4em;
-        }
-      \`}/>
-      <Red>Hello {this.props.toWhat}</Red>
+    return <div className="markdown-body">
+      <h1>Hello {this.props.toWhat}</h1>
+      <blockquote>There is no <strike>spoon</strike> server</blockquote>
       <Explanation/>
-    </>;
+    </div>;
   }
 }
   
@@ -91,6 +80,22 @@ ReactDOM.render(
   'name.js':
     `
 export const name = 'Velcro';
+    `.trim() + '\n',
+  'style.css':
+    `
+.markdown-body {
+  box-sizing: border-box;
+  min-width: 200px;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 45px;
+}
+
+@media (max-width: 767px) {
+  .markdown-body {
+    padding: 15px;
+  }
+}
     `.trim() + '\n',
 };
 

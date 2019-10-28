@@ -157,20 +157,29 @@ export class EditorManager implements IDisposable {
     return Monaco.editor.createModel(content, language, uri);
   }
 
-  focusModel(model: Monaco.editor.ITextModel) {
+  focusHref(href: string, options: { lineNumber?: number } = {}) {
+    const model = Monaco.editor.getModel(Monaco.Uri.parse(href));
+
+    if (model) {
+      this.focusModel(model, options);
+    }
+  }
+
+  focusModel(model: Monaco.editor.ITextModel, options: { lineNumber?: number } = {}) {
     if (this.editor) {
       this.editor.setModel(model);
+      if (options.lineNumber) {
+        this.editor.revealLineInCenter(options.lineNumber, Monaco.editor.ScrollType.Smooth);
+      }
       this.editor.focus();
     }
   }
 
-  focusPath(path: string) {
-    if (this.editor) {
-      const model = Monaco.editor.getModel(Monaco.Uri.file(path));
+  focusPath(path: string, options: { lineNumber?: number } = {}) {
+    const model = Monaco.editor.getModel(Monaco.Uri.file(path));
 
-      if (model) {
-        this.focusModel(model);
-      }
+    if (model) {
+      this.focusModel(model, options);
     }
   }
 
@@ -185,6 +194,8 @@ export class EditorManager implements IDisposable {
       showUnused: true,
       scrollBeyondLastLine: false,
       theme: 'vs',
+      wordWrap: 'bounded',
+      wrappingIndent: 'same',
     });
 
     this.editor.onDidDispose(() => {
