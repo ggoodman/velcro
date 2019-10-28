@@ -52,11 +52,9 @@ export function createRuntime(Velcro) {
    * @param {ModuleFactory} factory
    */
   Runtime.prototype.register = function(id, factory) {
-    if (this[registrySymbol][id]) {
-      throw new Error(`A module factory is already registered for ${id}`);
+    if (!this[registrySymbol][id]) {
+      this[registrySymbol][id] = factory;
     }
-
-    this[registrySymbol][id] = factory;
   };
 
   Runtime.prototype.remove = function(id) {
