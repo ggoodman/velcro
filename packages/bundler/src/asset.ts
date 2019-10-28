@@ -90,9 +90,59 @@ export namespace Asset {
 }
 
 function getParserForAsset(asset: Asset): { parse: typeof parseFile } {
+  if (asset.href.endsWith('.css')) {
+    return {
+      parse: (_href, magicString): ReturnType<typeof parseFile> => {
+        const cssCode = magicString.original;
+        const BACKSLASH = '\\'.charCodeAt(0);
+        const SINGLE_QUOTE = "'".charCodeAt(0);
+        const NL = '\n'.charCodeAt(0);
+        const CR = '\r'.charCodeAt(0);
+
+        let escaped = false;
+
+        for (let i = 0; i < cssCode.length; i++) {
+          const char = cssCode.charCodeAt(i);
+
+          if (char === BACKSLASH) {
+            escaped = !escaped;
+            continue;
+          }
+
+          if (!escaped) {
+            // Escape certain characters (if not already escaped)
+            switch (char) {
+              case CR:
+              case NL:
+              case SINGLE_QUOTE:
+                magicString.prependRight(i, '\\');
+                break;
+            }
+          }
+
+          escaped = false;
+        }
+
+        magicString.prepend(
+          'var styleTag = document.createElement("style");styleTag.type = "text/css";styleTag.innerHTML = \''
+        );
+        magicString.append('\';document.getElementsByTagName("head")[0].appendChild(styleTag);');
+
+        var styleTag = document.createElement('style');
+        styleTag.textContent;
+
+        return {
+          requireDependencies: [],
+          requireResolveDependencies: [],
+          unboundSymbols: new Map(),
+        };
+      },
+    };
+  }
+
   if (asset.href.endsWith('.json')) {
     return {
-      parse: (_uri, magicString): ReturnType<typeof parseFile> => {
+      parse: (_href, magicString): ReturnType<typeof parseFile> => {
         magicString.prepend('module.exports = ');
 
         return {
