@@ -293,7 +293,7 @@ export class Bundler {
 
     if (options.sourceMap) {
       const sourceMap = bundle.generateMap({
-        includeContent: false,
+        includeContent: true,
         hires: false,
       });
 
