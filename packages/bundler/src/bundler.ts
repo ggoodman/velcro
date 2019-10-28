@@ -72,7 +72,7 @@ export class Bundler {
   }
 
   async generateBundleCode(entrypoints: string[], options: Bundler.BundleOptions = {}): Promise<string> {
-    if (!Array.isArray(entrypoints) || !entrypoints.length) {
+    if (!Array.isArray(entrypoints)) {
       throw new Error('Generating a bundle requires passing in an array of entrypoints');
     }
     const tokenSource = new CancellationTokenSource();
