@@ -66,7 +66,7 @@ class Hello extends Component {
   render() {
     return <div className="markdown-body">
       <h1>Hello {this.props.toWhat}</h1>
-      <blockquote>There is no <strike>spoon</strike> server</blockquote>
+      <blockquote>There is no <del>spoon</del> server</blockquote>
       <Explanation/>
     </div>;
   }
