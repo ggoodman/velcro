@@ -157,30 +157,59 @@ export class EditorManager implements IDisposable {
     return Monaco.editor.createModel(content, language, uri);
   }
 
-  focusHref(href: string, options: { lineNumber?: number } = {}) {
-    const model = Monaco.editor.getModel(Monaco.Uri.parse(href));
+  focusHref(
+    href: string,
+    options: { lineNumber?: number; columnNumber?: number; markers?: Monaco.editor.IMarkerData[] } = {}
+  ) {
+    const model = this.getModelByHref(href);
 
     if (model) {
       this.focusModel(model, options);
     }
   }
 
-  focusModel(model: Monaco.editor.ITextModel, options: { lineNumber?: number } = {}) {
+  focusModel(
+    model: Monaco.editor.ITextModel,
+    options: { lineNumber?: number; columnNumber?: number; markers?: Monaco.editor.IMarkerData[] } = {}
+  ) {
     if (this.editor) {
       this.editor.setModel(model);
       if (options.lineNumber) {
         this.editor.revealLineInCenter(options.lineNumber, Monaco.editor.ScrollType.Smooth);
+        this.editor.setPosition({
+          column: options.columnNumber || 0,
+          lineNumber: options.lineNumber,
+        });
+      }
+      if (options.markers) {
+        Monaco.editor.setModelMarkers(model, 'editorManager', options.markers);
       }
       this.editor.focus();
     }
   }
 
-  focusPath(path: string, options: { lineNumber?: number } = {}) {
-    const model = Monaco.editor.getModel(Monaco.Uri.file(path));
+  focusPath(
+    path: string,
+    options: { lineNumber?: number; columnNumber?: number; markers?: Monaco.editor.IMarkerData[] } = {}
+  ) {
+    const model = this.getModelByPath(path);
 
     if (model) {
       this.focusModel(model, options);
     }
+  }
+
+  getModelByHref(href: string) {
+    try {
+      const uri = Monaco.Uri.parse(href);
+      return Monaco.editor.getModel(uri);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  getModelByPath(path: string) {
+    return Monaco.editor.getModel(Monaco.Uri.file(path));
   }
 
   mount(el: HTMLElement) {
