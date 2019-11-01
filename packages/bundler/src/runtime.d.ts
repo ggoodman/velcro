@@ -17,4 +17,15 @@ export interface IRuntime {
   require(spec: string): any;
 }
 
+interface ModuleRecord {
+  dependencies: Record<string, string>;
+  factory: ModuleFactory;
+}
+
+interface RuntimeManifest {
+  aliases: Record<string, string>;
+  entrypoints: Record<string, string>;
+  modules: Record<string, ModuleRecord>;
+}
+
 export function createRuntime(Velcro: typeof import('.')): { new (): IRuntime };

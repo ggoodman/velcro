@@ -27,6 +27,19 @@ const DEFAULT_SHIM_GLOBALS: { [key: string]: { spec: string; export?: string } }
   },
 };
 
+interface HrefEntrypoint {
+  type: 'href';
+  href: string;
+}
+
+interface InlineEntrypoint {
+  type: 'inline';
+  href: string;
+  code: string;
+}
+
+type Entrypoint = HrefEntrypoint | InlineEntrypoint;
+
 export class Bundler {
   readonly resolver: Resolver;
 
@@ -59,19 +72,19 @@ export class Bundler {
     this.pendingResolves.clear();
   }
 
-  private getOrCreateAsset(resolveDetails: Bundler.ResolveDetails): Asset {
-    let asset = this.assetsByHref.get(resolveDetails.resolvedHref);
+  private getOrCreateAsset(href: string, rootHref: string): Asset {
+    let asset = this.assetsByHref.get(href);
 
     if (!asset) {
-      asset = new Asset(resolveDetails.resolvedHref, resolveDetails.rootHref);
-      this.assetsByHref.set(resolveDetails.resolvedHref, asset);
+      asset = new Asset(href, rootHref);
+      this.assetsByHref.set(href, asset);
       this.onAssetAddedEmitter.fire(asset);
     }
 
     return asset;
   }
 
-  async generateBundleCode(entrypoints: string[], options: Bundler.BundleOptions = {}): Promise<string> {
+  async generateBundleCode(entrypoints: Entrypoint[], options: Bundler.BundleOptions = {}): Promise<string> {
     if (!Array.isArray(entrypoints)) {
       throw new Error('Generating a bundle requires passing in an array of entrypoints');
     }
@@ -91,7 +104,7 @@ export class Bundler {
     const dependenciesToAliases = new Map<string, Asset>();
     const entrypointsToAssets = new Map<string, Asset>();
 
-    const enqueueUnresolvedAsset = async (spec: string, fromSpec?: string): Promise<Asset> => {
+    const enqueue = async <T>(op: () => T | Promise<T>): Promise<T> => {
       try {
         pendingOperations++;
 
@@ -99,97 +112,25 @@ export class Bundler {
           options.onEnqueueAsset();
         }
 
-        const resolvedSpec = await this.resolveWithDetails(spec, fromSpec, { token });
-        const href = resolvedSpec.resolvedHref;
-        const asset = this.getOrCreateAsset(resolvedSpec);
-
-        // No need to re-process the same asset during the same operation
-        if (!assets.has(asset)) {
-          assets.add(asset);
-          if (!asset.magicString) {
-            const code = await this.readCode(asset, { token });
-
-            asset.setCode(code);
-          }
-
-          const promises = [] as Promise<Asset.Dependency>[];
-
-          for (const dependency of asset.unresolvedDependencies.requireDependencies) {
-            promises.push(
-              enqueueUnresolvedAsset(dependency.spec.value, href).then(dependencyAsset => {
-                return {
-                  type: Asset.DependencyKind.Require,
-                  href: dependencyAsset.href,
-                  rootHref: dependencyAsset.rootHref,
-                  callee: dependency.callee,
-                  spec: dependency.spec,
-                  value: dependency.spec.value,
-                };
-              })
-            );
-          }
-
-          for (const dependency of asset.unresolvedDependencies.requireResolveDependencies) {
-            promises.push(
-              enqueueUnresolvedAsset(dependency.spec.value, href).then(dependencyAsset => {
-                return {
-                  type: Asset.DependencyKind.RequireResolve,
-                  href: dependencyAsset.href,
-                  rootHref: dependencyAsset.rootHref,
-                  callee: dependency.callee,
-                  spec: dependency.spec,
-                  value: dependency.spec.value,
-                };
-              })
-            );
-          }
-
-          for (const [symbolName, references] of asset.unresolvedDependencies.unboundSymbols) {
-            const shim = DEFAULT_SHIM_GLOBALS[symbolName];
-
-            if (shim) {
-              promises.push(
-                enqueueUnresolvedAsset(shim.spec, href).then(dependencyAsset => {
-                  return {
-                    type: Asset.DependencyKind.InjectedGlobal,
-                    href: dependencyAsset.href,
-                    rootHref: dependencyAsset.rootHref,
-                    references,
-                    exportName: shim.export,
-                    symbolName,
-                    value: `${shim.spec}${shim.export ? `[${JSON.stringify(shim.export)}]` : ''}`,
-                  };
-                })
-              );
-            }
-          }
-
-          const dependencies = await Promise.all(promises);
-
-          asset.dependencies.splice(0, asset.dependencies.length, ...dependencies);
-        }
-
-        pendingOperations--;
+        const result = await op();
 
         if (options.onCompleteAsset) {
           options.onCompleteAsset();
         }
+
+        pendingOperations--;
 
         if (pendingOperations < 0) {
           throw new InvariantViolation('Pending operations fell below zero');
         }
 
         if (pendingOperations === 0) {
-          // Let's make sure this happens 'later'.
-          Promise.resolve().then(() => dfd.resolve());
+          // Let's make sure this happens after the current microtask.
+          setTimeout(() => dfd.resolve(), 0);
         }
 
-        return asset;
+        return result;
       } catch (err) {
-        if (options.onCompleteAsset) {
-          options.onCompleteAsset();
-        }
-
         // Let's make sure this happens 'later'.
         Promise.resolve().then(() => dfd.reject(err));
 
@@ -197,56 +138,168 @@ export class Bundler {
       }
     };
 
+    const resolveDependencies = async (asset: Asset, code: string): Promise<Asset> => {
+      asset.setCode(code);
+
+      const promises = [] as Promise<Asset.Dependency>[];
+
+      for (const dependency of asset.unresolvedDependencies.requireDependencies) {
+        promises.push(
+          enqueue(() => resolveAsset(dependency.spec.value, asset.href)).then(dependencyAsset => {
+            return {
+              type: Asset.DependencyKind.Require,
+              href: dependencyAsset.href,
+              rootHref: dependencyAsset.rootHref,
+              callee: dependency.callee,
+              spec: dependency.spec,
+              value: dependency.spec.value,
+            };
+          })
+        );
+      }
+
+      for (const dependency of asset.unresolvedDependencies.requireResolveDependencies) {
+        promises.push(
+          enqueue(() => resolveAsset(dependency.spec.value, asset.href)).then(dependencyAsset => {
+            return {
+              type: Asset.DependencyKind.RequireResolve,
+              href: dependencyAsset.href,
+              rootHref: dependencyAsset.rootHref,
+              callee: dependency.callee,
+              spec: dependency.spec,
+              value: dependency.spec.value,
+            };
+          })
+        );
+      }
+
+      for (const [symbolName, references] of asset.unresolvedDependencies.unboundSymbols) {
+        const shim = DEFAULT_SHIM_GLOBALS[symbolName];
+
+        if (shim) {
+          promises.push(
+            enqueue(() => resolveAsset(shim.spec, asset.href)).then(dependencyAsset => {
+              return {
+                type: Asset.DependencyKind.InjectedGlobal,
+                href: dependencyAsset.href,
+                rootHref: dependencyAsset.rootHref,
+                references,
+                exportName: shim.export,
+                symbolName,
+                value: `${shim.spec}${shim.export ? `[${JSON.stringify(shim.export)}]` : ''}`,
+              };
+            })
+          );
+        }
+      }
+
+      const dependencies = await Promise.all(promises);
+
+      asset.dependencies.splice(0, asset.dependencies.length, ...dependencies);
+
+      return asset;
+    };
+
+    const resolveAsset = async (spec: string, fromSpec?: string): Promise<Asset> => {
+      const resolvedSpec = await this.resolveWithDetails(spec, fromSpec, {
+        syntheticDependencies: options.dependencies,
+        token,
+      });
+      const asset = this.getOrCreateAsset(resolvedSpec.resolvedHref, resolvedSpec.rootHref);
+
+      // No need to re-process the same asset during the same operation
+      if (!assets.has(asset)) {
+        assets.add(asset);
+        const code = await this.readCode(asset, { token });
+        resolveDependencies(asset, code);
+      }
+
+      return asset;
+    };
+
     if (options.dependencies) {
       for (const name in options.dependencies) {
-        enqueueUnresolvedAsset(`${name}@${options.dependencies[name]}`).then(
+        const dependency = options.dependencies[name];
+        enqueue(() => resolveAsset(`${name}@${dependency}`)).then(
           asset => dependenciesToAliases.set(name, asset),
           _ => undefined
         );
       }
     }
 
-    for (const entrypoint of entrypoints) {
+    for (const idx in entrypoints) {
+      const entrypoint = entrypoints[idx];
+
       // We need to add a catch handler because we might not catch all thrown exceptions,
       // only the first, via the dfd.promise.
-      enqueueUnresolvedAsset(entrypoint).then(asset => entrypointsToAssets.set(entrypoint, asset), _ => undefined);
+      switch (entrypoint.type) {
+        case 'href': {
+          enqueue(() => resolveAsset(entrypoint.href)).then(
+            asset => entrypointsToAssets.set(entrypoint.href, asset),
+            _ => undefined
+          );
+          break;
+        }
+        case 'inline': {
+          enqueue(() => {
+            const asset = this.getOrCreateAsset(entrypoint.href, 'velcro:///');
+
+            if (!assets.has(asset)) {
+              assets.add(asset);
+              return resolveDependencies(asset, entrypoint.code);
+            }
+
+            return asset;
+          }).then(asset => entrypointsToAssets.set(entrypoint.href, asset), _ => undefined);
+          break;
+        }
+        default: {
+          throw new Error(`Unexpected entrypoint type '${(entrypoint as any).type}`);
+        }
+      }
     }
 
     await dfd.promise;
 
     // Now all assets should be fully loaded
 
-    const bundle = new Bundle({ separator: '\n' });
+    const bundle = new Bundle({ separator: '\n\t\t,\n' });
 
     for (const asset of assets) {
       if (!asset.magicString) {
         throw new Error(`Invariant violation: asset is not loaded '${asset.href}'`);
       }
 
+      const dependencies = {} as Record<string, string>;
       const magicString = asset.magicString.clone();
-
-      magicString.trim();
+      magicString.indent('\t\t\t');
 
       // We'll replace each dependency string with the resolved stable href. The stable href doesn't require any
       // information about where it is being resolved from, so it is useful as a long-term pointer whose target
       // can change over time
       for (const dependency of asset.dependencies) {
         switch (dependency.type) {
-          case Asset.DependencyKind.Require:
-            magicString.overwrite(dependency.spec.start, dependency.spec.end, JSON.stringify(dependency.href));
+          case Asset.DependencyKind.Require: {
+            // magicString.overwrite(dependency.spec.start, dependency.spec.end, JSON.stringify(dependency.href));
             // magicString.overwrite(dependency.callee.start, dependency.callee.end, '__velcro_require');
+            dependencies[dependency.spec.value] = dependency.href;
             break;
-          case Asset.DependencyKind.RequireResolve:
-            magicString.overwrite(dependency.spec.start, dependency.spec.end, JSON.stringify(dependency.href));
+          }
+          case Asset.DependencyKind.RequireResolve: {
+            // magicString.overwrite(dependency.spec.start, dependency.spec.end, JSON.stringify(dependency.href));
             // magicString.overwrite(dependency.callee.start, dependency.callee.end, '__velcro_require_resolve');
+            dependencies[dependency.spec.value] = dependency.href;
             break;
-          case Asset.DependencyKind.InjectedGlobal:
+          }
+          case Asset.DependencyKind.InjectedGlobal: {
             magicString.prepend(
-              `const ${dependency.symbolName} = require(${JSON.stringify(dependency.href)})${
+              `\n\t\t\tconst ${dependency.symbolName} = require(${JSON.stringify(dependency.symbolName)})${
                 dependency.exportName ? `.${dependency.exportName}` : ''
               };\n`
             );
+            dependencies[dependency.symbolName] = dependency.href;
             break;
+          }
           default:
             throw new Error(
               `Invariant violation: Encountered unexpected dependency kind '${(dependency as any).type}'`
@@ -256,29 +309,38 @@ export class Bundler {
 
       magicString.trim();
       magicString.prepend(
-        `Velcro.runtime.register(${JSON.stringify(
-          asset.href
-        )}, function(module, exports, require, __dirname, __filename){\n`
+        `\t\t${JSON.stringify(asset.href)}: { dependencies: ${JSON.stringify(
+          dependencies
+        )}, factory: function(module, exports, require, __dirname, __filename){\n`
       );
-
-      magicString.append('\n});');
+      magicString.append('\n\t\t}}');
 
       bundle.addSource(magicString);
     }
 
-    bundle.prepend(
-      `(${createRuntime.toString()})(typeof globalThis === 'object' ? (globalThis.Velcro || (globalThis.Velcro = {})) : (this.Velcro || (this.Velcro = {})));\n`
+    const aliasMap = Array.from(dependenciesToAliases).reduce(
+      (acc, [name, asset]) => {
+        acc[name] = asset.href;
+        return acc;
+      },
+      {} as Record<string, string>
     );
+    const entrypointMap = options.requireEntrypoints
+      ? Array.from(entrypointsToAssets).reduce(
+          (acc, [name, asset]) => {
+            acc[name] = asset.href;
+            return acc;
+          },
+          {} as Record<string, string>
+        )
+      : {};
 
-    for (const [name, asset] of dependenciesToAliases) {
-      bundle.append(`Velcro.runtime.alias(${JSON.stringify(name)}, ${JSON.stringify(asset.href)});\n`);
-    }
-
-    if (options.requireEntrypoints) {
-      for (const asset of entrypointsToAssets.values()) {
-        bundle.append(`Velcro.runtime.require(${JSON.stringify(asset.href)});\n`);
-      }
-    }
+    bundle.prepend(
+      `(${createRuntime.toString()})({\n\taliases:${JSON.stringify(aliasMap)},\n\tentrypoints:${JSON.stringify(
+        entrypointMap
+      )},\n\tmodules:{\n`
+    );
+    bundle.append(`\n\t}\n});`);
 
     // Yield to event loop
     await new Promise(resolve => setTimeout(resolve, 0));
@@ -412,12 +474,15 @@ export class Bundler {
   private async resolveWithDetails(
     uri: string,
     fromUri: string | undefined,
-    { token }: { token: CancellationToken }
+    { syntheticDependencies, token }: { syntheticDependencies?: Record<string, string>; token: CancellationToken }
   ): Promise<Bundler.ResolveDetails> {
     let resolved: Bundler.ResolveDetails;
 
     if (isBareModuleSpecifier(uri)) {
-      const bareModuleResolveResult = await resolveBareModuleToUnpkgWithDetails(this.resolver, uri, fromUri, { token });
+      const bareModuleResolveResult = await resolveBareModuleToUnpkgWithDetails(this.resolver, uri, fromUri, {
+        syntheticDependencies,
+        token,
+      });
 
       if (!bareModuleResolveResult.stableUrl) {
         throw new Error(`Failed to resolve bare module '${uri}' from '${fromUri || '@root'}' to a stable url`);

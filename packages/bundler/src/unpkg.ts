@@ -52,7 +52,7 @@ export const resolveBareModuleToUnpkgWithDetails = async (
   resolver: Resolver,
   href: string,
   parentHref: string | undefined,
-  { token }: { token?: CancellationToken } = {}
+  { syntheticDependencies, token }: { syntheticDependencies?: Record<string, string>; token?: CancellationToken } = {}
 ) => {
   const parsedSpec = parseBareModuleSpec(href);
   const details = { bareModule: {}, resolvedUrl: undefined } as {
@@ -75,33 +75,41 @@ export const resolveBareModuleToUnpkgWithDetails = async (
   if (parsedSpec.spec) {
     // A manually-specified spec means we should use that instead of looking for a parent package.json
     resolvedSpecRoot = parsedSpec.nameSpec;
-  } else if (parentHref) {
-    // If there is a parentHref, we want to resolve based on the spec from the including file's
-    // package.json, if such exists. For example if we're requring prop-types/checkPropTypes from react-dom,
-    // we want to check react-dom's package.json for the version constraints for prop-types.
-    let parentUrl: URL;
+  } else {
+    if (syntheticDependencies && parsedSpec.name in syntheticDependencies) {
+      resolvedSpecRoot = `${parsedSpec.name}@${syntheticDependencies[parsedSpec.name]}`;
+    } else if (parentHref) {
+      // If there is a parentHref, we want to resolve based on the spec from the including file's
+      // package.json, if such exists. For example if we're requring prop-types/checkPropTypes from react-dom,
+      // we want to check react-dom's package.json for the version constraints for prop-types.
+      let parentUrl: URL;
 
-    try {
-      parentUrl = new URL(parentHref);
-    } catch (err) {
-      throw new Error(
-        `Error loading bare module ${href} because the parent module ${parentHref} could not be resolved to a URL`
-      );
-    }
+      try {
+        parentUrl = new URL(parentHref);
+      } catch (err) {
+        throw new Error(
+          `Error loading bare module ${href} because the parent module ${parentHref} could not be resolved to a URL`
+        );
+      }
 
-    const parentPackageInfo = await resolver.readParentPackageJson(parentUrl, { token });
+      try {
+        const parentPackageInfo = await resolver.readParentPackageJson(parentUrl, { token });
 
-    if (parentPackageInfo) {
-      const consolidatedDependencies = {
-        ...(parentPackageInfo.packageJson.peerDependencies || {}),
-        ...(parentPackageInfo.packageJson.devDependencies || {}),
-        ...(parentPackageInfo.packageJson.dependencies || {}),
-      };
+        if (parentPackageInfo) {
+          const consolidatedDependencies = {
+            ...(parentPackageInfo.packageJson.peerDependencies || {}),
+            ...(parentPackageInfo.packageJson.devDependencies || {}),
+            ...(parentPackageInfo.packageJson.dependencies || {}),
+          };
 
-      details.bareModule.versionSpec = consolidatedDependencies[parsedSpec.name];
+          details.bareModule.versionSpec = consolidatedDependencies[parsedSpec.name];
 
-      if (details.bareModule.versionSpec) {
-        resolvedSpecRoot = `${parsedSpec.name}@${details.bareModule.versionSpec}`;
+          if (details.bareModule.versionSpec) {
+            resolvedSpecRoot = `${parsedSpec.name}@${details.bareModule.versionSpec}`;
+          }
+        }
+      } catch (_) {
+        // Ignore
       }
     }
   }
