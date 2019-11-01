@@ -1,8 +1,8 @@
 import styled from '@emotion/styled/macro';
-import { runtime, CanceledError } from '@velcro/bundler';
+import { CanceledError } from '@velcro/bundler';
 import * as Monaco from 'monaco-editor';
 import React, { useEffect, useRef, useContext, useState } from 'react';
-import { Delayer, Throttler, DisposableStore, CancellationTokenSource } from 'ts-primitives';
+import { Delayer, Throttler, DisposableStore, CancellationTokenSource, IDisposable, Emitter } from 'ts-primitives';
 import { EditorManagerContext } from '../lib/EditorManager';
 
 interface MessageLine {
@@ -87,6 +87,7 @@ const PreviewMessage: React.FC<{ message: Message }> = ({ message }) => {
 const Preview: React.FC<{ className?: string }> = props => {
   const invalidations = useRef(new Set<string>());
   const previewWrapRef = useRef<HTMLDivElement | null>(null);
+  const hmrClientRef = useRef<HmrClient | null>(null);
   const previewIframeRef = useRef<HTMLIFrameElement | null>(null);
   const editorManager = useContext(EditorManagerContext);
   const [messages, setMessages] = useState([] as Message[]);
@@ -138,63 +139,49 @@ const Preview: React.FC<{ className?: string }> = props => {
         }
 
         const resolvedEntrypointHref = resolvedEntrypoint.resolvedUrl.href;
-        const errorOverlayBundle = await editorManager.bundler.generateBundleCode([], {
-          dependencies: {
-            'react-error-overlay': '^6.0.3',
-          },
-          onCompleteAsset: () => {
-            if (building) {
-              setBuildProgress(buildProgress => {
-                return {
-                  completed: buildProgress.completed + 1,
-                  total: buildProgress.total,
-                };
-              });
-            }
-          },
-          onEnqueueAsset: () => {
-            if (building) {
-              setBuildProgress(buildProgress => {
-                return {
-                  completed: buildProgress.completed,
-                  total: buildProgress.total + 1,
-                };
-              });
-            }
-          },
-          sourceMap: true,
-          token,
-        });
 
-        const bundle = await editorManager.bundler.generateBundleCode([resolvedEntrypointHref], {
-          onCompleteAsset: () => {
-            if (building) {
-              setBuildProgress(buildProgress => {
-                return {
-                  completed: buildProgress.completed + 1,
-                  total: buildProgress.total,
-                };
-              });
-            }
-          },
-          onEnqueueAsset: () => {
-            if (building) {
-              setBuildProgress(buildProgress => {
-                return {
-                  completed: buildProgress.completed,
-                  total: buildProgress.total + 1,
-                };
-              });
-            }
-          },
-          sourceMap: true,
-          requireEntrypoints: true,
-          token,
-        });
+        const bundle = await editorManager.bundler.generateBundleCode(
+          [
+            {
+              type: 'inline',
+              code: `(${createBundleRuntime.toString().replace('velcroRequire', 'require')})();`,
+              href: 'playground:///runtime.js',
+            },
+            {
+              type: 'href',
+              href: resolvedEntrypointHref,
+            },
+          ],
+          {
+            dependencies: {
+              'react-error-overlay': '^6.0.3',
+            },
+            onCompleteAsset: () => {
+              if (building) {
+                setBuildProgress(buildProgress => {
+                  return {
+                    completed: buildProgress.completed + 1,
+                    total: buildProgress.total,
+                  };
+                });
+              }
+            },
+            onEnqueueAsset: () => {
+              if (building) {
+                setBuildProgress(buildProgress => {
+                  return {
+                    completed: buildProgress.completed,
+                    total: buildProgress.total + 1,
+                  };
+                });
+              }
+            },
+            sourceMap: true,
+            requireEntrypoints: true,
+            token,
+          }
+        );
 
-        const errorWatcher = new File([`${errorOverlayBundle}\n(${createBundleRuntime.toString()})();`], 'watcher.js', {
-          type: 'text/javascript',
-        });
         const bundleFile = new File([bundle], resolvedEntrypointHref, {
           type: 'text/javascript',
         });
@@ -208,7 +195,6 @@ const Preview: React.FC<{ className?: string }> = props => {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="X-UA-Compatible" content="ie=edge">
 <title>Document</title>
-<script src="${URL.createObjectURL(errorWatcher)}"></script>
 </head>
 <body>
 <div id="root"></div>
@@ -249,12 +235,13 @@ const Preview: React.FC<{ className?: string }> = props => {
           throw err;
         }
       } catch (err) {
+        tokenSource.cancel();
+
         if (!(err instanceof CanceledError) && (err && err.name !== 'CanceledError')) {
           setMessages(messages => [...messages, { lines: [{ isInternal: false, text: err.message }] }]);
         }
       } finally {
         if (tokenSource) {
-          tokenSource.cancel();
           tokenSource.dispose();
         }
 
@@ -295,21 +282,57 @@ const Preview: React.FC<{ className?: string }> = props => {
     disposable.add(
       (() => {
         const onMessage = async (e: MessageEvent) => {
-          if (!e.data || typeof e.data.type !== 'string' || !e.data.payload) {
+          console.log('onMessage', e);
+          if (
+            (previewIframeRef.current && e.source !== previewIframeRef.current.contentWindow) ||
+            !e.data ||
+            typeof e.data.type !== 'string' ||
+            !e.data.payload
+          ) {
             return;
           }
 
           switch (e.data.type) {
             case 'error_open': {
-              debugger;
               if (!editorManager.editor) {
                 return;
               }
 
-              editorManager.focusHref(e.data.payload.fileName, {
-                lineNumber: e.data.payload.lineNumber ? e.data.payload.lineNumber - 1 : undefined,
-              });
+              const model = editorManager.getModelByHref(e.data.payload.fileName);
+
+              if (model) {
+                let lineNumber: number | undefined = e.data.payload.lineNumber;
+                let columnNumber: number | undefined = undefined;
+
+                if (lineNumber !== undefined) {
+                  const row = model.getLineContent(lineNumber);
+                  const matches = row.match(/^(\s*)/);
+
+                  columnNumber = matches ? matches[1].length + 1 : undefined;
+                }
+
+                editorManager.focusModel(model, {
+                  lineNumber,
+                  columnNumber,
+                });
+              }
+
               break;
+            }
+            case 'hmr_ready': {
+              if (!(e.data.payload instanceof MessagePort)) {
+                console.warn(
+                  'Received "hmr_ready" message from preview but did not receive the expected MessagePort payload',
+                  e.data
+                );
+                return;
+              }
+
+              hmrClientRef.current = new HmrClient(e.data.payload);
+              break;
+            }
+            default: {
+              console.debug({ message: e.data }, 'Unknown message received from preview iframe');
             }
           }
         };
@@ -322,6 +345,14 @@ const Preview: React.FC<{ className?: string }> = props => {
         };
       })()
     );
+
+    disposable.add({
+      dispose() {
+        if (hmrClientRef.current) {
+          hmrClientRef.current.dispose();
+        }
+      },
+    });
 
     queueRefreshPreview([]);
 
@@ -344,16 +375,33 @@ const Preview: React.FC<{ className?: string }> = props => {
 
 export default styled(Preview)``;
 
-declare var Velcro: { runtime: typeof runtime };
+declare var velcroRequire: NodeRequire;
 
 function createBundleRuntime(filename?: string) {
-  const ReactErrorOverlay = Velcro.runtime.require('react-error-overlay') as typeof import('react-error-overlay');
+  const ReactErrorOverlay = velcroRequire('react-error-overlay') as typeof import('react-error-overlay');
+  const channel = new MessageChannel();
 
   ReactErrorOverlay.setEditorHandler(err => {
     window.parent.postMessage({ type: 'error_open', payload: err }, '*');
   });
   ReactErrorOverlay.startReportingRuntimeErrors({
-    onError: () => console.log('onError?'),
+    onError: () => undefined,
     filename,
   });
+
+  window.parent.postMessage({ type: 'hmr_ready', payload: channel.port1 }, '*', [channel.port1]);
+}
+
+class HmrClient implements IDisposable {
+  private readonly onRequestManifestEmitter = new Emitter();
+
+  constructor(private readonly port: MessagePort) {}
+
+  get onRequestManifest() {
+    return this.onRequestManifestEmitter.event;
+  }
+
+  dispose() {
+    this.port.close();
+  }
 }
