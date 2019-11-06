@@ -1,6 +1,6 @@
 {
   "name": "@velcro/resolver",
-  "version": "0.22.0",
+  "version": "0.23.0",
   "description": "Resolve references to absolute urls using the node module resolution algorithm using an generic host interface",
   "keywords": [
     "velcro",
