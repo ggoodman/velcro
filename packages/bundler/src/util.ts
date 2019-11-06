@@ -1,3 +1,5 @@
+import { CancellationToken, CanceledError } from '@velcro/resolver';
+
 const RELATE_PATH_RX = /^[./]|^[a-z_-]+:/;
 const SPEC_RX = /^((@[^/]+\/[^/@]+|[^./@][^/@]*)(?:@([^/]+))?)(.*)?$/;
 
@@ -15,11 +17,21 @@ export class Deferred<T = void> {
 
   private internalState: 'pending' | 'rejected' | 'resolved' = 'pending';
 
-  constructor() {
+  constructor(token?: CancellationToken) {
     this.promise = new Promise<T>((promiseResolve, promiseReject) => {
       this.promiseResolve = promiseResolve;
       this.promiseReject = promiseReject;
     });
+
+    if (token) {
+      if (token.isCancellationRequested) {
+        this.reject(new CanceledError('Canceled'));
+      } else {
+        token.onCancellationRequested(() => {
+          this.reject(new CanceledError('Canceled'));
+        });
+      }
+    }
   }
 
   get isSettled() {

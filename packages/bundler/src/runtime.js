@@ -41,14 +41,6 @@ export function createRuntime(manifest, options) {
      */
     this.root = new Module('velcro://root', this);
 
-    Object.defineProperty(this, Symbol.toStringTag, {
-      configurable: false,
-      enumerable: false,
-      get() {
-        return 'Module';
-      },
-    });
-
     var self = this;
 
     this.register('@@runtime', function(module) {
@@ -215,6 +207,14 @@ export function createRuntime(manifest, options) {
 
     /** @readonly */
     this.runtime = runtime;
+
+    Object.defineProperty(this, Symbol.toStringTag, {
+      configurable: false,
+      enumerable: false,
+      get() {
+        return 'Module';
+      },
+    });
   }
 
   /**
@@ -230,7 +230,6 @@ export function createRuntime(manifest, options) {
       const factory = registry[id];
 
       if (!factory) {
-        console.error();
         throw new Error(`Factory missing for ${id}`);
       }
 

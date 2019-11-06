@@ -37,8 +37,8 @@
     "test": "lab -fSv --leaks --transform ./test/lib/typescript.js"
   },
   "devDependencies": {
-    "@hapi/code": "^6.0.0",
-    "@hapi/lab": "^20.2.2",
+    "@hapi/code": "^7.0.0",
+    "@hapi/lab": "^21.0.0",
     "@types/acorn": "^4.0.5",
     "@types/estree": "0.0.39",
     "@types/fs-extra": "^5.0.5",

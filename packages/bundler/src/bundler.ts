@@ -89,15 +89,19 @@ export class Bundler {
     const token = tokenSource.token;
 
     if (options.token) {
-      const disposable = options.token.onCancellationRequested(() => {
+      if (options.token.isCancellationRequested) {
         tokenSource.cancel();
-        disposable.dispose();
+        tokenSource.dispose();
+      }
+      options.token.onCancellationRequested(() => {
+        tokenSource.cancel();
+        tokenSource.dispose();
       });
     }
 
     let pendingOperations = 0;
     const assets = new Set<Asset>();
-    const dfd = new Deferred();
+    const dfd = new Deferred(token);
     const dependenciesToAssets = new Map<string, Asset>();
     const entrypointsToAssets = new Map<string, Asset>();
 
@@ -129,9 +133,11 @@ export class Bundler {
         return result;
       } catch (err) {
         // Let's make sure this happens 'later'.
-        Promise.resolve()
-          .then(() => dfd.reject(err))
-          .catch(_ => undefined);
+        if (!dfd.isSettled) {
+          Promise.resolve()
+            .then(() => dfd.reject(err))
+            .catch(_ => undefined);
+        }
 
         throw err;
       }
@@ -409,8 +415,6 @@ export namespace Bundler {
     dependencies?: Record<string, string>;
     onEnqueueAsset?(): void;
     onCompleteAsset?(): void;
-    requireEntrypoints?: boolean;
-    sourceMap?: boolean;
     token?: CancellationToken;
   }
 
