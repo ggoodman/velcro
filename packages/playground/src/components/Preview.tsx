@@ -483,6 +483,7 @@ const Preview: React.FC<{ className?: string }> = props => {
 export default styled(Preview)``;
 
 declare var velcroRequire: NodeRequire;
+declare var __velcroRuntime: Runtime;
 
 // aliases: Record<string, string>;
 // entrypoints: Record<string, string>;
@@ -529,14 +530,10 @@ function createBundleRuntime() {
           ReactErrorOverlay.dismissBuildError();
           ReactErrorOverlay.dismissRuntimeErrors();
           const reload = e.data;
-          //@ts-ignore
-          const runtime = __velcroRuntime as Runtime;
-
-          const queue = [...reload.invalidations];
+          const runtime = __velcroRuntime;
+          const queue = reload.invalidations.slice();
           const seen = new Set<string>();
           const requireReload = [] as string[];
-
-          console.log('processing reload queue', [...queue]);
 
           while (queue.length) {
             const href = queue.shift()!;
@@ -551,29 +548,22 @@ function createBundleRuntime() {
               continue;
             }
 
-            console.log('processing', module.id);
-
             runtime.remove(href);
 
             for (const disposeCallback of module.disposeCallbacks) {
-              console.log('calling disposeCallback', module.id, disposeCallback);
               disposeCallback.cb && disposeCallback.cb();
             }
 
             if (module.acceptCallbacks.length) {
               for (const acceptCallback of module.acceptCallbacks) {
-                console.log('calling acceptCallback', module.id, acceptCallback);
                 acceptCallback.cb && acceptCallback.cb();
               }
             } else {
               const dependents = module.dependents.filter(m => !seen.has(m.id)).map(m => m.id);
 
-              console.log('queueing dependents', dependents);
-
               if (dependents.length) {
                 queue.push(...dependents);
               } else {
-                console.log('scheduling required reload', module.id);
                 requireReload.push(module.id);
               }
             }
@@ -588,10 +578,7 @@ function createBundleRuntime() {
             });
           };
           script.onload = function() {
-            console.log('new script loaded', reload.href);
-
             for (const toReload of requireReload) {
-              console.log('requiring', toReload);
               runtime.require(toReload);
             }
 
