@@ -51,6 +51,8 @@ export interface IModule {
 }
 
 export interface IRuntime {
+  readonly root: IModule;
+
   alias(spec: string, href: string): void;
   dependency(fromHref: string, spec: string, toHref: string): void;
   get(id: string): IModule | undefined;

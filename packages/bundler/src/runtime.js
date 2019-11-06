@@ -253,7 +253,7 @@ export function createRuntime(manifest, options) {
       );
     }
 
-    addToSet(module.dependents, module);
+    addToSet(module.dependents, this);
     addToSet(this.dependencies, module);
 
     return module.module.exports;
