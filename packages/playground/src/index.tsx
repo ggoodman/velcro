@@ -1,10 +1,13 @@
-import React from 'react';
+import styled from '@emotion/styled';
+import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
+import { Button } from 'reakit/Button';
+import { useDialogState, Dialog } from 'reakit/Dialog';
+import { Portal } from 'reakit/Portal';
 // import 'modern-css-reset';
 
 import App from './components/App';
 import * as serviceWorker from './serviceWorker';
-import styled from '@emotion/styled';
 
 const project = {
   'package.json':
@@ -118,19 +121,173 @@ const AppWrap = styled.div`
     flex: 0 0 80vh;
     width: 80vw;
     background: white;
-    box-shadow: 0 19px 38px rgba(0, 0, 0, 0.3), 0 15px 12px rgba(0, 0, 0, 0.22);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
     max-height: 90vh;
   }
 `;
 
+const Notifications = styled.div`
+  font-family: Open Sans, Helvetica Neue, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #222;
+
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding: 8px;
+
+  & > * {
+    box-shadow: 0 19px 38px rgba(0, 0, 0, 0.3), 0 15px 12px rgba(0, 0, 0, 0.22);
+    max-width: 200px;
+    margin: 8px;
+  }
+`;
+
+const AlertDialog = styled(Dialog)`
+  background-color: white;
+  padding: 0.5em 1em;
+  border-radius: 4px;
+
+  & > p {
+    margin: 0;
+  }
+`;
+
+const OnlineNotification: React.FC<{ notification: ServiceWorkerOnine; onDismiss: () => void }> = ({ onDismiss }) => {
+  const dialog = useDialogState({ visible: true });
+
+  return (
+    <AlertDialog
+      {...dialog}
+      hideOnClickOutside={false}
+      hideOnEsc={false}
+      modal={false}
+      role="alertdialog"
+      aria-label="This application is ready for offline usage"
+    >
+      <p>This application is ready for offline usage</p>
+      <Button onClick={onDismiss}>Hide</Button>
+    </AlertDialog>
+  );
+};
+
+const UpdatedNotification: React.FC<{ notification: ServiceWorkerUpdated; onDismiss: () => void }> = ({
+  notification,
+  onDismiss,
+}) => {
+  const dialog = useDialogState({ visible: true });
+
+  const onClickUpdate = () => {
+    const waitingServiceWorker = notification.registration.waiting;
+
+    interface ServiceWorkerEvent extends Event {
+      target: Partial<ServiceWorker> & EventTarget | null;
+    }
+
+    if (waitingServiceWorker) {
+      waitingServiceWorker.addEventListener('statechange', (event: ServiceWorkerEvent) => {
+        if (event.target && event.target.state === 'activated') {
+          window.location.reload();
+        }
+      });
+      waitingServiceWorker.postMessage({ type: 'SKIP_WAITING' });
+    }
+  };
+
+  return (
+    <AlertDialog {...dialog} modal={false} role="alertdialog" aria-label="A new version of this application is ready">
+      <p>A new version of this application is ready</p>
+      <Button onClick={onDismiss}>Cancel</Button>
+      <Button onClick={onClickUpdate}>Update</Button>
+    </AlertDialog>
+  );
+};
+
+interface ServiceWorkerOnine {
+  type: 'online';
+  registration: ServiceWorkerRegistration;
+}
+
+interface ServiceWorkerUpdated {
+  type: 'updated';
+  registration: ServiceWorkerRegistration;
+}
+
+type ServiceWorkerNotification = ServiceWorkerOnine | ServiceWorkerUpdated;
+
+const ServiceWorkerLifecycle: React.FC = props => {
+  const [notifications, setNotifications] = useState([] as ServiceWorkerNotification[]);
+
+  useEffect(() => {
+    serviceWorker.register({
+      onSuccess(registration) {
+        const newNotifications = notifications.filter(n => n.type !== 'online');
+
+        newNotifications.push({ type: 'online', registration });
+        setNotifications(newNotifications);
+      },
+      onUpdate(registration) {
+        const newNotifications = notifications.filter(n => n.type !== 'updated');
+
+        newNotifications.push({ type: 'updated', registration });
+        setNotifications(newNotifications);
+      },
+    });
+  });
+
+  const removeNotification = (notification: ServiceWorkerNotification) => {
+    const idx = notifications.indexOf(notification);
+
+    if (idx !== -1) {
+      const newNotifications = notifications.slice();
+
+      newNotifications.splice(idx, 1);
+
+      setNotifications(newNotifications);
+    }
+  };
+
+  return (
+    <>
+      <Portal>
+        <Notifications>
+          {notifications.map((notification, i) => {
+            switch (notification.type) {
+              case 'online':
+                return (
+                  <OnlineNotification
+                    key={i}
+                    notification={notification}
+                    onDismiss={() => removeNotification(notification)}
+                  ></OnlineNotification>
+                );
+              case 'updated':
+                return (
+                  <UpdatedNotification
+                    key={i}
+                    notification={notification}
+                    onDismiss={() => removeNotification(notification)}
+                  ></UpdatedNotification>
+                );
+            }
+
+            return undefined;
+          })}
+        </Notifications>
+      </Portal>
+      {props.children}
+    </>
+  );
+};
+
 ReactDOM.render(
-  <AppWrap>
-    <App initialPath="index.jsx" project={project} />
-  </AppWrap>,
+  <ServiceWorkerLifecycle>
+    <AppWrap>
+      <App initialPath="index.jsx" project={project} />
+    </AppWrap>
+  </ServiceWorkerLifecycle>,
   document.getElementById('root')
 );
-
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
-serviceWorker.register();

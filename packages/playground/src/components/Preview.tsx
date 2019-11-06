@@ -1,5 +1,6 @@
 import styled from '@emotion/styled/macro';
-import { CanceledError, InvariantViolation, Runtime } from '@velcro/bundler';
+import { InvariantViolation, Runtime } from '@velcro/bundler';
+import { CanceledError } from '@velcro/resolver';
 import * as Monaco from 'monaco-editor';
 import React, { useEffect, useRef, useContext, useState } from 'react';
 import {
@@ -344,7 +345,6 @@ const Preview: React.FC<{ className?: string }> = props => {
         tokenSource.cancel();
 
         if (!(err instanceof CanceledError) && (err && err.name !== 'CanceledError')) {
-          debugger;
           setMessages(messages => [...messages, { lines: [{ isInternal: false, text: err.message }] }]);
         }
       } finally {
