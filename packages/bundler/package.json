@@ -57,7 +57,7 @@
     "rollup-plugin-terser": "^5.1.2",
     "rollup-plugin-typescript2": "^0.20.1",
     "serve": "^11.0.0",
-    "typescript": "^3.7.0-dev.20191018"
+    "typescript": "^3.7.2"
   },
   "dependencies": {
     "@ampproject/remapping": "^0.1.0",
