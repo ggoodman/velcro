@@ -1,15 +1,12 @@
-import remapping from '@ampproject/remapping';
 import { version as nodeLibsVersion } from '@velcro/node-libs/package.json';
 import { CancellationToken, CancellationTokenSource, EntryNotFoundError, Resolver } from '@velcro/resolver';
-import { Base64 } from 'js-base64';
-import { Bundle } from 'magic-string';
-import { Emitter, Event, CanceledError } from 'ts-primitives';
+import { Emitter, Event } from 'ts-primitives';
 
 import { isBareModuleSpecifier, Deferred } from './util';
 import { resolveBareModuleToUnpkgWithDetails } from './unpkg';
 import { Asset } from './asset';
-import { createRuntime } from './runtime';
 import { InvariantViolation } from './error';
+import { Bundle } from './bundle';
 
 const EMPTY_MODULE_URL = new URL('velcro://@empty');
 const EMPTY_MODULE_CODE = 'module.exports = function(){};';
@@ -84,7 +81,7 @@ export class Bundler {
     return asset;
   }
 
-  async generateBundleCode(entrypoints: Entrypoint[], options: Bundler.BundleOptions = {}): Promise<string> {
+  async generateBundle(entrypoints: Entrypoint[], options: Bundler.BundleOptions = {}): Promise<Bundle> {
     if (!Array.isArray(entrypoints)) {
       throw new Error('Generating a bundle requires passing in an array of entrypoints');
     }
@@ -101,7 +98,7 @@ export class Bundler {
     let pendingOperations = 0;
     const assets = new Set<Asset>();
     const dfd = new Deferred();
-    const dependenciesToAliases = new Map<string, Asset>();
+    const dependenciesToAssets = new Map<string, Asset>();
     const entrypointsToAssets = new Map<string, Asset>();
 
     const enqueue = async <T>(op: () => T | Promise<T>): Promise<T> => {
@@ -132,7 +129,9 @@ export class Bundler {
         return result;
       } catch (err) {
         // Let's make sure this happens 'later'.
-        Promise.resolve().then(() => dfd.reject(err));
+        Promise.resolve()
+          .then(() => dfd.reject(err))
+          .catch(_ => undefined);
 
         throw err;
       }
@@ -144,6 +143,10 @@ export class Bundler {
       const promises = [] as Promise<Asset.Dependency>[];
 
       for (const dependency of asset.unresolvedDependencies.requireDependencies) {
+        if (dependency.spec.value === '@@runtime') {
+          continue;
+        }
+
         promises.push(
           enqueue(() => resolveAsset(dependency.spec.value, asset.href)).then(dependencyAsset => {
             return {
@@ -211,7 +214,9 @@ export class Bundler {
       if (!assets.has(asset)) {
         assets.add(asset);
         const code = await this.readCode(asset, { token });
-        resolveDependencies(asset, code);
+        // No need to wait for this, but we do need to make sure it doesn't
+        // generate an unhandled rejection.
+        resolveDependencies(asset, code).catch(_ => undefined);
       }
 
       return asset;
@@ -221,7 +226,7 @@ export class Bundler {
       for (const name in options.dependencies) {
         const dependency = options.dependencies[name];
         enqueue(() => resolveAsset(`${name}@${dependency}`)).then(
-          asset => dependenciesToAliases.set(name, asset),
+          asset => dependenciesToAssets.set(name, asset),
           _ => undefined
         );
       }
@@ -261,155 +266,7 @@ export class Bundler {
 
     await dfd.promise;
 
-    // Now all assets should be fully loaded
-
-    const bundle = new Bundle({ separator: '\n\t\t,\n' });
-
-    for (const asset of assets) {
-      if (!asset.magicString) {
-        throw new Error(`Invariant violation: asset is not loaded '${asset.href}'`);
-      }
-
-      const dependencies = {} as Record<string, string>;
-      const magicString = asset.magicString.clone();
-      magicString.indent('\t\t\t');
-
-      // We'll replace each dependency string with the resolved stable href. The stable href doesn't require any
-      // information about where it is being resolved from, so it is useful as a long-term pointer whose target
-      // can change over time
-      for (const dependency of asset.dependencies) {
-        switch (dependency.type) {
-          case Asset.DependencyKind.Require: {
-            // magicString.overwrite(dependency.spec.start, dependency.spec.end, JSON.stringify(dependency.href));
-            // magicString.overwrite(dependency.callee.start, dependency.callee.end, '__velcro_require');
-            dependencies[dependency.spec.value] = dependency.href;
-            break;
-          }
-          case Asset.DependencyKind.RequireResolve: {
-            // magicString.overwrite(dependency.spec.start, dependency.spec.end, JSON.stringify(dependency.href));
-            // magicString.overwrite(dependency.callee.start, dependency.callee.end, '__velcro_require_resolve');
-            dependencies[dependency.spec.value] = dependency.href;
-            break;
-          }
-          case Asset.DependencyKind.InjectedGlobal: {
-            magicString.prepend(
-              `\n\t\t\tconst ${dependency.symbolName} = require(${JSON.stringify(dependency.symbolName)})${
-                dependency.exportName ? `.${dependency.exportName}` : ''
-              };\n`
-            );
-            dependencies[dependency.symbolName] = dependency.href;
-            break;
-          }
-          default:
-            throw new Error(
-              `Invariant violation: Encountered unexpected dependency kind '${(dependency as any).type}'`
-            );
-        }
-      }
-
-      magicString.trim();
-      magicString.prepend(
-        `\t\t${JSON.stringify(asset.href)}: { dependencies: ${JSON.stringify(
-          dependencies
-        )}, factory: function(module, exports, require, __dirname, __filename){\n`
-      );
-      magicString.append('\n\t\t}}');
-
-      bundle.addSource(magicString);
-    }
-
-    const aliasMap = Array.from(dependenciesToAliases).reduce(
-      (acc, [name, asset]) => {
-        acc[name] = asset.href;
-        return acc;
-      },
-      {} as Record<string, string>
-    );
-    const entrypointMap = options.requireEntrypoints
-      ? Array.from(entrypointsToAssets).reduce(
-          (acc, [name, asset]) => {
-            acc[name] = asset.href;
-            return acc;
-          },
-          {} as Record<string, string>
-        )
-      : {};
-
-    bundle.prepend(
-      `(${createRuntime.toString()})({\n\taliases:${JSON.stringify(aliasMap)},\n\tentrypoints:${JSON.stringify(
-        entrypointMap
-      )},\n\tmodules:{\n`
-    );
-    bundle.append(`\n\t}\n});`);
-
-    // Yield to event loop
-    await new Promise(resolve => setTimeout(resolve, 0));
-
-    if (token.isCancellationRequested) {
-      throw new CanceledError('Canceled');
-    }
-
-    const bundleCode = bundle.toString();
-
-    let sourceMapSuffix = '';
-
-    if (options.sourceMap) {
-      const sourceMap = bundle.generateMap({
-        includeContent: true,
-        hires: false,
-      });
-
-      sourceMap.file = `velcro://bundle.js`;
-
-      // Yield to event loop
-      await new Promise(resolve => setTimeout(resolve, 0));
-
-      if (token.isCancellationRequested) {
-        throw new CanceledError('Canceled');
-      }
-
-      // In case a source map seems to be self-referential, avoid crashing
-      const seen = new Set<Asset>();
-      const combinedMap = remapping(
-        sourceMap.toString(),
-        (uri: string) => {
-          const asset = this.assetsByHref.get(uri);
-
-          if (asset && asset.sourceMappingUrl) {
-            if (seen.has(asset)) {
-              return null;
-            }
-
-            seen.add(asset);
-
-            const match = asset.sourceMappingUrl.match(/^data:application\/json;(?:charset=([^;]+);)?base64,(.*)$/);
-
-            if (match) {
-              if (match[1] && match[1] !== 'utf-8') {
-                return null;
-              }
-
-              try {
-                const decoded = JSON.parse(Base64.decode(match[2]));
-
-                return decoded;
-              } catch (err) {
-                return null;
-              }
-            }
-          }
-
-          return null;
-        },
-        false
-      );
-
-      sourceMapSuffix = `\n//# sourceMappingURL=data:application/json;charset=utf-8;base64,${Base64.encode(
-        JSON.stringify(combinedMap)
-      )}`;
-    }
-
-    return `${bundleCode}${sourceMapSuffix}`;
+    return new Bundle(assets, entrypointsToAssets, dependenciesToAssets);
   }
 
   async invalidate(spec: string, { token }: { token?: CancellationToken } = {}): Promise<boolean> {

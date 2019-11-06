@@ -123,13 +123,32 @@ function getParserForAsset(asset: Asset): { parse: typeof parseFile } {
           escaped = false;
         }
 
-        magicString.prepend(
-          'var styleTag = document.createElement("style");styleTag.type = "text/css";styleTag.innerHTML = \''
-        );
-        magicString.append('\';document.getElementsByTagName("head")[0].appendChild(styleTag);');
+        magicString.prepend(`
+          function reload(styles){
+            var styleTag = document.querySelector('head > style[type="text/css"][data-href=${JSON.stringify(
+              asset.href
+            )}]');
 
-        var styleTag = document.createElement('style');
-        styleTag.textContent;
+            if (styleTag && styleTag.parentElement) {
+              styleTag.parentElement.removeChild(styleTag);
+            }
+
+            styleTag = document.createElement("style");
+            styleTag.type = "text/css";
+            styleTag.dataset.href=${JSON.stringify(asset.href)};
+
+            styleTag.innerHTML = '`);
+        magicString.append(`';
+            document.head.appendChild(styleTag);
+          };
+          reload();
+
+          exports.reload = reload;
+
+          if (module.hot && module.hot.accept) {
+            require(${JSON.stringify(asset.href)}).reload()
+          }
+        `);
 
         return {
           requireDependencies: [],
