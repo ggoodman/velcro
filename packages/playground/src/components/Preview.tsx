@@ -389,7 +389,6 @@ const Preview: React.FC<{ className?: string }> = props => {
     disposable.add(
       (() => {
         const onMessage = async (e: MessageEvent) => {
-          console.log('onMessage', e);
           if (
             (previewIframeRef.current && e.source !== previewIframeRef.current.contentWindow) ||
             !e.data ||
@@ -485,10 +484,6 @@ export default styled(Preview)``;
 declare var velcroRequire: NodeRequire;
 declare var __velcroRuntime: Runtime;
 
-// aliases: Record<string, string>;
-// entrypoints: Record<string, string>;
-// modules: Record<string, ImmediateExecutionModuleRecord>;
-
 /**
  * Important: This function needs to be fully self-contained because it will be stringified.
  * @param filename
@@ -501,7 +496,6 @@ function createBundleRuntime() {
   window.ReactErrorOverlay = ReactErrorOverlay;
 
   ReactErrorOverlay.setEditorHandler(err => {
-    console.log('error', err);
     window.parent.postMessage({ type: 'error_open', payload: err }, '*');
   });
   ReactErrorOverlay.startReportingRuntimeErrors({
@@ -509,8 +503,6 @@ function createBundleRuntime() {
   });
 
   channel.port2.onmessage = function(e) {
-    console.log('[HMR SERVER] Got message', e.data);
-
     if (!e.data || typeof e.data !== 'object') {
       throw new Error(`Unexpected message received by HMR server`);
     }
@@ -544,7 +536,6 @@ function createBundleRuntime() {
             const module = runtime.get(href);
 
             if (!module) {
-              console.log('no module found', href);
               continue;
             }
 
@@ -559,12 +550,13 @@ function createBundleRuntime() {
                 acceptCallback.cb && acceptCallback.cb();
               }
             } else {
-              const dependents = module.dependents.filter(m => !seen.has(m.id)).map(m => m.id);
+              const isEntrypoint = module.dependents.indexOf(runtime.root) !== -1;
 
-              if (dependents.length) {
-                queue.push(...dependents);
-              } else {
+              if (isEntrypoint) {
                 requireReload.push(module.id);
+              } else {
+                const dependents = module.dependents.filter(m => !seen.has(m.id)).map(m => m.id);
+                queue.push(...dependents);
               }
             }
           }
@@ -601,44 +593,9 @@ function createBundleRuntime() {
     return val && typeof val === 'object';
   }
 
-  // function isRecordSet<K, V>(
-  //   val: unknown,
-  //   keyPredicate: (val: unknown) => val is K,
-  //   valuePredicate: (val: unknown) => val is V
-  // ) {
-  //   if (!isObject(val)) {
-  //     return false;
-  //   }
-
-  //   for (let k in val) {
-  //     if (!keyPredicate(k) || !valuePredicate(val[k])) {
-  //       console.warn('predicate failed', val, keyPredicate, valuePredicate);
-  //       return false;
-  //     }
-  //   }
-
-  //   return true;
-  // }
-
   function isString(val: unknown): val is string {
     return typeof val === 'string';
   }
-
-  // function isModule(record: unknown): record is DeferredExecutionModuleRecord {
-  //   const ret = isObject(record) && isRecordSet(record.dependencies, isString, isString) && isString(record.code);
-
-  //   return ret;
-  // }
-
-  // function isValidManifest(message: unknown): message is DeferredExecutionManifest {
-  //   if (!isObject(message)) return false;
-
-  //   return (
-  //     isRecordSet(message.aliases, isString, isString) &&
-  //     isRecordSet(message.entrypoints, isString, isString) &&
-  //     isRecordSet(message.modules, isString, isModule)
-  //   );
-  // }
 
   function isValidReload(message: unknown): message is HmrReloadRequest {
     if (!isObject(message)) return false;
@@ -672,7 +629,6 @@ class HmrClient implements IDisposable {
 
   constructor(private readonly port: MessagePort) {
     port.onmessage = e => {
-      console.log('[HMR CLIENT] got message', e.data);
       if (!e.data || typeof e.data !== 'object') {
         throw new InvariantViolation('Unexpected message received from HMR client');
       }
