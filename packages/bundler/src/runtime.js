@@ -2,25 +2,40 @@
 
 /**
  *
- * @param {import('./runtime').RuntimeManifest} manifest
- * @returns {import('./runtime').IRuntime}
+ * @param {import('./types').ImmediateExecutionManifest} manifest
+ * @param {import('./types').RuntimeOptions} [options]
+ * @returns {import('./types').IRuntime}
  */
-export function createRuntime(manifest) {
-  const aliasesSymbol = Symbol.for('velcro.aliases');
-  const mappingsSymbol = Symbol.for('velcro.mappings');
-  const modulesSymbol = Symbol.for('velcro.modules');
-  const registrySymbol = Symbol.for('velcro.registry');
+export function createRuntime(manifest, options) {
+  /** @type {Record<string, string | undefined>} */
+  var aliases = Object.create(null);
+  /** @type {Record<string, Record<string, string | undefined> | undefined> } */
+  var mappings = Object.create(null);
+  /** @type {Record<string, Module | undefined>} */
+  var modules = Object.create(null);
+  /** @type {Record<string, import('./types').ModuleFactory | undefined>} */
+  var registry = Object.create(null);
+
+  /**
+   * @template T
+   * @param {T[]} set
+   * @param {T} value
+   * @returns {T[]}
+   */
+  function addToSet(set, value) {
+    var idx = set.indexOf(value);
+
+    if (idx === -1) set.push(value);
+
+    return set;
+  }
 
   /**
    * @class
+   * @implements {import('./types').IRuntime}
    * @property {Module} root
    */
   function Runtime() {
-    this[aliasesSymbol] = Object.create(null);
-    this[mappingsSymbol] = Object.create(null);
-    this[modulesSymbol] = Object.create(null);
-    this[registrySymbol] = Object.create(null);
-
     /**
      * @readonly
      */
@@ -33,6 +48,12 @@ export function createRuntime(manifest) {
         return 'Module';
       },
     });
+
+    var self = this;
+
+    this.register('@@runtime', function(module) {
+      module.exports = self;
+    });
   }
 
   /**
@@ -40,7 +61,7 @@ export function createRuntime(manifest) {
    * @param {string} id
    */
   Runtime.prototype.alias = function(name, id) {
-    this[aliasesSymbol][name] = id;
+    aliases[name] = id;
   };
 
   /**
@@ -49,49 +70,49 @@ export function createRuntime(manifest) {
    * @param {string} toId
    */
   Runtime.prototype.dependency = function(fromId, spec, toId) {
-    if (!(fromId in this[mappingsSymbol])) {
-      this[mappingsSymbol][fromId] = Object.create(null);
+    var mappingsForId = mappings[fromId];
+
+    if (!mappingsForId) {
+      mappingsForId = {};
+      mappings[fromId] = mappingsForId;
     }
-    this[mappingsSymbol][fromId][spec] = toId;
+
+    mappingsForId[spec] = toId;
+  };
+
+  /**
+   * @param {string} id
+   */
+  Runtime.prototype.get = function(id) {
+    id = aliases[id] || id;
+
+    return modules[id];
   };
 
   /**
    * @param {string} fromId
    * @param {string} spec
+   * @returns {string}
    */
   Runtime.prototype.getId = function(fromId, spec) {
-    if (spec in this[aliasesSymbol]) {
-      return this[aliasesSymbol][spec];
+    var alias = aliases[spec];
+
+    if (alias) {
+      return alias;
     }
 
-    var mappings = this[mappingsSymbol][fromId];
+    var mappingsForId = mappings[fromId];
 
-    if (mappings && spec in mappings) {
-      return mappings[spec];
-    }
-
-    return spec;
+    return (mappingsForId && mappingsForId[spec]) || spec;
   };
 
   /**
-   * @param {string} name
+   * @param {import('./types').ImmediateExecutionManifest} manifest
+   * @param {boolean} [executeEntrypoints]
    */
-  Runtime.prototype.import = function(name) {
-    return new Promise((resolve, reject) => {
-      try {
-        return resolve(this.require(name));
-      } catch (err) {
-        return reject(err);
-      }
-    });
-  };
-
-  /**
-   * @param {import('./runtime').RuntimeManifest} manifest
-   */
-  Runtime.prototype.init = function(manifest) {
+  Runtime.prototype.init = function(manifest, executeEntrypoints) {
     for (const href in manifest.modules) {
-      const module = manifest.modules[href];
+      var module = manifest.modules[href];
 
       for (const alias in module.dependencies) {
         this.dependency(href, alias, module.dependencies[alias]);
@@ -105,56 +126,69 @@ export function createRuntime(manifest) {
 
     for (const entrypoint in manifest.entrypoints) {
       this.alias(entrypoint, manifest.entrypoints[entrypoint]);
-      this.require(entrypoint);
+
+      if (executeEntrypoints) {
+        this.require(entrypoint);
+      }
     }
   };
 
   /**
    * @param {string} id
-   * @param {import('./runtime').ModuleFactory} factory
+   * @param {import('./types').ModuleFactory} factory
    */
   Runtime.prototype.register = function(id, factory) {
-    if (!this[registrySymbol][id]) {
-      this[registrySymbol][id] = factory;
+    if (!registry[id]) {
+      registry[id] = factory;
     }
   };
 
   /**
    * @param {string} id
+   * @returns {Module | undefined}
    */
   Runtime.prototype.remove = function(id) {
-    id = this[aliasesSymbol][id] || id;
-    const module = this[modulesSymbol][id];
+    var module = this.get(id);
 
     if (!module) {
-      return false;
+      return;
     }
 
-    const seen = new Set();
-    const removalQueue = [module];
+    delete modules[module.id];
+    delete mappings[module.id];
+    delete registry[module.id];
 
-    while (removalQueue.length) {
-      const moduleToRemove = removalQueue.shift();
-
-      if (seen.has(moduleToRemove)) {
-        continue;
-      }
-      seen.add(moduleToRemove);
-
-      removalQueue.push(...moduleToRemove.dependents);
-
-      delete this[modulesSymbol][moduleToRemove.id];
-      delete this[mappingsSymbol][moduleToRemove.id];
-    }
-
-    return true;
+    return module;
   };
 
   /**
    * @param {string} id
    */
   Runtime.prototype.require = function(id) {
-    return this.root.require(this[aliasesSymbol][id] || id);
+    return this.root.require(aliases[id] || id);
+  };
+
+  /**
+   * @class
+   * @param {Module} module
+   */
+  function HotModule(module) {
+    /** @private */
+    this.module = module;
+  }
+
+  /**
+   * @param {() => void} cb
+   */
+  HotModule.prototype.accept = function(cb) {
+    this.module.acceptCallbacks.push({ cb: cb });
+  };
+
+  /**
+   * @param {() => void} cb
+   */
+  HotModule.prototype.dispose = function(cb) {
+    this.module.disposeCallbacks.push({ cb: cb });
   };
 
   /**
@@ -163,9 +197,23 @@ export function createRuntime(manifest) {
    * @param {Runtime} runtime
    */
   function Module(id, runtime) {
-    this.exports = {};
-    this.dependents = new Set();
+    /** @type {Module[]} */
+    this.dependencies = [];
+    /** @type {Module[]} */
+    this.dependents = [];
     this.id = id;
+    /** @type {import('./types').AcceptCallback[]} */
+    this.acceptCallbacks = [];
+    /** @type {import('./types').DisposeCallback[]} */
+    this.disposeCallbacks = [];
+
+    /** @readonly */
+    this.module = Object.seal({
+      exports: {},
+      hot: new HotModule(this),
+    });
+
+    /** @readonly */
     this.runtime = runtime;
   }
 
@@ -175,10 +223,11 @@ export function createRuntime(manifest) {
   Module.prototype.require = function(id) {
     id = this.runtime.getId(this.id, id);
 
-    let module = this.runtime[modulesSymbol][id];
+    /** @type {Module | undefined} */
+    var module = modules[id];
 
     if (!module) {
-      const factory = this.runtime[registrySymbol][id];
+      const factory = registry[id];
 
       if (!factory) {
         console.error();
@@ -187,31 +236,34 @@ export function createRuntime(manifest) {
 
       module = new Module(id, this.runtime);
 
-      this.runtime[modulesSymbol][id] = module;
+      modules[id] = module;
 
-      let dirname = id;
-      let filename = id;
+      // Free up the registry entry and release any refs for GC
+      delete registry[id];
 
-      // const util = Velcro.util;
+      var dirname = id;
+      var filename = id;
 
-      // if (util && util.dirname) {
-      //   dirname = util.dirname(id);
-      // }
-      // if (util && util.basename) {
-      //   filename = util.basename(id);
-      // }
-
-      factory.call(module.exports, module, module.exports, module.require.bind(module), dirname, filename);
+      factory.call(
+        module.module.exports,
+        module.module,
+        module.module.exports,
+        module.require.bind(module),
+        dirname,
+        filename
+      );
     }
 
-    module.dependents.add(this);
+    addToSet(module.dependents, module);
+    addToSet(this.dependencies, module);
 
-    return module.exports;
+    return module.module.exports;
   };
 
-  const runtime = new Runtime();
+  //@ts-ignore
+  const runtime = (options && options.runtime && window[options.runtime]) || new Runtime();
 
-  runtime.init(manifest);
+  runtime.init(manifest, options && options.executeEntrypoints);
 
   return runtime;
 }

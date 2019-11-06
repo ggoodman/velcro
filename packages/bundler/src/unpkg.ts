@@ -1,5 +1,5 @@
 import { version as nodeLibsVersion } from '@velcro/node-libs/package.json';
-import { Resolver } from '@velcro/resolver';
+import { Resolver, CanceledError } from '@velcro/resolver';
 import { CancellationToken } from 'ts-primitives';
 
 import { parseBareModuleSpec } from './util';
@@ -108,8 +108,11 @@ export const resolveBareModuleToUnpkgWithDetails = async (
             resolvedSpecRoot = `${parsedSpec.name}@${details.bareModule.versionSpec}`;
           }
         }
-      } catch (_) {
-        // Ignore
+      } catch (err) {
+        if (err instanceof CanceledError || err.name === 'CanceledError') {
+          throw err;
+        }
+        // Ignore other errors
       }
     }
   }
