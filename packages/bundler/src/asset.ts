@@ -124,29 +124,33 @@ function getParserForAsset(asset: Asset): { parse: typeof parseFile } {
         }
 
         magicString.prepend(`
-          function reload(styles){
-            var styleTag = document.querySelector('head > style[type="text/css"][data-href=${JSON.stringify(
-              asset.href
-            )}]');
-
-            if (styleTag && styleTag.parentElement) {
-              styleTag.parentElement.removeChild(styleTag);
-            }
-
-            styleTag = document.createElement("style");
+          function reload(){
+            var styleTag = document.createElement("style");
             styleTag.type = "text/css";
             styleTag.dataset.href=${JSON.stringify(asset.href)};
 
             styleTag.innerHTML = '`);
         magicString.append(`';
             document.head.appendChild(styleTag);
-          };
-          reload();
 
-          exports.reload = reload;
+            return function() {    
+              if (styleTag && styleTag.parentElement) {
+                styleTag.parentElement.removeChild(styleTag);
+              }
+            };
+          };
+
+          var remove = reload();
 
           if (module.hot && module.hot.accept) {
-            require(${JSON.stringify(asset.href)}).reload()
+            module.hot.accept(function() {
+              require(${JSON.stringify(asset.href)});
+            });
+          }
+          if (module.hot && module.hot.dispose) {
+            module.hot.dispose(function() {
+              remove();
+            });
           }
         `);
 

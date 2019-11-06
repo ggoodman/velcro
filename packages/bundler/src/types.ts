@@ -45,8 +45,8 @@ export interface IModule {
   readonly id: string;
   readonly acceptCallbacks: ReadonlyArray<AcceptCallback>;
   readonly disposeCallbacks: ReadonlyArray<DisposeCallback>;
-  readonly dependencies: ReadonlyArray<IModule>;
-  readonly dependents: ReadonlyArray<IModule>;
+  readonly dependencies: Set<IModule>;
+  readonly dependents: Set<IModule>;
   readonly require: RequireFunction;
 }
 

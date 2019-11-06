@@ -7,6 +7,8 @@
  * @returns {import('./types').IRuntime}
  */
 export function createRuntime(manifest, options) {
+  'use strict';
+
   /** @type {Record<string, string | undefined>} */
   var aliases = Object.create(null);
   /** @type {Record<string, Record<string, string | undefined> | undefined> } */
@@ -15,20 +17,6 @@ export function createRuntime(manifest, options) {
   var modules = Object.create(null);
   /** @type {Record<string, import('./types').ModuleFactory | undefined>} */
   var registry = Object.create(null);
-
-  /**
-   * @template T
-   * @param {T[]} set
-   * @param {T} value
-   * @returns {T[]}
-   */
-  function addToSet(set, value) {
-    var idx = set.indexOf(value);
-
-    if (idx === -1) set.push(value);
-
-    return set;
-  }
 
   /**
    * @class
@@ -140,11 +128,19 @@ export function createRuntime(manifest, options) {
    * @returns {Module | undefined}
    */
   Runtime.prototype.remove = function(id) {
-    var module = this.get(id);
+    const module = this.get(id);
 
     if (!module) {
       return;
     }
+
+    module.dependents.forEach(dependent => {
+      dependent.dependencies.delete(module);
+    });
+
+    module.dependencies.forEach(dependency => {
+      dependency.dependents.delete(module);
+    });
 
     delete modules[module.id];
     delete mappings[module.id];
@@ -189,10 +185,10 @@ export function createRuntime(manifest, options) {
    * @param {Runtime} runtime
    */
   function Module(id, runtime) {
-    /** @type {Module[]} */
-    this.dependencies = [];
-    /** @type {Module[]} */
-    this.dependents = [];
+    /** @type {Set<Module>} */
+    this.dependencies = new Set();
+    /** @type {Set<Module>} */
+    this.dependents = new Set();
     this.id = id;
     /** @type {import('./types').AcceptCallback[]} */
     this.acceptCallbacks = [];
@@ -253,8 +249,12 @@ export function createRuntime(manifest, options) {
       );
     }
 
-    addToSet(module.dependents, this);
-    addToSet(this.dependencies, module);
+    // In a hot reload scenario there may be two generations
+    // of the same module. Don't record these dependencies.
+    if (module.id !== this.id) {
+      module.dependents.add(this);
+      this.dependencies.add(module);
+    }
 
     return module.module.exports;
   };
