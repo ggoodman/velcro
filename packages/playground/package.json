@@ -20,8 +20,7 @@
     "reakit": "^1.0.0-beta.9",
     "sourcemap-codec": "1.4.6",
     "stackframe": "^1.1.0",
-    "ts-primitives": "^1.1.0",
-    "typescript": "^3.7.0-dev.20191018"
+    "ts-primitives": "^1.1.0"
   },
   "scripts": {
     "start": "react-app-rewired start",
@@ -50,7 +49,8 @@
     "babel-plugin-emotion": "^10.0.22",
     "customize-cra": "^0.8.0",
     "monaco-editor-webpack-plugin": "^1.7.0",
-    "react-app-rewired": "^2.1.4"
+    "react-app-rewired": "^2.1.4",
+    "typescript": "^3.7.2"
   },
   "homepage": "https://ggoodman.github.io/velcro"
 }

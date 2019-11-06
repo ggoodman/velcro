@@ -50,7 +50,7 @@
     "rollup-plugin-terser": "^4.0.4",
     "rollup-plugin-typescript2": "^0.20.1",
     "tslib": "^1.9.3",
-    "typescript": "^3.7.0-dev.20191018"
+    "typescript": "^3.7.2"
   },
   "prettier": {
     "printWidth": 120,
