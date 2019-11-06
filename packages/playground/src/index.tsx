@@ -47,6 +47,7 @@ export const Explanation = () => <>
       <li>If you want to add another module, make sure to add it to <code>package.json</code> first.</li>
       <li>Automatic type acquisition for full typings support in the browser, in JavaScript!</li>
       <li>Resolve source locations in stack traces</li>
+      <li>Hot module reloading</li>
     </ul>
   </section>
 </>;
