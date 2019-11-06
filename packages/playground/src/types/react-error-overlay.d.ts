@@ -15,7 +15,7 @@ declare module 'react-error-overlay' {
   export function dismissBuildError(): void;
   export function reportBuildError(error: string): void;
 
-  export function dismissRuntimeError(): void;
+  export function dismissRuntimeErrors(): void;
   export function reportRuntimeError(error: Error, options?: RuntimeReportingOption): void;
   export function startReportingRuntimeErrors(options: RuntimeReportingOption): void;
   export function stopReportingRuntimeErrors(): void;

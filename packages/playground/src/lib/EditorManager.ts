@@ -41,8 +41,7 @@ export class EditorManager implements IDisposable {
     this.disposableStore.add(this.onDidChangeEmitter);
 
     Monaco.languages.typescript.typescriptDefaults.setEagerModelSync(true);
-    Monaco.languages.typescript.typescriptDefaults.setMaximumWorkerIdleTime(0);
-
+    Monaco.languages.typescript.typescriptDefaults.setMaximumWorkerIdleTime(-1);
     Monaco.languages.typescript.typescriptDefaults.setCompilerOptions({
       allowJs: true,
       allowNonTsExtensions: true,
@@ -66,7 +65,6 @@ export class EditorManager implements IDisposable {
       target: Monaco.languages.typescript.ScriptTarget.ES2015,
       typeRoots: ['node_modules/@types'],
     });
-
     Monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({
       noSemanticValidation: true,
       noSyntaxValidation: false,
@@ -127,7 +125,6 @@ export class EditorManager implements IDisposable {
   }
 
   get dispose() {
-    console.log('EditorManager::dispose()');
     return this.disposableStore.dispose;
   }
 
