@@ -12,7 +12,7 @@ import {
 } from './util';
 import { EntryNotFoundError } from './error';
 import { ResolverHost } from './resolver_host';
-import { CanceledError } from 'ts-primitives';
+import { CanceledError } from './cancellation';
 
 const TRAILING_SLASH_RX = /\/?$/;
 
