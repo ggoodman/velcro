@@ -75,13 +75,7 @@ export class Resolver {
       token,
     };
 
-    const canonicalUrlPromise = this.host.getCanonicalUrl
-      ? this.host.getCanonicalUrl(this, url, { token })
-      : Promise.resolve(url);
-
-    if (token.isCancellationRequested) {
-      throw new CanceledError('Canceled');
-    }
+    const canonicalUrlPromise = this.host.getCanonicalUrl(this, url, { token });
 
     // To figure out if the url should be resolved as a file or as a directory, we need to first canonicalize the url
     // if the host supports this and resolve the root url for the given asset.
