@@ -1,5 +1,3 @@
-export { CanceledError } from 'ts-primitives';
-
 class ExtendableError extends Error {
   constructor(message: string) {
     super(message);
