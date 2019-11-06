@@ -525,6 +525,7 @@ function createBundleRuntime() {
           const runtime = __velcroRuntime;
           const queue = reload.invalidations.slice();
           const seen = new Set<string>();
+          const potentialOrphans = new Set<string>();
           const requireReload = [] as string[];
 
           while (queue.length) {
@@ -539,7 +540,12 @@ function createBundleRuntime() {
               continue;
             }
 
+            module.dependencies.forEach(dependency => {
+              potentialOrphans.add(dependency.id);
+            });
+
             runtime.remove(href);
+            potentialOrphans.delete(module.id);
 
             for (const disposeCallback of module.disposeCallbacks) {
               disposeCallback.cb && disposeCallback.cb();
@@ -550,13 +556,16 @@ function createBundleRuntime() {
                 acceptCallback.cb && acceptCallback.cb();
               }
             } else {
-              const isEntrypoint = module.dependents.indexOf(runtime.root) !== -1;
+              const isEntrypoint = module.dependents.has(runtime.root);
 
               if (isEntrypoint) {
                 requireReload.push(module.id);
               } else {
-                const dependents = module.dependents.filter(m => !seen.has(m.id)).map(m => m.id);
-                queue.push(...dependents);
+                module.dependents.forEach(dependent => {
+                  if (!seen.has(dependent.id)) {
+                    queue.push(dependent.id);
+                  }
+                });
               }
             }
           }
@@ -573,6 +582,20 @@ function createBundleRuntime() {
             for (const toReload of requireReload) {
               runtime.require(toReload);
             }
+
+            // Find any module that will become orphaned by this change and
+            // dispose it
+            potentialOrphans.forEach(potentialOrphan => {
+              const potentialOrphanModule = runtime.get(potentialOrphan);
+
+              if (potentialOrphanModule && potentialOrphanModule.dependents.size === 0) {
+                for (const disposeCallback of potentialOrphanModule.disposeCallbacks) {
+                  disposeCallback.cb && disposeCallback.cb();
+                }
+
+                runtime.remove(potentialOrphan);
+              }
+            });
 
             channel.port2.postMessage({
               type: 'reload',
