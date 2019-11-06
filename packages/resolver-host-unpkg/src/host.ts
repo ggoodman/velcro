@@ -158,7 +158,7 @@ export class ResolverHostUnpkg extends AbstractResolverHost {
         return res.arrayBuffer();
       })
       .catch(err => {
-        if (err.name === 'AbortError') {
+        if (signal && signal.aborted) {
           throw new CanceledError('Canceled');
         }
 
@@ -311,7 +311,7 @@ export class ResolverHostUnpkg extends AbstractResolverHost {
     const signal = signalFromCancellationToken(token, this.AbortController);
     const fetch = this.fetch;
     const res = await fetch(href, { signal }).catch(err => {
-      if (err.name === 'AbortError') {
+      if (signal && signal.aborted) {
         throw new CanceledError('Canceled');
       }
 
