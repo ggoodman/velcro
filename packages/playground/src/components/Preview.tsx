@@ -188,8 +188,6 @@ const Preview: React.FC<{ className?: string }> = props => {
                   });
                 }
               },
-              sourceMap: true,
-              requireEntrypoints: true,
               token,
             }
           );
@@ -237,8 +235,6 @@ const Preview: React.FC<{ className?: string }> = props => {
                   });
                 }
               },
-              sourceMap: true,
-              requireEntrypoints: !hmrClientRef.current,
               token,
             }
           );
