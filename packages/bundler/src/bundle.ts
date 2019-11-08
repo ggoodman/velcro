@@ -5,7 +5,7 @@ import MagicString, { Bundle as MagicStringBundle } from 'magic-string';
 import { Asset } from './asset';
 import { InvariantViolation } from './error';
 import { createRuntime } from './runtime';
-import { DeferredExecutionModuleRecord, DeferredExecutionManifest, RuntimeOptions } from './types';
+import { RuntimeOptions } from './types';
 
 export class Bundle {
   private readonly assetsByHref = new Map<string, Asset>();
@@ -64,43 +64,10 @@ export class Bundle {
     };
   }
 
-  toManifest(options?: { sourceMap?: boolean }): DeferredExecutionManifest {
-    const manifest: DeferredExecutionManifest = {
-      aliases: {},
-      entrypoints: {},
-      modules: {},
-    };
-
-    for (const asset of this.assets) {
-      manifest.modules[asset.href] = this.buildAssetForDeferredExecution(asset, options);
-    }
-
-    for (const [name, asset] of this.dependenciesToAssets) {
-      manifest.aliases[name] = asset.href;
-    }
-
-    for (const [name, asset] of this.entrypointsToAssets) {
-      manifest.entrypoints[name] = asset.href;
-    }
-
-    return manifest;
-  }
-
   toString(options: { sourceMap?: boolean } & RuntimeOptions = {}) {
     const { code, sourceMap } = this.buildForImmediateExecution(options);
 
     return code + (sourceMap ? `\n//# sourceMappingURL=${sourceMap.toDataUri()}` : '');
-  }
-
-  private buildAssetForDeferredExecution(
-    asset: Asset,
-    options: { sourceMap?: boolean } = {}
-  ): DeferredExecutionModuleRecord {
-    const { dependencies, magicString } = buildAssetAndCollectDependencies(asset, '');
-    const sourceMap = options.sourceMap ? this.generateSourceMap(magicString, asset.href) : undefined;
-    const code = magicString.toString() + (sourceMap ? `\n//# sourceMappingURL=${sourceMap.toDataUri()}` : '');
-
-    return { code, dependencies };
   }
 
   private generateSourceMap(bundle: MagicStringBundle | MagicString, href: string) {
@@ -236,12 +203,12 @@ function buildAssetAndCollectDependencies(
 }
 
 function buildAssetForImmediateExecution(asset: Asset) {
-  const { dependencies, magicString } = buildAssetAndCollectDependencies(asset, '\t\t\t');
+  const { dependencies, magicString } = buildAssetAndCollectDependencies(asset, '\t\t\t\t');
 
   magicString.prepend(
-    `\t\t${JSON.stringify(asset.href)}: { dependencies: ${JSON.stringify(
+    `\t\t${JSON.stringify(asset.href)}: {\n\t\t\tdependencies: ${JSON.stringify(
       dependencies
-    )}, factory: function(module, exports, require, __dirname, __filename){\n`
+    )},\n\t\t\tfactory: function(module, exports, require, __dirname, __filename){\n\t\t\t\tvar __webpack_require__ = require;\n`
   );
   magicString.append('\n\t\t}}');
 

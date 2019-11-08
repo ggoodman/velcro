@@ -38,6 +38,7 @@ interface InlineEntrypoint {
 type Entrypoint = HrefEntrypoint | InlineEntrypoint;
 
 export class Bundler {
+  readonly resolveBareModule: (spec: string, pathname?: string) => URL;
   readonly resolver: Resolver;
 
   private readonly assetsByHref = new Map<string, Asset>();
@@ -50,6 +51,7 @@ export class Bundler {
   static readonly schemaVersion: 1;
 
   constructor(options: Bundler.Options) {
+    this.resolveBareModule = options.resolveBareModule;
     this.resolver = options.resolver;
   }
 
@@ -286,7 +288,13 @@ export class Bundler {
 
       try {
         if (isBareModuleSpecifier(spec)) {
-          resolveResult = await resolveBareModuleToUnpkgWithDetails(this.resolver, spec, undefined, { token });
+          resolveResult = await resolveBareModuleToUnpkgWithDetails(
+            this.resolver,
+            this.resolveBareModule,
+            spec,
+            undefined,
+            { token }
+          );
         } else {
           const combinedUri = new URL(spec);
           resolveResult = await this.resolver.resolve(combinedUri, { token });
@@ -342,10 +350,16 @@ export class Bundler {
     let resolved: Bundler.ResolveDetails;
 
     if (isBareModuleSpecifier(uri)) {
-      const bareModuleResolveResult = await resolveBareModuleToUnpkgWithDetails(this.resolver, uri, fromUri, {
-        syntheticDependencies,
-        token,
-      });
+      const bareModuleResolveResult = await resolveBareModuleToUnpkgWithDetails(
+        this.resolver,
+        this.resolveBareModule,
+        uri,
+        fromUri,
+        {
+          syntheticDependencies,
+          token,
+        }
+      );
 
       if (!bareModuleResolveResult.stableUrl) {
         throw new Error(`Failed to resolve bare module '${uri}' from '${fromUri || '@root'}' to a stable url`);
@@ -419,6 +433,7 @@ export namespace Bundler {
   }
 
   export interface Options {
+    resolveBareModule: (spec: string, pathname?: string) => URL;
     resolver: Resolver;
   }
 

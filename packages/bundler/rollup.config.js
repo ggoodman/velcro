@@ -64,15 +64,7 @@ module.exports = [
         sourcemap: true,
       },
     ],
-    external: [
-      '@ampproject/remapping',
-      '@velcro/resolver',
-      'acorn',
-      'js-base64',
-      'magic-string',
-      'module',
-      'ts-primitives',
-    ],
+    external: [Object.keys(pkg.dependencies)],
     plugins: [
       RollupPluginJson(),
       RollupPluginTypescript({
