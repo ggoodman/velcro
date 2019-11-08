@@ -198,6 +198,7 @@ export function createRuntime(manifest, options) {
     /** @readonly */
     this.module = Object.seal({
       exports: {},
+      id: id,
       hot: new HotModule(this),
     });
 

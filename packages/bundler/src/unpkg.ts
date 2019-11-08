@@ -4,7 +4,7 @@ import { CancellationToken } from 'ts-primitives';
 
 import { parseBareModuleSpec } from './util';
 
-const BARE_MODULE_PREFIX = 'https://unpkg.com/';
+// const BARE_MODULE_PREFIX = 'https://unpkg.com/';
 
 // const DEFAULT_SHIM_GLOBALS: { [key: string]: { spec: string; export?: string } } = {
 //   Buffer: {
@@ -50,6 +50,7 @@ NODE_CORE_SHIMS['punycode'] = 'punycode@2.1.1';
 
 export const resolveBareModuleToUnpkgWithDetails = async (
   resolver: Resolver,
+  resolveBareModule: (spec: string, pathname?: string) => URL,
   href: string,
   parentHref: string | undefined,
   { syntheticDependencies, token }: { syntheticDependencies?: Record<string, string>; token?: CancellationToken } = {}
@@ -120,23 +121,23 @@ export const resolveBareModuleToUnpkgWithDetails = async (
   if (resolvedSpecRoot) {
     // The name + spec was hard-coded or could be derived from a parent package.json. We just
     // need to prepend the staic prefix and then append the requested pathname.
-    resolvedSpecRoot = `${BARE_MODULE_PREFIX}${resolvedSpecRoot}`;
+    resolvedSpecRoot = resolveBareModule(resolvedSpecRoot).href;
     unresolvedHref = `${resolvedSpecRoot}${parsedSpec.pathname}`;
   } else {
     if (!parentHref) {
       // There was no parent href from which to derive version constraints so we will take
       // the provided 'namespec' and prefix it with the static prefix. That will be the root
       // and the href can be determined by adding the requested pathname.
-      resolvedSpecRoot = `${BARE_MODULE_PREFIX}${parsedSpec.nameSpec}`;
-      unresolvedHref = `${resolvedSpecRoot}${parsedSpec.pathname}`;
+      resolvedSpecRoot = resolveBareModule(`${parsedSpec.nameSpec}`).href;
+      unresolvedHref = resolveBareModule(`${parsedSpec.nameSpec}`, parsedSpec.pathname).href;
     } else {
       const builtIn = NODE_CORE_SHIMS[href];
 
       if (builtIn) {
         const parsedBuiltInSpec = parseBareModuleSpec(builtIn);
 
-        resolvedSpecRoot = `${BARE_MODULE_PREFIX}${parsedBuiltInSpec.nameSpec}`;
-        unresolvedHref = `${resolvedSpecRoot}${parsedBuiltInSpec.pathname}`;
+        resolvedSpecRoot = resolveBareModule(parsedBuiltInSpec.nameSpec).href;
+        unresolvedHref = resolveBareModule(parsedBuiltInSpec.nameSpec, parsedBuiltInSpec.pathname).href;
         details.bareModule.isBuiltIn = true;
       }
     }
