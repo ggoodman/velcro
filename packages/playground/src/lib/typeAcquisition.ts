@@ -1,7 +1,6 @@
-import { util, Resolver, PackageJson, ResolvedEntryKind, ResolverHost } from '@velcro/resolver';
+import { util, Resolver, PackageJson, ResolvedEntryKind } from '@velcro/resolver';
 
 import { Emitter, Event } from 'ts-primitives';
-import { BareModuleSpec } from '@velcro/resolver-host-unpkg';
 
 const HAS_D_TS_EXTENSION = /\.d\.ts$/;
 
@@ -53,7 +52,7 @@ export class TypeAcquirer {
 
   constructor(
     private readonly resolver: Resolver,
-    private readonly resolveBareModule: (resolver: ResolverHost, spec: BareModuleSpec) => URL
+    private readonly resolveBareModule: (spec: string, pathname?: string) => URL
   ) {}
 
   private _importAdjacentTypings(
@@ -80,15 +79,7 @@ export class TypeAcquirer {
 
         promises.push(
           this.resolver.host
-            .readFileContent(
-              this.resolver,
-              this.resolveBareModule(this.resolver.host, {
-                name: pkgJson.name!,
-                nameSpec: `${pkgJson.name}@${pkgJson.version}`,
-                pathname,
-                spec: pkgJson.version!,
-              })
-            )
+            .readFileContent(this.resolver, this.resolveBareModule(`${pkgJson.name}@${pkgJson.version}`, pathname))
             .then(
               // eslint-disable-next-line no-loop-func
               buf => {
@@ -207,12 +198,7 @@ export class TypeAcquirer {
   ): Promise<{ [pathname: string]: PackageFileEntry }> {
     const unresolvedUrl = await this.resolver.host.getCanonicalUrl(
       this.resolver,
-      this.resolveBareModule(this.resolver.host, {
-        name,
-        spec: version,
-        nameSpec: `${name}@${version}`,
-        pathname: '/',
-      })
+      this.resolveBareModule(`${name}@${version}`, '/')
     );
     const resolvedUrl = await this.resolver.host.getCanonicalUrl(this.resolver, unresolvedUrl);
     const entries: { [pathname: string]: PackageFileEntry } = {};
@@ -244,12 +230,7 @@ export class TypeAcquirer {
     // console.log('_import', name, range, parentPath);
 
     const pkgJsonPathname = util.join(parentPath, 'node_modules', name, 'package.json');
-    const bareModuleUrl = this.resolveBareModule(this.resolver.host, {
-      name,
-      spec: range,
-      nameSpec: `${name}@${range}`,
-      pathname: '/package.json',
-    });
+    const bareModuleUrl = this.resolveBareModule(`${name}@${range}`, '/package.json');
     const resolvedPkgJson = await this.resolver.readParentPackageJson(bareModuleUrl);
 
     if (!resolvedPkgJson) {
