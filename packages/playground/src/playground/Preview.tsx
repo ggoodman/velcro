@@ -510,7 +510,7 @@ function createBundleRuntime() {
     switch (e.data.type) {
       case 'build_error': {
         ReactErrorOverlay.dismissRuntimeErrors();
-        ReactErrorOverlay.reportBuildError(e.data.stack || e.data.message);
+        ReactErrorOverlay.reportBuildError(e.data.message || e.data);
 
         channel.port2.postMessage({
           type: 'reload',
@@ -544,7 +544,6 @@ function createBundleRuntime() {
               potentialOrphans.add(dependency.id);
             });
 
-            runtime.remove(href);
             potentialOrphans.delete(module.id);
 
             for (const disposeCallback of module.disposeCallbacks) {
@@ -569,6 +568,10 @@ function createBundleRuntime() {
               }
             }
           }
+
+          seen.forEach(href => {
+            runtime.remove(href);
+          });
 
           const script = document.createElement('script');
           script.src = reload.href;

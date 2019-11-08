@@ -12,10 +12,15 @@ import { ResolverHostWithCache } from '../lib/ResolverHostWithCache';
 const rootUri = Monaco.Uri.file('/');
 
 export class EditorManager implements IDisposable {
+  readonly unpkgCdn = new ResolverHostUnpkg({
+    cdn: 'unpkg',
+  });
+
   readonly bundler = new Bundler({
+    resolveBareModule: this.unpkgCdn.resolveBareModule.bind(this.unpkgCdn),
     resolver: new Resolver(
       new ResolverHostCompound({
-        'https://unpkg.com/': new ResolverHostWithCache(new ResolverHostUnpkg()),
+        [this.unpkgCdn.getRoot().href]: new ResolverHostWithCache(this.unpkgCdn),
         [rootUri.toString(true)]: new ResolverHostMonaco(rootUri),
       }),
       {
@@ -30,7 +35,10 @@ export class EditorManager implements IDisposable {
   private readonly disposableStore = new DisposableStore();
   private readonly initialPath: string | undefined;
 
-  private readonly typeAcquirer = new TypeAcquirer(this.bundler.resolver, ResolverHostUnpkg.resolveBareModule);
+  private readonly typeAcquirer = new TypeAcquirer(
+    this.bundler.resolver,
+    this.unpkgCdn.resolveBareModule.bind(this.unpkgCdn)
+  );
   private readonly viewState = new WeakMap<Monaco.editor.ITextModel, Monaco.editor.ICodeEditorViewState>();
 
   private readonly onWillFocusModelEmitter = new Emitter<Monaco.editor.ITextModel>();
@@ -217,6 +225,9 @@ export class EditorManager implements IDisposable {
     this.editor = Monaco.editor.create(el, {
       model: null,
       automaticLayout: true,
+      minimap: {
+        enabled: false,
+      },
       showUnused: true,
       scrollBeyondLastLine: false,
       theme: 'vs',
