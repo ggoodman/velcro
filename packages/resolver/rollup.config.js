@@ -51,7 +51,7 @@ module.exports = [
         sourcemap: true,
       },
     ],
-    external: ['ts-primitives'],
+    external: [Object.keys(pkg.dependencies)],
     plugins: [
       RollupPluginTypescript({
         check: true,
