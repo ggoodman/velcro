@@ -2,7 +2,7 @@ import { ResolvedEntryKind } from '@velcro/resolver';
 
 export type CustomFetch = (
   url: string,
-  options?: Pick<RequestInit, 'redirect' | 'signal'>
+  options?: Pick<RequestInit, 'redirect' | 'signal' | 'mode'>
 ) => Promise<Pick<Response, 'arrayBuffer' | 'json' | 'ok' | 'status'>>;
 
 export type BareModuleSpec = {
@@ -32,9 +32,8 @@ export type Entry = Directory | File;
 
 export function isValidEntry(entry: unknown): entry is Entry {
   if (!entry || typeof entry !== 'object') return false;
-  if ((entry as any).type === ResolvedEntryKind.Directory) return isValidDirectory(entry);
-  if ((entry as any).type === ResolvedEntryKind.File) return isValidFile(entry);
-  return false;
+
+  return isValidFile(entry) || isValidDirectory(entry);
 }
 
 export function isValidDirectory(entry: unknown): entry is Directory {

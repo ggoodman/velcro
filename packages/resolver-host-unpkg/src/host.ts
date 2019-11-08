@@ -7,25 +7,189 @@ import {
   PackageJson,
   CancellationToken,
   CanceledError,
-  ResolverHost,
 } from '@velcro/resolver';
 import LRU from 'lru-cache';
 import { satisfies, validRange } from 'semver';
 
-import { EntryNotFoundError } from './error';
-import { BareModuleSpec, Directory, Spec, CustomFetch, isValidDirectory } from './types';
-import { parseUnpkgUrl, signalFromCancellationToken } from './util';
-
-const UNPKG_PROTOCOL = 'https:';
-const UNPKG_HOST = 'unpkg.com';
+import { EntryNotFoundError, FetchError } from './error';
+import { Directory, Spec, CustomFetch, isValidDirectory, Entry } from './types';
+import { signalFromCancellationToken } from './util';
 
 interface UnpkgPackageHostOptions {
   AbortController?: typeof AbortController;
   fetch?: CustomFetch;
+  cdn?: 'unpkg' | 'jsdelivr';
+}
+
+interface AbstractCdn {
+  name: string;
+
+  isValidUrl(url: URL): boolean;
+  normalizePackageListing(result: unknown): Directory;
+  parseUrl(url: URL | string): Spec;
+  urlForPackageFile(spec: string, pathname: string): URL;
+  urlForPackageList(spec: string): URL;
+}
+
+class UnpkgCdn implements AbstractCdn {
+  name = 'unpkg';
+
+  private readonly UNPKG_SPEC_RX = /^\/((@[^/]+\/[^/@]+|[^/@]+)(?:@([^/]+))?)(.*)?$/;
+
+  isValidUrl(url: URL) {
+    return url.protocol !== UnpkgCdn.protocol || url.hostname !== UnpkgCdn.host;
+  }
+
+  normalizePackageListing(result: unknown) {
+    if (!isValidDirectory(result)) {
+      throw new Error(`Error normalizing directory listing`);
+    }
+
+    return result;
+  }
+
+  parseUrl(url: URL | string) {
+    if (url instanceof URL) {
+      url = url.pathname;
+    }
+
+    /**
+     * 1: scope + name + version
+     * 2: scope + name
+     * 3: version?
+     * 4: pathname
+     */
+    const matches = url.match(this.UNPKG_SPEC_RX);
+
+    if (!matches) {
+      throw new Error(`Unable to parse unexpected unpkg url: ${url}`);
+    }
+
+    return {
+      spec: matches[1],
+      name: matches[2],
+      version: matches[3] || '',
+      pathname: matches[4] || '',
+    };
+  }
+
+  urlForPackageFile(spec: string, pathname: string): URL {
+    return new URL(`${UnpkgCdn.protocol}//${UnpkgCdn.host}/${spec}${pathname}`);
+  }
+
+  urlForPackageList(spec: string) {
+    return new URL(`${UnpkgCdn.protocol}//${UnpkgCdn.host}/${spec}/?meta`);
+  }
+
+  static readonly protocol = 'https:';
+  static readonly host = 'unpkg.com';
+}
+
+class JSDelivrCdn implements AbstractCdn {
+  name = 'jsdelivr';
+
+  private readonly JSDELIVR_SPEC_RX = /^\/npm\/((@[^/]+\/[^/@]+|[^/@]+)(?:@([^/]+))?)(.*)?$/;
+
+  isValidUrl(url: URL) {
+    return url.protocol !== JSDelivrCdn.protocol || url.hostname !== JSDelivrCdn.host;
+  }
+
+  normalizePackageListing(result: unknown): Directory {
+    if (!result || typeof result !== 'object') {
+      throw new Error(`Unexpected package listing contents`);
+    }
+
+    const files = (result as any).files;
+
+    if (!Array.isArray(files)) {
+      throw new Error(`Unexpected package listing contents`);
+    }
+
+    const mapChildEntry = (parent: string, child: unknown): Entry => {
+      if (!child || typeof child !== 'object') {
+        console.log('child', { parent, child });
+        throw new Error(`Unexpected entry in package listing contents`);
+      }
+
+      const name = (child as any).name;
+
+      if (typeof name !== 'string') {
+        console.log('name or files', { parent, child });
+        throw new Error(`Unexpected entry in package listing contents`);
+      }
+
+      const path = `${parent}/${name}`;
+
+      if ((child as any).type === ResolvedEntryKind.Directory) {
+        const files = (child as any).files;
+
+        if (!Array.isArray(files)) {
+          console.log('name or files', { parent, child });
+          throw new Error(`Unexpected entry in package listing contents`);
+        }
+        return {
+          type: ResolvedEntryKind.Directory,
+          path,
+          files: files.map(file => mapChildEntry(path, file)),
+        };
+      } else if ((child as any).type === ResolvedEntryKind.File) {
+        return {
+          type: ResolvedEntryKind.File,
+          path,
+        };
+      }
+
+      throw new Error(`Error mapping child entry in package file listing`);
+    };
+
+    return {
+      type: ResolvedEntryKind.Directory,
+      path: '/',
+      files: files.map(file => mapChildEntry('', file)),
+    };
+  }
+
+  parseUrl(url: URL | string) {
+    if (url instanceof URL) {
+      url = url.pathname;
+    }
+
+    /**
+     * 1: scope + name + version
+     * 2: scope + name
+     * 3: version?
+     * 4: pathname
+     */
+    const matches = url.match(this.JSDELIVR_SPEC_RX);
+
+    if (!matches) {
+      throw new Error(`Unable to parse unexpected unpkg url: ${url}`);
+    }
+
+    return {
+      spec: matches[1],
+      name: matches[2],
+      version: matches[3] || '',
+      pathname: matches[4] || '',
+    };
+  }
+
+  urlForPackageFile(spec: string, pathname: string): URL {
+    return new URL(`${JSDelivrCdn.protocol}//${JSDelivrCdn.host}/npm/${spec}${pathname}`);
+  }
+
+  urlForPackageList(spec: string) {
+    return new URL(`${JSDelivrCdn.protocol}//${JSDelivrCdn.dataHost}/v1/package/npm/${spec}/tree`);
+  }
+
+  static readonly protocol = 'https:';
+  static readonly host = 'cdn.jsdelivr.net';
+  static readonly dataHost = 'data.jsdelivr.com';
 }
 
 export class ResolverHostUnpkg extends AbstractResolverHost {
   private readonly AbortController?: typeof AbortController;
+  private readonly cdn: AbstractCdn;
   private readonly contentCache = new LRU<string, ArrayBuffer>({
     length(buf) {
       return buf.byteLength;
@@ -49,30 +213,47 @@ export class ResolverHostUnpkg extends AbstractResolverHost {
 
     this.AbortController = options.AbortController;
     this.fetch = options.fetch || ((input: RequestInfo, init?: RequestInit) => fetch(input, init));
+    this.cdn = options.cdn === 'jsdelivr' ? new JSDelivrCdn() : new UnpkgCdn();
   }
 
   async getCanonicalUrl(resolver: Resolver, url: URL, { token }: { token?: CancellationToken } = {}) {
-    if (url.protocol !== UNPKG_PROTOCOL || url.hostname !== UNPKG_HOST) {
-      throw new Error(`Unable to list non-unpkg entries for ${url.href}`);
+    if (this.cdn.isValidUrl(url)) {
+      throw new Error(`Unable to list non-${this.cdn.name} entries for ${url.href}`);
     }
 
-    const unresolvedSpec = parseUnpkgUrl(url);
+    const unresolvedSpec = this.cdn.parseUrl(url);
     const packageJson = await this.readPackageJsonWithCache(resolver, unresolvedSpec, { token });
 
-    return new URL(
-      `${UNPKG_PROTOCOL}//${UNPKG_HOST}/${packageJson.name}@${packageJson.version}${unresolvedSpec.pathname}`
-    );
+    if (!packageJson.name) {
+      throw new Error(`Missing name property in package.json for '${url.href}'`);
+    }
+    if (!packageJson.version) {
+      throw new Error(`Missing version property in package.json for '${url.href}'`);
+    }
+
+    return this.cdn.urlForPackageFile(`${packageJson.name}@${packageJson.version}`, unresolvedSpec.pathname);
   }
 
   async getResolveRoot(resolver: Resolver, url: URL, { token }: { token?: CancellationToken } = {}): Promise<URL> {
-    if (url.protocol !== UNPKG_PROTOCOL || url.hostname !== UNPKG_HOST) {
-      throw new Error(`Unable to list non-unpkg entries for ${url.href}`);
+    if (this.cdn.isValidUrl(url)) {
+      throw new Error(`Unable to list non-${this.cdn.name} entries for ${url.href}`);
     }
 
-    const unresolvedSpec = parseUnpkgUrl(url);
+    const unresolvedSpec = this.cdn.parseUrl(url);
     const packageJson = await this.readPackageJsonWithCache(resolver, unresolvedSpec, { token });
 
-    return new URL(`${UNPKG_PROTOCOL}//${UNPKG_HOST}/${packageJson.name}@${packageJson.version}/`);
+    if (!packageJson.name) {
+      throw new Error(`Missing name property in package.json for '${url.href}'`);
+    }
+    if (!packageJson.version) {
+      throw new Error(`Missing version property in package.json for '${url.href}'`);
+    }
+
+    return this.cdn.urlForPackageFile(`${packageJson.name}@${packageJson.version}`, '/');
+  }
+
+  getRoot() {
+    return this.cdn.urlForPackageFile('', '');
   }
 
   async listEntries(
@@ -80,17 +261,17 @@ export class ResolverHostUnpkg extends AbstractResolverHost {
     url: URL,
     { token }: { token?: CancellationToken } = {}
   ): Promise<ResolvedEntry[]> {
-    if (url.protocol !== UNPKG_PROTOCOL || url.hostname !== UNPKG_HOST) {
-      throw new Error(`Unable to list non-unpkg entries for ${url.href}`);
+    if (this.cdn.isValidUrl(url)) {
+      throw new Error(`Unable to list non-${this.cdn.name} entries for ${url.href}`);
     }
 
     const rootUrl = await resolver.host.getResolveRoot(resolver, url, { token });
-    const unresolvedSpec = parseUnpkgUrl(url);
+    const unresolvedSpec = this.cdn.parseUrl(url);
     const packageJson = await this.readPackageJsonWithCache(resolver, unresolvedSpec, { token });
 
-    url.pathname = `/${packageJson.name}@${packageJson.version}${unresolvedSpec.pathname}`;
+    url = this.cdn.urlForPackageFile(`${packageJson.name}@${packageJson.version}`, unresolvedSpec.pathname);
 
-    let parentEntry: Directory | undefined = await this.readPackageEntriesWithCache(parseUnpkgUrl(url), { token });
+    let parentEntry: Directory | undefined = await this.readPackageEntriesWithCache(this.cdn.parseUrl(url), { token });
 
     if (token && token.isCancellationRequested) {
       throw new CanceledError('Canceled');
@@ -127,8 +308,8 @@ export class ResolverHostUnpkg extends AbstractResolverHost {
   }
 
   async readFileContent(_: Resolver, url: URL, { token }: { token?: CancellationToken } = {}): Promise<ArrayBuffer> {
-    if (url.protocol !== UNPKG_PROTOCOL || url.hostname !== UNPKG_HOST) {
-      throw new Error(`Unable to read file contents for non-unpkg entries for ${url.href}`);
+    if (this.cdn.isValidUrl(url)) {
+      throw new Error(`Unable to read file contents for non-${this.cdn.name} entries for ${url.href}`);
     }
 
     const href = url.href;
@@ -150,13 +331,18 @@ export class ResolverHostUnpkg extends AbstractResolverHost {
     const signal = signalFromCancellationToken(token, this.AbortController);
     const fetch = this.fetch;
     const promise = fetch(href, { redirect: 'follow', signal })
-      .then(res => {
-        if (!res.ok) {
-          throw new Error(`Error reading file content for ${href}: ${res.status}`);
-        }
+      .then(
+        res => {
+          if (!res.ok) {
+            throw new Error(`Error reading file content for ${href}: ${res.status}`);
+          }
 
-        return res.arrayBuffer();
-      })
+          return res.arrayBuffer();
+        },
+        err => {
+          throw new FetchError(href, err);
+        }
+      )
       .catch(err => {
         if (signal && signal.aborted) {
           throw new CanceledError('Canceled');
@@ -176,6 +362,10 @@ export class ResolverHostUnpkg extends AbstractResolverHost {
     } finally {
       this.inflightContentRequests.delete(href);
     }
+  }
+
+  resolveBareModule(spec: string, pathname = '') {
+    return this.cdn.urlForPackageFile(spec, pathname);
   }
 
   private async readPackageEntriesWithCache(
@@ -290,8 +480,8 @@ export class ResolverHostUnpkg extends AbstractResolverHost {
   ): Promise<PackageJson> {
     // console.log('readPackageJson(%s)', spec);
 
-    const href = `${UNPKG_PROTOCOL}//${UNPKG_HOST}/${spec}/package.json`;
-    const content = await this.readFileContent(resolver, new URL(href), { token });
+    const url = this.cdn.urlForPackageFile(spec, '/package.json');
+    const content = await this.readFileContent(resolver, url, { token });
 
     let manifest: PackageJson;
 
@@ -307,7 +497,8 @@ export class ResolverHostUnpkg extends AbstractResolverHost {
   private async readPackageEntries(spec: string, { token }: { token?: CancellationToken } = {}): Promise<Directory> {
     // console.log('readPackageEntries(%s)', spec);
 
-    const href = `${UNPKG_PROTOCOL}//${UNPKG_HOST}/${spec}/?meta`;
+    const url = this.cdn.urlForPackageList(spec);
+    const href = url.href;
     const signal = signalFromCancellationToken(token, this.AbortController);
     const fetch = this.fetch;
     const res = await fetch(href, { signal }).catch(err => {
@@ -315,7 +506,7 @@ export class ResolverHostUnpkg extends AbstractResolverHost {
         throw new CanceledError('Canceled');
       }
 
-      throw err;
+      throw new FetchError(href, err);
     });
 
     if (!res.ok) {
@@ -324,14 +515,6 @@ export class ResolverHostUnpkg extends AbstractResolverHost {
 
     const json = await res.json();
 
-    if (!isValidDirectory(json)) {
-      throw new Error(`Unexpected response payload while listing package contents for ${spec}`);
-    }
-
-    return json;
-  }
-
-  static resolveBareModule(_: ResolverHost, spec: BareModuleSpec) {
-    return new URL(`${UNPKG_PROTOCOL}//${UNPKG_HOST}/${spec.name}@${spec.spec}${spec.pathname}`);
+    return this.cdn.normalizePackageListing(json);
   }
 }

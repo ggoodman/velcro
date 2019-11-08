@@ -17,3 +17,9 @@ export class EntryNotFoundError extends ExtendableError {
     super(`Not found ${url.href}`);
   }
 }
+
+export class FetchError extends ExtendableError {
+  constructor(href: string, err: Error) {
+    super(`Error while fetching ${href}: ${err.name || Error}: ${err.message}`);
+  }
+}
