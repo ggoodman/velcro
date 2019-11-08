@@ -2,8 +2,8 @@
   "files": {
     "static/js/0.587f77c5.chunk.js": "/velcro/static/js/0.587f77c5.chunk.js",
     "static/js/0.587f77c5.chunk.js.map": "/velcro/static/js/0.587f77c5.chunk.js.map",
-    "main.js": "/velcro/static/js/main.94f49384.chunk.js",
-    "main.js.map": "/velcro/static/js/main.94f49384.chunk.js.map",
+    "main.js": "/velcro/static/js/main.f5247b51.chunk.js",
+    "main.js.map": "/velcro/static/js/main.f5247b51.chunk.js.map",
     "runtime-main.js": "/velcro/static/js/runtime-main.a17d1164.js",
     "runtime-main.js.map": "/velcro/static/js/runtime-main.a17d1164.js.map",
     "static/css/3.b5046089.chunk.css": "/velcro/static/css/3.b5046089.chunk.css",
@@ -140,7 +140,7 @@
     "index.html": "/velcro/index.html",
     "json.worker.js": "/velcro/json.worker.js",
     "json.worker.js.map": "/velcro/json.worker.js.map",
-    "precache-manifest.35608b80a7c3b981ef14f3dfd533760d.js": "/velcro/precache-manifest.35608b80a7c3b981ef14f3dfd533760d.js",
+    "precache-manifest.6b793e78085aa7281ab47125e8af4dc6.js": "/velcro/precache-manifest.6b793e78085aa7281ab47125e8af4dc6.js",
     "service-worker.js": "/velcro/service-worker.js",
     "static/css/3.b5046089.chunk.css.map": "/velcro/static/css/3.b5046089.chunk.css.map",
     "typescript.worker.js": "/velcro/typescript.worker.js",
@@ -150,6 +150,6 @@
     "static/js/runtime-main.a17d1164.js",
     "static/css/3.b5046089.chunk.css",
     "static/js/3.6f46c14b.chunk.js",
-    "static/js/main.94f49384.chunk.js"
+    "static/js/main.f5247b51.chunk.js"
   ]
 }
