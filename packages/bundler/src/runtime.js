@@ -118,9 +118,7 @@ export function createRuntime(manifest, options) {
    * @param {import('./types').ModuleFactory} factory
    */
   Runtime.prototype.register = function(id, factory) {
-    if (!registry[id]) {
-      registry[id] = factory;
-    }
+    registry[id] = factory;
   };
 
   /**

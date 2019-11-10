@@ -114,6 +114,8 @@ function getParserForAsset(asset: Asset): { parse: typeof parseFile } {
             switch (char) {
               case CR:
               case NL:
+                magicString.overwrite(i, i + 1, ' ');
+                break;
               case SINGLE_QUOTE:
                 magicString.prependRight(i, '\\');
                 break;
@@ -127,8 +129,6 @@ function getParserForAsset(asset: Asset): { parse: typeof parseFile } {
           function reload(){
             var styleTag = document.createElement("style");
             styleTag.type = "text/css";
-            styleTag.dataset.href=${JSON.stringify(asset.href)};
-
             styleTag.innerHTML = '`);
         magicString.append(`';
             document.head.appendChild(styleTag);
@@ -142,11 +142,6 @@ function getParserForAsset(asset: Asset): { parse: typeof parseFile } {
 
           var remove = reload();
 
-          if (module.hot && module.hot.accept) {
-            module.hot.accept(function() {
-              require(${JSON.stringify(asset.href)});
-            });
-          }
           if (module.hot && module.hot.dispose) {
             module.hot.dispose(function() {
               remove();

@@ -208,7 +208,7 @@ function buildAssetForImmediateExecution(asset: Asset) {
   magicString.prepend(
     `\t\t${JSON.stringify(asset.href)}: {\n\t\t\tdependencies: ${JSON.stringify(
       dependencies
-    )},\n\t\t\tfactory: function(module, exports, require, __dirname, __filename){\n\t\t\t\tvar __webpack_require__ = require;\n`
+    )},\n\t\t\tfactory: function(module, exports, require, __dirname, __filename){\n`
   );
   magicString.append('\n\t\t}}');
 
