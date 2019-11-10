@@ -12,21 +12,15 @@ interface ServiceWorkerContextValue {
   updateAssets(): void;
 }
 
-const ServiceWorkerContext = React.createContext<ServiceWorkerContextValue>({
-  assetsCached: false,
-  assetsUpdateReady: false,
-  updateAssets() {
-    throw new Error(`Attempting to update assets outside of the ServiceWorkerContext`);
-  },
-});
+const ServiceWorkerContext = React.createContext<ServiceWorkerContextValue | undefined>(undefined);
 
 export function ServiceWorkerProvider(props: React.PropsWithChildren<{}>) {
   const [waitingServiceWorker, setWaitingServiceWorker] = React.useState<ServiceWorker | null>(null);
   const [assetsUpdateReady, setAssetsUpdateReady] = React.useState(false);
   const [assetsCached, setAssetsCached] = React.useState(false);
 
-  const value = React.useMemo(
-    () => ({
+  const value = React.useMemo(() => {
+    return {
       assetsUpdateReady,
       assetsCached,
       // Call when the user confirm update of application and reload page
@@ -41,9 +35,8 @@ export function ServiceWorkerProvider(props: React.PropsWithChildren<{}>) {
           waitingServiceWorker.postMessage({ type: 'SKIP_WAITING' });
         }
       },
-    }),
-    [assetsUpdateReady, assetsCached, waitingServiceWorker]
-  );
+    };
+  }, [assetsUpdateReady, assetsCached, waitingServiceWorker]);
 
   // Once on component mounted subscribe to Update and Succes events in
   // CRA's service worker wrapper
@@ -53,8 +46,16 @@ export function ServiceWorkerProvider(props: React.PropsWithChildren<{}>) {
         setWaitingServiceWorker(registration.waiting);
         setAssetsUpdateReady(true);
       },
-      onSuccess: () => {
+      onSuccess: registration => {
         setAssetsCached(true);
+
+        if (registration.active) {
+          registration.active.addEventListener('statechange', (event: ServiceWorkerEvent) => {
+            if (!navigator.serviceWorker.controller) {
+              setAssetsCached(false);
+            }
+          });
+        }
       },
     });
   }, []);

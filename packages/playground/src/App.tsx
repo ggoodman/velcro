@@ -1,8 +1,9 @@
 import { Global, css } from '@emotion/core';
 import styled from '@emotion/styled/macro';
+import CssBaseline from '@material-ui/core/CssBaseline';
 import { OfflineBolt, Update } from '@material-ui/icons';
-import 'modern-css-reset';
 import React from 'react';
+import { Tooltip, TooltipReference, useTooltipState } from 'reakit/Tooltip';
 
 import { Playground } from './playground';
 import { files } from './templates/react';
@@ -29,9 +30,11 @@ const StatusBarItem = styled.span`
 
 const ReloadButton = styled(Button)`
   border: 0;
-  background: transparent;
-  margin: 0;
-  padding: 0 0.2em;
+  background: #008cba;
+  margin: 0 0.5em;
+  color: white;
+  border-radius: 2px;
+  font-weight: 600;
 
   :hover {
     cursor: pointer;
@@ -39,22 +42,45 @@ const ReloadButton = styled(Button)`
   }
 `;
 
+const StyledTooltip = styled.div`
+  font-family: Open Sans, Helvetica Neue, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.4;
+  background-color: #333;
+  color: #fff;
+  border-radius: 4px;
+  opacity: 0.9;
+  padding: 0.2em 0.4em;
+`;
+
 const StatusBar: React.FC = () => {
-  const foo = useServiceWorker();
+  const serviceWorker = useServiceWorker();
+  const offlineTooltip = useTooltipState({ gutter: 0 });
+  const reloadTooltip = useTooltipState({ gutter: 0 });
 
   return (
     <StatusBarStyles>
-      {foo.assetsCached ? (
-        <StatusBarItem>
-          <OfflineBolt color="inherit" /> Offline ready
-        </StatusBarItem>
+      {serviceWorker.assetsCached ? (
+        <TooltipReference {...offlineTooltip} as={StatusBarItem}>
+          <OfflineBolt color="inherit" fontSize="small" />
+          &nbsp;Offline ready
+        </TooltipReference>
       ) : null}
-      {foo.assetsUpdateReady || true ? (
-        <StatusBarItem>
-          <Update color="inherit" /> Update ready:
-          <ReloadButton onClick={() => foo.updateAssets()}>Reload now</ReloadButton>
-        </StatusBarItem>
+      <Tooltip {...offlineTooltip} as={StyledTooltip}>
+        This application has been fully cached and can now be used offline.
+      </Tooltip>
+
+      {serviceWorker.assetsUpdateReady ? (
+        <TooltipReference {...reloadTooltip} as={StatusBarItem}>
+          <Update color="inherit" fontSize="small" />
+          &nbsp;Update ready:
+          <ReloadButton onClick={() => serviceWorker.updateAssets()}>Reload</ReloadButton>
+        </TooltipReference>
       ) : null}
+      <Tooltip {...reloadTooltip} as={StyledTooltip}>
+        There is an update of this application ready to install. Click install reload to install the update and reload
+        the page.
+      </Tooltip>
     </StatusBarStyles>
   );
 };
@@ -66,13 +92,11 @@ const StatusBarStyles = styled.div`
   font-size: 90%;
 
   height: 24px;
+  padding: 0 0.5em;
 
   ${StatusBarItem} {
     margin-left: 0.5em;
-
-    :first {
-      margin-left: 0;
-    }
+    margin-right: 0.5em;
   }
 `;
 
@@ -93,12 +117,12 @@ const AppWrapper = styled.div`
 
   ${PlaygroundWrapper} {
     flex: 1;
+    background: #f5f5f5;
     border-radius: 2px;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
-  }
 
-  ${StatusBarStyles} {
-    background: #f5f5f5;
+    ${StatusBarStyles} {
+    }
   }
 `;
 
@@ -164,6 +188,8 @@ const Header = styled.div`
 `;
 
 const globalCss = css`
+  @import url('https://fonts.googleapis.com/css?family=Raleway:900&display=swap');
+
   *,
   *::before,
   *::after {
@@ -196,13 +222,12 @@ const globalCss = css`
       }
     }
   }
-
-  @import url('https://fonts.googleapis.com/css?family=Raleway:900&display=swap');
 `;
 
 export const App: React.FC = () => {
   return (
     <ServiceWorkerProvider>
+      <CssBaseline />
       <AppWrapper>
         <Global styles={globalCss}></Global>
         <Header>

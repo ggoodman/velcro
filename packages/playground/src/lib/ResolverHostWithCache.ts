@@ -9,8 +9,6 @@ type ThenArg<T> = T extends Promise<infer U> ? U : T;
 export class ResolverHostWithCache extends AbstractResolverHost {
   private readonly idbPromise = openDB('velcro', Bundler.schemaVersion, {
     async upgrade(db, oldVersion, newVersion, transaction) {
-      console.log('Upgrading cache from version %s to %s', oldVersion, newVersion);
-
       if (!oldVersion) {
         db.createObjectStore('getCanonicalUrl');
         db.createObjectStore('getResolveRoot');

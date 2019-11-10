@@ -64,6 +64,8 @@ const PreviewIframeWrap = styled.div`
 `;
 const PreviewWrap = styled.div`
   position: relative;
+  background: white;
+
   ${PreviewIframeWrap} {
     position: absolute;
     top: 0;
@@ -254,7 +256,7 @@ const Preview: React.FC<{ className?: string }> = props => {
             });
           } else {
             const updatedBundleFile = new File(
-              [build.toString({ executeEntrypoints: true, runtime: '__velcroRuntime', sourceMap: true })],
+              [build.toString({ executeEntrypoints: false, runtime: '__velcroRuntime', sourceMap: true })],
               'playground:///runtime.js',
               {
                 type: 'text/javascript',
@@ -527,6 +529,8 @@ function createBundleRuntime() {
           const seen = new Set<string>();
           const potentialOrphans = new Set<string>();
           const requireReload = [] as string[];
+          const acceptCallbackQueue = [] as ({ module: typeof runtime.root; cb: () => void })[];
+          const disposeCallbackQueue = [] as ({ module: typeof runtime.root; cb: () => void })[];
 
           while (queue.length) {
             const href = queue.shift()!;
@@ -547,12 +551,12 @@ function createBundleRuntime() {
             potentialOrphans.delete(module.id);
 
             for (const disposeCallback of module.disposeCallbacks) {
-              disposeCallback.cb && disposeCallback.cb();
+              disposeCallbackQueue.push({ module, cb: disposeCallback.cb });
             }
 
             if (module.acceptCallbacks.length) {
               for (const acceptCallback of module.acceptCallbacks) {
-                acceptCallback.cb && acceptCallback.cb();
+                acceptCallbackQueue.push({ module, cb: acceptCallback.cb });
               }
             } else {
               const isEntrypoint = module.dependents.has(runtime.root);
@@ -582,6 +586,13 @@ function createBundleRuntime() {
             });
           };
           script.onload = function() {
+            disposeCallbackQueue.forEach(({ cb, module }) => {
+              cb();
+            });
+            acceptCallbackQueue.forEach(({ cb, module }) => {
+              cb();
+            });
+
             for (const toReload of requireReload) {
               runtime.require(toReload);
             }
@@ -593,7 +604,7 @@ function createBundleRuntime() {
 
               if (potentialOrphanModule && potentialOrphanModule.dependents.size === 0) {
                 for (const disposeCallback of potentialOrphanModule.disposeCallbacks) {
-                  disposeCallback.cb && disposeCallback.cb();
+                  disposeCallback.cb();
                 }
 
                 runtime.remove(potentialOrphan);

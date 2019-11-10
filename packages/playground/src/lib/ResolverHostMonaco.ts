@@ -94,6 +94,7 @@ export class ResolverHostMonaco extends AbstractResolverHost {
   private async getTranspiledValue(model: Monaco.editor.ITextModel) {
     if (model.getModeId() === LANGUAGE_TYPESCRIPT) {
       const href = model.uri.toString(true);
+
       const tryLoadFromWorker = async () => {
         const workerFactory = await Monaco.languages.typescript.getTypeScriptWorker();
         const workerClient = await workerFactory(model.uri);
