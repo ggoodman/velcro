@@ -107,14 +107,12 @@ class JSDelivrCdn implements AbstractCdn {
 
     const mapChildEntry = (parent: string, child: unknown): Entry => {
       if (!child || typeof child !== 'object') {
-        console.log('child', { parent, child });
         throw new Error(`Unexpected entry in package listing contents`);
       }
 
       const name = (child as any).name;
 
       if (typeof name !== 'string') {
-        console.log('name or files', { parent, child });
         throw new Error(`Unexpected entry in package listing contents`);
       }
 
@@ -124,7 +122,6 @@ class JSDelivrCdn implements AbstractCdn {
         const files = (child as any).files;
 
         if (!Array.isArray(files)) {
-          console.log('name or files', { parent, child });
           throw new Error(`Unexpected entry in package listing contents`);
         }
         return {
