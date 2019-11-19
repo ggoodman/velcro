@@ -7,18 +7,19 @@ import {
   PackageJson,
   CancellationToken,
   CanceledError,
+  EntryNotFoundError,
 } from '@velcro/resolver';
 import LRU from 'lru-cache';
 import { satisfies, validRange } from 'semver';
 
-import { EntryNotFoundError, FetchError } from './error';
+import { FetchError } from './error';
 import { Directory, Spec, CustomFetch, isValidDirectory, Entry } from './types';
 import { signalFromCancellationToken } from './util';
 
 interface UnpkgPackageHostOptions {
   AbortController?: typeof AbortController;
   fetch?: CustomFetch;
-  cdn?: 'unpkg' | 'jsdelivr';
+  cdn?: AbstractCdn;
 }
 
 interface AbstractCdn {
@@ -85,10 +86,17 @@ class UnpkgCdn implements AbstractCdn {
   static readonly host = 'unpkg.com';
 }
 
+type JSDelivrKind = 'gh' | 'npm';
+
 class JSDelivrCdn implements AbstractCdn {
   name = 'jsdelivr';
 
-  private readonly JSDELIVR_SPEC_RX = /^\/npm\/((@[^/]+\/[^/@]+|[^/@]+)(?:@([^/]+))?)(.*)?$/;
+  private readonly specRx: Record<JSDelivrKind, RegExp> = {
+    gh: /^\/(([^/]+\/[^/@]+)(?:@([^/]+))?)(.*)?$/,
+    npm: /^\/((@[^/]+\/[^/@]+|[^/@]+)(?:@([^/]+))?)(.*)?$/,
+  };
+
+  constructor(private readonly kind: JSDelivrKind = 'npm') {}
 
   isValidUrl(url: URL) {
     return url.protocol !== JSDelivrCdn.protocol || url.hostname !== JSDelivrCdn.host;
@@ -151,13 +159,21 @@ class JSDelivrCdn implements AbstractCdn {
       url = url.pathname;
     }
 
+    const prefix = `/${this.kind}`;
+
+    if (!url.startsWith(prefix)) {
+      throw new Error(`Unable to parse unexpected ${this.name} url: ${url}`);
+    }
+
+    url = url.slice(prefix.length);
+
     /**
      * 1: scope + name + version
      * 2: scope + name
      * 3: version?
      * 4: pathname
      */
-    const matches = url.match(this.JSDELIVR_SPEC_RX);
+    const matches = url.match(this.specRx[this.kind]);
 
     if (!matches) {
       throw new Error(`Unable to parse unexpected unpkg url: ${url}`);
@@ -172,11 +188,11 @@ class JSDelivrCdn implements AbstractCdn {
   }
 
   urlForPackageFile(spec: string, pathname: string): URL {
-    return new URL(`${JSDelivrCdn.protocol}//${JSDelivrCdn.host}/npm/${spec}${pathname}`);
+    return new URL(`${JSDelivrCdn.protocol}//${JSDelivrCdn.host}/${this.kind}/${spec}${pathname}`);
   }
 
   urlForPackageList(spec: string) {
-    return new URL(`${JSDelivrCdn.protocol}//${JSDelivrCdn.dataHost}/v1/package/npm/${spec}/tree`);
+    return new URL(`${JSDelivrCdn.protocol}//${JSDelivrCdn.dataHost}/v1/package/${this.kind}/${spec}/tree`);
   }
 
   static readonly protocol = 'https:';
@@ -185,6 +201,27 @@ class JSDelivrCdn implements AbstractCdn {
 }
 
 export class ResolverHostUnpkg extends AbstractResolverHost {
+  static forNpmFromUnpkg(options: Omit<UnpkgPackageHostOptions, 'cdn'> = {}) {
+    return new ResolverHostUnpkg({
+      ...options,
+      cdn: new UnpkgCdn(),
+    });
+  }
+
+  static forNpmFromJsdelivr(options: Omit<UnpkgPackageHostOptions, 'cdn'> = {}) {
+    return new ResolverHostUnpkg({
+      ...options,
+      cdn: new JSDelivrCdn('npm'),
+    });
+  }
+
+  static forGithubFromJsdelivr(options: Omit<UnpkgPackageHostOptions, 'cdn'> = {}) {
+    return new ResolverHostUnpkg({
+      ...options,
+      cdn: new JSDelivrCdn('gh'),
+    });
+  }
+
   private readonly AbortController?: typeof AbortController;
   private readonly cdn: AbstractCdn;
   private readonly contentCache = new LRU<string, ArrayBuffer>({
@@ -210,7 +247,7 @@ export class ResolverHostUnpkg extends AbstractResolverHost {
 
     this.AbortController = options.AbortController;
     this.fetch = options.fetch || ((input: RequestInfo, init?: RequestInit) => fetch(input, init));
-    this.cdn = options.cdn === 'jsdelivr' ? new JSDelivrCdn() : new UnpkgCdn();
+    this.cdn = options.cdn || new UnpkgCdn();
   }
 
   async getCanonicalUrl(resolver: Resolver, url: URL, { token }: { token?: CancellationToken } = {}) {
@@ -331,6 +368,10 @@ export class ResolverHostUnpkg extends AbstractResolverHost {
       .then(
         res => {
           if (!res.ok) {
+            if (res.status === 404) {
+              throw new EntryNotFoundError(href);
+            }
+
             throw new Error(`Error reading file content for ${href}: ${res.status}`);
           }
 
@@ -507,6 +548,10 @@ export class ResolverHostUnpkg extends AbstractResolverHost {
     });
 
     if (!res.ok) {
+      if (res.status === 404) {
+        throw new EntryNotFoundError(href);
+      }
+
       throw new Error(`Error listing package contents for ${spec}: ${res.status}`);
     }
 
