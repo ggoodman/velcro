@@ -45,6 +45,7 @@
     "@types/hapi__code": "^5.3.0",
     "@types/js-base64": "^2.3.1",
     "@types/node": "^11.11.3",
+    "@types/npm-package-arg": "^6.1.0",
     "@types/puppeteer": "^1.12.3",
     "@velcro/resolver-host-unpkg": "^0.25.0",
     "fetch-h2": "^2.2.1",
@@ -67,6 +68,7 @@
     "acorn": "^7.0.0",
     "js-base64": "^2.5.1",
     "magic-string": "^0.25.2",
+    "npm-package-arg": "^7.0.0",
     "ts-primitives": "^1.1.0"
   },
   "prettier": {

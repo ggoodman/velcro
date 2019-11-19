@@ -1,19 +1,31 @@
+import { version as nodeLibsVersion } from '@velcro/node-libs/package.json';
 import MagicString from 'magic-string';
+
+import { Bundler } from './bundler';
+import { parseFile } from './parser';
 import { getSourceMappingUrl } from './util';
-import { UnresolvedDependencies, parseFile } from './parser';
+
+const DEFAULT_SHIM_GLOBALS: { [key: string]: { spec: string; export?: string } } = {
+  Buffer: {
+    spec: `@velcro/node-libs@${nodeLibsVersion}/lib/buffer.js`,
+    export: 'Buffer',
+  },
+  global: {
+    spec: `@velcro/node-libs@${nodeLibsVersion}/lib/global.js`,
+  },
+  process: {
+    spec: `@velcro/node-libs@${nodeLibsVersion}/lib/process.js`,
+  },
+};
 
 export class Asset {
-  readonly dependencies = [] as Asset.Dependency[];
-  readonly unresolvedDependencies = {} as UnresolvedDependencies;
-
-  readonly deps = new Map<Asset.Dependency, Asset>();
-
+  dependencies: Asset.Dependency[] | undefined = undefined;
   magicString?: MagicString;
-  sourceMappingUrl?: string;
+  sourceMappingUrl?: string | null;
 
   constructor(readonly href: string, readonly rootHref: string) {}
 
-  setCode(code: string) {
+  setCode(code: string): Asset.Dependency[] {
     this.magicString = new MagicString(code, {
       filename: this.href,
       indentExclusionRanges: [],
@@ -23,9 +35,41 @@ export class Asset {
     const parser = getParserForAsset(this);
     const dependencies = parser.parse(this.href, this.magicString);
 
-    this.unresolvedDependencies.requireDependencies = dependencies.requireDependencies;
-    this.unresolvedDependencies.requireResolveDependencies = dependencies.requireResolveDependencies;
-    this.unresolvedDependencies.unboundSymbols = dependencies.unboundSymbols;
+    this.dependencies = [];
+
+    for (const dep of dependencies.requireDependencies) {
+      this.dependencies.push({
+        type: Asset.DependencyKind.Require,
+        callee: dep.callee,
+        references: [{ start: dep.spec.start, end: dep.spec.end }],
+        value: dep.spec.value,
+      });
+    }
+
+    for (const dep of dependencies.requireResolveDependencies) {
+      this.dependencies.push({
+        type: Asset.DependencyKind.RequireResolve,
+        callee: dep.callee,
+        references: [{ start: dep.spec.start, end: dep.spec.end }],
+        value: dep.spec.value,
+      });
+    }
+
+    for (const [symbolName, references] of dependencies.unboundSymbols) {
+      const shim = DEFAULT_SHIM_GLOBALS[symbolName];
+
+      if (shim) {
+        this.dependencies.push({
+          type: Asset.DependencyKind.InjectedGlobal,
+          exportName: shim.export,
+          references,
+          symbolName,
+          value: `${shim.spec}${shim.export ? `[${JSON.stringify(shim.export)}]` : ''}`,
+        });
+      }
+    }
+
+    return this.dependencies;
   }
 
   toJSON() {
@@ -41,7 +85,7 @@ export class Asset {
   static fromJSON(json: Asset.AsObject): Asset {
     const asset = new Asset(json.href, json.rootHref);
 
-    asset.dependencies.push(...json.dependencies);
+    asset.dependencies = json.dependencies;
     asset.sourceMappingUrl = json.sourceMappingUrl;
     asset.setCode(json.code);
 
@@ -60,28 +104,25 @@ export namespace Asset {
 
   export interface RequireDependency {
     type: DependencyKind.Require;
-    href: string;
-    rootHref: string;
+    resolveDetails?: Bundler.ResolveDetails;
     callee: { start: number; end: number };
-    spec: { start: number; end: number; value: string };
+    references: ReadonlyArray<{ start: number; end: number }>;
     value: string;
   }
 
   export interface RequireResolveDependency {
     type: DependencyKind.RequireResolve;
-    href: string;
-    rootHref: string;
+    resolveDetails?: Bundler.ResolveDetails;
     callee: { start: number; end: number };
-    spec: { start: number; end: number; value: string };
+    references: ReadonlyArray<{ start: number; end: number }>;
     value: string;
   }
 
   export interface InjectedGlobalDependency {
     type: DependencyKind.InjectedGlobal;
-    href: string;
-    rootHref: string;
+    resolveDetails?: Bundler.ResolveDetails;
     exportName?: string;
-    references: { start: number; end: number }[];
+    references: ReadonlyArray<{ start: number; end: number }>;
     symbolName: string;
     value: string;
   }

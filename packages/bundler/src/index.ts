@@ -2,6 +2,7 @@ export { CancellationToken, CancellationTokenSource } from 'ts-primitives';
 
 export * from './asset';
 export * from './bundler';
+export { Bundle } from './bundle';
 export * from './error';
 export {
   DeferredExecutionManifest,

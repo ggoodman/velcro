@@ -100,7 +100,53 @@ export function getSourceMappingUrl(str: string) {
 
   while ((match = re.exec(str))) lastMatch = match;
 
-  if (!lastMatch) return undefined;
+  if (!lastMatch) return null;
 
   return lastMatch[1];
+}
+
+export class MapSet<K, V> {
+  private readonly m = new Map<K, Set<V>>();
+
+  add(key: K, value: V) {
+    let valueSet = this.m.get(key);
+
+    if (!valueSet) {
+      valueSet = new Set();
+      this.m.set(key, valueSet);
+    }
+
+    valueSet.add(value);
+
+    return this;
+  }
+
+  delete(key: K, value: V) {
+    const valueSet = this.m.get(key);
+    let deleted = false;
+
+    if (valueSet) {
+      deleted = valueSet.delete(value);
+
+      if (deleted && !valueSet.size) {
+        this.m.delete(key);
+      }
+    }
+
+    return deleted;
+  }
+
+  deleteAll(key: K) {
+    return this.m.delete(key);
+  }
+
+  getValues(key: K) {
+    return new Set(this.m.get(key));
+  }
+
+  has(key: K, value: V) {
+    const valueSet = this.m.get(key);
+
+    return valueSet ? valueSet.has(value) : false;
+  }
 }

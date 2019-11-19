@@ -28,12 +28,6 @@ export function createRuntime(manifest, options) {
      * @readonly
      */
     this.root = new Module('velcro://root', this);
-
-    var self = this;
-
-    this.register('@@runtime', function(module) {
-      module.exports = self;
-    });
   }
 
   /**

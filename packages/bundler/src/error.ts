@@ -14,6 +14,8 @@ class ExtendableError extends Error {
 
 export class InvariantViolation extends ExtendableError {}
 
+export class NotSupportedError extends ExtendableError {}
+
 export class ResolveError extends ExtendableError {
   constructor(readonly href: string, readonly fromHref?: string) {
     super(`Unable to resolve '${href}'${fromHref ? ` from '${fromHref}'` : ''}`);

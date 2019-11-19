@@ -168,21 +168,27 @@ function buildAssetAndCollectDependencies(
   magicString.trim();
   magicString.indent(indent);
 
+  if (!asset.dependencies) {
+    throw new InvariantViolation(`Asset '${asset.href}' scheduled for build is missing its dependencies array`);
+  }
+
   // We'll replace each dependency string with the resolved stable href. The stable href doesn't require any
   // information about where it is being resolved from, so it is useful as a long-term pointer whose target
   // can change over time
   for (const dependency of asset.dependencies) {
+    if (!dependency.resolveDetails) {
+      throw new InvariantViolation(
+        `Asset '${asset.href}' has an unresolved dependency of type '${dependency.type}' with spec '${dependency.value}'`
+      );
+    }
+
     switch (dependency.type) {
       case Asset.DependencyKind.Require: {
-        // magicString.overwrite(dependency.spec.start, dependency.spec.end, JSON.stringify(dependency.href));
-        // magicString.overwrite(dependency.callee.start, dependency.callee.end, '__velcro_require');
-        dependencies[dependency.spec.value] = dependency.href;
+        dependencies[dependency.value] = dependency.resolveDetails!.resolvedHref;
         break;
       }
       case Asset.DependencyKind.RequireResolve: {
-        // magicString.overwrite(dependency.spec.start, dependency.spec.end, JSON.stringify(dependency.href));
-        // magicString.overwrite(dependency.callee.start, dependency.callee.end, '__velcro_require_resolve');
-        dependencies[dependency.spec.value] = dependency.href;
+        dependencies[dependency.value] = dependency.resolveDetails!.resolvedHref;
         break;
       }
       case Asset.DependencyKind.InjectedGlobal: {
@@ -191,7 +197,7 @@ function buildAssetAndCollectDependencies(
             dependency.exportName ? `.${dependency.exportName}` : ''
           };\n`
         );
-        dependencies[dependency.symbolName] = dependency.href;
+        dependencies[dependency.symbolName] = dependency.resolveDetails!.resolvedHref;
         break;
       }
       default:
