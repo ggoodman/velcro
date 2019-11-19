@@ -117,6 +117,10 @@ export class ResolverHostMemory extends AbstractResolverHost {
     return this.baseUrl;
   }
 
+  getRoot() {
+    return this.baseUrl;
+  }
+
   async listEntries(_resolver: Resolver, url: URL) {
     const urlPathname = util.ensureTrailingSlash(url.pathname);
     const basePathname = this.baseUrl.pathname;
