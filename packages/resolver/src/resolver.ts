@@ -23,6 +23,7 @@ interface ResolverOptions {
 
 interface ResolverResolveOptions extends ResolverOptions {
   ignoreBrowserOverrides?: boolean;
+  invalidatedBy?: Set<string>;
   token?: CancellationToken;
 }
 
@@ -59,6 +60,8 @@ export class Resolver {
       }
     }
 
+    const { invalidatedBy = new Set<string>() } = options;
+
     let token = options.token;
 
     if (!token) {
@@ -71,17 +74,18 @@ export class Resolver {
       extensions: options.extensions || this.extensions,
       ignoreBrowserOverrides:
         typeof options.ignoreBrowserOverrides === 'undefined' ? false : options.ignoreBrowserOverrides,
+      invalidatedBy,
       packageMain: options.packageMain || this.packageMain,
       token,
     };
 
-    const canonicalUrlPromise = this.host.getCanonicalUrl(this, url, { token });
+    const canonicalUrlPromise = this.host.getCanonicalUrl(this, url, { invalidatedBy, token });
 
     // To figure out if the url should be resolved as a file or as a directory, we need to first canonicalize the url
     // if the host supports this and resolve the root url for the given asset.
     const [canonicalUrl, rootUrl] = await Promise.all([
       canonicalUrlPromise,
-      this.host.getResolveRoot(this, url, { token }),
+      this.host.getResolveRoot(this, url, { invalidatedBy, token }),
     ]);
 
     if (token.isCancellationRequested) {
@@ -107,6 +111,7 @@ export class Resolver {
 
     return {
       ignored: resolvedUrl === false,
+      invalidatedBy,
       resolvedUrl: resolvedUrl || undefined,
       rootUrl,
     };
@@ -121,24 +126,35 @@ export class Resolver {
    * The outcome of this process will then be resolved as if it were a file.
    */
   private async resolveAsDirectory(url: URL, options: NormalizedResolveOptions): Promise<URL | false | undefined> {
+    const { invalidatedBy, token } = options;
+
+    // If the enclosing directory is removed, then this file should be invalidated
+    invalidatedBy.add(url.href);
+
     const [rootUrl, entries] = await Promise.all([
-      this.host.getResolveRoot(this, url, { token: options.token }),
-      this.host.listEntries(this, url, { token: options.token }),
+      this.host.getResolveRoot(this, url, { invalidatedBy, token }),
+      this.host.listEntries(this, url, { invalidatedBy, token }),
     ]);
 
-    if (options.token.isCancellationRequested) {
+    if (token.isCancellationRequested) {
       throw new CanceledError('Canceled');
     }
 
     let mainPathname = 'index';
 
     // Step 1: Look for a package.json with an main field
-    const packageJsonEntry = entries.find(entry => basename(entry.url.pathname) === 'package.json');
+    const packageJsonHref = new URL(resolve(url.pathname, './package.json'), url).href;
+    const packageJsonEntry = entries.find(
+      entry => entry.type === ResolvedEntryKind.File && entry.url.href === packageJsonHref
+    );
+
+    // If the package.json file changes (or is created), invalidate the resolution
+    invalidatedBy.add(packageJsonHref);
 
     if (packageJsonEntry) {
-      const packageJsonContent = await this.host.readFileContent(this, packageJsonEntry.url, { token: options.token });
+      const packageJsonContent = await this.host.readFileContent(this, packageJsonEntry.url, { token });
 
-      if (options.token.isCancellationRequested) {
+      if (token.isCancellationRequested) {
         throw new CanceledError('Canceled');
       }
 
@@ -170,9 +186,13 @@ export class Resolver {
       throw new TypeError(`Unable to resolve the root as a file: ${url.href}`);
     }
 
-    const rootUrl = await this.host.getResolveRoot(this, url, { token: options.token });
+    const { invalidatedBy, token } = options;
 
-    if (options.token.isCancellationRequested) {
+    invalidatedBy.add(url.href);
+
+    const rootUrl = await this.host.getResolveRoot(this, url, { invalidatedBy, token });
+
+    if (token.isCancellationRequested) {
       throw new CanceledError('Canceled');
     }
 
@@ -180,14 +200,18 @@ export class Resolver {
     // field and then consider browser mapping overrides in there.
     const parentPackageJson =
       this.packageMain.includes('browser') && !options.ignoreBrowserOverrides
-        ? await this.readParentPackageJson(url, { token: options.token })
+        ? await this.readParentPackageJson(url, { invalidatedBy, token })
         : undefined;
 
-    if (options.token.isCancellationRequested) {
+    if (token.isCancellationRequested) {
       throw new CanceledError('Canceled');
     }
 
     const browserOverrides = new Map<string, URL | false>();
+
+    if (parentPackageJson) {
+      invalidatedBy.add(parentPackageJson.url.href);
+    }
 
     if (parentPackageJson && typeof parentPackageJson.packageJson.browser === 'object') {
       const browserMap = parentPackageJson.packageJson.browser;
@@ -216,10 +240,13 @@ export class Resolver {
     }
 
     const containingUrl = new URL(ensureTrailingSlash(dirname(url.pathname)), rootUrl);
-    const filename = basename(url.pathname);
-    const entries = await this.host.listEntries(this, containingUrl, { token: options.token });
 
-    if (options.token.isCancellationRequested) {
+    invalidatedBy.add(containingUrl.href);
+
+    const filename = basename(url.pathname);
+    const entries = await this.host.listEntries(this, containingUrl, { token });
+
+    if (token.isCancellationRequested) {
       throw new CanceledError('Canceled');
     }
 
@@ -245,7 +272,10 @@ export class Resolver {
 
     // Look for browser overrides
     for (const ext of options.extensions) {
-      const mapping = browserOverrides.get(`${url.href}${ext}`);
+      const hrefWithExtension = `${url.href}${ext}`;
+      const mapping = browserOverrides.get(hrefWithExtension);
+
+      invalidatedBy.add(hrefWithExtension);
 
       if (mapping === false) {
         // console.warn('REMAPPED %s to undefined', url);
@@ -281,17 +311,19 @@ export class Resolver {
 
   public async readParentPackageJson(
     url: URL,
-    options: { token?: CancellationToken } = {}
+    options: { invalidatedBy?: Set<string>; token?: CancellationToken } = {}
   ): Promise<{ packageJson: PackageJson; url: URL } | undefined> {
-    url = await this.host.getCanonicalUrl(this, url, { token: options.token });
+    const { invalidatedBy = new Set<string>(), token } = options;
 
-    if (options.token && options.token.isCancellationRequested) {
+    url = await this.host.getCanonicalUrl(this, url, { invalidatedBy, token });
+
+    if (token && token.isCancellationRequested) {
       throw new CanceledError('Canceled');
     }
 
-    const hostRootUrl = await this.host.getResolveRoot(this, url, { token: options.token });
+    const hostRootUrl = await this.host.getResolveRoot(this, url, { invalidatedBy, token });
 
-    if (options.token && options.token.isCancellationRequested) {
+    if (token && token.isCancellationRequested) {
       throw new CanceledError('Canceled');
     }
 
@@ -304,24 +336,30 @@ export class Resolver {
         return undefined;
       }
 
-      const entries = await this.host.listEntries(this, dir, { token: options.token });
+      invalidatedBy.add(dir.href);
 
-      if (options.token && options.token.isCancellationRequested) {
+      const entries = await this.host.listEntries(this, dir, { invalidatedBy, token });
+
+      if (token && token.isCancellationRequested) {
         throw new CanceledError('Canceled');
       }
 
+      const packageJsonHref = new URL(resolve(dir.pathname, './package.json'), url).href;
       const packageJsonEntry = entries.find(
-        entry => entry.type === ResolvedEntryKind.File && entry.url.pathname.endsWith('/package.json')
+        entry => entry.type === ResolvedEntryKind.File && entry.url.href === packageJsonHref
       );
+
+      invalidatedBy.add(packageJsonHref);
 
       if (packageJsonEntry) {
         // Found! Let's try to parse
         try {
           const parentPackageJsonContent = await this.host.readFileContent(this, packageJsonEntry.url, {
-            token: options.token,
+            invalidatedBy,
+            token,
           });
 
-          if (options.token && options.token.isCancellationRequested) {
+          if (token && token.isCancellationRequested) {
             throw new CanceledError('Canceled');
           }
 

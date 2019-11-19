@@ -2,6 +2,7 @@ export type PackageMainField = 'browser' | 'module' | 'jsnext:main' | 'main' | '
 
 export interface ResolveDetails {
   ignored: boolean;
+  invalidatedBy: Set<string>;
   resolvedUrl?: URL;
   rootUrl: URL;
 }
