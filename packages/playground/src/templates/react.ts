@@ -13,12 +13,11 @@ export const files = {
     ) + '\n',
   'app.jsx': `
 import React, { Component } from 'react';
-
 import 'github-markdown-css';
-import './style.css';
 
 import { Explanation } from './explanation';
 import { name } from './name';
+import './style.css';
 
 class Hello extends Component {
   render() {

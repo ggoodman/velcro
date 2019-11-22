@@ -1,33 +1,62 @@
-import * as Monaco from 'monaco-editor';
-import { Emitter, IDisposable, DisposableStore, ThrottledDelayer } from 'ts-primitives';
-import { useState, useEffect, useContext, createContext } from 'react';
-import { TypeAcquirer } from './typeAcquisition';
 import { Bundler } from '@velcro/bundler';
 import { Resolver } from '@velcro/resolver';
 import { ResolverHostCompound } from '@velcro/resolver-host-compound';
-import { ResolverHostMonaco } from '../lib/ResolverHostMonaco';
+import { ResolverHostMemory } from '@velcro/resolver-host-memory';
 import { ResolverHostUnpkg } from '@velcro/resolver-host-unpkg';
+import * as Monaco from 'monaco-editor';
+import resolveNpmSpec from 'npm-package-arg';
+import { useState, useEffect, useContext, createContext } from 'react';
+import { Emitter, IDisposable, DisposableStore, ThrottledDelayer } from 'ts-primitives';
+
+import { TypeAcquirer } from './typeAcquisition';
+import { ResolverHostMonaco } from '../lib/ResolverHostMonaco';
 import { ResolverHostWithCache } from '../lib/ResolverHostWithCache';
+import { ResolverHostWithInflightCache } from '../lib/ResolverHostWithInflightCache';
+import { NotSupportedError } from './error';
+import { createBundleRuntime } from './previewRuntime';
 
 const rootUri = Monaco.Uri.file('/');
 
 export class EditorManager implements IDisposable {
-  readonly unpkgCdn = new ResolverHostUnpkg({
-    cdn: 'unpkg',
+  readonly unpkgCdn = ResolverHostUnpkg.forNpmFromUnpkg();
+  readonly githubCdn = ResolverHostUnpkg.forGithubFromJsdelivr();
+  readonly cachingUnpkgHost = new ResolverHostWithCache(this.unpkgCdn, {
+    namespace: this.unpkgCdn.getRoot().href,
+  });
+
+  readonly previewRuntimeHost = new ResolverHostMemory(
+    {
+      'index.js': `(${createBundleRuntime.toString().replace(/velcroRequire/g, 'require')})();`,
+      'package.json': JSON.stringify({
+        dependencies: {
+          'react-error-overlay': '^6.0.3',
+        },
+      }),
+    },
+    'preview'
+  );
+  readonly inflightCachingHost = new ResolverHostWithInflightCache(
+    new ResolverHostCompound({
+      [this.unpkgCdn.getRoot().href]: this.cachingUnpkgHost,
+      [this.previewRuntimeHost.getRoot().href]: this.previewRuntimeHost,
+      [rootUri.toString(true)]: new ResolverHostMonaco(rootUri),
+    })
+  );
+
+  readonly previewBundler = new Bundler({
+    resolveBareModule: this.resolveBareModule.bind(this),
+    resolver: new Resolver(this.inflightCachingHost, {
+      extensions: ['.js'],
+      packageMain: ['browser', 'main'],
+    }),
   });
 
   readonly bundler = new Bundler({
-    resolveBareModule: this.unpkgCdn.resolveBareModule.bind(this.unpkgCdn),
-    resolver: new Resolver(
-      new ResolverHostCompound({
-        [this.unpkgCdn.getRoot().href]: new ResolverHostWithCache(this.unpkgCdn),
-        [rootUri.toString(true)]: new ResolverHostMonaco(rootUri),
-      }),
-      {
-        extensions: ['.js', '.jsx', '.ts', '.tsx'],
-        packageMain: ['browser', 'main'],
-      }
-    ),
+    resolveBareModule: this.resolveBareModule.bind(this),
+    resolver: new Resolver(this.inflightCachingHost, {
+      extensions: ['.js', '.jsx', '.ts', '.tsx'],
+      packageMain: ['browser', 'main'],
+    }),
   });
 
   editor: Monaco.editor.IStandaloneCodeEditor | null = null;
@@ -272,6 +301,35 @@ export class EditorManager implements IDisposable {
 
   inferLanguage(pathname: string) {
     return pathname.match(/\.(?:tsx?|jsx?)$/) ? 'typescript' : undefined;
+  }
+
+  private resolveBareModule(spec: string, pathname?: string) {
+    const npmSpec = resolveNpmSpec(spec);
+
+    switch (npmSpec.type) {
+      case 'range':
+      case 'version': {
+        return this.unpkgCdn.resolveBareModule(spec, pathname);
+      }
+      case 'git': {
+        if (npmSpec.hosted && npmSpec.hosted.type === 'github') {
+          const resolvedSpec = `${npmSpec.hosted.user}/${npmSpec.hosted.project}@${npmSpec.gitRange ||
+            npmSpec.gitCommittish}`;
+          console.log({ resolvedSpec, npmSpec });
+          return this.githubCdn.resolveBareModule(resolvedSpec, pathname);
+        }
+
+        throw new NotSupportedError(
+          `Unable to resolve '${spec}' because dependencies of type '${npmSpec.type}' are not yet supported`
+        );
+      }
+      default: {
+        debugger;
+        throw new NotSupportedError(
+          `Unable to resolve '${spec}' because dependencies of type '${npmSpec.type}' are not yet supported`
+        );
+      }
+    }
   }
 }
 

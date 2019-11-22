@@ -10,11 +10,13 @@
     "@velcro/bundler": "^0.25.0",
     "@velcro/resolver": "^0.25.0",
     "@velcro/resolver-host-compound": "^0.25.0",
+    "@velcro/resolver-host-memory": "^0.25.0",
     "@velcro/resolver-host-unpkg": "^0.25.0",
     "emotion-theming": "^10.0.19",
     "error-stack-parser": "^2.0.4",
     "idb": "^4.0.5",
     "modern-css-reset": "^1.0.4",
+    "npm-package-arg": "^7.0.0",
     "react": "^16.11.0",
     "react-dom": "^16.11.0",
     "react-error-overlay": "^6.0.3",
@@ -46,6 +48,7 @@
     ]
   },
   "devDependencies": {
+    "@types/npm-package-arg": "^6.1.0",
     "@types/react": "^16.9.11",
     "@types/react-dom": "^16.9.3",
     "babel-plugin-emotion": "^10.0.22",

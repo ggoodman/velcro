@@ -15,6 +15,8 @@ export class ExtendableError extends Error {
 
 export class InvariantError extends ExtendableError {}
 
+export class NotSupportedError extends ExtendableError {}
+
 export class TimeoutError extends ExtendableError {}
 
 export class TranspileError extends ExtendableError {
