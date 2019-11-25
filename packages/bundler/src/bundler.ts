@@ -11,7 +11,7 @@ const EMPTY_MODULE_URL = new URL('velcro://@empty');
 const EMPTY_MODULE_CODE = 'module.exports = function(){};';
 
 export class Bundler {
-  readonly resolveBareModule: (spec: string, pathname?: string) => URL;
+  readonly resolveBareModule: (spec: string, pathname?: string) => URL | Promise<URL>;
   readonly resolver: Resolver;
 
   private readonly assetsByHref = new Map<string, Asset>();
@@ -247,7 +247,7 @@ export class Bundler {
       case 'range':
       case 'tag':
       case 'version':
-        const resolvedUri = this.resolveBareModule(
+        const resolvedUri = await this.resolveBareModule(
           `${resolvedArg.name}@${resolvedArg.resolvedSpec.fetchSpec}`,
           resolvedArg.pathname
         );
@@ -322,7 +322,7 @@ export namespace Bundler {
   }
 
   export interface Options {
-    resolveBareModule: (spec: string, pathname?: string) => URL;
+    resolveBareModule: (spec: string, pathname?: string) => URL | Promise<URL>;
     resolver: Resolver;
   }
 
