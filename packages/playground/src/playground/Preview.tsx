@@ -1,5 +1,6 @@
 import styled from '@emotion/styled/macro';
-import { Bundle, InvariantViolation } from '@velcro/bundler';
+import { expose, Transport } from '@ggoodman/rpc';
+import { InvariantViolation } from '@velcro/bundler';
 import { CanceledError } from '@velcro/resolver';
 import * as Monaco from 'monaco-editor';
 import React, { useEffect, useRef, useContext, useState } from 'react';
@@ -12,6 +13,7 @@ import {
   Emitter,
   Event,
   timeout,
+  CancellationToken,
 } from 'ts-primitives';
 
 import { EditorManagerContext } from '../lib/EditorManager';
@@ -125,6 +127,45 @@ const Preview: React.FC<{ className?: string }> = props => {
     const delayer = new Delayer(500);
     const throttler = new Throttler();
 
+    const worker = new Worker('../lib/bundlerWorker', { type: 'module' });
+    const hostApi: import('../lib/bundlerWorker').HostApi = {
+      async getCanonicalUrl(href) {
+        const url = await editorManager.inflightCachingHost.getCanonicalUrl(editorManager.resolver, new URL(href));
+
+        return url.href;
+      },
+      async getResolveRoot(href) {
+        const url = await editorManager.inflightCachingHost.getResolveRoot(editorManager.resolver, new URL(href));
+
+        return url.href;
+      },
+      async listEntries(href) {
+        const entries = await editorManager.inflightCachingHost.listEntries(editorManager.resolver, new URL(href));
+
+        return entries.map(entry => {
+          return {
+            type: entry.type,
+            href: entry.url.href,
+          };
+        });
+      },
+      async readFileContent(href) {
+        const content = await editorManager.inflightCachingHost.readFileContent(editorManager.resolver, new URL(href));
+
+        return editorManager.resolver.decoder.decode(content);
+      },
+      async resolveBareModule(spec, pathname) {
+        const url = await editorManager.resolveBareModule(spec, pathname);
+
+        return url.href;
+      },
+    };
+    const workerClient = expose(hostApi).connect<import('../lib/bundlerWorker').WorkerApi>(
+      Transport.fromDomWorker(worker)
+    );
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    let building = true;
     let tokenSource = new CancellationTokenSource();
 
     const queueRefreshPreview = (uris: string[]) => {
@@ -140,54 +181,29 @@ const Preview: React.FC<{ className?: string }> = props => {
       delayer.trigger(() => throttler.queue(() => refreshPreview(tokenSource.token)));
     };
 
-    const refreshPreview = async (token: Monaco.CancellationToken) => {
-      const toInvalidate = Array.from(invalidations.current);
-
-      setMessages([]);
-
-      invalidations.current.clear();
-
-      setBuildProgress({ completed: 0, total: 0 });
-
-      let building = true;
+    const rerender = async (invalidate: string[], token: CancellationToken) => {
+      let runtimeBundle = runtimeBundleString.current;
 
       try {
-        if (!runtimeBundleString.current) {
-          const runtimeBundle = await editorManager.previewBundler.generateBundle(
+        if (!runtimeBundle) {
+          runtimeBundle = await workerClient.invoke(
+            'generateBundle',
             [`${editorManager.previewRuntimeHost.getRoot()}index.js`],
+            onEnqueueAsset,
+            onCompleteAsset,
             {
-              onCompleteAsset: () => {
-                if (building) {
-                  setBuildProgress(buildProgress => {
-                    return {
-                      completed: buildProgress.completed + 1,
-                      total: buildProgress.total,
-                    };
-                  });
-                }
-              },
-              onEnqueueAsset: () => {
-                if (building) {
-                  setBuildProgress(buildProgress => {
-                    return {
-                      completed: buildProgress.completed,
-                      total: buildProgress.total + 1,
-                    };
-                  });
-                }
-              },
-              token,
+              executeEntrypoints: true,
+              sourceMap: false,
             }
           );
-
-          runtimeBundleString.current = runtimeBundle.toString({ executeEntrypoints: true, sourceMap: false });
+          runtimeBundleString.current = runtimeBundle;
         }
 
-        let build: Bundle | Error;
+        let codeBundle: string;
 
         try {
           const unresolvedEntrypointHref = Monaco.Uri.file('/').toString(true);
-          const resolvedEntrypoint = await editorManager.bundler.resolver.resolve(unresolvedEntrypointHref);
+          const resolvedEntrypoint = await editorManager.resolver.resolve(unresolvedEntrypointHref);
 
           if (!resolvedEntrypoint.resolvedUrl) {
             throw new Error(`Unable to determine the entrypoing to your code`);
@@ -195,132 +211,80 @@ const Preview: React.FC<{ className?: string }> = props => {
 
           const resolvedEntrypointHref = resolvedEntrypoint.resolvedUrl.href;
 
-          build = await editorManager.bundler.generateBundle([resolvedEntrypointHref], {
-            invalidations: toInvalidate,
-            onCompleteAsset: () => {
-              if (building) {
-                setBuildProgress(buildProgress => {
-                  return {
-                    completed: buildProgress.completed + 1,
-                    total: buildProgress.total,
-                  };
-                });
-              }
-            },
-            onEnqueueAsset: () => {
-              if (building) {
-                setBuildProgress(buildProgress => {
-                  return {
-                    completed: buildProgress.completed,
-                    total: buildProgress.total + 1,
-                  };
-                });
-              }
-            },
-            token,
-          });
-        } catch (err) {
-          build = err;
-        }
-
-        if (hmrClientRef.current) {
-          if (build instanceof CanceledError || (build instanceof Error && build.name === 'CanceledError')) {
-            return;
-          } else if (build instanceof Error) {
-            hmrClientRef.current.send({
-              type: 'build_error',
-              message: build.message,
-              stack: build.stack,
-            });
-          } else {
-            const updatedBundleFile = new File(
-              [build.toString({ executeEntrypoints: false, runtime: '__velcroRuntime', sourceMap: true })],
-              'playground:///runtime.js',
-              {
-                type: 'text/javascript',
-              }
-            );
-            const updatedBundleHref = URL.createObjectURL(updatedBundleFile);
-
-            hmrClientRef.current.send({
-              type: 'reload',
-              invalidations: toInvalidate,
-              href: updatedBundleHref,
-            });
-          }
-
-          await Promise.race([
-            Event.toPromise(hmrClientRef.current.onReload),
-            timeout(5000).then(() => {
-              throw new TimeoutError(`HMR refresh timed out`);
-            }),
-          ]);
-        } else {
-          let bundledCode: string;
-
-          if (build instanceof Error) {
-            bundledCode = `ReactErrorOverlay.reportBuildError(${JSON.stringify(build.message)});\n`;
-          } else {
-            bundledCode = `__velcroRuntime = ${build.toString({ executeEntrypoints: true, sourceMap: true })}`;
-          }
-
-          const runtimeFile = new File([runtimeBundleString.current], 'playground:///runtime.js', {
-            type: 'text/javascript',
-          });
-          const bundleFile = new File([bundledCode], 'playground:///index.js', {
-            type: 'text/javascript',
-          });
-          const markup = new File(
-            [
-              `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="X-UA-Compatible" content="ie=edge">
-<title>Document</title>
-<script src="${URL.createObjectURL(runtimeFile)}"></script>
-</head>
-<body>
-<div id="root"></div>
-<script src="${URL.createObjectURL(bundleFile)}"></script>
-</body>
-</html>`,
-            ],
-            Monaco.Uri.file('/index.html').toString(true),
+          codeBundle = await workerClient.invoke(
+            'generateBundle',
+            [resolvedEntrypointHref],
+            onEnqueueAsset,
+            onCompleteAsset,
             {
-              type: 'text/html',
+              executeEntrypoints: true,
+              invalidations: invalidate,
+              sourceMap: true,
             }
           );
-          const htmlUrl = URL.createObjectURL(markup);
-          const iframe = document.createElement('iframe');
-          iframe.style.display = 'none';
-          iframe.src = htmlUrl;
-
-          if (previewWrapRef.current) {
-            previewWrapRef.current.appendChild(iframe);
-          }
-
-          try {
-            await new Promise((resolve, reject) => {
-              iframe.onload = () => resolve();
-              iframe.onerror = reject;
-            });
-
-            if (previewIframeRef.current) {
-              previewIframeRef.current.remove();
-            }
-
-            iframe.style.display = '';
-
-            previewIframeRef.current = iframe;
-          } catch (err) {
-            iframe.remove();
-
+        } catch (err) {
+          if (err.name === 'CanceledError') {
             throw err;
           }
+
+          codeBundle = `ReactErrorOverlay.reportBuildError(${JSON.stringify(err.message)});\n`;
         }
+
+        const runtimeBundleFile = new File([runtimeBundle], 'playground:///runtime.js', {
+          type: 'text/javascript',
+        });
+        const codeBundleFile = new File([`var __velcroRuntime = ${codeBundle};\n`], 'playground:///index.js', {
+          type: 'text/javascript',
+        });
+        const markup = new File(
+          [
+            `
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <script src="${URL.createObjectURL(runtimeBundleFile)}"></script>
+  </head>
+  <body>
+  <div id="root"></div>
+  <script src="${URL.createObjectURL(codeBundleFile)}"></script>
+  </body>
+  </html>`,
+          ],
+          Monaco.Uri.file('/index.html').toString(true),
+          {
+            type: 'text/html',
+          }
+        );
+        const htmlUrl = URL.createObjectURL(markup);
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = htmlUrl;
+
+        if (previewWrapRef.current) {
+          previewWrapRef.current.appendChild(iframe);
+        }
+
+        try {
+          await new Promise((resolve, reject) => {
+            iframe.onload = () => resolve();
+            iframe.onerror = reject;
+          });
+        } catch (err) {
+          iframe.remove();
+          throw err;
+        }
+
+        if (previewIframeRef.current) {
+          previewIframeRef.current.remove();
+        }
+
+        iframe.style.display = '';
+
+        previewIframeRef.current = iframe;
       } catch (err) {
         tokenSource.cancel();
 
@@ -338,7 +302,102 @@ const Preview: React.FC<{ className?: string }> = props => {
       }
     };
 
+    const hotReload = async (invalidate: string[], hmrClient: HmrClient, token: CancellationToken) => {
+      try {
+        const unresolvedEntrypointHref = Monaco.Uri.file('/').toString(true);
+        const resolvedEntrypoint = await editorManager.resolver.resolve(unresolvedEntrypointHref);
+
+        if (!resolvedEntrypoint.resolvedUrl) {
+          throw new Error(`Unable to determine the entrypoing to your code`);
+        }
+
+        const resolvedEntrypointHref = resolvedEntrypoint.resolvedUrl.href;
+        const codeBundle = await workerClient.invoke(
+          'generateBundle',
+          [resolvedEntrypointHref],
+          onEnqueueAsset,
+          onCompleteAsset,
+          {
+            executeEntrypoints: false,
+            invalidations: invalidate,
+            runtime: '__velcroRuntime',
+            sourceMap: true,
+          }
+        );
+        const updatedBundleFile = new File([codeBundle], 'playground:///runtime.js', {
+          type: 'text/javascript',
+        });
+        const updatedBundleHref = URL.createObjectURL(updatedBundleFile);
+
+        hmrClient.send({
+          type: 'reload',
+          invalidations: invalidate,
+          href: updatedBundleHref,
+        });
+
+        await Promise.race([
+          Event.toPromise(hmrClient.onReload),
+          timeout(5000).then(() => {
+            throw new TimeoutError(`HMR refresh timed out`);
+          }),
+        ]);
+      } catch (err) {
+        hmrClient.send({
+          type: 'build_error',
+          message: err.message,
+          stack: err.stack,
+        });
+      }
+    };
+
+    const refreshPreview = async (token: CancellationToken) => {
+      const refreshId = Date.now();
+      console.time(`Refresh ${refreshId}`);
+      const toInvalidate = Array.from(invalidations.current);
+
+      setMessages([]);
+
+      invalidations.current.clear();
+
+      building = true;
+      setBuildProgress({ completed: 0, total: 0 });
+
+      try {
+        if (!hmrClientRef.current) {
+          return await rerender(toInvalidate, token);
+        } else {
+          return await hotReload(toInvalidate, hmrClientRef.current, token);
+        }
+      } catch (err) {
+      } finally {
+        console.timeEnd(`Refresh ${refreshId}`);
+        building = false;
+        setBuildProgress({ completed: 0, total: 0 });
+      }
+    };
+
     disposable.add(delayer);
+
+    const onEnqueueAsset = () => {
+      if (building) {
+        setBuildProgress(buildProgress => {
+          return {
+            completed: buildProgress.completed,
+            total: buildProgress.total + 1,
+          };
+        });
+      }
+    };
+    const onCompleteAsset = () => {
+      if (building) {
+        setBuildProgress(buildProgress => {
+          return {
+            completed: buildProgress.completed + 1,
+            total: buildProgress.total,
+          };
+        });
+      }
+    };
 
     for (const model of Monaco.editor.getModels()) {
       disposable.add(
@@ -440,10 +499,12 @@ const Preview: React.FC<{ className?: string }> = props => {
       },
     });
 
+    disposable.add(workerClient);
+
     queueRefreshPreview([]);
 
     return () => disposable.dispose();
-  }, [editorManager.bundler, editorManager, invalidations]);
+  }, [editorManager.resolver, editorManager, invalidations]);
 
   return (
     <PreviewWrap className={props.className}>

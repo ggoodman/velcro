@@ -1,5 +1,5 @@
 import { Bundler } from '@velcro/bundler';
-import { Resolver, AbstractResolverHost, ResolverHost } from '@velcro/resolver';
+import { Resolver, AbstractResolverHost, ResolverHost, ResolverHostOperationOptions } from '@velcro/resolver';
 import { openDB, IDBPDatabase } from 'idb';
 import { timeout, Limiter } from 'ts-primitives';
 import { TimeoutError } from './error';
@@ -145,10 +145,10 @@ export class ResolverHostWithCache extends AbstractResolverHost {
     return this.withMemoryCache(href, loadFn, cache, inflightMap, storeName, serialize, deserialize);
   }
 
-  async getCanonicalUrl(resolver: Resolver, url: URL) {
+  async getCanonicalUrl(resolver: Resolver, url: URL, options?: ResolverHostOperationOptions) {
     const result = await this.withCache(
       url.href,
-      () => this.host.getCanonicalUrl(resolver, url),
+      () => this.host.getCanonicalUrl(resolver, url, options),
       this.getCanonicalUrlCache,
       this.inflightGetCanonicalUrl,
       'getCanonicalUrl',
@@ -159,10 +159,10 @@ export class ResolverHostWithCache extends AbstractResolverHost {
     return result;
   }
 
-  async getResolveRoot(resolver: Resolver, url: URL) {
+  async getResolveRoot(resolver: Resolver, url: URL, options?: ResolverHostOperationOptions) {
     const result = await this.withCache(
       url.href,
-      () => this.host.getResolveRoot(resolver, url),
+      () => this.host.getResolveRoot(resolver, url, options),
       this.getResolveRootCache,
       this.inflightGetResolveRoot,
       'getResolveRoot',
@@ -173,10 +173,10 @@ export class ResolverHostWithCache extends AbstractResolverHost {
     return result;
   }
 
-  async listEntries(resolver: Resolver, url: URL) {
+  async listEntries(resolver: Resolver, url: URL, options?: ResolverHostOperationOptions) {
     const result = await this.withCache(
       url.href,
-      () => this.host.listEntries(resolver, url),
+      () => this.host.listEntries(resolver, url, options),
       this.listEntriesCache,
       this.inflightListEntries,
       'listEntries',
@@ -195,11 +195,11 @@ export class ResolverHostWithCache extends AbstractResolverHost {
     return result;
   }
 
-  async readFileContent(resolver: Resolver, url: URL) {
+  async readFileContent(resolver: Resolver, url: URL, options?: ResolverHostOperationOptions) {
     try {
       const result = await this.withCache(
         url.href,
-        () => this.host.readFileContent(resolver, url),
+        () => this.host.readFileContent(resolver, url, options),
         this.readFileContentCache,
         this.inflightReadFileContent,
         'readFileContent'
