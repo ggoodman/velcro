@@ -1,58 +1,63 @@
-import { Resolver } from '@velcro/resolver';
-import { ResolverHostCompound } from '@velcro/resolver-host-compound';
-import { ResolverHostMemory } from '@velcro/resolver-host-memory';
-import { ResolverHostUnpkg } from '@velcro/resolver-host-unpkg';
+import { ResolverHost } from '@velcro/resolver';
 import * as Monaco from 'monaco-editor';
-import resolveNpmSpec from 'npm-package-arg';
 import { useState, useEffect, useContext, createContext } from 'react';
 import { Emitter, IDisposable, DisposableStore, ThrottledDelayer } from 'ts-primitives';
 
-import { TypeAcquirer } from './typeAcquisition';
 import { ResolverHostMonaco } from '../lib/ResolverHostMonaco';
-import { ResolverHostWithCache } from '../lib/ResolverHostWithCache';
-import { ResolverHostWithInflightCache } from '../lib/ResolverHostWithInflightCache';
-import { NotSupportedError } from './error';
-import { createBundleRuntime } from './previewRuntime';
+import { expose, Transport } from '@ggoodman/rpc';
 
 const rootUri = Monaco.Uri.file('/');
 
-export class EditorManager implements IDisposable {
-  readonly unpkgCdn = ResolverHostUnpkg.forNpmFromJsdelivr();
-  readonly githubCdn = ResolverHostUnpkg.forGithubFromJsdelivr();
-  readonly cachingUnpkgHost = new ResolverHostWithCache(this.unpkgCdn, {
-    namespace: this.unpkgCdn.getRoot().href,
-  });
+function createLocalApi(host: ResolverHost) {
+  return {
+    getCanonicalUrl: async (href: string) => {
+      const url = await host.getCanonicalUrl(null!, new URL(href));
 
-  readonly previewRuntimeHost = new ResolverHostMemory(
-    {
-      'index.js': `(${createBundleRuntime.toString().replace(/velcroRequire/g, 'require')})();`,
-      'package.json': JSON.stringify({
-        dependencies: {
-          'react-error-overlay': '^6.0.3',
-        },
-      }),
+      return url.href;
     },
-    'preview'
-  );
-  readonly inflightCachingHost = new ResolverHostWithInflightCache(
-    new ResolverHostCompound({
-      [this.unpkgCdn.getRoot().href]: this.cachingUnpkgHost,
-      [this.previewRuntimeHost.getRoot().href]: this.previewRuntimeHost,
-      [rootUri.toString(true)]: new ResolverHostMonaco(rootUri),
-    })
+    getResolveRoot: async (href: string) => {
+      const url = await host.getResolveRoot(null!, new URL(href));
+
+      return url.href;
+    },
+    listEntries: async (href: string) => {
+      const entries = await host.listEntries(null!, new URL(href));
+
+      return entries.map(entry => ({
+        type: entry.type,
+        href: entry.url.href,
+      }));
+    },
+    readFileContent: async (href: string) => {
+      const decoder = new TextDecoder();
+      const content = await host.readFileContent(null!, new URL(href));
+
+      return decoder.decode(content);
+    },
+  };
+}
+
+export type HostApi = ReturnType<typeof createLocalApi>;
+
+export class EditorManager implements IDisposable {
+  private readonly resolverHostMonaco = new ResolverHostMonaco(rootUri);
+  private readonly localApi = createLocalApi(this.resolverHostMonaco);
+  private readonly worker = new Worker('../lib/bundlerWorker', { type: 'module' });
+  readonly workerPeer = expose(this.localApi).connect<import('../lib/bundlerWorker').WorkerApi>(
+    Transport.fromDomWorker(this.worker)
   );
 
-  readonly resolver = new Resolver(this.inflightCachingHost, {
-    extensions: ['.js', '.jsx', '.ts', '.tsx'],
-    packageMain: ['browser', 'main'],
-  });
+  // readonly resolver = new Resolver(this.inflightCachingHost, {
+  //   extensions: ['.js', '.jsx', '.ts', '.tsx'],
+  //   packageMain: ['browser', 'main'],
+  // });
 
   editor: Monaco.editor.IStandaloneCodeEditor | null = null;
 
   private readonly disposableStore = new DisposableStore();
   private readonly initialPath: string | undefined;
 
-  private readonly typeAcquirer = new TypeAcquirer(this.resolver, this.resolveBareModule.bind(this));
+  // private readonly typeAcquirer = new TypeAcquirer(this.resolver, this.resolveBareModule.bind(this));
   private readonly viewState = new WeakMap<Monaco.editor.ITextModel, Monaco.editor.ICodeEditorViewState>();
 
   private readonly onWillFocusModelEmitter = new Emitter<Monaco.editor.ITextModel>();
@@ -61,6 +66,8 @@ export class EditorManager implements IDisposable {
   constructor(options: { files?: Record<string, string>; initialPath?: string } = {}) {
     this.disposableStore.add(this.onWillFocusModelEmitter);
     this.disposableStore.add(this.onDidChangeEmitter);
+    this.disposableStore.add(this.workerPeer);
+    this.disposableStore.add({ dispose: () => this.worker.terminate() });
 
     Monaco.languages.typescript.typescriptDefaults.setEagerModelSync(true);
     Monaco.languages.typescript.typescriptDefaults.setMaximumWorkerIdleTime(-1);
@@ -119,7 +126,14 @@ export class EditorManager implements IDisposable {
         }
 
         Monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({ noSemanticValidation: true });
-        await this.typeAcquirer.importTypesForSpecs(dependencies);
+        await this.workerPeer.invoke('importTypesForSpecs', dependencies, file => {
+          this.disposableStore.add(
+            Monaco.languages.typescript.typescriptDefaults.addExtraLib(
+              file.content,
+              Monaco.Uri.file(file.pathname).toString(true)
+            )
+          );
+        });
         Monaco.languages.typescript.typescriptDefaults.setDiagnosticsOptions({ noSemanticValidation: false });
       };
 
@@ -131,17 +145,6 @@ export class EditorManager implements IDisposable {
         this.disposableStore.add(throttler);
       }
     });
-
-    this.disposableStore.add(
-      this.typeAcquirer.onTypeFile(file => {
-        this.disposableStore.add(
-          Monaco.languages.typescript.typescriptDefaults.addExtraLib(
-            file.content,
-            Monaco.Uri.file(file.pathname).toString(true)
-          )
-        );
-      })
-    );
 
     this.initialPath = options.initialPath;
   }
@@ -286,34 +289,6 @@ export class EditorManager implements IDisposable {
 
   inferLanguage(pathname: string) {
     return pathname.match(/\.(?:tsx?|jsx?)$/) ? 'typescript' : undefined;
-  }
-
-  resolveBareModule(spec: string, pathname?: string) {
-    const npmSpec = resolveNpmSpec(spec);
-
-    switch (npmSpec.type) {
-      case 'range':
-      case 'version': {
-        return this.unpkgCdn.resolveBareModule(spec, pathname);
-      }
-      case 'git': {
-        if (npmSpec.hosted && npmSpec.hosted.type === 'github') {
-          const resolvedSpec = `${npmSpec.hosted.user}/${npmSpec.hosted.project}@${npmSpec.gitRange ||
-            npmSpec.gitCommittish}`;
-          return this.githubCdn.resolveBareModule(resolvedSpec, pathname);
-        }
-
-        throw new NotSupportedError(
-          `Unable to resolve '${spec}' because dependencies of type '${npmSpec.type}' are not yet supported`
-        );
-      }
-      default: {
-        debugger;
-        throw new NotSupportedError(
-          `Unable to resolve '${spec}' because dependencies of type '${npmSpec.type}' are not yet supported`
-        );
-      }
-    }
   }
 }
 
