@@ -64,7 +64,7 @@ module.exports = [
         sourcemap: true,
       },
     ],
-    external: [Object.keys(pkg.dependencies)],
+    external: Object.keys(pkg.dependencies),
     plugins: [
       RollupPluginJson(),
       RollupPluginTypescript({

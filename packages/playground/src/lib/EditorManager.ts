@@ -1,4 +1,3 @@
-import { Bundler } from '@velcro/bundler';
 import { Resolver } from '@velcro/resolver';
 import { ResolverHostCompound } from '@velcro/resolver-host-compound';
 import { ResolverHostMemory } from '@velcro/resolver-host-memory';
@@ -18,7 +17,7 @@ import { createBundleRuntime } from './previewRuntime';
 const rootUri = Monaco.Uri.file('/');
 
 export class EditorManager implements IDisposable {
-  readonly unpkgCdn = ResolverHostUnpkg.forNpmFromUnpkg();
+  readonly unpkgCdn = ResolverHostUnpkg.forNpmFromJsdelivr();
   readonly githubCdn = ResolverHostUnpkg.forGithubFromJsdelivr();
   readonly cachingUnpkgHost = new ResolverHostWithCache(this.unpkgCdn, {
     namespace: this.unpkgCdn.getRoot().href,
@@ -43,20 +42,9 @@ export class EditorManager implements IDisposable {
     })
   );
 
-  readonly previewBundler = new Bundler({
-    resolveBareModule: this.resolveBareModule.bind(this),
-    resolver: new Resolver(this.inflightCachingHost, {
-      extensions: ['.js'],
-      packageMain: ['browser', 'main'],
-    }),
-  });
-
-  readonly bundler = new Bundler({
-    resolveBareModule: this.resolveBareModule.bind(this),
-    resolver: new Resolver(this.inflightCachingHost, {
-      extensions: ['.js', '.jsx', '.ts', '.tsx'],
-      packageMain: ['browser', 'main'],
-    }),
+  readonly resolver = new Resolver(this.inflightCachingHost, {
+    extensions: ['.js', '.jsx', '.ts', '.tsx'],
+    packageMain: ['browser', 'main'],
   });
 
   editor: Monaco.editor.IStandaloneCodeEditor | null = null;
@@ -64,10 +52,7 @@ export class EditorManager implements IDisposable {
   private readonly disposableStore = new DisposableStore();
   private readonly initialPath: string | undefined;
 
-  private readonly typeAcquirer = new TypeAcquirer(
-    this.bundler.resolver,
-    this.unpkgCdn.resolveBareModule.bind(this.unpkgCdn)
-  );
+  private readonly typeAcquirer = new TypeAcquirer(this.resolver, this.resolveBareModule.bind(this));
   private readonly viewState = new WeakMap<Monaco.editor.ITextModel, Monaco.editor.ICodeEditorViewState>();
 
   private readonly onWillFocusModelEmitter = new Emitter<Monaco.editor.ITextModel>();
@@ -303,7 +288,7 @@ export class EditorManager implements IDisposable {
     return pathname.match(/\.(?:tsx?|jsx?)$/) ? 'typescript' : undefined;
   }
 
-  private resolveBareModule(spec: string, pathname?: string) {
+  resolveBareModule(spec: string, pathname?: string) {
     const npmSpec = resolveNpmSpec(spec);
 
     switch (npmSpec.type) {
@@ -315,7 +300,6 @@ export class EditorManager implements IDisposable {
         if (npmSpec.hosted && npmSpec.hosted.type === 'github') {
           const resolvedSpec = `${npmSpec.hosted.user}/${npmSpec.hosted.project}@${npmSpec.gitRange ||
             npmSpec.gitCommittish}`;
-          console.log({ resolvedSpec, npmSpec });
           return this.githubCdn.resolveBareModule(resolvedSpec, pathname);
         }
 
