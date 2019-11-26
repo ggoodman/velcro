@@ -1,5 +1,4 @@
 import styled from '@emotion/styled/macro';
-import { expose, Transport } from '@ggoodman/rpc';
 import { InvariantViolation } from '@velcro/bundler';
 import { CanceledError } from '@velcro/resolver';
 import * as Monaco from 'monaco-editor';
@@ -127,42 +126,42 @@ const Preview: React.FC<{ className?: string }> = props => {
     const delayer = new Delayer(500);
     const throttler = new Throttler();
 
-    const worker = new Worker('../lib/bundlerWorker', { type: 'module' });
-    const hostApi: import('../lib/bundlerWorker').HostApi = {
-      async getCanonicalUrl(href) {
-        const url = await editorManager.inflightCachingHost.getCanonicalUrl(editorManager.resolver, new URL(href));
+    // const worker = new Worker('../lib/bundlerWorker', { type: 'module' });
+    // const hostApi: import('../lib/bundlerWorker').HostApi = {
+    //   async getCanonicalUrl(href) {
+    //     const url = await editorManager.inflightCachingHost.getCanonicalUrl(editorManager.resolver, new URL(href));
 
-        return url.href;
-      },
-      async getResolveRoot(href) {
-        const url = await editorManager.inflightCachingHost.getResolveRoot(editorManager.resolver, new URL(href));
+    //     return url.href;
+    //   },
+    //   async getResolveRoot(href) {
+    //     const url = await editorManager.inflightCachingHost.getResolveRoot(editorManager.resolver, new URL(href));
 
-        return url.href;
-      },
-      async listEntries(href) {
-        const entries = await editorManager.inflightCachingHost.listEntries(editorManager.resolver, new URL(href));
+    //     return url.href;
+    //   },
+    //   async listEntries(href) {
+    //     const entries = await editorManager.inflightCachingHost.listEntries(editorManager.resolver, new URL(href));
 
-        return entries.map(entry => {
-          return {
-            type: entry.type,
-            href: entry.url.href,
-          };
-        });
-      },
-      async readFileContent(href) {
-        const content = await editorManager.inflightCachingHost.readFileContent(editorManager.resolver, new URL(href));
+    //     return entries.map(entry => {
+    //       return {
+    //         type: entry.type,
+    //         href: entry.url.href,
+    //       };
+    //     });
+    //   },
+    //   async readFileContent(href) {
+    //     const content = await editorManager.inflightCachingHost.readFileContent(editorManager.resolver, new URL(href));
 
-        return editorManager.resolver.decoder.decode(content);
-      },
-      async resolveBareModule(spec, pathname) {
-        const url = await editorManager.resolveBareModule(spec, pathname);
+    //     return editorManager.resolver.decoder.decode(content);
+    //   },
+    //   async resolveBareModule(spec, pathname) {
+    //     const url = await editorManager.resolveBareModule(spec, pathname);
 
-        return url.href;
-      },
-    };
-    const workerClient = expose(hostApi).connect<import('../lib/bundlerWorker').WorkerApi>(
-      Transport.fromDomWorker(worker)
-    );
+    //     return url.href;
+    //   },
+    // };
+    // const workerClient = expose(hostApi).connect<import('../lib/bundlerWorker').WorkerApi>(
+    //   Transport.fromDomWorker(worker)
+    // );
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let building = true;
@@ -186,9 +185,9 @@ const Preview: React.FC<{ className?: string }> = props => {
 
       try {
         if (!runtimeBundle) {
-          const result = await workerClient.invoke(
+          const result = await editorManager.workerPeer.invoke(
             'generateBundle',
-            [`${editorManager.previewRuntimeHost.getRoot()}index.js`],
+            [`memory:/preview/index.js`],
             onEnqueueAsset,
             onCompleteAsset,
             {
@@ -204,14 +203,13 @@ const Preview: React.FC<{ className?: string }> = props => {
 
         try {
           const unresolvedEntrypointHref = Monaco.Uri.file('/').toString(true);
-          const resolvedEntrypoint = await editorManager.resolver.resolve(unresolvedEntrypointHref);
+          const resolvedEntrypointHref = await editorManager.workerPeer.invoke('resolve', unresolvedEntrypointHref);
 
-          if (!resolvedEntrypoint.resolvedUrl) {
+          if (!resolvedEntrypointHref) {
             throw new Error(`Unable to determine the entrypoing to your code`);
           }
 
-          const resolvedEntrypointHref = resolvedEntrypoint.resolvedUrl.href;
-          const result = await workerClient.invoke(
+          const result = await editorManager.workerPeer.invoke(
             'generateBundle',
             [resolvedEntrypointHref],
             onEnqueueAsset,
@@ -307,14 +305,13 @@ const Preview: React.FC<{ className?: string }> = props => {
     const hotReload = async (invalidate: string[], hmrClient: HmrClient, token: CancellationToken) => {
       try {
         const unresolvedEntrypointHref = Monaco.Uri.file('/').toString(true);
-        const resolvedEntrypoint = await editorManager.resolver.resolve(unresolvedEntrypointHref);
+        const resolvedEntrypointHref = await editorManager.workerPeer.invoke('resolve', unresolvedEntrypointHref);
 
-        if (!resolvedEntrypoint.resolvedUrl) {
+        if (!resolvedEntrypointHref) {
           throw new Error(`Unable to determine the entrypoing to your code`);
         }
 
-        const resolvedEntrypointHref = resolvedEntrypoint.resolvedUrl.href;
-        const result = await workerClient.invoke(
+        const result = await editorManager.workerPeer.invoke(
           'generateBundle',
           [resolvedEntrypointHref],
           onEnqueueAsset,
@@ -502,12 +499,10 @@ const Preview: React.FC<{ className?: string }> = props => {
       },
     });
 
-    disposable.add(workerClient);
-
     queueRefreshPreview([]);
 
     return () => disposable.dispose();
-  }, [editorManager.resolver, editorManager, invalidations]);
+  }, [editorManager.workerPeer, editorManager, invalidations]);
 
   return (
     <PreviewWrap className={props.className}>
