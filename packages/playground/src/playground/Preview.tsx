@@ -186,7 +186,7 @@ const Preview: React.FC<{ className?: string }> = props => {
 
       try {
         if (!runtimeBundle) {
-          runtimeBundle = await workerClient.invoke(
+          const result = await workerClient.invoke(
             'generateBundle',
             [`${editorManager.previewRuntimeHost.getRoot()}index.js`],
             onEnqueueAsset,
@@ -196,6 +196,7 @@ const Preview: React.FC<{ className?: string }> = props => {
               sourceMap: false,
             }
           );
+          runtimeBundle = result.code;
           runtimeBundleString.current = runtimeBundle;
         }
 
@@ -210,8 +211,7 @@ const Preview: React.FC<{ className?: string }> = props => {
           }
 
           const resolvedEntrypointHref = resolvedEntrypoint.resolvedUrl.href;
-
-          codeBundle = await workerClient.invoke(
+          const result = await workerClient.invoke(
             'generateBundle',
             [resolvedEntrypointHref],
             onEnqueueAsset,
@@ -222,6 +222,8 @@ const Preview: React.FC<{ className?: string }> = props => {
               sourceMap: true,
             }
           );
+
+          codeBundle = result.code;
         } catch (err) {
           if (err.name === 'CanceledError') {
             throw err;
@@ -312,26 +314,27 @@ const Preview: React.FC<{ className?: string }> = props => {
         }
 
         const resolvedEntrypointHref = resolvedEntrypoint.resolvedUrl.href;
-        const codeBundle = await workerClient.invoke(
+        const result = await workerClient.invoke(
           'generateBundle',
           [resolvedEntrypointHref],
           onEnqueueAsset,
           onCompleteAsset,
           {
             executeEntrypoints: false,
+            incremental: true,
             invalidations: invalidate,
             runtime: '__velcroRuntime',
             sourceMap: true,
           }
         );
-        const updatedBundleFile = new File([codeBundle], 'playground:///runtime.js', {
+        const updatedBundleFile = new File([result.code], 'playground:///runtime.js', {
           type: 'text/javascript',
         });
         const updatedBundleHref = URL.createObjectURL(updatedBundleFile);
 
         hmrClient.send({
           type: 'reload',
-          invalidations: invalidate,
+          invalidations: result.invalidations,
           href: updatedBundleHref,
         });
 
