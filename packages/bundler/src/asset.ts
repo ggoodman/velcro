@@ -34,6 +34,21 @@ export class Asset {
 
     const parser = getParserForAsset(this);
     const dependencies = parser.parse(this.href, this.magicString);
+    const oldDependenciesByKind = (this.dependencies || []).reduce(
+      (acc, dep) => {
+        let depsByKind = acc[dep.type];
+
+        if (!depsByKind) {
+          depsByKind = {};
+          acc[dep.type] = depsByKind;
+        }
+
+        depsByKind[dep.value] = dep.resolveDetails;
+
+        return acc;
+      },
+      {} as Record<Asset.DependencyKind, Record<string, Bundler.ResolveDetails | undefined>>
+    );
 
     this.dependencies = [];
 
@@ -43,6 +58,9 @@ export class Asset {
         callee: dep.callee,
         references: [{ start: dep.spec.start, end: dep.spec.end }],
         value: dep.spec.value,
+        resolveDetails: oldDependenciesByKind[Asset.DependencyKind.Require]
+          ? oldDependenciesByKind[Asset.DependencyKind.Require][dep.spec.value]
+          : undefined,
       });
     }
 
@@ -52,6 +70,9 @@ export class Asset {
         callee: dep.callee,
         references: [{ start: dep.spec.start, end: dep.spec.end }],
         value: dep.spec.value,
+        resolveDetails: oldDependenciesByKind[Asset.DependencyKind.RequireResolve]
+          ? oldDependenciesByKind[Asset.DependencyKind.RequireResolve][dep.spec.value]
+          : undefined,
       });
     }
 
@@ -59,12 +80,17 @@ export class Asset {
       const shim = DEFAULT_SHIM_GLOBALS[symbolName];
 
       if (shim) {
+        const value = `${shim.spec}${shim.export ? `[${JSON.stringify(shim.export)}]` : ''}`;
+
         this.dependencies.push({
           type: Asset.DependencyKind.InjectedGlobal,
           exportName: shim.export,
           references,
           symbolName,
-          value: `${shim.spec}${shim.export ? `[${JSON.stringify(shim.export)}]` : ''}`,
+          value,
+          resolveDetails: oldDependenciesByKind[Asset.DependencyKind.InjectedGlobal]
+            ? oldDependenciesByKind[Asset.DependencyKind.InjectedGlobal][value]
+            : undefined,
         });
       }
     }

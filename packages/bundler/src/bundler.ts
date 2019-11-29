@@ -10,11 +10,16 @@ import { Bundle } from './bundle';
 const EMPTY_MODULE_URL = new URL('velcro://@empty');
 const EMPTY_MODULE_CODE = 'module.exports = function(){};';
 
+const noopLogger: Bundler.Logger = {
+  info() {},
+};
+
 export class Bundler {
   readonly resolveBareModule: (spec: string, pathname?: string) => URL | Promise<URL>;
   readonly resolver: Resolver;
 
   private readonly assetsByHref = new Map<string, Asset>();
+  private readonly logger: Bundler.Logger;
   private readonly resolutionCache = new Map<string, Bundler.ResolveDetails>();
   private readonly resolutionInvalidations = new MapSet<string, string>();
 
@@ -24,6 +29,7 @@ export class Bundler {
   static readonly schemaVersion: 1;
 
   constructor(options: Bundler.Options) {
+    this.logger = options.logger || noopLogger;
     this.resolveBareModule = options.resolveBareModule;
     this.resolver = options.resolver;
   }
@@ -61,6 +67,7 @@ export class Bundler {
     }
     const tokenSource = new CancellationTokenSource();
     const token = tokenSource.token;
+    const incremental = !!options.incremental;
 
     if (options.token) {
       if (options.token.isCancellationRequested) {
@@ -75,6 +82,7 @@ export class Bundler {
 
     let pendingOperations = 0;
     const assets = new Set<Asset>();
+    const incrementalAssets = new Set<Asset>();
     const dfd = new Deferred(token);
     const dependenciesToAssets = new Map<string, Asset>();
     const entrypointsToAssets = new Map<string, Asset>();
@@ -119,6 +127,7 @@ export class Bundler {
       let resolveDetails = this.resolutionCache.get(resolutionCacheKey);
 
       if (!resolveDetails) {
+        this.logger.info({ spec, fromHref }, 'resolveHref cache miss');
         // console.debug('[MISS] resolveHref(%s, %s)', spec, fromHref);
         resolveDetails = await this.resolveWithDetails(spec, fromHref, { token });
 
@@ -144,10 +153,14 @@ export class Bundler {
         assets.add(asset);
 
         if (!asset.magicString || !asset.dependencies) {
+          this.logger.info({ href: asset.href }, 'resolveAsset readCode');
           // console.debug('[MISS] resolveAsset(%s)', asset.href);
           const code = await this.readCode(asset, { token });
 
           asset.setCode(code);
+
+          // We only add assets that needed to be (re)created to an incremental build
+          incrementalAssets.add(asset);
         } else {
           // console.debug('[HIT] resolveAsset(%s)', asset.href);
         }
@@ -165,6 +178,7 @@ export class Bundler {
         let resolveDetails = dependency.resolveDetails;
 
         if (!resolveDetails) {
+          this.logger.info({ href: asset.href, dependency: dependency.value }, 'resolveDependency cache miss');
           // console.debug('[MISS] resolveDependency(%s, %s)', asset.href, dependency.value);
           resolveDetails = await resolveHref(dependency.value, asset.href);
           dependency.resolveDetails = resolveDetails;
@@ -182,11 +196,16 @@ export class Bundler {
           this.resolutionInvalidations.deleteAll(invalidation);
 
           if (this.resolutionCache.delete(resolutionCacheKey)) {
+            this.logger.info({ resolutionCacheKey }, 'invalidated resolution cache entry');
             // console.debug('[INVALID] invalidated resolution %s by %s', resolutionCacheKey, invalidation);
           }
         }
 
-        if (this.assetsByHref.delete(invalidation)) {
+        const asset = this.assetsByHref.get(invalidation);
+
+        if (asset) {
+          asset.magicString = undefined;
+          this.logger.info({ href: invalidation }, 'invalidated asset');
           // console.debug('[INVALID] invalidated asset %s', invalidation);
         }
       }
@@ -217,7 +236,7 @@ export class Bundler {
 
     // console.timeEnd('Bundler.generateBundle');
 
-    return new Bundle(assets, entrypointsToAssets, dependenciesToAssets);
+    return new Bundle(incremental ? incrementalAssets : assets, entrypointsToAssets, dependenciesToAssets);
   }
 
   private async readCode(asset: Asset, { token }: { token: CancellationToken }): Promise<string> {
@@ -315,13 +334,19 @@ export namespace Bundler {
   }
 
   export interface BundleOptions {
+    incremental?: boolean;
     invalidations?: string[];
     onEnqueueAsset?(): void;
     onCompleteAsset?(): void;
     token?: CancellationToken;
   }
 
+  export interface Logger {
+    info(...args: any[]): void;
+  }
+
   export interface Options {
+    logger?: Logger;
     resolveBareModule: (spec: string, pathname?: string) => URL | Promise<URL>;
     resolver: Resolver;
   }
