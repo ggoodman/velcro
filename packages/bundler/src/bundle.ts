@@ -11,7 +11,7 @@ export class Bundle {
   private readonly assetsByHref = new Map<string, Asset>();
 
   constructor(
-    private readonly assets: Set<Asset>,
+    public readonly assets: ReadonlySet<Asset>,
     private readonly entrypointsToAssets: Map<string, Asset>,
     private readonly dependenciesToAssets: Map<string, Asset>
   ) {

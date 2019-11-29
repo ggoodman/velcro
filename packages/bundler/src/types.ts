@@ -60,6 +60,7 @@ export interface IRuntime {
   register(spec: string, factory: ModuleFactory): any;
   remove(spec: string): IModule | undefined;
   require(spec: string): any;
+  unregister(spec: string): IModule | undefined;
 }
 
 export interface RuntimeOptions {

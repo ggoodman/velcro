@@ -135,8 +135,6 @@ export function createRuntime(manifest, options) {
     });
 
     delete modules[module.id];
-    delete mappings[module.id];
-    delete registry[module.id];
 
     return module;
   };
@@ -146,6 +144,23 @@ export function createRuntime(manifest, options) {
    */
   Runtime.prototype.require = function(id) {
     return this.root.require(aliases[id] || id);
+  };
+
+  /**
+   * @param {string} id
+   * @returns {Module | undefined}
+   */
+  Runtime.prototype.unregister = function(id) {
+    const module = this.get(id);
+
+    if (!module) {
+      return;
+    }
+
+    delete mappings[module.id];
+    delete registry[module.id];
+
+    return module;
   };
 
   /**
@@ -225,9 +240,6 @@ export function createRuntime(manifest, options) {
       module = new Module(id, this.runtime);
 
       modules[id] = module;
-
-      // Free up the registry entry and release any refs for GC
-      delete registry[id];
 
       var dirname = id;
       var filename = id;
