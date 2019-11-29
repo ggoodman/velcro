@@ -236,7 +236,9 @@ export class Bundler {
 
     // console.timeEnd('Bundler.generateBundle');
 
-    return new Bundle(incremental ? incrementalAssets : assets, entrypointsToAssets, dependenciesToAssets);
+    return new Bundle(incremental ? incrementalAssets : assets, entrypointsToAssets, dependenciesToAssets, {
+      incremental,
+    });
   }
 
   private async readCode(asset: Asset, { token }: { token: CancellationToken }): Promise<string> {
