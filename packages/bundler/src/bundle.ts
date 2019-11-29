@@ -4,7 +4,7 @@ import MagicString, { Bundle as MagicStringBundle } from 'magic-string';
 
 import { Asset } from './asset';
 import { InvariantViolation } from './error';
-import { createRuntime } from './runtime';
+import { createIncrementalPrelude, createRuntime } from './runtime';
 import { RuntimeOptions } from './types';
 
 export class Bundle {
@@ -13,7 +13,8 @@ export class Bundle {
   constructor(
     public readonly assets: ReadonlySet<Asset>,
     private readonly entrypointsToAssets: Map<string, Asset>,
-    private readonly dependenciesToAssets: Map<string, Asset>
+    private readonly dependenciesToAssets: Map<string, Asset>,
+    private readonly options: Bundle.Options = {}
   ) {
     for (const asset of assets) {
       this.assetsByHref.set(asset.href, asset);
@@ -48,8 +49,11 @@ export class Bundle {
       runtime: options.runtime,
     };
 
+    const prelude =
+      this.options.incremental && options.runtime ? createIncrementalPrelude.toString() : createRuntime.toString();
+
     bundle.prepend(
-      `(${createRuntime.toString()})({\n\taliases:${JSON.stringify(aliasMap)},\n\tentrypoints:${JSON.stringify(
+      `(${prelude})({\n\taliases:${JSON.stringify(aliasMap)},\n\tentrypoints:${JSON.stringify(
         entrypointMap
       )},\n\tmodules:{\n`
     );
@@ -115,6 +119,12 @@ export class Bundle {
         false
       )
     );
+  }
+}
+
+export namespace Bundle {
+  export interface Options {
+    incremental?: boolean;
   }
 }
 

@@ -271,3 +271,23 @@ export function createRuntime(manifest, options) {
 
   return runtime;
 }
+
+//@ts-check
+
+/**
+ *
+ * @param {import('./types').ImmediateExecutionManifest} manifest
+ * @param {import('./types').RuntimeOptions} [options]
+ * @returns {import('./types').IRuntime}
+ */
+export function createIncrementalPrelude(manifest, options) {
+  'use strict';
+
+  /** @type {import('./types').IRuntime} */
+  //@ts-ignore
+  const runtime = window[options.runtime];
+
+  runtime.init(manifest, options && options.executeEntrypoints);
+
+  return runtime;
+}
