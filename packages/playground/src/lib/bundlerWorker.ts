@@ -1,14 +1,7 @@
 /* eslint-disable no-restricted-globals */
 import { expose, Transport } from '@ggoodman/rpc';
 import { Bundler } from '@velcro/bundler';
-import {
-  Resolver,
-  CancellationToken,
-  AbstractResolverHost,
-  ResolvedEntry,
-  ResolverHost,
-  ResolvedEntryKind,
-} from '@velcro/resolver';
+import { Resolver, ResolvedEntry, ResolverHost, ResolvedEntryKind } from '@velcro/resolver';
 import { RuntimeOptions } from '@velcro/bundler/dist/dist-main/types';
 
 export type HostApi = {
@@ -52,6 +45,7 @@ const resolverHost: ResolverHost = {
 };
 
 const bundler = new Bundler({
+  // logger: console,
   resolver: new Resolver(resolverHost, {
     extensions: ['.js', '.jsx', '.ts', '.tsx'],
     packageMain: ['browser', 'main'],
@@ -73,14 +67,18 @@ const workerApi = {
     const bundle = await bundler.generateBundle(entrypoints, {
       onCompleteAsset,
       onEnqueueAsset,
+      incremental: options.incremental,
       invalidations: options.invalidations,
     });
 
-    return bundle.toString({
+    const code = bundle.toString({
       executeEntrypoints: options.executeEntrypoints,
       runtime: options.runtime,
       sourceMap: options.sourceMap,
     });
+    const invalidations = Array.from(bundle.assets).map(asset => asset.href);
+
+    return { code, invalidations };
   },
 };
 

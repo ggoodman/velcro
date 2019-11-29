@@ -104,6 +104,11 @@ export function createBundleRuntime() {
           }
 
           seen.forEach(href => {
+            // Only remove modules that were explicitly invalidated
+            if (reload.invalidations.indexOf(href) >= 0) {
+              runtime.unregister(href);
+            }
+
             runtime.remove(href);
           });
 
@@ -116,34 +121,41 @@ export function createBundleRuntime() {
             });
           };
           script.onload = function() {
-            disposeCallbackQueue.forEach(({ cb, module }) => {
-              cb();
-            });
-            acceptCallbackQueue.forEach(({ cb, module }) => {
-              cb();
-            });
+            try {
+              disposeCallbackQueue.forEach(({ cb }) => {
+                cb();
+              });
+              acceptCallbackQueue.forEach(({ cb }) => {
+                cb();
+              });
 
-            for (const toReload of requireReload) {
-              runtime.require(toReload);
-            }
-
-            // Find any module that will become orphaned by this change and
-            // dispose it
-            potentialOrphans.forEach(potentialOrphan => {
-              const potentialOrphanModule = runtime.get(potentialOrphan);
-
-              if (potentialOrphanModule && potentialOrphanModule.dependents.size === 0) {
-                for (const disposeCallback of potentialOrphanModule.disposeCallbacks) {
-                  disposeCallback.cb();
-                }
-
-                runtime.remove(potentialOrphan);
+              for (const toReload of requireReload) {
+                runtime.require(toReload);
               }
-            });
 
-            channel.port2.postMessage({
-              type: 'reload',
-            });
+              // Find any module that will become orphaned by this change and
+              // dispose it
+              potentialOrphans.forEach(potentialOrphan => {
+                const potentialOrphanModule = runtime.get(potentialOrphan);
+
+                if (potentialOrphanModule && potentialOrphanModule.dependents.size === 0) {
+                  for (const disposeCallback of potentialOrphanModule.disposeCallbacks) {
+                    disposeCallback.cb();
+                  }
+
+                  runtime.remove(potentialOrphan);
+                }
+              });
+
+              channel.port2.postMessage({
+                type: 'reload',
+              });
+            } catch (err) {
+              channel.port2.postMessage({
+                type: 'reload',
+                err,
+              });
+            }
           };
 
           document.head.appendChild(script);
