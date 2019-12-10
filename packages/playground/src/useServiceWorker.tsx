@@ -44,10 +44,13 @@ export function ServiceWorkerProvider(props: React.PropsWithChildren<{}>) {
     serviceWorker.register({
       onUpdate: registration => {
         setWaitingServiceWorker(registration.waiting);
+      },
+      onUpdateAvailable: registration => {
         setAssetsUpdateReady(true);
       },
       onSuccess: registration => {
         setAssetsCached(true);
+        setAssetsUpdateReady(false);
 
         if (registration.active) {
           registration.active.addEventListener('statechange', (event: ServiceWorkerEvent) => {

@@ -42,22 +42,15 @@ export type HostApi = ReturnType<typeof createLocalApi>;
 export class EditorManager implements IDisposable {
   private readonly resolverHostMonaco = new ResolverHostMonaco(rootUri);
   private readonly localApi = createLocalApi(this.resolverHostMonaco);
-  private readonly worker = new Worker('../lib/bundlerWorker', { type: 'module' });
-  readonly workerPeer = expose(this.localApi).connect<import('../lib/bundlerWorker').WorkerApi>(
+  private readonly worker = new Worker('./bundler.worker', { type: 'module' });
+  readonly workerPeer = expose(this.localApi).connect<import('./bundler.worker').WorkerApi>(
     Transport.fromDomWorker(this.worker)
   );
-
-  // readonly resolver = new Resolver(this.inflightCachingHost, {
-  //   extensions: ['.js', '.jsx', '.ts', '.tsx'],
-  //   packageMain: ['browser', 'main'],
-  // });
 
   editor: Monaco.editor.IStandaloneCodeEditor | null = null;
 
   private readonly disposableStore = new DisposableStore();
   private readonly initialPath: string | undefined;
-
-  // private readonly typeAcquirer = new TypeAcquirer(this.resolver, this.resolveBareModule.bind(this));
   private readonly viewState = new WeakMap<Monaco.editor.ITextModel, Monaco.editor.ICodeEditorViewState>();
 
   private readonly onWillFocusModelEmitter = new Emitter<Monaco.editor.ITextModel>();

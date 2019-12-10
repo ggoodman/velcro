@@ -1,5 +1,3 @@
-import { Runtime } from '@velcro/bundler';
-
 export interface HmrBuildErrorRequest {
   type: 'build_error';
   message?: string;
@@ -14,7 +12,7 @@ export interface HmrReloadRequest {
 export interface HmrReloadResponse {}
 
 declare var velcroRequire: NodeRequire;
-declare var __velcroRuntime: Runtime;
+declare var __velcroRuntime: import('@velcro/bundler').Runtime;
 
 /**
  * Important: This function needs to be fully self-contained because it will be stringified.
@@ -38,6 +36,7 @@ export function createBundleRuntime() {
     if (!e.data || typeof e.data !== 'object') {
       throw new Error(`Unexpected message received by HMR server`);
     }
+    const runtime = __velcroRuntime;
 
     switch (e.data.type) {
       case 'build_error': {
@@ -54,11 +53,10 @@ export function createBundleRuntime() {
           ReactErrorOverlay.dismissBuildError();
           ReactErrorOverlay.dismissRuntimeErrors();
           const reload = e.data;
-          const runtime = __velcroRuntime;
           const queue = reload.invalidations.slice();
-          const seen = new Set<string>();
+          const seen = new Set<string>([runtime.root.id]);
           const potentialOrphans = new Set<string>();
-          const requireReload = [] as string[];
+          const requireReload = new Set<string>();
           const acceptCallbackQueue = [] as ({ module: typeof runtime.root; cb: () => void })[];
           const disposeCallbackQueue = [] as ({ module: typeof runtime.root; cb: () => void })[];
 
@@ -74,6 +72,8 @@ export function createBundleRuntime() {
               continue;
             }
 
+            requireReload.add(module.id);
+
             module.dependencies.forEach(dependency => {
               potentialOrphans.add(dependency.id);
             });
@@ -88,17 +88,20 @@ export function createBundleRuntime() {
               for (const acceptCallback of module.acceptCallbacks) {
                 acceptCallbackQueue.push({ module, cb: acceptCallback.cb });
               }
-            } else {
-              const isEntrypoint = module.dependents.has(runtime.root);
 
-              if (isEntrypoint) {
-                requireReload.push(module.id);
-              } else {
-                module.dependents.forEach(dependent => {
-                  if (!seen.has(dependent.id)) {
-                    queue.push(dependent.id);
-                  }
-                });
+              requireReload.delete(module.id);
+            } else {
+              let shouldReload = true;
+
+              module.dependents.forEach(dependent => {
+                if (dependent.id !== runtime.root.id) {
+                  queue.push(dependent.id);
+                  shouldReload = false;
+                }
+              });
+
+              if (!shouldReload) {
+                requireReload.delete(module.id);
               }
             }
           }
@@ -109,7 +112,9 @@ export function createBundleRuntime() {
               runtime.unregister(href);
             }
 
-            runtime.remove(href);
+            if (href !== runtime.root.id) {
+              runtime.remove(href);
+            }
           });
 
           const script = document.createElement('script');
@@ -122,6 +127,25 @@ export function createBundleRuntime() {
           };
           script.onload = function() {
             try {
+              // Find any module that will become orphaned by this change and
+              // dispose it
+              potentialOrphans.forEach(potentialOrphan => {
+                const potentialOrphanModule = runtime.get(potentialOrphan);
+
+                if (potentialOrphanModule && potentialOrphanModule.dependents.size === 0) {
+                  for (const disposeCallback of potentialOrphanModule.disposeCallbacks) {
+                    disposeCallbackQueue.push({
+                      module: potentialOrphanModule,
+                      cb: disposeCallback.cb,
+                    });
+                  }
+
+                  if (potentialOrphan !== runtime.root.id) {
+                    runtime.remove(potentialOrphan);
+                  }
+                }
+              });
+
               disposeCallbackQueue.forEach(({ cb }) => {
                 cb();
               });
@@ -130,22 +154,8 @@ export function createBundleRuntime() {
               });
 
               for (const toReload of requireReload) {
-                runtime.require(toReload);
+                runtime.root.require(toReload);
               }
-
-              // Find any module that will become orphaned by this change and
-              // dispose it
-              potentialOrphans.forEach(potentialOrphan => {
-                const potentialOrphanModule = runtime.get(potentialOrphan);
-
-                if (potentialOrphanModule && potentialOrphanModule.dependents.size === 0) {
-                  for (const disposeCallback of potentialOrphanModule.disposeCallbacks) {
-                    disposeCallback.cb();
-                  }
-
-                  runtime.remove(potentialOrphan);
-                }
-              });
 
               channel.port2.postMessage({
                 type: 'reload',
@@ -155,6 +165,8 @@ export function createBundleRuntime() {
                 type: 'reload',
                 err,
               });
+
+              throw err;
             }
           };
 

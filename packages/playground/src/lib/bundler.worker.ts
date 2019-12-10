@@ -1,4 +1,4 @@
-/* eslint-disable no-restricted-globals */
+/* eslint-disable no-restricted-globals, import/first */
 import { expose, Transport } from '@ggoodman/rpc';
 import { Bundler } from '@velcro/bundler';
 import { Resolver, ResolvedEntry, ResolverHost, ResolvedEntryKind } from '@velcro/resolver';
@@ -81,6 +81,7 @@ const resolver = new Resolver(resolverHost, {
 });
 const typeAcquirer = new TypeAcquirer(resolver, resolveBareModule);
 const bundler = new Bundler({
+  // logger: console,
   resolver,
   resolveBareModule,
 });
@@ -101,6 +102,7 @@ const workerApi = {
 
     const code = bundle.toString({
       executeEntrypoints: options.executeEntrypoints,
+      loggerLevel: options.loggerLevel,
       runtime: options.runtime,
       sourceMap: options.sourceMap,
     });

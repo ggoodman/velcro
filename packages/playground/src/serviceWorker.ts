@@ -21,10 +21,11 @@ const isLocalhost = Boolean(
 type Config = {
   onSuccess?: (registration: ServiceWorkerRegistration) => void;
   onUpdate?: (registration: ServiceWorkerRegistration) => void;
+  onUpdateAvailable?: (registration: ServiceWorkerRegistration) => void;
 };
 
 export function register(config?: Config) {
-  if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
+  if (/*process.env.NODE_ENV === 'production' &&*/ 'serviceWorker' in navigator) {
     // The URL constructor is available in all browsers that support SW.
     const publicUrl = new URL(process.env.PUBLIC_URL, window.location.href);
     if (publicUrl.origin !== window.location.origin) {
@@ -37,7 +38,7 @@ export function register(config?: Config) {
     window.addEventListener('load', () => {
       const swUrl = `${process.env.PUBLIC_URL}/service-worker.js`;
 
-      if (isLocalhost) {
+      if (false && isLocalhost) {
         // This is running on localhost. Let's check if a service worker still exists or not.
         checkValidServiceWorker(swUrl, config);
       } else {
@@ -56,21 +57,29 @@ function registerValidSW(swUrl: string, config?: Config) {
   navigator.serviceWorker
     .register(swUrl)
     .then(registration => {
+      console.log('registration', registration);
       registration.onupdatefound = () => {
+        if (config && config.onUpdateAvailable) {
+          config.onUpdateAvailable(registration);
+        }
         const installingWorker = registration.installing;
+        console.log('registration.onupdatefound', registration);
         if (installingWorker == null) {
           return;
         }
         installingWorker.onstatechange = () => {
+          console.log('installingWorker.onstatechange', installingWorker.state, installingWorker);
           if (installingWorker.state === 'installed') {
             if (navigator.serviceWorker.controller) {
               // Execute callback
               if (config && config.onUpdate) {
+                console.log('config.onUpdate', registration);
                 config.onUpdate(registration);
               }
             } else {
               // Execute callback
               if (config && config.onSuccess) {
+                console.log('config.onUpdate', registration);
                 config.onSuccess(registration);
               }
             }

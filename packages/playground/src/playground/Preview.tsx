@@ -126,44 +126,6 @@ const Preview: React.FC<{ className?: string }> = props => {
     const delayer = new Delayer(500);
     const throttler = new Throttler();
 
-    // const worker = new Worker('../lib/bundlerWorker', { type: 'module' });
-    // const hostApi: import('../lib/bundlerWorker').HostApi = {
-    //   async getCanonicalUrl(href) {
-    //     const url = await editorManager.inflightCachingHost.getCanonicalUrl(editorManager.resolver, new URL(href));
-
-    //     return url.href;
-    //   },
-    //   async getResolveRoot(href) {
-    //     const url = await editorManager.inflightCachingHost.getResolveRoot(editorManager.resolver, new URL(href));
-
-    //     return url.href;
-    //   },
-    //   async listEntries(href) {
-    //     const entries = await editorManager.inflightCachingHost.listEntries(editorManager.resolver, new URL(href));
-
-    //     return entries.map(entry => {
-    //       return {
-    //         type: entry.type,
-    //         href: entry.url.href,
-    //       };
-    //     });
-    //   },
-    //   async readFileContent(href) {
-    //     const content = await editorManager.inflightCachingHost.readFileContent(editorManager.resolver, new URL(href));
-
-    //     return editorManager.resolver.decoder.decode(content);
-    //   },
-    //   async resolveBareModule(spec, pathname) {
-    //     const url = await editorManager.resolveBareModule(spec, pathname);
-
-    //     return url.href;
-    //   },
-    // };
-    // const workerClient = expose(hostApi).connect<import('../lib/bundlerWorker').WorkerApi>(
-    //   Transport.fromDomWorker(worker)
-    // );
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let building = true;
     let tokenSource = new CancellationTokenSource();
 
@@ -192,6 +154,7 @@ const Preview: React.FC<{ className?: string }> = props => {
             onCompleteAsset,
             {
               executeEntrypoints: true,
+              // loggerLevel: 'debug',
               sourceMap: false,
             }
           );
@@ -217,6 +180,7 @@ const Preview: React.FC<{ className?: string }> = props => {
             {
               executeEntrypoints: true,
               invalidations: invalidate,
+              // loggerLevel: 'debug',
               sourceMap: true,
             }
           );
