@@ -186,7 +186,8 @@ export class Bundler {
 
     const resolveDependency = (asset: Asset, dependency: Asset.Dependency) => {
       enqueue(async () => {
-        let resolveDetails = dependency.resolveDetails;
+        const resolutionCacheKey = JSON.stringify([dependency.value, asset.href]);
+        let resolveDetails = this.resolutionCache.get(resolutionCacheKey);
 
         if (!resolveDetails) {
           this.logger.info({ href: asset.href, dependency: dependency.value }, 'resolveDependency cache miss');
@@ -197,6 +198,8 @@ export class Bundler {
           // console.debug('[HIT] resolveDependency(%s, %s)', asset.href, dependency.value);
         }
 
+        dependency.resolveDetails = resolveDetails;
+
         return resolveAsset(resolveDetails);
       });
     };
@@ -204,8 +207,6 @@ export class Bundler {
     if (options.invalidations) {
       for (const invalidation of options.invalidations) {
         for (const resolutionCacheKey of this.resolutionInvalidations.getValues(invalidation)) {
-          this.resolutionInvalidations.deleteAll(invalidation);
-
           if (this.resolutionCache.delete(resolutionCacheKey)) {
             this.logger.info({ resolutionCacheKey }, 'invalidated resolution cache entry');
             // console.debug('[INVALID] invalidated resolution %s by %s', resolutionCacheKey, invalidation);
