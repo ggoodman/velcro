@@ -12,7 +12,7 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/velcro/html.worker.js"
   },
   {
-    "revision": "cbaf5fd40a8f2679d2977a282f0482b7",
+    "revision": "71e0fe6d9eae7c2ed35a4d1098d830e9",
     "url": "/velcro/index.html"
   },
   {
@@ -24,8 +24,8 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/velcro/static/css/3.b5046089.chunk.css"
   },
   {
-    "revision": "1d73744f97ee9788f66ab4ce720466cb",
-    "url": "/velcro/static/js/0.63de61d4.chunk.worker.js"
+    "revision": "b713337bc81337ce82855693e8e8e425",
+    "url": "/velcro/static/js/0.57620719.chunk.worker.js"
   },
   {
     "revision": "e1e2c97fc3b18b7dc623",
@@ -280,8 +280,8 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/velcro/static/js/9.2b983f56.chunk.js"
   },
   {
-    "revision": "e0c83c058586f95b85d5",
-    "url": "/velcro/static/js/main.adb9b6ec.chunk.js"
+    "revision": "c2cee353141f698cd883",
+    "url": "/velcro/static/js/main.72534f66.chunk.js"
   },
   {
     "revision": "2c05481730f13255b624",
