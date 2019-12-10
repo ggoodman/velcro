@@ -63,11 +63,17 @@ export interface IRuntime {
   unregister(spec: string): IModule | undefined;
 }
 
+export interface RuntimeLogger {
+  debug(...args: any[]): void;
+}
+
 export interface RuntimeOptions {
   /**
    * Whether the listed entrypoints should be automatically invoked
    */
   executeEntrypoints?: boolean;
+
+  loggerLevel?: keyof RuntimeLogger;
 
   runtime?: string;
 }

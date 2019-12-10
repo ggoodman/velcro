@@ -64,7 +64,7 @@ export function maybeParseBareModuleSpec(spec: string): BareModuleSpec | undefin
    * 3: version?
    * 4: pathname
    */
-  const matches = spec.match(SPEC_RX);
+  const matches = String.prototype.match.call(spec, SPEC_RX);
 
   if (!matches) {
     return undefined;

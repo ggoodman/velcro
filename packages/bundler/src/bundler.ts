@@ -153,11 +153,22 @@ export class Bundler {
         assets.add(asset);
 
         if (!asset.magicString || !asset.dependencies) {
-          this.logger.info({ href: asset.href }, 'resolveAsset readCode');
           // console.debug('[MISS] resolveAsset(%s)', asset.href);
           const code = await this.readCode(asset, { token });
 
           asset.setCode(code);
+
+          this.logger.info(
+            {
+              href: asset.href,
+              dependencies: asset.dependencies!.map(dep => ({
+                value: dep.value,
+                type: dep.type,
+                resolved: !!dep.resolveDetails,
+              })),
+            },
+            'resolveAsset readCode'
+          );
 
           // We only add assets that needed to be (re)created to an incremental build
           incrementalAssets.add(asset);
@@ -199,6 +210,10 @@ export class Bundler {
             this.logger.info({ resolutionCacheKey }, 'invalidated resolution cache entry');
             // console.debug('[INVALID] invalidated resolution %s by %s', resolutionCacheKey, invalidation);
           }
+        }
+
+        if (this.resolutionInvalidations.deleteAll(invalidation)) {
+          this.logger.info({ invalidation }, 'invalidated resolution invalidations');
         }
 
         const asset = this.assetsByHref.get(invalidation);

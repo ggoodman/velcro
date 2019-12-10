@@ -46,6 +46,7 @@ export class Bundle {
     );
     const runtimeOptions: RuntimeOptions = {
       executeEntrypoints: options.executeEntrypoints,
+      loggerLevel: options.loggerLevel,
       runtime: options.runtime,
     };
 

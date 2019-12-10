@@ -9,14 +9,19 @@
 export function createRuntime(manifest, options) {
   'use strict';
 
-  /** @type {Record<string, string | undefined>} */
-  var aliases = Object.create(null);
   /** @type {Record<string, Record<string, string | undefined> | undefined> } */
   var mappings = Object.create(null);
   /** @type {Record<string, Module | undefined>} */
   var modules = Object.create(null);
   /** @type {Record<string, import('./types').ModuleFactory | undefined>} */
   var registry = Object.create(null);
+  var logLevel = { never: 0, debug: 1 }[(options && options.loggerLevel) || 'never'];
+  /** @type {import('./types').RuntimeLogger} */
+  var logger = {
+    debug(...args) {
+      if (logLevel >= 1) console.debug(...args);
+    },
+  };
 
   /**
    * @class
@@ -35,7 +40,8 @@ export function createRuntime(manifest, options) {
    * @param {string} id
    */
   Runtime.prototype.alias = function(name, id) {
-    aliases[name] = id;
+    logger.debug(`runtime.alias(%s, %s)`, name, id);
+    this.dependency(this.root.id, name, id);
   };
 
   /**
@@ -44,6 +50,7 @@ export function createRuntime(manifest, options) {
    * @param {string} toId
    */
   Runtime.prototype.dependency = function(fromId, spec, toId) {
+    logger.debug(`runtime.dependency(%s, %s, %s)`, fromId, spec, toId);
     var mappingsForId = mappings[fromId];
 
     if (!mappingsForId) {
@@ -58,7 +65,11 @@ export function createRuntime(manifest, options) {
    * @param {string} id
    */
   Runtime.prototype.get = function(id) {
-    id = aliases[id] || id;
+    var mappingsForId = mappings[this.root.id];
+
+    if (mappingsForId) {
+      id = mappingsForId[id] || id;
+    }
 
     return modules[id];
   };
@@ -69,12 +80,6 @@ export function createRuntime(manifest, options) {
    * @returns {string}
    */
   Runtime.prototype.getId = function(fromId, spec) {
-    var alias = aliases[spec];
-
-    if (alias) {
-      return alias;
-    }
-
     var mappingsForId = mappings[fromId];
 
     return (mappingsForId && mappingsForId[spec]) || spec;
@@ -112,6 +117,7 @@ export function createRuntime(manifest, options) {
    * @param {import('./types').ModuleFactory} factory
    */
   Runtime.prototype.register = function(id, factory) {
+    logger.debug(`runtime.register(%s, %s)`, id);
     registry[id] = factory;
   };
 
@@ -121,6 +127,8 @@ export function createRuntime(manifest, options) {
    */
   Runtime.prototype.remove = function(id) {
     const module = this.get(id);
+
+    logger.debug(`runtime.remove(%s): %s`, id, !!module);
 
     if (!module) {
       return;
@@ -143,7 +151,7 @@ export function createRuntime(manifest, options) {
    * @param {string} id
    */
   Runtime.prototype.require = function(id) {
-    return this.root.require(aliases[id] || id);
+    return this.root.require(id);
   };
 
   /**
@@ -151,6 +159,7 @@ export function createRuntime(manifest, options) {
    * @returns {Module | undefined}
    */
   Runtime.prototype.unregister = function(id) {
+    logger.debug(`runtime.unregister(%s)`, id);
     const module = this.get(id);
 
     if (!module) {
@@ -241,8 +250,17 @@ export function createRuntime(manifest, options) {
 
       modules[id] = module;
 
+      // In a hot reload scenario there may be two generations
+      // of the same module. Don't record these dependencies.
+      if (module.id !== this.id) {
+        module.dependents.add(this);
+        this.dependencies.add(module);
+      }
+
       var dirname = id;
       var filename = id;
+
+      logger.debug(`require::factory(%s)`, id, factory);
 
       factory.call(
         module.module.exports,
