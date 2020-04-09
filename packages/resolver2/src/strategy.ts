@@ -3,6 +3,7 @@ import { Thenable } from 'ts-primitives';
 import { ResolverContext } from './context';
 import { Settings } from './settings';
 import { Uri } from './uri';
+import { ResolveResult } from './resolver';
 
 export enum ResolvedEntryKind {
   File = 'file',
@@ -13,6 +14,8 @@ export interface ResolvedEntry<TKind extends ResolvedEntryKind = ResolvedEntryKi
   uri: Uri;
   type: TKind;
 }
+
+export interface BareModuleResult extends ResolveResult {}
 
 export interface CanonicalizeResult {
   uri: Uri;
@@ -39,6 +42,11 @@ export interface ReadFileContentResult {
 }
 
 export interface ResolverStrategy {
+  getUrlForBareModule?(
+    this: ResolverStrategy,
+    spec: string,
+    ctx: ResolverContext
+  ): BareModuleResult | Thenable<BareModuleResult>;
   getCanonicalUrl(
     this: ResolverStrategy,
     uri: Uri,

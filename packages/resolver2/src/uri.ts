@@ -45,6 +45,10 @@ export class Uri extends URI {
     return childHref.slice(parentHref.length + 1 + parentOffset);
   }
 
+  static from(...args: Parameters<typeof URI['from']>) {
+    return new Uri(super.from(...args));
+  }
+
   static isPrefixOf(prefix: Uri, uri: Uri) {
     return (
       prefix.authority === uri.authority &&
@@ -55,7 +59,20 @@ export class Uri extends URI {
     );
   }
 
-  toString() {
-    return super.toString(true);
+  static parse(...args: Parameters<typeof URI['parse']>) {
+    return new Uri(super.parse(...args));
+  }
+
+  static revive(...args: Parameters<typeof URI['revive']>) {
+    //@ts-ignore
+    return new Uri(super.revive(...args));
+  }
+
+  toString(skipEncoding = true) {
+    return super.toString(skipEncoding);
+  }
+
+  with(...args: Parameters<URI['with']>) {
+    return new Uri(super.with(...args));
   }
 }

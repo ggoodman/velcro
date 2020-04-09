@@ -9,6 +9,7 @@ import {
   CanonicalizeResult,
   ResolveRootResult,
   ListEntriesResult,
+  BareModuleResult,
 } from './strategy';
 import { Uri } from './uri';
 import { PackageJson, parseBufferAsPackageJson } from './packageJson';
@@ -78,6 +79,121 @@ export function isValidFile(entry: unknown): entry is File {
 
 function specToString(spec: Spec) {
   return `${spec.spec}${spec.pathname}`;
+}
+
+class JSDelivrCdn implements AbstractCdn {
+  name = 'jsdelivr';
+
+  private readonly specRx = /^\/((@[^/]+\/[^/@]+|[^/@]+)(?:@([^/]+))?)(.*)?$/;
+
+  isValidUrl(url: Uri) {
+    return url.scheme === JSDelivrCdn.protocol || url.authority === JSDelivrCdn.host;
+  }
+
+  normalizePackageListing(result: unknown): Directory {
+    if (!result || typeof result !== 'object') {
+      throw new Error(`Unexpected package listing contents`);
+    }
+
+    const files = (result as any).files;
+
+    if (!Array.isArray(files)) {
+      throw new Error(`Unexpected package listing contents`);
+    }
+
+    const mapChildEntry = (parent: string, child: unknown): Entry => {
+      if (!child || typeof child !== 'object') {
+        throw new Error(`Unexpected entry in package listing contents`);
+      }
+
+      const name = (child as any).name;
+
+      if (typeof name !== 'string') {
+        throw new Error(`Unexpected entry in package listing contents`);
+      }
+
+      const path = `${parent}/${name}`;
+
+      if ((child as any).type === ResolvedEntryKind.Directory) {
+        const files = (child as any).files;
+
+        if (!Array.isArray(files)) {
+          throw new Error(`Unexpected entry in package listing contents`);
+        }
+        return {
+          type: ResolvedEntryKind.Directory,
+          path,
+          files: files.map((file) => mapChildEntry(path, file)),
+        };
+      } else if ((child as any).type === ResolvedEntryKind.File) {
+        return {
+          type: ResolvedEntryKind.File,
+          path,
+        };
+      }
+
+      throw new Error(`Error mapping child entry in package file listing`);
+    };
+
+    return {
+      type: ResolvedEntryKind.Directory,
+      path: '/',
+      files: files.map((file) => mapChildEntry('', file)),
+    };
+  }
+
+  parseUrl(url: Uri | string) {
+    if (Uri.isUri(url)) {
+      url = url.path;
+    }
+
+    const prefix = `/npm`;
+
+    if (!url.startsWith(prefix)) {
+      throw new Error(`Unable to parse unexpected ${this.name} url: ${url}`);
+    }
+
+    url = url.slice(prefix.length);
+
+    /**
+     * 1: scope + name + version
+     * 2: scope + name
+     * 3: version?
+     * 4: pathname
+     */
+    const matches = url.match(this.specRx);
+
+    if (!matches) {
+      throw new Error(`Unable to parse unexpected unpkg url: ${url}`);
+    }
+
+    return {
+      spec: matches[1],
+      name: matches[2],
+      version: matches[3] || '',
+      pathname: matches[4] || '',
+    };
+  }
+
+  urlForPackageFile(spec: string, pathname: string): Uri {
+    return Uri.from({
+      scheme: JSDelivrCdn.protocol,
+      authority: JSDelivrCdn.host,
+      path: `/npm/${spec}${pathname}`,
+    });
+  }
+
+  urlForPackageList(spec: string): Uri {
+    return Uri.from({
+      scheme: JSDelivrCdn.protocol,
+      authority: JSDelivrCdn.dataHost,
+      path: `/v1/package/npm/${spec}/tree`,
+    });
+  }
+
+  static readonly protocol = 'https';
+  static readonly host = 'cdn.jsdelivr.net';
+  static readonly dataHost = 'data.jsdelivr.com';
 }
 
 class UnpkgCdn implements AbstractCdn {
@@ -154,10 +270,10 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
   readonly #packageJsonCache = new Map<string, Map<string, PackageJson>>();
   readonly #readUrlFn: UrlContentFetcher;
 
-  constructor(readUrlFn: UrlContentFetcher) {
+  constructor(readUrlFn: UrlContentFetcher, cdn: 'jsdelivr' | 'unpkg' = 'jsdelivr') {
     super();
 
-    this.#cdn = new UnpkgCdn();
+    this.#cdn = cdn === 'jsdelivr' ? new JSDelivrCdn() : new UnpkgCdn();
     this.#readUrlFn = readUrlFn;
   }
 
@@ -169,11 +285,20 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
 
     if (!Uri.isPrefixOf(rootUri, uri)) {
       throw new Error(
-        `This strategy is only able to handle URIs under '${rootUri.toString()}' and is unable to handle '${uri.toString()}'`
+        `This strategy is only able to handle URIs under '${rootUri.toString(
+          true
+        )}' and is unable to handle '${uri.toString()}'`
       );
     }
 
     return fn(rootUri);
+  }
+
+  async getUrlForBareModule(spec: string, ctx: ResolverContext): Promise<BareModuleResult> {
+    const unresolvedUri = this.#cdn.urlForPackageFile(spec, '');
+    const resolveReturn = await ctx.resolve(unresolvedUri);
+
+    return resolveReturn;
   }
 
   getCanonicalUrl(uri: Uri, ctx: ResolverContext): Promise<CanonicalizeResult> {

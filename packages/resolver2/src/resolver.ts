@@ -1,4 +1,4 @@
-import { basename, CancellationToken, CancellationTokenSource } from 'ts-primitives';
+import { basename, CancellationToken, CancellationTokenSource, Thenable } from 'ts-primitives';
 import { all, isThenable, checkCancellation } from './async';
 import { CanceledError, EntryNotFoundError } from './error';
 import { Uri } from './uri';
@@ -8,6 +8,7 @@ import { ResolverStrategy, ResolvedEntryKind, ResolvedEntry } from './strategy';
 import { Settings } from './settings';
 
 export interface ReadParentPackageJsonOptions {
+  ctx?: ResolverContext;
   token?: CancellationToken;
 }
 
@@ -31,6 +32,7 @@ export type ReadParentPackageJsonResult = ReadParentPackageJsonResultInternal & 
 };
 
 export interface ResolveOptions {
+  ctx?: ResolverContext;
   token?: CancellationToken;
 }
 
@@ -42,6 +44,8 @@ interface ResolveResultInternal {
 export interface ResolveResult extends ResolveResultInternal {
   visited: Set<string>;
 }
+
+const SPEC_RX = /^((@[^/]+\/[^/@]+|[^./@][^/@]*)(?:@([^/]+))?)(.*)?$/;
 
 export abstract class AbstractResolverStrategy implements ResolverStrategy {
   getCanonicalUrl(
@@ -81,41 +85,125 @@ export class Resolver {
     this.#strategy = strategy;
   }
 
-  resolve(url: string | Uri, options: ResolveOptions = {}): Promise<ResolveResult> {
-    const tokenSource = new CancellationTokenSource(options.token);
-    const ctx = ResolverContext.create(
-      typeof url === 'string' ? Uri.parse(url) : url,
-      this.#strategy,
-      this.#settings,
-      tokenSource.token
-    );
+  async readFileContent(
+    spec: string,
+    options?: { ctx?: ResolverContext; parseAsString: true; token?: CancellationToken }
+  ): Promise<{ content: string; found: boolean; uri: Uri | null }>;
+  async readFileContent(
+    spec: string,
+    options?: { ctx?: ResolverContext; parseAsString?: false; token?: CancellationToken }
+  ): Promise<{ content: ArrayBuffer; found: boolean; uri: Uri | null }>;
+  async readFileContent(
+    spec: string,
+    options: { ctx?: ResolverContext; parseAsString?: boolean; token?: CancellationToken } = {}
+  ): Promise<{ content: ArrayBuffer | string; found: boolean; uri: Uri | null }> {
+    let ctx = options.ctx;
+    let tokenSource: CancellationTokenSource | undefined;
 
-    return this._resolve(url, ctx)
-      .then(
-        (result) => {
-          return {
-            ...result,
-            visited: ctx.visited,
-          };
-        },
-        (err) => {
-          tokenSource.cancel();
+    if (!ctx) {
+      tokenSource = new CancellationTokenSource(options.token);
+      ctx = ResolverContext.create(spec, this, this.#strategy, this.#settings, tokenSource.token);
+    }
 
-          return Promise.reject(err);
-        }
-      )
-      .finally(() => {
-        tokenSource.dispose();
-      });
+    try {
+      let found: boolean;
+      let uri: Uri | null;
+      if (SPEC_RX.test(spec)) {
+        const result = await ctx.getUrlForBareModule(spec);
+        found = result.found;
+        uri = result.uri;
+      } else {
+        const result = await this.resolve(spec, { ctx });
+        found = result.found;
+        uri = result.uri;
+      }
+      if (!found) {
+        throw new EntryNotFoundError(spec);
+      }
+
+      if (uri === null) {
+        return {
+          content: options.parseAsString ? '' : new ArrayBuffer(0),
+          found,
+          uri,
+        };
+      }
+
+      const { content } = await ctx.readFileContent(uri);
+
+      return {
+        content: options.parseAsString ? ctx.decoder.decode(content) : content,
+        found,
+        uri,
+      };
+    } finally {
+      tokenSource?.dispose(true);
+    }
+  }
+
+  async resolve(url: string | Uri, options: ResolveOptions = {}): Promise<ResolveResult> {
+    let ctx = options.ctx;
+    let tokenSource: CancellationTokenSource | undefined;
+
+    if (!ctx) {
+      tokenSource = new CancellationTokenSource(options.token);
+      ctx = ResolverContext.create(
+        String(url),
+        this,
+        this.#strategy,
+        this.#settings,
+        tokenSource.token
+      );
+    }
+
+    try {
+      const result = await this._resolve(url, ctx);
+
+      return {
+        ...result,
+        visited: ctx.visited,
+      };
+    } finally {
+      tokenSource?.dispose(true);
+    }
+  }
+
+  async resolveBareModule(spec: string, options: ResolveOptions = {}): Promise<ResolveResult> {
+    let ctx = options.ctx;
+    let tokenSource: CancellationTokenSource | undefined;
+
+    if (!ctx) {
+      tokenSource = new CancellationTokenSource(options.token);
+      ctx = ResolverContext.create(spec, this, this.#strategy, this.#settings, tokenSource.token);
+    }
+
+    try {
+      const result = await ctx.getUrlForBareModule(spec);
+
+      return {
+        ...result,
+        visited: ctx.visited,
+      };
+    } finally {
+      tokenSource?.dispose(true);
+    }
   }
 
   readParentPackageJson(
     url: string | Uri,
     options: ReadParentPackageJsonOptions = {}
-  ): Promise<ReadParentPackageJsonResult> {
+  ): Thenable<ReadParentPackageJsonResult> {
+    if (options.ctx) {
+      return this._readParentPackageJson(url, options.ctx).then((result) => ({
+        ...result,
+        visited: ctx.visited,
+      }));
+    }
+
     const tokenSource = new CancellationTokenSource(options.token);
     const ctx = ResolverContext.create(
-      typeof url === 'string' ? Uri.parse(url) : url,
+      String(url),
+      this,
       this.#strategy,
       this.#settings,
       tokenSource.token
@@ -159,7 +247,9 @@ export class Resolver {
 
     if (!Uri.isPrefixOf(rootUriWithoutTrailingSlash, canonicalizationResult.uri)) {
       throw new Error(
-        `Unable to resolve a module whose path ${canonicalizationResult.uri.toString()} is above the host's root ${rootUri.toString()}`
+        `Unable to resolve a module whose path ${canonicalizationResult.uri.toString(
+          true
+        )} is above the host's root ${rootUri.toString()}`
       );
     }
 
