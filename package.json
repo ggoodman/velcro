@@ -19,24 +19,26 @@
   "author": "Geoff Goodman <geoff@goodman.dev> (https://geoff.goodman.dev)",
   "license": "MIT",
   "devDependencies": {
+    "@ggoodman/ts-lib-tools": "^0.4.0",
+    "@hapi/wreck": "^17.0.0",
+    "gh-pages": "^2.2.0",
     "idb": "^4.0.4",
-    "lerna": "^3.16.4",
+    "lerna": "^3.20.2",
     "monaco-editor": "^0.18.1",
-    "prettier": "^1.18.2",
+    "prettier": "^2.0.4",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
-    "rollup": "^1.21.4",
-    "serve": "^11.1.0",
-    "typescript": "^3.7.2"
+    "rollup": "^1.29.0",
+    "serve": "^11.3.0",
+    "typescript": "^3.7.5"
   },
   "prettier": {
     "printWidth": 120,
     "singleQuote": true,
     "tabWidth": 2,
-    "trailingComma": "es5"
+    "trailingComma": "es5",
+    "parser": "babel-ts"
   },
-  "dependencies": {
-    "gh-pages": "^2.1.1"
-  },
+  "dependencies": {},
   "homepage": "https://ggoodman.github.io/velcro"
 }

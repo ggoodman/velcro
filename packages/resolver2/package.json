@@ -12,6 +12,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@ggoodman/channels": "^0.2.0",
+    "@ggoodman/ts-lab": "^1.0.3",
     "@ggoodman/ts-lib-tools": "^0.4.0",
     "@hapi/code": "^8.0.1",
     "@hapi/lab": "^22.0.4",
@@ -19,6 +21,7 @@
     "@pollyjs/adapter-node-http": "^4.0.4",
     "@pollyjs/core": "^4.0.4",
     "@pollyjs/persister-fs": "^4.0.4",
+    "@types/estree": "0.0.44",
     "@types/pollyjs__adapter-node-http": "^2.0.0",
     "@types/pollyjs__core": "^4.0.0",
     "@types/pollyjs__persister-fs": "^2.0.0",
@@ -27,6 +30,14 @@
     "typescript": "^3.8.3"
   },
   "dependencies": {
+    "@paybase/csp": "^1.0.9",
+    "@velcro/node-libs": "^0.27.0",
+    "acorn": "^7.1.1",
+    "buntis": "^0.2.1",
+    "magic-string": "^0.25.7",
+    "memfs": "^3.1.2",
+    "meriyah": "^1.9.12",
+    "seafox": "^1.5.0",
     "semver": "^7.2.1",
     "ts-primitives": "^2.4.0"
   },
