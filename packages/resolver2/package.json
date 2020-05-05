@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "0x": "^4.9.1",
     "@ggoodman/channels": "^0.2.0",
     "@ggoodman/ts-lab": "^1.0.3",
     "@ggoodman/ts-lib-tools": "^0.4.0",
@@ -27,7 +28,7 @@
     "@types/pollyjs__persister-fs": "^2.0.0",
     "prettier": "2",
     "ts-node": "^8.8.2",
-    "typescript": "^3.8.3"
+    "typescript": "^3.9.0-beta"
   },
   "dependencies": {
     "@paybase/csp": "^1.0.9",
@@ -37,9 +38,11 @@
     "magic-string": "^0.25.7",
     "memfs": "^3.1.2",
     "meriyah": "^1.9.12",
+    "piscina": "^1.2.0",
     "seafox": "^1.5.0",
     "semver": "^7.2.1",
-    "ts-primitives": "^2.4.0"
+    "ts-primitives": "^2.4.0",
+    "web-worker": "^1.0.0"
   },
   "prettier": {
     "printWidth": 100,

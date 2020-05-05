@@ -2,6 +2,12 @@ abstract class BaseError extends Error {
   readonly name = this.constructor.name;
 }
 
+export class BuildError extends BaseError {
+  constructor(readonly errors: Error[]) {
+    super(`Build failed with errors: ${errors.map((err) => err.message).join('\n')}`);
+  }
+}
+
 export class AmbiguousModuleError extends BaseError {}
 
 export class CanceledError extends BaseError {}
@@ -25,3 +31,7 @@ export class DependencyNotFoundError extends EntryNotFoundError {
 }
 
 export class NotResolvableError extends BaseError {}
+
+export function isCanceledError(err: unknown): err is CanceledError {
+  return err instanceof CanceledError || (err as any)?.name === 'CanceledError';
+}

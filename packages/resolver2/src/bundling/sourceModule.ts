@@ -16,6 +16,10 @@ export class SourceModule {
     return this.uri.toString();
   }
 
+  get rootHref() {
+    return this.rootUri.toString();
+  }
+
   setUriForDependency(dependency: SourceModuleDependency, uri: Uri) {
     if (!this.dependencies.has(dependency)) {
       throw new Error(`WAT?`);

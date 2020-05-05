@@ -28,7 +28,7 @@ import {
   isNodeWithStartAndEnd,
   NodeWithStartAndEnd,
 } from './ast';
-import MagicString from 'magic-string';
+// import MagicString from 'magic-string';
 
 // const whitespaceRx = /^\s*$/m;
 
@@ -40,44 +40,40 @@ const defaultParseOptions: ParseOptions = {
   nodeEnv: 'development',
 };
 
-export function parseFile(uri: string, code: string, options?: ParseOptions) {
+export function parseFile(uri: string, code: string, options: ParseOptions = {}) {
   const ctx: DependencyVisitorContext = Object.assign(Object.create(null), defaultParseOptions, {
     unboundSymbols: new Map(),
     locals: new Map(),
-    nodeEnv: options?.nodeEnv,
+    nodeEnv: options.nodeEnv,
     replacements: [],
     requires: [],
     requireResolves: [],
     skip: new Set(),
   });
 
-  const magicString = new MagicString(code, {
-    filename: uri,
-    indentExclusionRanges: [],
-  });
+  // const magicString = new MagicString(code, {
+  //   filename: uri,
+  //   indentExclusionRanges: [],
+  // });
 
   try {
     // let lastToken: acorn.Token | undefined = undefined;
 
-    const ast = parse(magicString.original, {
-      onComment: (_isBlock, _test, start, end) => {
-        magicString.remove(start, end);
-      },
-      onToken: (token) => {
-        magicString.addSourcemapLocation(token.start);
-
-        // const wsStart = lastToken ? lastToken.end : 0;
-
-        // if (wsStart < token.start - 1) {
-        //   const between = magicString.original.substring(wsStart, token.start);
-
-        //   if (whitespaceRx.test(between)) {
-        //     magicString.overwrite(wsStart, token.start - 1, ' ');
-        //   }
-        // }
-
-        // lastToken = token;
-      },
+    const ast = parse(code, {
+      // onComment: (_isBlock, _test, start, end) => {
+      //   magicString.remove(start, end);
+      // },
+      // onToken: (token) => {
+      //   magicString.addSourcemapLocation(token.start);
+      //   // const wsStart = lastToken ? lastToken.end : 0;
+      //   // if (wsStart < token.start - 1) {
+      //   //   const between = magicString.original.substring(wsStart, token.start);
+      //   //   if (whitespaceRx.test(between)) {
+      //   //     magicString.overwrite(wsStart, token.start - 1, ' ');
+      //   //   }
+      //   // }
+      //   // lastToken = token;
+      // },
     });
 
     traverse(ast, ctx, scopingAndRequiresVisitor);
@@ -120,7 +116,6 @@ export function parseFile(uri: string, code: string, options?: ParseOptions) {
   }
 
   return {
-    magicString,
     requireDependencies,
     requireResolveDependencies,
     unboundSymbols,

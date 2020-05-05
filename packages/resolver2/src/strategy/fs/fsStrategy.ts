@@ -44,11 +44,21 @@ export class FsStrategy extends AbstractResolverStrategy {
       throw err;
     }
 
-    const realpath = await this.fs.promises.realpath(uri.fsPath);
+    try {
+      const realpath = await this.fs.promises.realpath(uri.fsPath);
 
-    return {
-      uri: Uri.file(realpath),
-    };
+      return {
+        uri: Uri.file(realpath),
+      };
+    } catch (err) {
+      if (err?.code === 'ENOENT') {
+        return {
+          uri,
+        };
+      }
+
+      throw err;
+    }
   }
 
   getRootUrl() {

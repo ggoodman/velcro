@@ -9,6 +9,8 @@ import { Settings } from './settings';
 import { ResolverStrategy, ResolvedEntryKind, ResolvedEntry } from './strategy';
 import { Uri } from './uri';
 
+const DEBUG = process.env.DEBUG?.match(/\bbuilder\b/);
+
 // type HeadArgs<T extends (...args: any[]) => any> = T extends (head: infer I, ...tail: any[]) => any
 //   ? I
 //   : never;
@@ -524,7 +526,7 @@ export class ResolverContext {
       );
     }
 
-    return new ResolverContext({
+    const ctx = new ResolverContext({
       cache: this.#cache,
       decoder: this.#decoder,
       path: this.#path.concat(encodedOperation),
@@ -533,6 +535,10 @@ export class ResolverContext {
       strategy: this.#strategy,
       token: this.#tokenSource.token,
     });
+
+    ctx.debug('%s(%s)', operationName, uri);
+
+    return ctx;
   }
 
   private _invokeOwnMethod<
@@ -677,10 +683,12 @@ export class ResolverContext {
   }
 
   debug(...args: Parameters<Console['debug']>) {
-    if (typeof args[0] === 'string') {
-      args[0] = ' '.repeat(this.#path.length) + args[0];
+    if (DEBUG) {
+      if (typeof args[0] === 'string') {
+        args[0] = ' '.repeat(this.#path.length) + args[0];
+      }
+      console.debug(...args);
     }
-    console.debug(...args);
   }
 }
 
@@ -689,9 +697,10 @@ function encodePathNode(operationName: string, uri: { toString(): string }) {
 }
 
 function decodePathNode(node: string) {
-  const parts = node.split(':');
+  const parts = node.split(':', 2);
 
   if (parts.length !== 2) {
+    console.log('WTF', { node, parts });
     throw new Error(`Invariant violation: Unexpected path node: '${node}'`);
   }
 

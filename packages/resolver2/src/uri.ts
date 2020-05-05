@@ -1,4 +1,4 @@
-import { URI, resolve } from 'ts-primitives';
+import { URI } from 'ts-primitives';
 
 const TRAILING_SLASH_RX = /\/?$/;
 

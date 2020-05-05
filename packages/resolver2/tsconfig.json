@@ -5,7 +5,8 @@
     "outDir": "./dist",
     "target": "ES2019",
     "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "typeRoots": ["node_modules/@types", "types"]
   },
   "include": ["src", "test"]
 }
