@@ -1,20 +1,14 @@
 // import { fetch, AbortController, AbortError, AbortSignal } from 'fetch-h2';
+import { script } from '@hapi/lab';
 import { read, request } from '@hapi/wreck';
 import * as MemFs from 'memfs';
 import { CancellationToken } from 'ts-primitives';
-
-import { expect } from '@hapi/code';
-import { script } from '@hapi/lab';
-
-import { Bundler } from '../src/bundling/bundler';
+import { CanceledError } from '../src/error';
+import { Resolver } from '../src/resolver';
 import { CdnStrategy } from '../src/strategy/cdn';
 import { CompoundStrategy } from '../src/strategy/compound';
 import { FsStrategy } from '../src/strategy/fs';
-import { Resolver } from '../src/resolver';
-import { CanceledError } from '../src/error';
-import { Uri } from '../src/uri';
 import { FsInterface } from '../src/strategy/fs/types';
-
 import { polly } from './lib/wreck';
 
 export const lab = script();
@@ -53,7 +47,7 @@ function createBundler(rootFs: typeof MemFs.vol) {
     packageMain: ['main'],
   });
 
-  return new Bundler(resolver);
+  // return createBundle({ resolver});
 }
 
 describe('Resolver', () => {
@@ -77,6 +71,6 @@ describe('Resolver', () => {
       )
     );
 
-    await bundler.add(Uri.file('/'));
+    // await bundler.add(Uri.file('/'));
   });
 });

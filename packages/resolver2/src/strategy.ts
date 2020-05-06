@@ -41,64 +41,64 @@ export interface ReadFileContentResult {
 export interface ResolverStrategy {
   getUrlForBareModule?(
     this: ResolverStrategy,
+    ctx: ResolverContext,
     name: string,
     spec: string,
-    path: string,
-    ctx: ResolverContext
+    path: string
   ): BareModuleResult | Thenable<BareModuleResult>;
   getCanonicalUrl(
     this: ResolverStrategy,
-    uri: Uri,
-    ctx: ResolverContext
+    ctx: ResolverContext,
+    uri: Uri
   ): CanonicalizeResult | Thenable<CanonicalizeResult>;
   getResolveRoot(
     this: ResolverStrategy,
-    uri: Uri,
-    ctx: ResolverContext
+    ctx: ResolverContext,
+    uri: Uri
   ): ResolveRootResult | Thenable<ResolveRootResult>;
   getSettings(
     this: ResolverStrategy,
-    uri: Uri,
-    ctx: ResolverContext
+    ctx: ResolverContext,
+    uri: Uri
   ): SettingsResult | Thenable<SettingsResult>;
-  canResolve(this: ResolverStrategy, uri: Uri): boolean;
+  canResolve(this: ResolverStrategy, ctx: ResolverContext, uri: Uri): boolean;
   listEntries(
     this: ResolverStrategy,
-    uri: Uri,
-    ctx: ResolverContext
+    ctx: ResolverContext,
+    uri: Uri
   ): ListEntriesResult | Thenable<ListEntriesResult>;
   readFileContent(
     this: ResolverStrategy,
-    uri: Uri,
-    ctx: ResolverContext
+    ctx: ResolverContext,
+    uri: Uri
   ): ReadFileContentResult | Thenable<ReadFileContentResult>;
 }
 
 export abstract class AbstractResolverStrategy implements ResolverStrategy {
   getCanonicalUrl(
-    uri: Uri,
-    _ctx: ResolverContext
+    _ctx: ResolverContext,
+    uri: Uri
   ): ReturnType<ResolverStrategy['getCanonicalUrl']> {
     return {
       uri,
     };
   }
 
-  abstract canResolve(_uri: Uri): ReturnType<ResolverStrategy['canResolve']>;
+  abstract canResolve(ctx: ResolverContext, _uri: Uri): ReturnType<ResolverStrategy['canResolve']>;
 
-  getSettings(_uri: Uri, ctx: ResolverContext): ReturnType<ResolverStrategy['getSettings']> {
+  getSettings(ctx: ResolverContext, _uri: Uri): ReturnType<ResolverStrategy['getSettings']> {
     return {
       settings: ctx.settings,
     };
   }
 
   abstract getResolveRoot(
-    uri: Uri,
-    ctx: ResolverContext
+    ctx: ResolverContext,
+    uri: Uri
   ): ReturnType<ResolverStrategy['getResolveRoot']>;
-  abstract listEntries(uri: Uri, ctx: ResolverContext): ReturnType<ResolverStrategy['listEntries']>;
+  abstract listEntries(ctx: ResolverContext, uri: Uri): ReturnType<ResolverStrategy['listEntries']>;
   abstract readFileContent(
-    uri: Uri,
-    ctx: ResolverContext
+    ctx: ResolverContext,
+    uri: Uri
   ): ReturnType<ResolverStrategy['readFileContent']>;
 }

@@ -1,4 +1,7 @@
+import { Uri } from '../uri';
+
 export enum SourceModuleDependencyKind {
+  Entrypoint = 'Entrypoint',
   Require = 'Require',
   RequireResolve = 'RequireResolve',
   GlobalObject = 'GlobalObject',
@@ -17,6 +20,10 @@ export class SourceModuleDependency {
     readonly locations: ReadonlyArray<SourceLocation>,
     readonly options: SourceModuleOptions = {}
   ) {}
+
+  static fromEntrypoint(uri: Uri) {
+    return new SourceModuleDependency(SourceModuleDependencyKind.Entrypoint, uri.toString(), []);
+  }
 
   static fromGloblaObject(spec: string, locations: SourceLocation[], exportName?: string) {
     return new SourceModuleDependency(SourceModuleDependencyKind.GlobalObject, spec, locations, {

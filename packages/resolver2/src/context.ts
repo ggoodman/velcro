@@ -164,7 +164,14 @@ export class ResolverContext {
   }
 
   canResolve(uri: Uri) {
-    return this.#strategy.canResolve(uri);
+    const method = this.#strategy.canResolve;
+    const receiver = this.#strategy;
+    const operationName = `${this.#strategy.constructor.name}.${method.name}`;
+    const href = uri.toString();
+
+    return this.runInChildContext(operationName, uri, (ctx) =>
+      this.runWithCache(operationName, href, method, receiver, ctx, uri)
+    );
   }
 
   dispose() {
@@ -172,15 +179,36 @@ export class ResolverContext {
   }
 
   getCanonicalUrl(uri: Uri) {
-    return this._invokeStrategyMethod(this.#strategy.getCanonicalUrl, uri);
+    const method = this.#strategy.getCanonicalUrl;
+    const receiver = this.#strategy;
+    const operationName = `${this.#strategy.constructor.name}.${method.name}`;
+    const href = uri.toString();
+
+    return this.runInChildContext(operationName, uri, (ctx) =>
+      this.runWithCache(operationName, href, method, receiver, ctx, uri)
+    );
   }
 
   getResolveRoot(uri: Uri) {
-    return this._invokeStrategyMethod(this.#strategy.getResolveRoot, uri);
+    const method = this.#strategy.getResolveRoot;
+    const receiver = this.#strategy;
+    const operationName = `${this.#strategy.constructor.name}.${method.name}`;
+    const href = uri.toString();
+
+    return this.runInChildContext(operationName, uri, (ctx) =>
+      this.runWithCache(operationName, href, method, receiver, ctx, uri)
+    );
   }
 
   getSettings(uri: Uri) {
-    return this._invokeStrategyMethod(this.#strategy.getSettings, uri);
+    const method = this.#strategy.getSettings;
+    const receiver = this.#strategy;
+    const operationName = `${this.#strategy.constructor.name}.${method.name}`;
+    const href = uri.toString();
+
+    return this.runInChildContext(operationName, uri, (ctx) =>
+      this.runWithCache(operationName, href, method, receiver, ctx, uri)
+    );
   }
 
   getUrlForBareModule(name: string, spec: string, path: string) {
@@ -194,15 +222,35 @@ export class ResolverContext {
       );
     }
 
-    return this._invokeStrategyMethod(method, name, spec, path);
+    const receiver = this.#strategy;
+    const operationName = `${this.#strategy.constructor.name}.${method.name}`;
+    const href = `${name}@${spec}${path}`;
+
+    return this.runInChildContext(operationName, href, (ctx) =>
+      this.runWithCache(operationName, href, method, receiver, ctx, name, spec, path)
+    );
   }
 
   listEntries(uri: Uri) {
-    return this._invokeStrategyMethod(this.#strategy.listEntries, uri);
+    const method = this.#strategy.listEntries;
+    const receiver = this.#strategy;
+    const operationName = `${this.#strategy.constructor.name}.${method.name}`;
+    const href = uri.toString();
+
+    return this.runInChildContext(operationName, uri, (ctx) =>
+      this.runWithCache(operationName, href, method, receiver, ctx, uri)
+    );
   }
 
   readFileContent(uri: Uri) {
-    return this._invokeStrategyMethod(this.#strategy.readFileContent, uri);
+    const method = this.#strategy.readFileContent;
+    const receiver = this.#strategy;
+    const operationName = `${this.#strategy.constructor.name}.${method.name}`;
+    const href = uri.toString();
+
+    return this.runInChildContext(operationName, uri, (ctx) =>
+      this.runWithCache(operationName, href, method, receiver, ctx, uri)
+    );
   }
 
   readParentPackageJson(uri: Uri) {
@@ -214,6 +262,82 @@ export class ResolverContext {
       this,
       uri
     );
+  }
+
+  recordVisit(uri: Uri, type: VisitKind = VisitKind.File) {
+    this.#visits.push({ type, uri });
+  }
+
+  resolve(uri: Uri) {
+    const method = resolve;
+    const receiver = null;
+    const operationName = method.name;
+    const href = uri.toString();
+
+    return this.runInChildContext(operationName, uri, (ctx) =>
+      this.runWithCache(operationName, href, method, receiver, ctx, uri)
+    );
+  }
+
+  runInChildContext<T>(
+    operationName: string,
+    uri: { toString(): string },
+    contextFn: (ctx: ResolverContext) => T
+  ): T {
+    return this.runInContext(
+      operationName,
+      uri,
+      { resetPath: false, resetVisits: false },
+      contextFn
+    );
+  }
+
+  runInIsolatedContext<T>(
+    operationName: string,
+    uri: { toString(): string },
+    contextFn: (ctx: ResolverContext) => T
+  ): T {
+    return this.runInContext(operationName, uri, { resetPath: true, resetVisits: true }, contextFn);
+  }
+
+  private runInContext<T>(
+    operationName: string,
+    uri: { toString(): string },
+    options: { resetPath: boolean; resetVisits: boolean },
+    contextFn: (ctx: ResolverContext) => T
+  ) {
+    const encodedOperation = encodePathNode(operationName, uri);
+
+    if (this.#path.includes(encodedOperation)) {
+      const formattedPath = this.#path
+        .map((segment) => {
+          const { operationName, uri } = decodePathNode(segment);
+
+          return `${operationName}(${uri.toString()})`;
+        })
+        .join(' -> ');
+
+      throw this._wrapError(
+        new Error(
+          `Detected a recursive call to the operation '${operationName}' for '${uri.toString()}' at path '${formattedPath}'`
+        )
+      );
+    }
+
+    const ctx = new ResolverContext({
+      cache: this.#cache,
+      decoder: this.#decoder,
+      path: options.resetPath ? [] : this.#path.concat(encodedOperation),
+      resolver: this.#resolver,
+      settings: this.#settings,
+      strategy: this.#strategy,
+      token: this.#tokenSource.token,
+      visits: options.resetVisits ? new Visits(uri) : this.#visits.child(uri),
+    });
+
+    ctx.debug('%s(%s)', operationName, uri);
+
+    return contextFn(ctx);
   }
 
   private runWithCache<TMethod extends (...args: any[]) => any>(
@@ -297,212 +421,6 @@ export class ResolverContext {
     operationCache.set(cacheKey, mappedResult);
 
     return mappedResult;
-  }
-
-  recordVisit(uri: Uri, type: VisitKind = VisitKind.File) {
-    this.#visits.push({ type, uri });
-  }
-
-  resolve(uri: Uri) {
-    return this._invokeOwnMethod(resolve, uri);
-  }
-
-  runInChildContext<T>(
-    operationName: string,
-    uri: { toString(): string },
-    contextFn: (ctx: ResolverContext) => T
-  ): T {
-    return this.runInContext(
-      operationName,
-      uri,
-      { resetPath: false, resetVisits: false },
-      contextFn
-    );
-  }
-
-  runInIsolatedContext<T>(
-    operationName: string,
-    uri: { toString(): string },
-    contextFn: (ctx: ResolverContext) => T
-  ): T {
-    return this.runInContext(operationName, uri, { resetPath: true, resetVisits: true }, contextFn);
-  }
-
-  private runInContext<T>(
-    operationName: string,
-    uri: { toString(): string },
-    options: { resetPath: boolean; resetVisits: boolean },
-    contextFn: (ctx: ResolverContext) => T
-  ) {
-    const encodedOperation = encodePathNode(operationName, uri);
-
-    if (this.#path.includes(encodedOperation)) {
-      const formattedPath = this.#path
-        .map((segment) => {
-          const { operationName, uri } = decodePathNode(segment);
-
-          return `${operationName}(${uri.toString()})`;
-        })
-        .join(' -> ');
-
-      throw this._wrapError(
-        new Error(
-          `Detected a recursive call to the operation '${operationName}' for '${uri.toString()}' at path '${formattedPath}'`
-        )
-      );
-    }
-
-    const ctx = new ResolverContext({
-      cache: this.#cache,
-      decoder: this.#decoder,
-      path: options.resetPath ? [] : this.#path.concat(encodedOperation),
-      resolver: this.#resolver,
-      settings: this.#settings,
-      strategy: this.#strategy,
-      token: this.#tokenSource.token,
-      visits: options.resetVisits ? new Visits(uri) : this.#visits.child(uri),
-    });
-
-    ctx.debug('%s(%s)', operationName, uri);
-
-    return contextFn(ctx);
-  }
-
-  private _invokeOwnMethod<TMethod extends typeof readParentPackageJson | typeof resolve>(
-    method: TMethod,
-    uri: Uri
-  ): ReturnTypeWithVisits<TMethod> {
-    const operationName = `ctx.${method.name}`;
-    const uriStr = uri.toString();
-    let operationCache = this.#cache.get(operationName) as
-      | Map<string, ReturnTypeWithVisits<TMethod>>
-      | undefined;
-
-    if (!operationCache) {
-      operationCache = new Map();
-      this.#cache.set(operationName, operationCache);
-    }
-
-    const cached = operationCache.get(uriStr);
-
-    if (cached) {
-      this.debug('%s(%s) [HIT]', operationName, uriStr);
-
-      // We either have a cached result or a cached promise for a result. Either way, the value
-      // is suitable as a return.
-      return cached;
-    }
-
-    this.debug('%s(%s) [MISS]', operationName, uriStr);
-
-    // Nothing is cached
-    const ret = this.runInChildContext(method.name, uri, (ctx) => method(ctx, uri));
-
-    if (isThenable(ret)) {
-      const promiseRet = ret as Thenable<ReturnTypeWithVisits<TMethod>>;
-
-      // Produce a promise that will only be settled once the cache has been updated accordingly.
-      const wrappedRet = promiseRet.then(
-        (result) => {
-          const mappedResult = this.#mapResultWithVisits(result);
-          // Override the pending value with the resolved value
-          operationCache!.set(uriStr, mappedResult);
-
-          return mappedResult;
-        },
-        (err) => {
-          // Delete the entry from the cache in case it was a transient failure
-          operationCache!.delete(uriStr);
-
-          return Promise.reject(err);
-        }
-      );
-
-      // Set the pending value in the cache for now
-      operationCache.set(uriStr, wrappedRet as Awaited<Thenable<ReturnTypeWithVisits<TMethod>>>);
-
-      return wrappedRet as Awaited<Thenable<ReturnTypeWithVisits<TMethod>>>;
-    }
-
-    const mappedResult = this.#mapResultWithVisits(ret);
-
-    operationCache.set(uriStr, mappedResult);
-
-    return mappedResult;
-  }
-
-  private _invokeStrategyMethod<
-    TMethod extends Required<ResolverStrategy>[
-      | 'getCanonicalUrl'
-      | 'getResolveRoot'
-      | 'getSettings'
-      | 'getUrlForBareModule'
-      | 'listEntries'
-      | 'readFileContent']
-  >(
-    method: TMethod,
-    uri: Parameters<TMethod>[0],
-    ...otherArgs: any[]
-  ): ReturnTypeWithVisits<TMethod> {
-    const operationName = `${this.#strategy.constructor.name || 'strategy'}.${method.name}`;
-    const uriStr = uri.toString();
-    let operationCache = this.#cache.get(operationName) as
-      | Map<string, ReturnTypeWithVisits<TMethod>>
-      | undefined;
-
-    if (!operationCache) {
-      operationCache = new Map();
-      this.#cache.set(operationName, operationCache);
-    }
-
-    const cached = operationCache.get(uriStr);
-
-    if (cached) {
-      this.debug('%s(%s) [HIT]', operationName, uriStr);
-
-      // We either have a cached result or a cached promise for a result. Either way, the value
-      // is suitable as a return.
-      return cached;
-    }
-
-    this.debug('%s(%s) [MISS]', operationName, uriStr);
-
-    // Nothing is cached
-    const ret = this.runInChildContext(method.name, uri, (ctx) =>
-      (method as any).call(this.#strategy, uri, ...otherArgs, ctx)
-    ) as ReturnTypeWithVisits<TMethod>;
-
-    if (isThenable(ret)) {
-      const promiseRet = ret as Thenable<ReturnTypeWithVisits<TMethod>>;
-
-      // Produce a promise that will only be settled once the cache has been updated accordingly.
-      const wrappedRet = promiseRet.then(
-        (result) => {
-          const mappedResult = this.#mapResultWithVisits(result);
-          // Override the pending value with the resolved value
-          operationCache!.set(uriStr, mappedResult);
-
-          return mappedResult;
-        },
-        (err) => {
-          // Delete the entry from the cache in case it was a transient failure
-          operationCache!.delete(uriStr);
-
-          return Promise.reject(err);
-        }
-      );
-
-      // Set the pending value in the cache for now
-      operationCache.set(uriStr, wrappedRet as Awaited<Thenable<ReturnTypeWithVisits<TMethod>>>);
-
-      return wrappedRet as Awaited<Thenable<ReturnTypeWithVisits<TMethod>>>;
-    }
-
-    const mappedRet = this.#mapResultWithVisits(ret);
-
-    operationCache.set(uriStr, mappedRet);
-
-    return mappedRet;
   }
 
   private _wrapError<T extends Error>(

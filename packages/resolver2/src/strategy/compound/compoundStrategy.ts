@@ -2,12 +2,14 @@ import { ResolverContext } from '../../context';
 import { AbstractResolverStrategy, ResolverStrategy } from '../../strategy';
 import { Uri } from '../../uri';
 
-type StrategyMethodsNames = Extract<
-  {
-    [TKey in keyof ResolverStrategy]: { Key: TKey; Value: ResolverStrategy[TKey] };
-  }[keyof ResolverStrategy],
-  { Value: (...args: any[]) => any }
->['Key'];
+type StrategyMethodsNames<
+  TMethodName extends keyof ResolverStrategy =
+    | 'getCanonicalUrl'
+    | 'getResolveRoot'
+    | 'getSettings'
+    | 'listEntries'
+    | 'readFileContent'
+> = TMethodName;
 
 interface ResolverHostFsOptions {
   strategies: ResolverStrategy[];
@@ -24,11 +26,11 @@ export class CompoundStrategy extends AbstractResolverStrategy {
 
   private _delegateToStrategy<
     TMethodName extends StrategyMethodsNames,
-    TMethod extends (...args: any) => any = ResolverStrategy[TMethodName]
-  >(method: TMethodName, uri: Uri, ctx: ResolverContext): ReturnType<TMethod> {
+    TMethod extends (ctx: ResolverContext, uri: Uri) => any = ResolverStrategy[TMethodName]
+  >(method: TMethodName, ctx: ResolverContext, uri: Uri): ReturnType<TMethod> {
     for (const strategy of this.strategies) {
-      if (strategy.canResolve(uri)) {
-        return strategy[method](uri, ctx) as ReturnType<TMethod>;
+      if (strategy.canResolve(ctx, uri)) {
+        return strategy[method](ctx, uri) as ReturnType<TMethod>;
       }
     }
 
@@ -37,9 +39,9 @@ export class CompoundStrategy extends AbstractResolverStrategy {
     ) as ReturnType<TMethod>;
   }
 
-  canResolve(uri: Uri) {
+  canResolve(ctx: ResolverContext, uri: Uri) {
     for (const strategy of this.strategies) {
-      if (strategy.canResolve(uri)) {
+      if (strategy.canResolve(ctx, uri)) {
         return true;
       }
     }
@@ -47,18 +49,18 @@ export class CompoundStrategy extends AbstractResolverStrategy {
     return false;
   }
 
-  getCanonicalUrl(uri: Uri, ctx: ResolverContext) {
-    return this._delegateToStrategy('getCanonicalUrl', uri, ctx);
+  getCanonicalUrl(ctx: ResolverContext, uri: Uri) {
+    return this._delegateToStrategy('getCanonicalUrl', ctx, uri);
   }
 
-  getResolveRoot(uri: Uri, ctx: ResolverContext) {
-    return this._delegateToStrategy('getResolveRoot', uri, ctx);
+  getResolveRoot(ctx: ResolverContext, uri: Uri) {
+    return this._delegateToStrategy('getResolveRoot', ctx, uri);
   }
 
-  getUrlForBareModule(name: string, spec: string, path: string, ctx: ResolverContext) {
+  getUrlForBareModule(ctx: ResolverContext, name: string, spec: string, path: string) {
     for (const strategy of this.strategies) {
       if (strategy.getUrlForBareModule) {
-        return strategy.getUrlForBareModule(name, spec, path, ctx);
+        return strategy.getUrlForBareModule(ctx, name, spec, path);
       }
     }
     return {
@@ -67,11 +69,11 @@ export class CompoundStrategy extends AbstractResolverStrategy {
     };
   }
 
-  listEntries(uri: Uri, ctx: ResolverContext) {
-    return this._delegateToStrategy('listEntries', uri, ctx);
+  listEntries(ctx: ResolverContext, uri: Uri) {
+    return this._delegateToStrategy('listEntries', ctx, uri);
   }
 
-  readFileContent(uri: Uri, ctx: ResolverContext) {
-    return this._delegateToStrategy('readFileContent', uri, ctx);
+  readFileContent(ctx: ResolverContext, uri: Uri) {
+    return this._delegateToStrategy('readFileContent', ctx, uri);
   }
 }

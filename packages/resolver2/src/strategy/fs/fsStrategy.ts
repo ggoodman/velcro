@@ -1,3 +1,4 @@
+import { ResolverContext } from '../../context';
 import { NotResolvableError } from '../../error';
 import {
   AbstractResolverStrategy,
@@ -24,20 +25,20 @@ export class FsStrategy extends AbstractResolverStrategy {
     this.rootUri = options.rootUri || Uri.file('/');
   }
 
-  private ensureUriUnderRoot(uri: Uri) {
-    if (!this.canResolve(uri)) {
+  private ensureUriUnderRoot(ctx: ResolverContext, uri: Uri) {
+    if (!this.canResolve(ctx, uri)) {
       return new NotResolvableError(
         `The URI '${uri}' is not under the root for this resolver strategy '${this.rootUri}'`
       );
     }
   }
 
-  canResolve(uri: Uri) {
+  canResolve(_ctx: ResolverContext, uri: Uri) {
     return Uri.isPrefixOf(this.rootUri, uri);
   }
 
-  async getCanonicalUrl(uri: Uri): Promise<CanonicalizeResult> {
-    const err = this.ensureUriUnderRoot(uri);
+  async getCanonicalUrl(ctx: ResolverContext, uri: Uri): Promise<CanonicalizeResult> {
+    const err = this.ensureUriUnderRoot(ctx, uri);
 
     if (err) {
       throw err;
@@ -64,8 +65,8 @@ export class FsStrategy extends AbstractResolverStrategy {
     return { uri: this.rootUri };
   }
 
-  getResolveRoot(uri: Uri) {
-    const err = this.ensureUriUnderRoot(uri);
+  getResolveRoot(ctx: ResolverContext, uri: Uri) {
+    const err = this.ensureUriUnderRoot(ctx, uri);
 
     if (err) {
       return Promise.reject(err);
@@ -74,8 +75,8 @@ export class FsStrategy extends AbstractResolverStrategy {
     return { uri: this.rootUri };
   }
 
-  async listEntries(uri: Uri) {
-    const err = this.ensureUriUnderRoot(uri);
+  async listEntries(ctx: ResolverContext, uri: Uri) {
+    const err = this.ensureUriUnderRoot(ctx, uri);
 
     if (err) {
       throw err;
@@ -104,8 +105,8 @@ export class FsStrategy extends AbstractResolverStrategy {
     return result;
   }
 
-  async readFileContent(uri: Uri) {
-    const err = this.ensureUriUnderRoot(uri);
+  async readFileContent(ctx: ResolverContext, uri: Uri) {
+    const err = this.ensureUriUnderRoot(ctx, uri);
 
     if (err) {
       throw err;

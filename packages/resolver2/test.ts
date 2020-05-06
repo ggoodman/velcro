@@ -62,25 +62,19 @@ async function main() {
     packageMain: ['main'],
   });
 
+  let graph;
   try {
     console.time('add');
-    const sourceModules = await createBundle({
+    graph = await createBundle({
       entrypoints: [Uri.file('')],
       resolver,
       nodeEnv: 'production',
     });
-
-    for (const edge of sourceModules) {
-      console.log(
-        '%s -> %s: [%s]',
-        edge.fromUri,
-        edge.toUri,
-        edge.visited.map((visit) => `${visit.uri.toString()}(${visit.type})`).join(', ')
-      );
-    }
   } finally {
     console.timeEnd('add');
   }
+
+  console.dir(graph, { compact: true, depth: 4 });
 }
 
 main().catch((err) => {
