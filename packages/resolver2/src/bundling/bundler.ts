@@ -1,25 +1,30 @@
-import { dirname, Emitter, DisposableStore } from 'ts-primitives';
-
-import { Uri } from '../uri';
-import { Resolver } from '../resolver';
+import MagicString from 'magic-string';
+import { dirname, DisposableStore, Emitter } from 'ts-primitives';
+import { checkCancellation, isThenable } from '../async';
+import { ResolverContext, Visit } from '../context';
 import {
+  BuildError,
+  DependencyNotFoundError,
   EntryExcludedError,
   EntryNotFoundError,
-  DependencyNotFoundError,
-  BuildError,
   isCanceledError,
+  ParseError,
 } from '../error';
-import { isThenable, checkCancellation } from '../async';
-import { ResolverContext } from '../context';
-
-import { parseBareModuleSpec, BareModuleSpec } from './bareModules';
+import { Resolver } from '../resolver';
+import { Uri } from '../uri';
+import { BareModuleSpec, parseBareModuleSpec } from './bareModules';
 import { MapSet } from './mapSet';
-// import { parseFile } from './parser';
+import { ParserFunction } from './parsing';
+import { DEFAULT_SHIM_GLOBALS, NODE_CORE_SHIMS } from './shims';
+import { parseJavaScript, parseJson } from './source';
 import { SourceModule } from './sourceModule';
 import { SourceModuleDependency } from './sourceModuleDependency';
-import { DEFAULT_SHIM_GLOBALS, NODE_CORE_SHIMS } from './shims';
-import MagicString from 'magic-string';
-import { parseFile } from './parser';
+
+type DependencyEdge = {
+  fromUri: Uri;
+  toUri: Uri;
+  visited: Visit[];
+};
 
 interface BundleOptions {
   entrypoints: Uri[];
@@ -29,10 +34,13 @@ interface BundleOptions {
 
 class Bundle {
   private readonly disposer = new DisposableStore();
+  private readonly edgesTo = new MapSet<string, DependencyEdge>();
+  private readonly edgesFrom = new MapSet<string, DependencyEdge>();
   private readonly entrypoints: Uri[];
   private readonly errors = [] as { ctx: ResolverContext; err: Error }[];
   private readonly nodeEnv: string;
   private readonly resolver: Resolver;
+  private readonly rootUri = Uri.parse('velcro:///root');
   private readonly pendingModuleOperations = new MapSet<string, Promise<unknown>>();
   private readonly sourceModules = new Map<string, SourceModule>();
 
@@ -71,7 +79,9 @@ class Bundle {
     disposer.add(evt);
 
     for (const uri of this.entrypoints) {
-      this.addUnresolvedUri(uri, rootCtx.withOperation('Bundle.addUnresolvedUri', uri));
+      rootCtx.runInChildContext('Bundle.addUnresolvedUri', uri, (ctx) =>
+        this.addUnresolvedUri(uri, ctx)
+      );
     }
 
     try {
@@ -80,10 +90,32 @@ class Bundle {
         await Promise.all(this.pendingModuleOperations.values());
       }
     } catch {
-      throw this.buildError(this.errors.map((e) => e.err));
+      throw this.buildError(this.errors);
     }
 
-    return this.sourceModules;
+    const fromQueue = [this.rootUri.toString()];
+    const edges = [] as DependencyEdge[];
+
+    while (fromQueue.length) {
+      const href = fromQueue.pop()!;
+      const edgesFrom = this.edgesFrom.get(href);
+
+      if (!edgesFrom) {
+        continue;
+      }
+
+      fromQueue.push(...[...edgesFrom].map((edge) => edge.toUri.toString()));
+      edges.push(...edgesFrom);
+    }
+
+    return edges;
+  }
+
+  private addEdge(fromUri: Uri, toUri: Uri, visited: Visit[]) {
+    const edge = { fromUri, toUri, visited };
+
+    this.edgesFrom.add(fromUri.toString(), edge);
+    this.edgesTo.add(toUri.toString(), edge);
   }
 
   private addModuleDependency(
@@ -95,7 +127,11 @@ class Bundle {
       return;
     }
 
-    const operation = this.resolveDependency(sourceModule, dependency, ctx);
+    const operation = ctx.runInChildContext(
+      'Bundle.resolveDependency',
+      `${sourceModule.href}|${dependency.spec}`,
+      (ctx) => this.resolveDependency(sourceModule, dependency, ctx)
+    );
 
     operation.then(
       () => {
@@ -117,10 +153,8 @@ class Bundle {
       return;
     }
 
-    this.readSourceAndCreateModule(
-      uri,
-      rootUri,
-      ctx.withOperation('Bundle.readSourceAndCreateModule', uri)
+    ctx.runInChildContext('Bundle.readSourceAndCreateModule', uri, (ctx) =>
+      this.readSourceAndCreateModule(uri, rootUri, ctx)
     );
   }
 
@@ -130,9 +164,8 @@ class Bundle {
     }
 
     const href = uri.toString();
-    const operation = this.addUnresolvedUriImpl(
-      uri,
-      ctx.withOperation('Bundler.addUnresolvedUriImpl', uri)
+    const operation = ctx.runInChildContext('Bundle.addUnresolvedUriImpl', uri, (ctx) =>
+      this.addUnresolvedUriImpl(uri, ctx)
     );
 
     operation.then(
@@ -161,10 +194,25 @@ class Bundle {
       throw new EntryExcludedError(uri);
     }
 
+    this.addEdge(this.rootUri, resolveResult.uri, resolveResult.visited);
     this.addResolvedUri(resolveResult.uri, resolveResult.rootUri, ctx);
   }
 
-  private buildError(errors: Error[]) {
+  private getParserForUri(uri: Uri): ParserFunction {
+    const path = uri.path;
+
+    if (path.endsWith('.json')) {
+      return parseJson;
+    }
+
+    if (path.endsWith('.js')) {
+      return parseJavaScript;
+    }
+
+    throw new ParseError(uri, 'No suitable parser was found');
+  }
+
+  private buildError(errors: { err: Error; ctx: ResolverContext }[]) {
     return new BuildError(errors);
   }
 
@@ -174,10 +222,8 @@ class Bundle {
     }
 
     const href = uri.toString();
-    const operation = this.readSourceAndCreateModuleImpl(
-      uri,
-      rootUri,
-      ctx.withOperation('Bundler.readSourceAndCreateModuleImpl', uri)
+    const operation = ctx.runInChildContext('Bundle.readSourceAndCreateModuleImpl', uri, (ctx) =>
+      this.readSourceAndCreateModuleImpl(uri, rootUri, ctx)
     );
 
     operation.then(
@@ -197,74 +243,37 @@ class Bundle {
 
   private async readSourceAndCreateModuleImpl(uri: Uri, rootUri: Uri, ctx: ResolverContext) {
     const href = uri.toString();
-    ctx.debug(`%s.readAndParse(%s)`, this.constructor.name, href);
     const contentReturn = ctx.readFileContent(uri);
     const contentResult = isThenable(contentReturn)
       ? await checkCancellation(contentReturn, ctx.token)
       : contentReturn;
-    const code = ctx.decoder.decode(contentResult.content);
-    console.time(`parseFile(${href})`);
+    const parser = this.getParserForUri(uri);
+    // console.time(`parseFile(${href})`);
 
-    const parsedResult = parseFile(href, code, {
-      nodeEnv: this.nodeEnv,
-    });
-    // const parsedResult = parseFile(href, code, {
-    //   nodeEnv: this.nodeEnv,
-    // });
-    console.timeEnd(`parseFile(${href})`);
-    const dependencies = new Set<SourceModuleDependency>();
-
-    const requiresBySpec = new Map<string, Array<{ start: number; end: number }>>();
-    for (const requireDependency of parsedResult.requireDependencies) {
-      let locations = requiresBySpec.get(requireDependency.spec.value);
-      if (!locations) {
-        locations = [];
-        requiresBySpec.set(requireDependency.spec.value, locations);
-      }
-
-      locations.push({ start: requireDependency.spec.start, end: requireDependency.spec.end });
-    }
-    for (const [spec, locations] of requiresBySpec) {
-      dependencies.add(SourceModuleDependency.fromRequire(spec, locations));
-    }
-
-    const requireResolvesBySpec = new Map<string, Array<{ start: number; end: number }>>();
-    for (const requireDependency of parsedResult.requireResolveDependencies) {
-      let locations = requiresBySpec.get(requireDependency.spec.value);
-      if (!locations) {
-        locations = [];
-        requiresBySpec.set(requireDependency.spec.value, locations);
-      }
-
-      locations.push({ start: requireDependency.spec.start, end: requireDependency.spec.end });
-    }
-    for (const [spec, locations] of requireResolvesBySpec) {
-      dependencies.add(SourceModuleDependency.fromRequireResolve(spec, locations));
-    }
-
-    for (const [symbolName, locations] of parsedResult.unboundSymbols) {
-      const shim = DEFAULT_SHIM_GLOBALS[symbolName];
-
-      if (shim) {
-        dependencies.add(
-          SourceModuleDependency.fromGloblaObject(shim.spec, locations, shim.export)
-        );
-      }
-    }
+    const { code, dependencies, syntax } = ctx.runInChildContext(
+      `parse[${parser.name}]`,
+      uri,
+      (ctx) =>
+        parser(ctx, uri, contentResult.content, {
+          environmentModules: NODE_CORE_SHIMS,
+          globalModules: DEFAULT_SHIM_GLOBALS,
+          nodeEnv: this.nodeEnv,
+        })
+    );
+    // console.timeEnd(`parseFile(${href})`);
 
     const sourceModule = new SourceModule(
       uri,
       rootUri,
       new MagicString(code, { filename: href, indentExclusionRanges: [] }),
-      dependencies
+      syntax,
+      new Set(dependencies)
     );
     this.sourceModules.set(sourceModule.href, sourceModule);
 
     for (const dependency of sourceModule.dependencies) {
-      this.addModuleDependency(
-        sourceModule,
-        dependency,
-        ctx.withOperation('Bundler.addModuleDependency', uri)
+      ctx.runInIsolatedContext('Bundle.addModuleDependency', `${href}|${dependency.spec}`, (ctx) =>
+        this.addModuleDependency(sourceModule, dependency, ctx)
       );
     }
   }
@@ -276,15 +285,11 @@ class Bundle {
   ) {
     const parsedSpec = parseBareModuleSpec(dependency.spec);
     const resolveReturn = parsedSpec
-      ? this.resolveBareModule(
-          sourceModule,
-          parsedSpec,
-          ctx.withOperation('Bundle.resolveBareModule', sourceModule.uri)
+      ? ctx.runInChildContext('Bundle.resolveBareModule', sourceModule.uri, (ctx) =>
+          this.resolveBareModule(sourceModule, parsedSpec, ctx)
         )
-      : this.resolveRelativeUri(
-          sourceModule,
-          dependency.spec,
-          ctx.withOperation('Bundle.resolveRelativeUri', sourceModule.uri)
+      : ctx.runInChildContext('Bundle.resolveRelativeUri', sourceModule.uri, (ctx) =>
+          this.resolveRelativeUri(sourceModule, dependency.spec, ctx)
         );
     const resolveResult = isThenable(resolveReturn)
       ? await checkCancellation(resolveReturn, ctx.token)
@@ -306,10 +311,10 @@ class Bundle {
       return;
     }
 
-    this.addResolvedUri(
-      resolveResult.uri,
-      resolveResult.rootUri,
-      ctx.withOperation('Bundle.addResolvedUri', resolveResult.uri)
+    this.addEdge(sourceModule.uri, resolveResult.uri, resolveResult.visited);
+
+    ctx.runInChildContext('Bundle.addResolvedUri', resolveResult.uri, (ctx) =>
+      this.addResolvedUri(resolveResult.uri, resolveResult.rootUri, ctx)
     );
   }
 
@@ -318,8 +323,6 @@ class Bundle {
     pathname: string,
     ctx: ResolverContext
   ) {
-    ctx.debug(`bundler.resolveRelativeUri(%s, %s)`, pathname, sourceModule.href);
-
     const uri = Uri.joinPath(
       Uri.from({
         ...sourceModule.uri,
@@ -344,6 +347,7 @@ class Bundle {
     return {
       uri: resolveResult.uri,
       rootUri: resolveResult.rootUri,
+      visited: resolveResult.visited,
     };
   }
 
@@ -352,12 +356,6 @@ class Bundle {
     parsedSpec: BareModuleSpec,
     ctx: ResolverContext
   ) {
-    ctx.debug(
-      `bundler.resolveBareModule(%s%s, %s)`,
-      parsedSpec.nameSpec,
-      parsedSpec.path,
-      sourceModule.href
-    );
     let locatorName = parsedSpec.name;
     let locatorSpec = parsedSpec.spec;
     let locatorPath = parsedSpec.path;
@@ -426,6 +424,7 @@ class Bundle {
     return {
       uri: resolveResult.uri,
       rootUri: resolveResult.rootUri,
+      visited: resolveResult.visited,
     };
   }
 }

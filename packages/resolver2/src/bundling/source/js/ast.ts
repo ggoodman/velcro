@@ -1,28 +1,28 @@
 import { parse as acornParse } from 'acorn';
 import {
-  Node,
-  Program,
+  ArrayPattern,
   ArrowFunctionExpression,
+  AssignmentPattern,
   BinaryExpression,
   BlockStatement,
   CallExpression,
+  ClassDeclaration,
+  Function,
   FunctionDeclaration,
   FunctionExpression,
   Identifier,
   IfStatement,
   Literal,
   MemberExpression,
-  SimpleLiteral,
-  VariableDeclaration,
+  Node,
   ObjectPattern,
-  ArrayPattern,
-  RestElement,
-  AssignmentPattern,
-  Function,
-  ClassDeclaration,
-  TryStatement,
-  ThisExpression,
+  Program,
   Property,
+  RestElement,
+  SimpleLiteral,
+  ThisExpression,
+  TryStatement,
+  VariableDeclaration,
 } from 'estree';
 
 export type NodeWithParent<TNode = Node> = TNode & {
@@ -123,7 +123,9 @@ export function isVariableDeclaration(node: Node): node is VariableDeclaration {
 
 // Refinements or groups
 export function isFunction(node: Node): node is Function {
-  return isFunctionDeclaration(node) || isFunctionExpression(node) || isArrowFunctionExpression(node);
+  return (
+    isFunctionDeclaration(node) || isFunctionExpression(node) || isArrowFunctionExpression(node)
+  );
 }
 
 export function isStringLiteral(node: Node): node is StringLiteral {

@@ -1,126 +1,117 @@
-import { BinaryOperator, Node, Function, Pattern, MemberExpression } from 'estree';
-
-import { traverse, Visitor } from './traverse';
+import { BinaryOperator, Function, Identifier, MemberExpression, Node, Pattern } from 'estree';
+import { ParserFunction, Replacement, SyntaxKind } from '../../parsing';
+import { SourceModuleDependency } from '../../sourceModuleDependency';
 import {
-  NodeWithParent,
-  isVariableDeclaration,
-  isIfStatement,
-  isBinaryExpression,
-  isStringLiteral,
-  isMemberExpression,
-  isCallExpression,
-  isIdentifier,
-  isObjectPattern,
   isArrayPattern,
-  isRestElement,
-  isAssignmentPattern,
-  isFunctionDeclaration,
-  isFunction,
-  isFunctionExpression,
   isArrowFunctionExpression,
-  isProgram,
+  isAssignmentPattern,
+  isBinaryExpression,
   isBlockStatement,
+  isCallExpression,
   isClassDeclaration,
-  isTryStatement,
-  isThisExpression,
-  isProperty,
-  parse,
+  isFunction,
+  isFunctionDeclaration,
+  isFunctionExpression,
+  isIdentifier,
+  isIfStatement,
+  isMemberExpression,
   isNodeWithStartAndEnd,
+  isObjectPattern,
+  isProgram,
+  isProperty,
+  isRestElement,
+  isStringLiteral,
+  isThisExpression,
+  isTryStatement,
+  isVariableDeclaration,
+  NodeWithParent,
   NodeWithStartAndEnd,
+  parse as parseAst,
 } from './ast';
-// import MagicString from 'magic-string';
+import { traverse, Visitor } from './traverse';
 
-// const whitespaceRx = /^\s*$/m;
-
-export type UnresolvedDependencies = ReturnType<typeof parseFile>;
-
-export type ParseOptions = { nodeEnv?: string };
-
-const defaultParseOptions: ParseOptions = {
-  nodeEnv: 'development',
-};
-
-export function parseFile(uri: string, code: string, options: ParseOptions = {}) {
-  const ctx: DependencyVisitorContext = Object.assign(Object.create(null), defaultParseOptions, {
+export const parse: ParserFunction = function parseJavaScript(
+  ctx,
+  uri,
+  data,
+  options
+): ReturnType<ParserFunction> {
+  const visitorCtx: DependencyVisitorContext = Object.assign(Object.create(null), {
     unboundSymbols: new Map(),
     locals: new Map(),
     nodeEnv: options.nodeEnv,
+    replacedSymbols: new Set<Identifier>(),
     replacements: [],
     requires: [],
     requireResolves: [],
     skip: new Set(),
   });
 
-  // const magicString = new MagicString(code, {
-  //   filename: uri,
-  //   indentExclusionRanges: [],
-  // });
+  const result: ReturnType<ParserFunction> = {
+    code: ctx.decoder.decode(data),
+    dependencies: [],
+    replacements: visitorCtx.replacements,
+    syntax: SyntaxKind.JavaScript,
+  };
 
   try {
-    // let lastToken: acorn.Token | undefined = undefined;
-
-    const ast = parse(code, {
-      // onComment: (_isBlock, _test, start, end) => {
-      //   magicString.remove(start, end);
-      // },
+    const ast = parseAst(result.code, {
+      onComment: (_isBlock, _test, start, end) => {
+        result.replacements.push({ start, end, replacement: '' });
+      },
       // onToken: (token) => {
       //   magicString.addSourcemapLocation(token.start);
-      //   // const wsStart = lastToken ? lastToken.end : 0;
-      //   // if (wsStart < token.start - 1) {
-      //   //   const between = magicString.original.substring(wsStart, token.start);
-      //   //   if (whitespaceRx.test(between)) {
-      //   //     magicString.overwrite(wsStart, token.start - 1, ' ');
-      //   //   }
-      //   // }
-      //   // lastToken = token;
       // },
     });
 
-    traverse(ast, ctx, scopingAndRequiresVisitor);
-    traverse(ast, ctx, collectGlobalsVisitor);
+    traverse(ast, visitorCtx, scopingAndRequiresVisitor);
+    traverse(ast, visitorCtx, collectGlobalsVisitor);
   } catch (err) {
     throw new Error(`Error parsing ${uri}: ${err.message}`);
   }
 
-  const requireDependencies = [] as {
-    callee: { start: number; end: number };
-    spec: { start: number; end: number; value: string };
-  }[];
+  // Handle explicit requires
+  const requiresBySpec = new Map<string, Array<{ start: number; end: number }>>();
+  for (const requireDependency of visitorCtx.requires) {
+    let locations = requiresBySpec.get(requireDependency.spec.value);
+    if (!locations) {
+      locations = [];
+      requiresBySpec.set(requireDependency.spec.value, locations);
+    }
 
-  for (const node of ctx.requires) {
-    requireDependencies.push({
-      callee: { ...node.callee },
-      spec: { ...node.spec },
-    });
+    locations.push({ start: requireDependency.spec.start, end: requireDependency.spec.end });
+  }
+  for (const [spec, locations] of requiresBySpec) {
+    result.dependencies.push(SourceModuleDependency.fromRequire(spec, locations));
   }
 
-  const requireResolveDependencies = [] as {
-    callee: { start: number; end: number };
-    spec: { start: number; end: number; value: string };
-  }[];
+  // Handle require.resolve
+  const requireResolvesBySpec = new Map<string, Array<{ start: number; end: number }>>();
+  for (const requireDependency of visitorCtx.requireResolves) {
+    let locations = requiresBySpec.get(requireDependency.spec.value);
+    if (!locations) {
+      locations = [];
+      requiresBySpec.set(requireDependency.spec.value, locations);
+    }
 
-  for (const node of ctx.requireResolves) {
-    requireResolveDependencies.push({
-      callee: { ...node.callee },
-      spec: { ...node.spec },
-    });
+    locations.push({ start: requireDependency.spec.start, end: requireDependency.spec.end });
+  }
+  for (const [spec, locations] of requireResolvesBySpec) {
+    result.dependencies.push(SourceModuleDependency.fromRequireResolve(spec, locations));
   }
 
-  const unboundSymbols = new Map<string, { start: number; end: number }[]>();
+  for (const [symbolName, locations] of visitorCtx.unboundSymbols) {
+    const shim = options.globalModules[symbolName];
 
-  for (const [symbolName, symbolNodes] of ctx.unboundSymbols) {
-    unboundSymbols.set(
-      symbolName,
-      symbolNodes.map((node) => ({ start: node.start, end: node.end }))
-    );
+    if (shim) {
+      result.dependencies.push(
+        SourceModuleDependency.fromGloblaObject(shim.spec, locations, shim.export)
+      );
+    }
   }
 
-  return {
-    requireDependencies,
-    requireResolveDependencies,
-    unboundSymbols,
-  };
-}
+  return result;
+};
 
 export type CommonJsRequire = {
   callee: { start: number; end: number };
@@ -137,7 +128,8 @@ export type DependencyVisitorContext = {
   readonly locals: Map<Node, { [identifier: string]: boolean }>;
   readonly nodeEnv: string;
   readonly requires: CommonJsRequire[];
-  readonly replacements: Array<{ start: number; end: number; replacement: string }>;
+  readonly replacedSymbols: Set<Identifier>;
+  readonly replacements: Replacement[];
   readonly requireResolves: CommonJsRequireResolve[];
   readonly skip: Set<Node>;
 };
@@ -159,6 +151,9 @@ export const collectGlobalsVisitor: Visitor<DependencyVisitorContext> = {
     if (isBindingIdentifier(node) && isIdentifier(node)) {
       var name = node.name;
       if (name === 'undefined') return;
+      if (ctx.replacedSymbols.has(node)) {
+        return;
+      }
 
       let foundBinding = false;
       let nextParent = node.parent;
@@ -347,6 +342,13 @@ function visitAndSkipBranches(
         isMemberExpression(node.test.right) &&
         memberExpressionMatches(node.test.right, 'process.env.NODE_ENV')
       ) {
+        let rootObject = node.test.right;
+        while (isMemberExpression(rootObject.object)) {
+          rootObject = rootObject.object;
+        }
+        if (isIdentifier(rootObject.object)) {
+          ctx.replacedSymbols.add(rootObject.object);
+        }
         // if ('development' === process.env.NODE_ENV) {}
         ctx.replacements.push({
           start: (node.test.right as any).start,
@@ -364,7 +366,13 @@ function visitAndSkipBranches(
         isMemberExpression(node.test.left) &&
         memberExpressionMatches(node.test.left, 'process.env.NODE_ENV')
       ) {
-        // if (process.env.NODE_ENV === 'development') {}
+        let rootObject = node.test.left;
+        while (isMemberExpression(rootObject.object)) {
+          rootObject = rootObject.object;
+        }
+        if (isIdentifier(rootObject.object)) {
+          ctx.replacedSymbols.add(rootObject.object);
+        } // if (process.env.NODE_ENV === 'development') {}
         ctx.replacements.push({
           start: (node.test.left as any).start,
           end: (node.test.left as any).end,

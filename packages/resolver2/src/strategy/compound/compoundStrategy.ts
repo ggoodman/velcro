@@ -1,6 +1,6 @@
+import { ResolverContext } from '../../context';
 import { AbstractResolverStrategy, ResolverStrategy } from '../../strategy';
 import { Uri } from '../../uri';
-import { ResolverContext } from '../../context';
 
 type StrategyMethodsNames = Extract<
   {

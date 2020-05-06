@@ -1,5 +1,4 @@
 import { Thenable } from 'ts-primitives';
-
 import { ResolverContext } from './context';
 import { Settings } from './settings';
 import { Uri } from './uri';
@@ -24,10 +23,6 @@ export interface CanonicalizeResult {
 }
 
 export interface ResolveRootResult {
-  uri: Uri;
-}
-
-export interface RootUrlResult {
   uri: Uri;
 }
 

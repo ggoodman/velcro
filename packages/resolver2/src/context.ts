@@ -1,22 +1,30 @@
-import { CancellationToken, Thenable, CancellationTokenSource, basename } from 'ts-primitives';
-
-import { isThenable, Awaited, all, checkCancellation } from './async';
+import { basename, CancellationToken, CancellationTokenSource, Thenable } from 'ts-primitives';
+import { all, Awaited, checkCancellation, isThenable } from './async';
 import { Decoder } from './decoder';
-import { EntryNotFoundError, CanceledError } from './error';
+import { CanceledError, EntryNotFoundError } from './error';
 import { PackageJson, parseBufferAsPackageJson } from './packageJson';
 import { Resolver } from './resolver';
 import { Settings } from './settings';
-import { ResolverStrategy, ResolvedEntryKind, ResolvedEntry } from './strategy';
+import { ResolvedEntry, ResolvedEntryKind, ResolverStrategy } from './strategy';
 import { Uri } from './uri';
 
-const DEBUG = process.env.DEBUG?.match(/\bbuilder\b/);
+type ReturnTypeWithVisits<
+  T extends (...args: any[]) => any,
+  TReturn = ReturnType<T>
+> = TReturn extends Thenable<infer U>
+  ? Thenable<U & { visited: Visit[] }>
+  : TReturn & { visited: Visit[] };
 
-// type HeadArgs<T extends (...args: any[]) => any> = T extends (head: infer I, ...tail: any[]) => any
-//   ? I
-//   : never;
-// type TailArgs<T extends (...args: any[]) => any> = T extends (head: any, ...tail: infer I) => any
-//   ? I
-//   : never;
+// type UncachedReturnType<T> = { [K in keyof T] : K extends typeof CACHE ? never : T[K] };
+// type UncachedReturn<
+//   T extends (...any: any[]) => any,
+//   TReturn = ReturnType<T>
+// > = TReturn extends Thenable<infer U>
+//   ? Thenable<UncachedReturnType<U>>
+//   : UncachedReturnType<TReturn>;
+
+const DEBUG = process.env.NODE_DEBUG?.match(/\bbuilder\b/);
+const CACHE = Symbol('Context.cache');
 
 type ResolveResult =
   | {
@@ -26,10 +34,26 @@ type ResolveResult =
   | { found: true; uri: null; rootUri: Uri }
   | { found: true; uri: Uri; rootUri: Uri };
 
+export enum VisitKind {
+  Directory = 'Directory',
+  File = 'File',
+}
+
+export type Visit =
+  | {
+      type: VisitKind.Directory;
+      uri: Uri;
+    }
+  | {
+      type: VisitKind.File;
+      uri: Uri;
+    };
+
 interface ReadParentPackageJsonResultInternalFound {
   found: true;
   packageJson: PackageJson;
   uri: Uri;
+  visitedDirs: Uri[];
 }
 
 interface ReadParentPackageJsonResultInternalNotFound {
@@ -42,6 +66,31 @@ type ReadParentPackageJsonResultInternal =
   | ReadParentPackageJsonResultInternalFound
   | ReadParentPackageJsonResultInternalNotFound;
 
+class Visits {
+  #parent?: Visits;
+  #visits = [] as Visit[];
+
+  constructor(readonly uri: { toString(): string }, parent?: Visits) {
+    this.#parent = parent;
+  }
+
+  child(uri: { toString(): string }): Visits {
+    return new Visits(uri, this);
+  }
+
+  push(visit: Visit) {
+    // if (!this.#parent) console.debug('[VISIT] %s -> %s [%s]', this.uri, visit.uri, visit.type);
+    if (!this.#visits.find((cmp) => cmp.type == visit.type && Uri.equals(cmp.uri, visit.uri))) {
+      this.#visits.push(visit);
+      this.#parent?.push(visit);
+    }
+  }
+
+  toArray(): Visit[] {
+    return this.#parent ? this.#parent.toArray() : this.#visits.slice();
+  }
+}
+
 interface ResolverContextOptions {
   cache: Map<string, Map<string, unknown>>;
   decoder: Decoder;
@@ -50,6 +99,7 @@ interface ResolverContextOptions {
   settings: Settings;
   strategy: ResolverStrategy;
   token: CancellationToken;
+  visits: Visits;
 }
 
 export class ResolverContext {
@@ -67,16 +117,20 @@ export class ResolverContext {
       settings,
       strategy,
       token,
+      visits: new Visits(Uri.parse('velcro:///root')),
     });
   }
 
   readonly #cache: ResolverContextOptions['cache'];
   readonly #decoder: ResolverContextOptions['decoder'];
+  readonly #mapResultWithVisits = <T>(result: T) =>
+    Object.assign(result, { visited: this.#visits.toArray() });
   readonly #path: ResolverContextOptions['path'];
   readonly #resolver: ResolverContextOptions['resolver'];
   readonly #settings: ResolverContextOptions['settings'];
   readonly #strategy: ResolverContextOptions['strategy'];
   readonly #tokenSource: CancellationTokenSource;
+  readonly #visits: Visits;
 
   private constructor(options: ResolverContextOptions) {
     this.#cache = options.cache;
@@ -86,10 +140,15 @@ export class ResolverContext {
     this.#settings = options.settings;
     this.#strategy = options.strategy;
     this.#tokenSource = new CancellationTokenSource(options.token);
+    this.#visits = options.visits;
   }
 
   get decoder() {
     return this.#decoder;
+  }
+
+  get path() {
+    return this.#path.slice() as ReadonlyArray<string>;
   }
 
   get settings() {
@@ -98,6 +157,10 @@ export class ResolverContext {
 
   get token() {
     return this.#tokenSource.token;
+  }
+
+  get visited() {
+    return this.#visits.toArray();
   }
 
   canResolve(uri: Uri) {
@@ -143,371 +206,134 @@ export class ResolverContext {
   }
 
   readParentPackageJson(uri: Uri) {
-    return this._invokeOwnMethod(this._readParentPackageJson, uri);
+    return this.runWithCache(
+      'readParentPackageJson',
+      uri.toString(),
+      readParentPackageJson,
+      null,
+      this,
+      uri
+    );
+  }
+
+  private runWithCache<TMethod extends (...args: any[]) => any>(
+    cacheSegment: string,
+    cacheKey: string,
+    fn: TMethod,
+    target: unknown,
+    ...args: Parameters<TMethod>
+  ): ReturnTypeWithVisits<TMethod> {
+    let operationCache = this.#cache.get(cacheSegment) as
+      | Map<string, ReturnTypeWithVisits<TMethod>>
+      | undefined;
+
+    if (!operationCache) {
+      operationCache = new Map();
+      this.#cache.set(cacheSegment, operationCache);
+    }
+
+    const cached = operationCache.get(cacheKey);
+
+    if (cached) {
+      this.debug('%s(%s) [HIT]', cacheSegment, cacheKey);
+
+      // We either have a cached result or a cached promise for a result. Either way, the value
+      // is suitable as a return.
+      return cached;
+    }
+
+    this.debug('%s(%s) [MISS]', cacheSegment, cacheKey);
+
+    // Nothing is cached
+    const ret = fn.apply(target, args);
+
+    if (isThenable(ret)) {
+      const promiseRet = ret as Thenable<ReturnTypeWithVisits<TMethod>>;
+
+      // Produce a promise that will only be settled once the cache has been updated accordingly.
+      const wrappedRet = promiseRet.then(
+        (result) => {
+          const mappedResult = this.#mapResultWithVisits(result);
+
+          if (mappedResult[CACHE]) {
+            const cacheEntries = mappedResult[CACHE] as [string, ReturnTypeWithVisits<TMethod>][];
+            delete mappedResult[CACHE];
+
+            for (const [cacheKey, value] of cacheEntries) {
+              operationCache!.set(cacheKey, value);
+            }
+          }
+
+          // Override the pending value with the resolved value
+          operationCache!.set(cacheKey, mappedResult);
+
+          return mappedResult;
+        },
+        (err) => {
+          // Delete the entry from the cache in case it was a transient failure
+          operationCache!.delete(cacheKey);
+
+          return Promise.reject(err);
+        }
+      );
+
+      // Set the pending value in the cache for now
+      operationCache.set(cacheKey, wrappedRet as Awaited<Thenable<ReturnTypeWithVisits<TMethod>>>);
+
+      return wrappedRet as Awaited<Thenable<ReturnTypeWithVisits<TMethod>>>;
+    }
+
+    const mappedResult = this.#mapResultWithVisits(ret);
+
+    if (mappedResult[CACHE]) {
+      const cacheEntries = mappedResult[CACHE] as [string, ReturnTypeWithVisits<TMethod>][];
+      delete mappedResult[CACHE];
+
+      for (const [cacheKey, value] of cacheEntries) {
+        operationCache!.set(cacheKey, value);
+      }
+    }
+
+    operationCache.set(cacheKey, mappedResult);
+
+    return mappedResult;
+  }
+
+  recordVisit(uri: Uri, type: VisitKind = VisitKind.File) {
+    this.#visits.push({ type, uri });
   }
 
   resolve(uri: Uri) {
-    return this._invokeOwnMethod(this._resolve, uri);
+    return this._invokeOwnMethod(resolve, uri);
   }
 
-  // run<TFunction extends (target: { toString(): string }, ...args: any[]) => any>(
-  //   fn: TFunction,
-  //   target: HeadArgs<TFunction>,
-  //   receiver: { constructor: { name: string } },
-  //   ...args: TailArgs<TFunction>
-  // ): ReturnType<TFunction> {
-  //   const operationName = `${receiver.constructor.name}.${fn.name}`;
-  //   const ctx = this.withOperation(operationName, target);
-  // }
-
-  private async _readParentPackageJson(
-    url: string | Uri
-  ): Promise<ReadParentPackageJsonResultInternal> {
-    this.debug('ctx._readParentPackageJson(%s)', url);
-    const uri = Uri.isUri(url) ? url : Uri.parse(url);
-    const canonicalizationReturn = this.getCanonicalUrl(uri);
-    const resolveRootReturn = this.getResolveRoot(uri);
-    const bothResolved = all([canonicalizationReturn, resolveRootReturn], this.token);
-    const [canonicalizationResult, resolveRootResult] = isThenable(bothResolved)
-      ? await checkCancellation(bothResolved, this.token)
-      : bothResolved;
-
-    return this._readParentPackageJsonInternal(canonicalizationResult.uri, resolveRootResult.uri, {
-      uriIsCanonicalized: true,
-    });
-  }
-
-  private async _resolve(url: Uri | string): Promise<ResolveResult> {
-    this.debug('ctx._resolve(%s)', url);
-    const uri = Uri.isUri(url) ? url : Uri.parse(url);
-    const bothResolved = all(
-      [this.getCanonicalUrl(uri), this.getResolveRoot(uri), this.getSettings(uri)],
-      this.token
-    );
-
-    const [canonicalizationResult, resolveRootResult, settingsResult] = isThenable(bothResolved)
-      ? await checkCancellation(bothResolved, this.token)
-      : bothResolved;
-
-    const rootUri = resolveRootResult.uri;
-    const rootUriWithoutTrailingSlash = Uri.ensureTrailingSlash(rootUri, '');
-
-    if (!Uri.isPrefixOf(rootUriWithoutTrailingSlash, canonicalizationResult.uri)) {
-      throw new Error(
-        `Unable to resolve a module whose path ${canonicalizationResult.uri.toString(
-          true
-        )} is above the host's root ${rootUri.toString()}`
-      );
-    }
-
-    if (
-      Uri.equals(rootUriWithoutTrailingSlash, canonicalizationResult.uri) ||
-      Uri.equals(rootUri, canonicalizationResult.uri)
-    ) {
-      return this._resolveAsDirectory(
-        canonicalizationResult.uri,
-        resolveRootResult.uri,
-        settingsResult.settings
-      );
-    }
-
-    return this._resolveAsFile(
-      canonicalizationResult.uri,
-      resolveRootResult.uri,
-      settingsResult.settings,
-      null
+  runInChildContext<T>(
+    operationName: string,
+    uri: { toString(): string },
+    contextFn: (ctx: ResolverContext) => T
+  ): T {
+    return this.runInContext(
+      operationName,
+      uri,
+      { resetPath: false, resetVisits: false },
+      contextFn
     );
   }
 
-  private async _resolveAsDirectory(
-    uri: Uri,
-    rootUri: Uri,
-    settings: Settings
-  ): Promise<ResolveResult> {
-    this.debug('ctx._resolveAsDirectory(%s)', uri);
-    // TODO: Visited
-    // ctx.visited.add(rootUri.toString());
-
-    const listEntriesReturn = this.listEntries(uri);
-    const listEntriesResult = isThenable(listEntriesReturn)
-      ? await checkCancellation(listEntriesReturn, this.token)
-      : listEntriesReturn;
-
-    let mainPathname = 'index';
-
-    // Step 1: Look for a package.json with an main field
-    const packageJsonUri = Uri.joinPath(uri, './package.json');
-
-    // TODO: Visited
-    // this.visited.add(packageJsonUri.toString());
-
-    const packageJsonEntry = listEntriesResult.entries.find(
-      (entry) => entry.type === ResolvedEntryKind.File && Uri.equals(packageJsonUri, entry.uri)
-    );
-
-    let packageJson: PackageJson | null = null;
-
-    if (packageJsonEntry) {
-      const packageJsonContentReturn = this.readFileContent(packageJsonUri);
-      const packageJsonContentResult = isThenable(packageJsonContentReturn)
-        ? await checkCancellation(packageJsonContentReturn, this.token)
-        : packageJsonContentReturn;
-
-      packageJson = parseBufferAsPackageJson(
-        this.decoder,
-        packageJsonContentResult.content,
-        uri.toString()
-      );
-
-      for (const packageMain of settings.packageMain) {
-        const pathname = packageJson[packageMain];
-        if (typeof pathname === 'string') {
-          mainPathname = pathname;
-          break;
-        }
-      }
-    }
-
-    return this._resolveAsFile(Uri.joinPath(uri, mainPathname), rootUri, settings, packageJson);
+  runInIsolatedContext<T>(
+    operationName: string,
+    uri: { toString(): string },
+    contextFn: (ctx: ResolverContext) => T
+  ): T {
+    return this.runInContext(operationName, uri, { resetPath: true, resetVisits: true }, contextFn);
   }
 
-  private async _resolveAsFile(
-    uri: Uri,
-    rootUri: Uri,
-    settings: Settings,
-    packageJson: PackageJson | null,
-    ignoreBrowserOverrides = false
-  ): Promise<ResolveResult> {
-    this.debug('ctx._resolveAsFile(%s)', uri);
-    if (uri.path === '' || uri.path === '/') {
-      throw new TypeError(`Unable to resolve the root as a file: ${uri.toString()}`);
-    }
-
-    // TODO: Visited
-    // this.visited.add(uri.toString());
-
-    const browserOverrides = new Map<string, Uri | false>();
-
-    if (packageJson === null) {
-      // The parent package.json is only interesting if we are going to look at the `browser`
-      // field and then consider browser mapping overrides in there.
-      const parentPackageJsonResult =
-        settings.packageMain.includes('browser') && !ignoreBrowserOverrides
-          ? await checkCancellation(
-              this._readParentPackageJsonInternal(uri, rootUri, {
-                uriIsCanonicalized: true,
-              }),
-              this.token
-            )
-          : undefined;
-      if (parentPackageJsonResult && parentPackageJsonResult.found) {
-        // TODO: Visited
-        // this.visited.add(parentPackageJsonResult.uri.toString());
-
-        if (
-          parentPackageJsonResult.packageJson.browser &&
-          typeof parentPackageJsonResult.packageJson.browser === 'object'
-        ) {
-          const browserMap = parentPackageJsonResult.packageJson.browser;
-          const packageJsonDir = Uri.joinPath(parentPackageJsonResult.uri, '..');
-
-          for (const entry in browserMap) {
-            const impliedUri = Uri.joinPath(packageJsonDir, entry);
-            const targetSpec = browserMap[entry];
-            const target = targetSpec === false ? false : Uri.joinPath(packageJsonDir, targetSpec);
-
-            if (Uri.equals(impliedUri, uri)) {
-              if (target === false) {
-                return {
-                  found: false,
-                  uri: null,
-                };
-              }
-
-              // console.warn('REMAPPED %s to %s', url, target);
-
-              // We found an exact match so let's make sure we resolve the re-mapped file but
-              // also that we don't go through the browser overrides rodeo again.
-              return this._resolveAsFile(target, rootUri, settings, packageJson, true);
-            }
-
-            browserOverrides.set(impliedUri.toString(), target);
-          }
-        }
-      }
-    }
-
-    const containingDirUri = Uri.ensureTrailingSlash(Uri.joinPath(uri, '..'));
-
-    // TODO: Visited
-    // this.visited.add(containingDirUri.toString());
-
-    const filename = basename(uri.path);
-    const entriesReturn = this.listEntries(containingDirUri);
-    const entriesResult = isThenable(entriesReturn)
-      ? await checkCancellation(entriesReturn, this.token)
-      : entriesReturn;
-    const entryDirectoryMap = new Map<string, ResolvedEntry>();
-    const entryFileMap = new Map<string, ResolvedEntry<ResolvedEntryKind.File>>();
-
-    for (const entry of entriesResult.entries) {
-      if (Uri.equals(entry.uri, uri) && entry.type == ResolvedEntryKind.File) {
-        // Found an exact match
-        return {
-          found: true,
-          rootUri,
-          uri,
-        };
-      }
-
-      if (entry.type === ResolvedEntryKind.Directory) {
-        const childFilename = Uri.getFirstPathSegmentAfterPrefix(entry.uri, containingDirUri);
-
-        entryDirectoryMap.set(childFilename, entry);
-      } else if (entry.type === ResolvedEntryKind.File) {
-        const childFilename = basename(entry.uri.path);
-
-        entryFileMap.set(childFilename, entry as ResolvedEntry<ResolvedEntryKind.File>);
-      }
-    }
-
-    // Look for browser overrides
-    for (const ext of settings.extensions) {
-      const hrefWithExtension = uri.with({ path: `${uri.path}${ext}` }).toString();
-      const mapping = browserOverrides.get(hrefWithExtension);
-
-      // TODO: Visted
-      // this.visited.add(hrefWithExtension);
-
-      if (mapping === false) {
-        // console.warn('REMAPPED %s to undefined', url);
-        return {
-          found: true,
-          rootUri,
-          uri: null,
-        };
-      } else if (mapping) {
-        // console.warn('REMAPPED %s to %s', url, mapping);
-
-        return this._resolveAsFile(mapping, rootUri, settings, packageJson, true);
-      }
-
-      const match = entryFileMap.get(`${filename}${ext}`);
-      if (match) {
-        if (match.type !== ResolvedEntryKind.File) {
-          continue;
-        }
-
-        return {
-          found: true,
-          rootUri,
-          uri: match.uri,
-        };
-      }
-    }
-
-    // First, attempt to find a matching file or directory
-    const match = entryDirectoryMap.get(filename);
-    if (match) {
-      if (match.type !== ResolvedEntryKind.Directory) {
-        throw new Error(`Invariant violation ${match.type} is unexpected`);
-      }
-
-      return this._resolveAsDirectory(match.uri, rootUri, settings);
-    }
-
-    throw new EntryNotFoundError(uri);
-  }
-
-  private async _readParentPackageJsonInternal(
-    uri: Uri,
-    rootUri: Uri,
-    options: { uriIsCanonicalized: boolean }
-  ): Promise<ReadParentPackageJsonResultInternal> {
-    this.debug('ctx._readParentPackageJsonInternal(%s)', uri);
-    if (!options.uriIsCanonicalized) {
-      const canonicalizationReturn = this.getCanonicalUrl(uri);
-      const canonicalizationResult = isThenable(canonicalizationReturn)
-        ? await checkCancellation(canonicalizationReturn, this.token)
-        : canonicalizationReturn;
-
-      uri = canonicalizationResult.uri;
-    }
-
-    const hostRootHref = Uri.ensureTrailingSlash(rootUri);
-    const containingDirUrl = Uri.ensureTrailingSlash(Uri.joinPath(uri, '..'));
-
-    const readPackageJsonOrRecurse = async (
-      dir: Uri
-    ): Promise<ReadParentPackageJsonResultInternal> => {
-      this.debug('ctx._readParentPackageJsonInternal::readPackageJsonOrRecurse(%s, %s)', uri, dir);
-      if (!Uri.isPrefixOf(hostRootHref, dir)) {
-        // Terminal condition for recursion
-        return {
-          found: false,
-          packageJson: null,
-          uri: null,
-        };
-      }
-
-      // TODO: Visited
-      // this.visited.add(dir.toString());
-
-      const entriesReturn = this.listEntries(dir);
-      const entriesResult = isThenable(entriesReturn)
-        ? await checkCancellation(entriesReturn, this.token)
-        : entriesReturn;
-      const packageJsonUri = Uri.joinPath(dir, 'package.json');
-      const packageJsonEntry = entriesResult.entries.find(
-        (entry) => entry.type === ResolvedEntryKind.File && Uri.equals(entry.uri, packageJsonUri)
-      );
-
-      // TODO: Visited
-      // this.visited.add(packageJsonUri.toString());
-
-      if (packageJsonEntry) {
-        // Found! Let's try to parse
-        try {
-          const parentPackageJsonContentReturn = this.readFileContent(packageJsonUri);
-          const parentPackageJsonContentResult = isThenable(parentPackageJsonContentReturn)
-            ? await checkCancellation(parentPackageJsonContentReturn, this.token)
-            : parentPackageJsonContentReturn;
-
-          const packageJson = parseBufferAsPackageJson(
-            this.decoder,
-            parentPackageJsonContentResult.content,
-            packageJsonUri.toString()
-          );
-
-          return { found: true, packageJson, uri: packageJsonUri };
-        } catch (err) {
-          if (err instanceof CanceledError || (err && err.name === 'CanceledError')) {
-            throw err;
-          }
-
-          // TODO: Maybe issue some warning?
-        }
-      }
-
-      // Not found here, let's try one up
-      const parentDir = Uri.ensureTrailingSlash(Uri.joinPath(dir, '..'));
-
-      // Skip infinite recursion
-      if (Uri.equals(uri, parentDir)) {
-        return {
-          found: false,
-          packageJson: null,
-          uri: null,
-        };
-      }
-
-      return readPackageJsonOrRecurse(parentDir);
-    };
-
-    return readPackageJsonOrRecurse(containingDirUrl);
-  }
-
-  withOperation(operationName: string, uri: { toString(): string }) {
+  private runInContext<T>(
+    operationName: string,
+    uri: { toString(): string },
+    options: { resetPath: boolean; resetVisits: boolean },
+    contextFn: (ctx: ResolverContext) => T
+  ) {
     const encodedOperation = encodePathNode(operationName, uri);
 
     if (this.#path.includes(encodedOperation)) {
@@ -529,27 +355,27 @@ export class ResolverContext {
     const ctx = new ResolverContext({
       cache: this.#cache,
       decoder: this.#decoder,
-      path: this.#path.concat(encodedOperation),
+      path: options.resetPath ? [] : this.#path.concat(encodedOperation),
       resolver: this.#resolver,
       settings: this.#settings,
       strategy: this.#strategy,
       token: this.#tokenSource.token,
+      visits: options.resetVisits ? new Visits(uri) : this.#visits.child(uri),
     });
 
     ctx.debug('%s(%s)', operationName, uri);
 
-    return ctx;
+    return contextFn(ctx);
   }
 
-  private _invokeOwnMethod<
-    TMethod extends
-      | typeof ResolverContext.prototype._readParentPackageJson
-      | typeof ResolverContext.prototype._resolve
-  >(method: TMethod, uri: Uri): ReturnType<TMethod> {
+  private _invokeOwnMethod<TMethod extends typeof readParentPackageJson | typeof resolve>(
+    method: TMethod,
+    uri: Uri
+  ): ReturnTypeWithVisits<TMethod> {
     const operationName = `ctx.${method.name}`;
     const uriStr = uri.toString();
     let operationCache = this.#cache.get(operationName) as
-      | Map<string, ReturnType<TMethod>>
+      | Map<string, ReturnTypeWithVisits<TMethod>>
       | undefined;
 
     if (!operationCache) {
@@ -570,20 +396,19 @@ export class ResolverContext {
     this.debug('%s(%s) [MISS]', operationName, uriStr);
 
     // Nothing is cached
-    const ret = (method as any).call(this, uri, {
-      ctx: this.withOperation(operationName, uri),
-    }) as ReturnType<TMethod>;
+    const ret = this.runInChildContext(method.name, uri, (ctx) => method(ctx, uri));
 
     if (isThenable(ret)) {
-      const promiseRet = ret as Thenable<ReturnType<TMethod>>;
+      const promiseRet = ret as Thenable<ReturnTypeWithVisits<TMethod>>;
 
       // Produce a promise that will only be settled once the cache has been updated accordingly.
       const wrappedRet = promiseRet.then(
         (result) => {
+          const mappedResult = this.#mapResultWithVisits(result);
           // Override the pending value with the resolved value
-          operationCache!.set(uriStr, result);
+          operationCache!.set(uriStr, mappedResult);
 
-          return result;
+          return mappedResult;
         },
         (err) => {
           // Delete the entry from the cache in case it was a transient failure
@@ -594,14 +419,16 @@ export class ResolverContext {
       );
 
       // Set the pending value in the cache for now
-      operationCache.set(uriStr, wrappedRet as Awaited<Thenable<ReturnType<TMethod>>>);
+      operationCache.set(uriStr, wrappedRet as Awaited<Thenable<ReturnTypeWithVisits<TMethod>>>);
 
-      return wrappedRet as Awaited<Thenable<ReturnType<TMethod>>>;
+      return wrappedRet as Awaited<Thenable<ReturnTypeWithVisits<TMethod>>>;
     }
 
-    operationCache.set(uriStr, ret);
+    const mappedResult = this.#mapResultWithVisits(ret);
 
-    return ret;
+    operationCache.set(uriStr, mappedResult);
+
+    return mappedResult;
   }
 
   private _invokeStrategyMethod<
@@ -612,11 +439,15 @@ export class ResolverContext {
       | 'getUrlForBareModule'
       | 'listEntries'
       | 'readFileContent']
-  >(method: TMethod, uri: Parameters<TMethod>[0], ...otherArgs: any[]): ReturnType<TMethod> {
+  >(
+    method: TMethod,
+    uri: Parameters<TMethod>[0],
+    ...otherArgs: any[]
+  ): ReturnTypeWithVisits<TMethod> {
     const operationName = `${this.#strategy.constructor.name || 'strategy'}.${method.name}`;
     const uriStr = uri.toString();
     let operationCache = this.#cache.get(operationName) as
-      | Map<string, ReturnType<TMethod>>
+      | Map<string, ReturnTypeWithVisits<TMethod>>
       | undefined;
 
     if (!operationCache) {
@@ -637,23 +468,21 @@ export class ResolverContext {
     this.debug('%s(%s) [MISS]', operationName, uriStr);
 
     // Nothing is cached
-    const ret = (method as any).call(
-      this.#strategy,
-      uri,
-      ...otherArgs,
-      this.withOperation(operationName, uri)
-    ) as ReturnType<TMethod>;
+    const ret = this.runInChildContext(method.name, uri, (ctx) =>
+      (method as any).call(this.#strategy, uri, ...otherArgs, ctx)
+    ) as ReturnTypeWithVisits<TMethod>;
 
     if (isThenable(ret)) {
-      const promiseRet = ret as Thenable<ReturnType<TMethod>>;
+      const promiseRet = ret as Thenable<ReturnTypeWithVisits<TMethod>>;
 
       // Produce a promise that will only be settled once the cache has been updated accordingly.
       const wrappedRet = promiseRet.then(
         (result) => {
+          const mappedResult = this.#mapResultWithVisits(result);
           // Override the pending value with the resolved value
-          operationCache!.set(uriStr, result);
+          operationCache!.set(uriStr, mappedResult);
 
-          return result;
+          return mappedResult;
         },
         (err) => {
           // Delete the entry from the cache in case it was a transient failure
@@ -664,14 +493,16 @@ export class ResolverContext {
       );
 
       // Set the pending value in the cache for now
-      operationCache.set(uriStr, wrappedRet as Awaited<Thenable<ReturnType<TMethod>>>);
+      operationCache.set(uriStr, wrappedRet as Awaited<Thenable<ReturnTypeWithVisits<TMethod>>>);
 
-      return wrappedRet as Awaited<Thenable<ReturnType<TMethod>>>;
+      return wrappedRet as Awaited<Thenable<ReturnTypeWithVisits<TMethod>>>;
     }
 
-    operationCache.set(uriStr, ret);
+    const mappedRet = this.#mapResultWithVisits(ret);
 
-    return ret;
+    operationCache.set(uriStr, mappedRet);
+
+    return mappedRet;
   }
 
   private _wrapError<T extends Error>(
@@ -708,4 +539,375 @@ function decodePathNode(node: string) {
     operationName: parts[0],
     uri: parts[1].includes(':') ? Uri.parse(parts[1]) : parts[1],
   };
+}
+
+async function resolve(ctx: ResolverContext, url: Uri | string): Promise<ResolveResult> {
+  const uri = Uri.isUri(url) ? url : Uri.parse(url);
+  const bothResolved = all(
+    [ctx.getCanonicalUrl(uri), ctx.getResolveRoot(uri), ctx.getSettings(uri)],
+    ctx.token
+  );
+
+  const [canonicalizationResult, resolveRootResult, settingsResult] = isThenable(bothResolved)
+    ? await checkCancellation(bothResolved, ctx.token)
+    : bothResolved;
+
+  const rootUri = resolveRootResult.uri;
+  const rootUriWithoutTrailingSlash = Uri.ensureTrailingSlash(rootUri, '');
+
+  if (!Uri.isPrefixOf(rootUriWithoutTrailingSlash, canonicalizationResult.uri)) {
+    throw new Error(
+      `Unable to resolve a module whose path ${canonicalizationResult.uri.toString(
+        true
+      )} is above the host's root ${rootUri.toString()}`
+    );
+  }
+
+  if (
+    Uri.equals(rootUriWithoutTrailingSlash, canonicalizationResult.uri) ||
+    Uri.equals(rootUri, canonicalizationResult.uri)
+  ) {
+    return ctx.runInChildContext('resolveAsDirectory', canonicalizationResult.uri, (ctx) =>
+      resolveAsDirectory(
+        ctx,
+        canonicalizationResult.uri,
+        resolveRootResult.uri,
+        settingsResult.settings
+      )
+    );
+  }
+
+  return ctx.runInChildContext('resolveAsFile', canonicalizationResult.uri, (ctx) =>
+    resolveAsFile(
+      ctx,
+      canonicalizationResult.uri,
+      resolveRootResult.uri,
+      settingsResult.settings,
+      null
+    )
+  );
+}
+
+async function resolveAsDirectory(
+  ctx: ResolverContext,
+  uri: Uri,
+  rootUri: Uri,
+  settings: Settings
+): Promise<ResolveResult> {
+  ctx.recordVisit(uri, VisitKind.Directory);
+
+  const listEntriesReturn = ctx.listEntries(uri);
+  const listEntriesResult = isThenable(listEntriesReturn)
+    ? await checkCancellation(listEntriesReturn, ctx.token)
+    : listEntriesReturn;
+
+  let mainPathname = 'index';
+
+  // Step 1: Look for a package.json with an main field
+  const packageJsonUri = Uri.joinPath(uri, './package.json');
+
+  ctx.recordVisit(packageJsonUri, VisitKind.File);
+
+  const packageJsonEntry = listEntriesResult.entries.find(
+    (entry) => entry.type === ResolvedEntryKind.File && Uri.equals(packageJsonUri, entry.uri)
+  );
+
+  let packageJson: PackageJson | null = null;
+
+  if (packageJsonEntry) {
+    const packageJsonContentReturn = ctx.readFileContent(packageJsonUri);
+    const packageJsonContentResult = isThenable(packageJsonContentReturn)
+      ? await checkCancellation(packageJsonContentReturn, ctx.token)
+      : packageJsonContentReturn;
+
+    packageJson = parseBufferAsPackageJson(
+      ctx.decoder,
+      packageJsonContentResult.content,
+      uri.toString()
+    );
+
+    for (const packageMain of settings.packageMain) {
+      const pathname = packageJson[packageMain];
+      if (typeof pathname === 'string') {
+        mainPathname = pathname;
+        break;
+      }
+    }
+  }
+
+  const fileUri = Uri.joinPath(uri, mainPathname);
+
+  return ctx.runInChildContext('resolveAsFile', uri, (ctx) =>
+    resolveAsFile(ctx, fileUri, rootUri, settings, packageJson)
+  );
+}
+
+async function resolveAsFile(
+  ctx: ResolverContext,
+  uri: Uri,
+  rootUri: Uri,
+  settings: Settings,
+  packageJson: PackageJson | null,
+  ignoreBrowserOverrides = false
+): Promise<ResolveResult> {
+  if (uri.path === '' || uri.path === '/') {
+    throw new TypeError(`Unable to resolve the root as a file: ${uri.toString()}`);
+  }
+
+  ctx.recordVisit(uri, VisitKind.File);
+
+  const browserOverrides = new Map<string, Uri | false>();
+
+  if (packageJson === null) {
+    // The parent package.json is only interesting if we are going to look at the `browser`
+    // field and then consider browser mapping overrides in there.
+    const parentPackageJsonResult =
+      settings.packageMain.includes('browser') && !ignoreBrowserOverrides
+        ? await checkCancellation(
+            ctx.runInChildContext('readParentPackageJsonInternal', uri, (ctx) =>
+              readParentPackageJsonInternal(ctx, uri, rootUri, { uriIsCanonicalized: true })
+            ),
+            ctx.token
+          )
+        : undefined;
+    if (parentPackageJsonResult && parentPackageJsonResult.found) {
+      ctx.recordVisit(parentPackageJsonResult.uri, VisitKind.File);
+
+      if (
+        parentPackageJsonResult.packageJson.browser &&
+        typeof parentPackageJsonResult.packageJson.browser === 'object'
+      ) {
+        const browserMap = parentPackageJsonResult.packageJson.browser;
+        const packageJsonDir = Uri.joinPath(parentPackageJsonResult.uri, '..');
+
+        for (const entry in browserMap) {
+          const impliedUri = Uri.joinPath(packageJsonDir, entry);
+          const targetSpec = browserMap[entry];
+          const target = targetSpec === false ? false : Uri.joinPath(packageJsonDir, targetSpec);
+
+          if (Uri.equals(impliedUri, uri)) {
+            if (target === false) {
+              return {
+                found: false,
+                uri: null,
+              };
+            }
+
+            // console.warn('REMAPPED %s to %s', url, target);
+
+            // We found an exact match so let's make sure we resolve the re-mapped file but
+            // also that we don't go through the browser overrides rodeo again.
+            return ctx.runInChildContext('resolveAsFile', target, (ctx) =>
+              resolveAsFile(ctx, target, rootUri, settings, packageJson, true)
+            );
+          }
+
+          browserOverrides.set(impliedUri.toString(), target);
+        }
+      }
+    }
+  }
+
+  const containingDirUri = Uri.ensureTrailingSlash(Uri.joinPath(uri, '..'));
+
+  const filename = basename(uri.path);
+  const entriesReturn = ctx.listEntries(containingDirUri);
+  const entriesResult = isThenable(entriesReturn)
+    ? await checkCancellation(entriesReturn, ctx.token)
+    : entriesReturn;
+  const entryDirectoryMap = new Map<string, ResolvedEntry>();
+  const entryFileMap = new Map<string, ResolvedEntry<ResolvedEntryKind.File>>();
+
+  for (const entry of entriesResult.entries) {
+    if (Uri.equals(entry.uri, uri) && entry.type == ResolvedEntryKind.File) {
+      // Found an exact match
+      return {
+        found: true,
+        rootUri,
+        uri,
+      };
+    }
+
+    if (entry.type === ResolvedEntryKind.Directory) {
+      const childFilename = Uri.getFirstPathSegmentAfterPrefix(entry.uri, containingDirUri);
+
+      entryDirectoryMap.set(childFilename, entry);
+    } else if (entry.type === ResolvedEntryKind.File) {
+      const childFilename = basename(entry.uri.path);
+
+      entryFileMap.set(childFilename, entry as ResolvedEntry<ResolvedEntryKind.File>);
+    }
+  }
+
+  // Look for browser overrides
+  for (const ext of settings.extensions) {
+    const hrefWithExtensionUri = uri.with({ path: `${uri.path}${ext}` });
+    const hrefWithExtension = hrefWithExtensionUri.toString();
+    const mapping = browserOverrides.get(hrefWithExtension);
+
+    ctx.recordVisit(hrefWithExtensionUri, VisitKind.File);
+
+    if (mapping === false) {
+      // console.warn('REMAPPED %s to undefined', url);
+      return {
+        found: true,
+        rootUri,
+        uri: null,
+      };
+    } else if (mapping) {
+      // console.warn('REMAPPED %s to %s', url, mapping);
+
+      return ctx.runInChildContext('resolveAsFile', mapping, (ctx) =>
+        resolveAsFile(ctx, mapping, rootUri, settings, packageJson, true)
+      );
+    }
+
+    const match = entryFileMap.get(`${filename}${ext}`);
+    if (match) {
+      if (match.type !== ResolvedEntryKind.File) {
+        continue;
+      }
+
+      return {
+        found: true,
+        rootUri,
+        uri: match.uri,
+      };
+    }
+  }
+
+  // First, attempt to find a matching file or directory
+  const match = entryDirectoryMap.get(filename);
+  if (match) {
+    if (match.type !== ResolvedEntryKind.Directory) {
+      throw new Error(`Invariant violation ${match.type} is unexpected`);
+    }
+
+    return ctx.runInChildContext('resolveAsDirectory', match.uri, (ctx) =>
+      resolveAsDirectory(ctx, match.uri, rootUri, settings)
+    );
+  }
+
+  throw new EntryNotFoundError(uri);
+}
+
+async function readParentPackageJson(ctx: ResolverContext, url: string | Uri) {
+  const uri = Uri.isUri(url) ? url : Uri.parse(url);
+  const canonicalizationReturn = ctx.getCanonicalUrl(uri);
+  const resolveRootReturn = ctx.getResolveRoot(uri);
+  const bothResolved = all([canonicalizationReturn, resolveRootReturn], ctx.token);
+  const [canonicalizationResult, resolveRootResult] = isThenable(bothResolved)
+    ? await checkCancellation(bothResolved, ctx.token)
+    : bothResolved;
+  const readReturn = ctx.runInChildContext(
+    'readParentPackageJsonInternal',
+    canonicalizationResult.uri,
+    (ctx) =>
+      readParentPackageJsonInternal(ctx, canonicalizationResult.uri, resolveRootResult.uri, {
+        uriIsCanonicalized: true,
+      })
+  );
+  const readResult = isThenable(readReturn) ? await readReturn : readReturn;
+
+  if (readResult.found && readResult.visitedDirs) {
+    const visitedDirs = readResult.visitedDirs;
+    delete readResult.visitedDirs;
+
+    (readResult as any)[CACHE] = visitedDirs.map((uri) => [uri.toString(), { ...readResult, uri }]);
+  }
+
+  return readResult;
+}
+
+async function readParentPackageJsonInternal(
+  ctx: ResolverContext,
+  uri: Uri,
+  rootUri: Uri,
+  options: { uriIsCanonicalized: boolean }
+): Promise<ReadParentPackageJsonResultInternal> {
+  if (!options.uriIsCanonicalized) {
+    const canonicalizationReturn = ctx.getCanonicalUrl(uri);
+    const canonicalizationResult = isThenable(canonicalizationReturn)
+      ? await checkCancellation(canonicalizationReturn, ctx.token)
+      : canonicalizationReturn;
+
+    uri = canonicalizationResult.uri;
+  }
+
+  const hostRootHref = Uri.ensureTrailingSlash(rootUri);
+  const containingDirUrl = Uri.ensureTrailingSlash(Uri.joinPath(uri, '..'));
+  const visitedDirs = [] as Uri[];
+
+  const readPackageJsonOrRecurse = async (
+    ctx: ResolverContext,
+    dir: Uri
+  ): Promise<ReadParentPackageJsonResultInternal> => {
+    if (!Uri.isPrefixOf(hostRootHref, dir)) {
+      // Terminal condition for recursion
+      return {
+        found: false,
+        packageJson: null,
+        uri: null,
+      };
+    }
+
+    ctx.recordVisit(dir, VisitKind.Directory);
+
+    const entriesReturn = ctx.listEntries(dir);
+    const entriesResult = isThenable(entriesReturn)
+      ? await checkCancellation(entriesReturn, ctx.token)
+      : entriesReturn;
+    const packageJsonUri = Uri.joinPath(dir, 'package.json');
+    const packageJsonEntry = entriesResult.entries.find(
+      (entry) => entry.type === ResolvedEntryKind.File && Uri.equals(entry.uri, packageJsonUri)
+    );
+
+    ctx.recordVisit(packageJsonUri, VisitKind.File);
+
+    if (packageJsonEntry) {
+      // Found! Let's try to parse
+      try {
+        const parentPackageJsonContentReturn = ctx.readFileContent(packageJsonUri);
+        const parentPackageJsonContentResult = isThenable(parentPackageJsonContentReturn)
+          ? await checkCancellation(parentPackageJsonContentReturn, ctx.token)
+          : parentPackageJsonContentReturn;
+
+        const packageJson = parseBufferAsPackageJson(
+          ctx.decoder,
+          parentPackageJsonContentResult.content,
+          packageJsonUri.toString()
+        );
+
+        return { found: true, packageJson, uri: packageJsonUri, visitedDirs };
+      } catch (err) {
+        if (err instanceof CanceledError || (err && err.name === 'CanceledError')) {
+          throw err;
+        }
+
+        // TODO: Maybe issue some warning?
+      }
+    }
+
+    // Not found here, let's try one up
+    const parentDir = Uri.ensureTrailingSlash(Uri.joinPath(dir, '..'));
+
+    // Skip infinite recursion
+    if (Uri.equals(uri, parentDir)) {
+      return {
+        found: false,
+        packageJson: null,
+        uri: null,
+      };
+    }
+
+    visitedDirs.push(dir);
+
+    return ctx.runInChildContext('readPackageJsonOrRecurse', parentDir, (ctx) =>
+      readPackageJsonOrRecurse(ctx, parentDir)
+    );
+  };
+
+  return ctx.runInChildContext('readPackageJsonOrRecurse', containingDirUrl, (ctx) =>
+    readPackageJsonOrRecurse(ctx, containingDirUrl)
+  );
 }

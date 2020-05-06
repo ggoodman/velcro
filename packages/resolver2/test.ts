@@ -1,17 +1,15 @@
 import { read, request } from '@hapi/wreck';
 import * as MemFs from 'memfs';
 import { CancellationToken } from 'ts-primitives';
-
 import { createBundle } from './src/bundling/bundler';
+import { CanceledError } from './src/error';
+import { Resolver } from './src/resolver';
 import { CdnStrategy } from './src/strategy/cdn';
 import { CompoundStrategy } from './src/strategy/compound';
 import { FsStrategy } from './src/strategy/fs';
-import { Resolver } from './src/resolver';
-import { Uri } from './src/uri';
 import { FsInterface } from './src/strategy/fs/types';
-
+import { Uri } from './src/uri';
 import { polly } from './test/lib/wreck';
-import { CanceledError } from './src/error';
 
 async function fetchBufferWithWreck(href: string, token: CancellationToken) {
   const resPromise = request('get', href, {
@@ -50,7 +48,7 @@ async function main() {
         },
       }),
       'index.js':
-        'module.exports = { "emotion": require("@emotion/core"), "react": require("react"), "react-dom": require("react-dom") };',
+        'module.exports = { /*"emotion": require("@emotion/core"), "package": require("./package"),*/ "react": require("react"), /*"react-dom": require("react-dom")*/ };',
     },
     '/'
   );
@@ -69,9 +67,17 @@ async function main() {
     const sourceModules = await createBundle({
       entrypoints: [Uri.file('')],
       resolver,
-      nodeEnv: 'development',
+      nodeEnv: 'production',
     });
-    console.log('Added %d source modules', sourceModules.size);
+
+    for (const edge of sourceModules) {
+      console.log(
+        '%s -> %s: [%s]',
+        edge.fromUri,
+        edge.toUri,
+        edge.visited.map((visit) => `${visit.uri.toString()}(${visit.type})`).join(', ')
+      );
+    }
   } finally {
     console.timeEnd('add');
   }

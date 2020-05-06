@@ -1,5 +1,6 @@
-import { Uri } from '../uri';
 import MagicString from 'magic-string';
+import { Uri } from '../uri';
+import { SyntaxKind } from './parsing';
 import { SourceModuleDependency } from './sourceModuleDependency';
 
 export class SourceModule {
@@ -9,6 +10,7 @@ export class SourceModule {
     readonly uri: Uri,
     readonly rootUri: Uri,
     readonly source: MagicString,
+    readonly syntax: SyntaxKind,
     readonly dependencies: Set<SourceModuleDependency>
   ) {}
 

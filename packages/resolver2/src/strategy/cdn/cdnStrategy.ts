@@ -1,20 +1,19 @@
 import { satisfies, validRange } from 'semver';
-import { Thenable, CancellationToken, basename } from 'ts-primitives';
-
-import { ResolverContext } from '../../context';
+import { basename, CancellationToken, Thenable } from 'ts-primitives';
+import { all, checkCancellation, isThenable } from '../../async';
+import { ResolverContext, Visit, VisitKind } from '../../context';
+import { EntryNotFoundError } from '../../error';
+import { PackageJson, parseBufferAsPackageJson } from '../../packageJson';
 import {
   AbstractResolverStrategy,
-  ResolvedEntryKind,
-  ResolverStrategy,
-  CanonicalizeResult,
-  ResolveRootResult,
-  ListEntriesResult,
   BareModuleResult,
+  CanonicalizeResult,
+  ListEntriesResult,
+  ResolvedEntryKind,
+  ResolveRootResult,
+  ResolverStrategy,
 } from '../../strategy';
 import { Uri } from '../../uri';
-import { PackageJson, parseBufferAsPackageJson } from '../../packageJson';
-import { checkCancellation, all, isThenable } from '../../async';
-import { EntryNotFoundError } from '../../error';
 
 interface AbstractCdn {
   name: string;
@@ -267,7 +266,10 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
   >();
   readonly #locks = new Map<string, unknown | Thenable<unknown>>();
   readonly #packageEntriesCache = new Map<string, Map<string, Directory>>();
-  readonly #packageJsonCache = new Map<string, Map<string, PackageJson>>();
+  readonly #packageJsonCache = new Map<
+    string,
+    Map<string, { packageJson: PackageJson; visited: Visit[] }>
+  >();
   readonly #readUrlFn: UrlContentFetcher;
   readonly #rootUri: Uri;
 
@@ -311,7 +313,11 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
   getCanonicalUrl(uri: Uri, ctx: ResolverContext): Promise<CanonicalizeResult> {
     return this._withRootUriCheck(uri, async () => {
       const unresolvedSpec = this.#cdn.parseUrl(uri);
-      const packageJsonReturn = this._readPackageJsonWithCache(unresolvedSpec, ctx);
+      const packageJsonReturn = ctx.runInChildContext(
+        'CdnStrategy._readPackageJsonWithCache',
+        specToString(unresolvedSpec),
+        (ctx) => this._readPackageJsonWithCache(unresolvedSpec, ctx)
+      );
       const packageJson = isThenable(packageJsonReturn)
         ? await packageJsonReturn
         : packageJsonReturn;
@@ -425,6 +431,7 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
         return cached;
       }
 
+      ctx.recordVisit(uri, VisitKind.File);
       const readReturn = this.#readUrlFn(uriStr, ctx.token);
 
       if (readReturn === null) {
@@ -477,10 +484,9 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
         const range = validRange(spec.version);
 
         if (range) {
-          for (const [version, packageJson] of packageEntriesCacheForModule) {
+          for (const [version, entries] of packageEntriesCacheForModule) {
             if (satisfies(version, range)) {
-              // console.log('[HIT] readPackageJsonWithCache(%s)', spec.spec);
-              return packageJson;
+              return entries;
             }
           }
         }
@@ -502,6 +508,7 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
 
     const uri = this.#cdn.urlForPackageList(spec.spec);
     const href = uri.toString();
+    ctx.recordVisit(uri, VisitKind.Directory);
     const data = await checkCancellation(this.#readUrlFn(href, ctx.token), ctx.token);
 
     if (data === null) {
@@ -514,7 +521,6 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
   }
 
   private _readPackageJsonWithCache(spec: Spec, ctx: ResolverContext) {
-    ctx.debug('%s._readPackageJsonWithCache(%s)', this.constructor.name, specToString(spec));
     return this._withLock(`packageJson:${spec.name}`, () => {
       let packageJsonCacheForModule = this.#packageJsonCache.get(spec.name);
 
@@ -523,16 +529,22 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
 
         if (exactMatch) {
           // console.log('[HIT-EXACT] readPackageJsonWithCache(%s)', spec.spec);
-          return exactMatch;
+          for (const visit of exactMatch.visited) {
+            ctx.recordVisit(visit.uri, visit.type);
+          }
+          return exactMatch.packageJson;
         }
 
         const range = validRange(spec.version);
 
         if (range) {
-          for (const [version, packageJson] of packageJsonCacheForModule) {
+          for (const [version, entry] of packageJsonCacheForModule) {
             if (satisfies(version, range)) {
               // console.log('[HIT] readPackageJsonWithCache(%s)', spec.spec);
-              return packageJson;
+              for (const visit of entry.visited) {
+                ctx.recordVisit(visit.uri, visit.type);
+              }
+              return entry.packageJson;
             }
           }
         }
@@ -542,7 +554,7 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
       }
 
       return this._readPackageJson(spec, ctx).then((packageJson) => {
-        packageJsonCacheForModule!.set(packageJson.version, packageJson);
+        packageJsonCacheForModule!.set(packageJson.version, { packageJson, visited: ctx.visited });
 
         return packageJson;
       });

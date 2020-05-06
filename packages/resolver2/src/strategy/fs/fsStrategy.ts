@@ -6,7 +6,6 @@ import {
   ResolvedEntryKind,
 } from '../../strategy';
 import { Uri } from '../../uri';
-
 import { FsInterface } from './types';
 
 interface ResolverHostFsOptions {

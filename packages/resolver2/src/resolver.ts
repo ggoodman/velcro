@@ -1,9 +1,8 @@
 import { CancellationToken, CancellationTokenSource } from 'ts-primitives';
-
 import { ResolverContext } from './context';
-import { ResolverStrategy } from './strategy';
-import { Settings } from './settings';
 import { Decoder } from './decoder';
+import { Settings } from './settings';
+import { ResolverStrategy } from './strategy';
 
 export interface ResolveOptions {
   ctx?: ResolverContext;

@@ -1,5 +1,5 @@
 import { version as nodeLibsVersion } from '@velcro/node-libs/package.json';
-import { parseBareModuleSpec, BareModuleSpec } from './bareModules';
+import { BareModuleSpec, parseBareModuleSpec } from './bareModules';
 
 export const DEFAULT_SHIM_GLOBALS: Record<string, { spec: string; export?: string } | undefined> = {
   Buffer: {

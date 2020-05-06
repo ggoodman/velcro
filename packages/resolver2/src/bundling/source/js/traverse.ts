@@ -1,5 +1,4 @@
 import { Node } from 'estree';
-
 import { NodeWithParent } from './ast';
 
 type VisitorContext = {
