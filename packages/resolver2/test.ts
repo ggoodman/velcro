@@ -33,7 +33,7 @@ async function fetchBufferWithWreck(href: string, token: CancellationToken) {
 }
 
 async function main() {
-  // polly.record();
+  polly.record();
   polly.replay();
 
   const rootFs = MemFs.Volume.fromJSON(
@@ -48,12 +48,12 @@ async function main() {
         },
       }),
       'index.js':
-        'module.exports = { /*"emotion": require("@emotion/core"), "package": require("./package"),*/ "react": require("react"), /*"react-dom": require("react-dom")*/ };',
+        'module.exports = { "emotion": require("@emotion/core"), "package": require("./package"), "react": require("react"), "react-dom": require("react-dom") };',
     },
     '/'
   );
   const fsStrategy = new FsStrategy({ fs: MemFs.createFsFromVolume(rootFs) as FsInterface });
-  const cdnStrategy = new CdnStrategy(fetchBufferWithWreck);
+  const cdnStrategy = new CdnStrategy(fetchBufferWithWreck, 'unpkg');
   const strategy = new CompoundStrategy({
     strategies: [cdnStrategy, fsStrategy],
   });
@@ -72,12 +72,12 @@ async function main() {
     });
   } finally {
     console.timeEnd('add');
+
+    await polly.stop();
   }
 
-  console.dir(graph, { compact: true, depth: 4 });
+  return graph;
+  // console.dir(graph, { compact: true, depth: 4 });
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+main();

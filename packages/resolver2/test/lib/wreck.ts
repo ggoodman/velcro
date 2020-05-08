@@ -1,5 +1,5 @@
-import { Polly } from '@pollyjs/core';
 import NodeHttpAdapter from '@pollyjs/adapter-node-http';
+import { Polly } from '@pollyjs/core';
 import NodeFsPersister from '@pollyjs/persister-fs';
 
 Polly.register(NodeFsPersister);

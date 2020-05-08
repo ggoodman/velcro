@@ -28,10 +28,6 @@ import {
 export type NodeWithParent<TNode = Node> = TNode & {
   parent: NodeWithParent | null;
 };
-export type NodeWithStartAndEnd<TNode = Node> = TNode & {
-  start: number;
-  end: number;
-};
 
 export interface StringLiteral extends SimpleLiteral {
   value: string;
@@ -87,10 +83,6 @@ export function isLiteral(node: Node): node is Literal {
 
 export function isMemberExpression(node: Node): node is MemberExpression {
   return node.type === 'MemberExpression';
-}
-
-export function isNodeWithStartAndEnd<T extends Node>(node: T): node is NodeWithStartAndEnd<T> {
-  return typeof (node as any).start === 'number' && typeof (node as any).end === 'number';
 }
 
 export function isObjectPattern(node: Node): node is ObjectPattern {

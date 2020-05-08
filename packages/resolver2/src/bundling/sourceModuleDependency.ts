@@ -14,6 +14,7 @@ interface SourceModuleOptions {
 type SourceLocation = { start: number; end: number };
 
 export class SourceModuleDependency {
+  locator?: { name: string; spec: string; path: string };
   private constructor(
     readonly kind: SourceModuleDependencyKind,
     readonly spec: string,

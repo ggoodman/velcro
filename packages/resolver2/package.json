@@ -6,7 +6,7 @@
   "scripts": {
     "build": "ts-lib-tools build --entry src/index.ts --entry src/test.ts",
     "build:watch": "ts-lib-tools watch --entry src/test.ts",
-    "test": "lab -fSv --globals globalThis --leaks --transform ./test/lib/typescript.js"
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
@@ -23,10 +23,13 @@
     "@pollyjs/core": "^4.0.4",
     "@pollyjs/persister-fs": "^4.0.4",
     "@types/estree": "0.0.44",
+    "@types/jest": "^25.2.1",
     "@types/pollyjs__adapter-node-http": "^2.0.0",
     "@types/pollyjs__core": "^4.0.0",
     "@types/pollyjs__persister-fs": "^2.0.0",
+    "jest": "^26.0.1",
     "prettier": "2",
+    "ts-jest": "^25.5.0",
     "ts-node": "^8.8.2",
     "typescript": "^3.8.3"
   },

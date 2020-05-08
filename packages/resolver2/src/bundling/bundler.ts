@@ -1,5 +1,5 @@
-import MagicString from 'magic-string';
-import { dirname, DisposableStore, Emitter } from 'ts-primitives';
+import MagicString, { Bundle } from 'magic-string';
+import { basename, dirname, DisposableStore, Emitter } from 'ts-primitives';
 import { checkCancellation, isThenable } from '../async';
 import { ResolverContext, Visit } from '../context';
 import {
@@ -42,10 +42,10 @@ class Graph {
   ) {}
 }
 
-class Bundle {
+class GraphBuilder {
   private readonly disposer = new DisposableStore();
-  private readonly edgesTo = new MapSet<string, DependencyEdge>();
-  private readonly edgesFrom = new MapSet<string, DependencyEdge>();
+  private readonly edgesOut = new MapSet<string, DependencyEdge>();
+  private readonly edgesIn = new MapSet<string, DependencyEdge>();
   private readonly entrypoints: Uri[];
   private readonly errors = [] as { ctx: ResolverContext; err: Error }[];
   private readonly nodeEnv: string;
@@ -103,14 +103,118 @@ class Bundle {
       throw this.buildError(this.errors);
     }
 
-    return new Graph(this.edgesTo, this.edgesFrom, this.entrypoints, this.sourceModules);
+    console.log('Finished');
+
+    class Chunk {
+      readonly sourceModules = new Map<string, SourceModule>();
+      readonly edgesIn = new MapSet<string, DependencyEdge>();
+      readonly edgesOut = new MapSet<string, DependencyEdge>();
+
+      constructor(readonly id: string) {}
+    }
+
+    const chunksByEntrypoint = new Map<string, Chunk>();
+    const initialEdges = this.edgesOut.get(this.rootUri.toString());
+
+    if (!initialEdges) {
+      throw new Error(`Invariant violation: No initial eges found`);
+    }
+
+    const rootChunk = new Chunk(this.rootUri.toString());
+    const queue = [...initialEdges].map((edge) => ({ fromChunk: rootChunk, edge }));
+
+    while (queue.length) {
+      const { fromChunk, edge } = queue.pop()!;
+      const fromHref = edge.fromUri.toString();
+      const toHref = edge.toUri.toString();
+      const fromSourceModule = this.sourceModules.get(fromHref);
+      const toSourceModule = this.sourceModules.get(toHref);
+
+      let toChunk = fromChunk;
+
+      if (!toSourceModule) {
+        throw new Error(
+          `Invariant violation: graph corrupted, missing source module for '${toHref}'`
+        );
+      }
+
+      const fromRootHref = fromSourceModule
+        ? fromSourceModule.rootUri.toString()
+        : this.rootUri.toString();
+      const toRootHref = toSourceModule.rootUri.toString();
+
+      if (fromRootHref !== toRootHref) {
+        const toChunkId = `${toRootHref}|${edge.dependency.spec}`;
+        let nextChunk = chunksByEntrypoint.get(toChunkId);
+
+        if (!nextChunk) {
+          nextChunk = new Chunk(toChunkId);
+          chunksByEntrypoint.set(toChunkId, nextChunk);
+        }
+
+        fromChunk.edgesOut.add(edge.dependency.spec, edge);
+        toChunk.edgesIn.add(edge.dependency.spec, edge);
+
+        toChunk = nextChunk;
+      }
+
+      toChunk.sourceModules.set(toHref, toSourceModule);
+
+      const edgesOut = this.edgesOut.get(toHref);
+
+      if (edgesOut) {
+        queue.push(...[...edgesOut].map((edge) => ({ fromChunk: toChunk, edge })));
+      }
+    }
+
+    for (const [chunkId, chunk] of chunksByEntrypoint) {
+      console.log(`%s:`, chunkId);
+
+      console.log('  Assets:');
+      for (const sourceModule of chunk.sourceModules.values()) {
+        console.log(
+          '    - %s %d b %d b',
+          sourceModule.href,
+          Buffer.from(sourceModule.source.original).length,
+          Buffer.from(sourceModule.source.toString()).length
+        );
+      }
+
+      const locatorString = (locator?: { name: string; spec: string; path: string }) => {
+        if (!locator) return '';
+
+        return ` via ${locator.name}@${locator.spec}${locator.path}`;
+      };
+
+      if (chunk.edgesOut.size) {
+        console.log('  Dependencies:');
+        for (const edge of chunk.edgesOut.values()) {
+          console.log('    - %s%s', edge.dependency.spec, locatorString(edge.dependency.locator));
+        }
+      }
+
+      const bundle = new Bundle({
+        separator: '\n',
+      });
+
+      for (const sourceModule of chunk.sourceModules.values()) {
+        bundle.addSource(sourceModule.source);
+      }
+
+      const { promises: fs } = await import('fs');
+
+      await fs.mkdir(`${process.cwd()}/chunks`, { recursive: true });
+      await fs.writeFile(`${process.cwd()}/chunks/${basename(chunkId)}.js`, bundle.toString());
+    }
+
+    return new Graph(this.edgesOut, this.edgesIn, this.entrypoints, this.sourceModules);
   }
 
   private addEdge(fromUri: Uri, toUri: Uri, visited: Visit[], dependency: SourceModuleDependency) {
     const edge = { dependency, fromUri, toUri, visited };
 
-    this.edgesFrom.add(fromUri.toString(), edge);
-    this.edgesTo.add(toUri.toString(), edge);
+    this.edgesOut.add(fromUri.toString(), edge);
+    this.edgesIn.add(toUri.toString(), edge);
   }
 
   private addModuleDependency(
@@ -248,12 +352,13 @@ class Bundle {
       : contentReturn;
     const parser = this.getParserForUri(uri);
     // console.time(`parseFile(${href})`);
+    const code = ctx.decoder.decode(contentResult.content);
 
-    const { code, dependencies, syntax } = ctx.runInChildContext(
+    const { dependencies, changes, syntax } = ctx.runInChildContext(
       `parse[${parser.name}]`,
       uri,
-      (ctx) =>
-        parser(ctx, uri, contentResult.content, {
+      () =>
+        parser(uri, code, {
           environmentModules: NODE_CORE_SHIMS,
           globalModules: DEFAULT_SHIM_GLOBALS,
           nodeEnv: this.nodeEnv,
@@ -261,13 +366,48 @@ class Bundle {
     );
     // console.timeEnd(`parseFile(${href})`);
 
-    const sourceModule = new SourceModule(
-      uri,
-      rootUri,
-      new MagicString(code, { filename: href, indentExclusionRanges: [] }),
-      syntax,
-      new Set(dependencies)
-    );
+    const magicString = new MagicString(code, { filename: href, indentExclusionRanges: [] });
+
+    changes.sort((a, b) => a.start - b.start);
+
+    let lastPos = 0;
+    console.log(uri.toString());
+
+    for (const change of changes) {
+      if (change.start < lastPos) {
+        console.log('skipping', lastPos, change);
+        continue;
+      }
+      console.log(
+        lastPos,
+        change.start,
+        (change as any)['end'],
+        change.type === 'overwrite' ? '*' : ''
+      );
+      switch (change.type) {
+        case 'appendRight':
+          magicString.appendRight(change.start, change.value);
+          lastPos = change.start;
+          break;
+        case 'remove':
+          if (change.start < change.end) {
+            magicString.remove(change.start, change.end);
+            lastPos = change.end;
+          }
+          break;
+        case 'overwrite':
+          if (change.start < change.end) {
+            magicString.overwrite(change.start, change.end, change.value, {
+              contentOnly: true,
+              storeName: true,
+            });
+            lastPos = change.end;
+          }
+          break;
+      }
+    }
+
+    const sourceModule = new SourceModule(uri, rootUri, magicString, syntax, new Set(dependencies));
     this.sourceModules.set(sourceModule.href, sourceModule);
 
     for (const dependency of sourceModule.dependencies) {
@@ -285,7 +425,7 @@ class Bundle {
     const parsedSpec = parseBareModuleSpec(dependency.spec);
     const resolveReturn = parsedSpec
       ? ctx.runInChildContext('Bundle.resolveBareModule', sourceModule.uri, (ctx) =>
-          this.resolveBareModule(ctx, sourceModule, parsedSpec)
+          this.resolveBareModule(ctx, sourceModule, parsedSpec, dependency)
         )
       : ctx.runInChildContext('Bundle.resolveRelativeUri', sourceModule.uri, (ctx) =>
           this.resolveRelativeUri(ctx, sourceModule, dependency.spec)
@@ -353,7 +493,8 @@ class Bundle {
   private async resolveBareModule(
     ctx: ResolverContext,
     sourceModule: SourceModule,
-    parsedSpec: BareModuleSpec
+    parsedSpec: BareModuleSpec,
+    dependency: SourceModuleDependency
   ) {
     let locatorName = parsedSpec.name;
     let locatorSpec = parsedSpec.spec;
@@ -391,6 +532,8 @@ class Bundle {
     if (!locatorSpec) {
       throw new DependencyNotFoundError(parsedSpec.nameSpec, sourceModule.uri);
     }
+
+    dependency.locator = { name: locatorName, spec: locatorSpec, path: locatorPath };
 
     const bareModuleUriReturn = ctx.getUrlForBareModule(locatorName, locatorSpec, locatorPath);
     const bareModuleUriResult = isThenable(bareModuleUriReturn)
@@ -434,7 +577,7 @@ interface CreateBundleOptions {
   nodeEnv?: string;
 }
 export function createBundle(options: CreateBundleOptions) {
-  const bundle = new Bundle(options);
+  const bundle = new GraphBuilder(options);
 
   return bundle.build();
 }

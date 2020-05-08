@@ -1,5 +1,6 @@
+import { Token } from 'acorn';
 import { BinaryOperator, Function, Identifier, MemberExpression, Node, Pattern } from 'estree';
-import { ParserFunction, Replacement, SyntaxKind } from '../../parsing';
+import { CodeChange, ParserFunction, SyntaxKind } from '../../parsing';
 import { SourceModuleDependency } from '../../sourceModuleDependency';
 import {
   isArrayPattern,
@@ -15,7 +16,6 @@ import {
   isIdentifier,
   isIfStatement,
   isMemberExpression,
-  isNodeWithStartAndEnd,
   isObjectPattern,
   isProgram,
   isProperty,
@@ -25,15 +25,20 @@ import {
   isTryStatement,
   isVariableDeclaration,
   NodeWithParent,
-  NodeWithStartAndEnd,
   parse as parseAst,
 } from './ast';
 import { traverse, Visitor } from './traverse';
 
+declare module 'estree' {
+  export interface BaseNodeWithoutComments {
+    start: number;
+    end: number;
+  }
+}
+
 export const parse: ParserFunction = function parseJavaScript(
-  ctx,
   uri,
-  data,
+  code,
   options
 ): ReturnType<ParserFunction> {
   const visitorCtx: DependencyVisitorContext = Object.assign(Object.create(null), {
@@ -41,27 +46,38 @@ export const parse: ParserFunction = function parseJavaScript(
     locals: new Map(),
     nodeEnv: options.nodeEnv,
     replacedSymbols: new Set<Identifier>(),
-    replacements: [],
+    changes: [],
     requires: [],
     requireResolves: [],
     skip: new Set(),
   });
 
   const result: ReturnType<ParserFunction> = {
-    code: ctx.decoder.decode(data),
+    code,
     dependencies: [],
-    replacements: visitorCtx.replacements,
+    changes: visitorCtx.changes,
     syntax: SyntaxKind.JavaScript,
   };
 
   try {
+    let lastToken: Token | undefined;
     const ast = parseAst(result.code, {
       onComment: (_isBlock, _test, start, end) => {
-        result.replacements.push({ start, end, replacement: '' });
+        result.changes.push({ type: 'remove', start, end });
       },
-      // onToken: (token) => {
-      //   magicString.addSourcemapLocation(token.start);
+      // onInsertedSemicolon(lastTokEnd) {
+      //   result.changes.push({ type: 'appendRight', position: lastTokEnd, value: ';' });
       // },
+      onToken: (token) => {
+        const start = lastToken ? lastToken.end + 1 : 0;
+        const end = token.start;
+
+        if (end > start) {
+          result.changes.push({ type: 'remove', start, end });
+        }
+
+        lastToken = token;
+      },
     });
 
     traverse(ast, visitorCtx, scopingAndRequiresVisitor);
@@ -124,12 +140,12 @@ export type CommonJsRequireResolve = {
 };
 
 export type DependencyVisitorContext = {
-  readonly unboundSymbols: Map<string, NodeWithStartAndEnd[]>;
+  readonly changes: CodeChange[];
+  readonly unboundSymbols: Map<string, Node[]>;
   readonly locals: Map<Node, { [identifier: string]: boolean }>;
   readonly nodeEnv: string;
   readonly requires: CommonJsRequire[];
   readonly replacedSymbols: Set<Identifier>;
-  readonly replacements: Replacement[];
   readonly requireResolves: CommonJsRequireResolve[];
   readonly skip: Set<Node>;
 };
@@ -144,10 +160,26 @@ export const scopingAndRequiresVisitor: Visitor<DependencyVisitorContext> = {
     visitAndSkipBranches(node, parent, ctx);
     visitRequires(node, parent, ctx);
   },
+  leave(node, _parent, ctx) {
+    if (isMemberExpression(node) && memberExpressionMatches(node, 'process.env.NODE_ENV')) {
+      ctx.changes.push({
+        type: 'overwrite',
+        start: node.start,
+        end: node.end,
+        value: JSON.stringify(ctx.nodeEnv),
+      });
+
+      ctx.skip.add(node);
+    }
+  },
 };
 
 export const collectGlobalsVisitor: Visitor<DependencyVisitorContext> = {
   enter(node, _parent, ctx) {
+    if (ctx.skip.has(node)) {
+      return this.skip();
+    }
+
     if (isBindingIdentifier(node) && isIdentifier(node)) {
       var name = node.name;
       if (name === 'undefined') return;
@@ -174,7 +206,7 @@ export const collectGlobalsVisitor: Visitor<DependencyVisitorContext> = {
         nextParent = nextParent.parent;
       }
 
-      if (!foundBinding && isNodeWithStartAndEnd(node)) {
+      if (!foundBinding) {
         let unboundSymbols = ctx.unboundSymbols.get(name);
         if (!unboundSymbols) {
           unboundSymbols = [];
@@ -195,7 +227,7 @@ export const collectGlobalsVisitor: Visitor<DependencyVisitorContext> = {
         nextParent = nextParent.parent;
       }
 
-      if (!foundBinding && isNodeWithStartAndEnd(node)) {
+      if (!foundBinding) {
         let unboundSymbols = ctx.unboundSymbols.get('this');
         if (!unboundSymbols) {
           unboundSymbols = [];
@@ -327,6 +359,9 @@ function visitAndSkipBranches(
   _parent: NodeWithParent | null,
   ctx: DependencyVisitorContext
 ) {
+  if (isIfStatement(node) && node.start > 1400 && node.start < 1500) {
+    debugger;
+  }
   if (isIfStatement(node) && isBinaryExpression(node.test)) {
     const tests = {
       '!=': (l: string, r: string) => l != r,
@@ -350,16 +385,37 @@ function visitAndSkipBranches(
           ctx.replacedSymbols.add(rootObject.object);
         }
         // if ('development' === process.env.NODE_ENV) {}
-        ctx.replacements.push({
-          start: (node.test.right as any).start,
-          end: (node.test.right as any).end,
-          replacement: JSON.stringify(ctx.nodeEnv),
-        });
 
         if (!test(node.test.left.value, ctx.nodeEnv)) {
           ctx.skip.add(node.consequent);
-        } else if (node.alternate) {
-          ctx.skip.add(node.alternate);
+          // We can blow away the alternate but we need to start and the end of the consequent + 1 char
+          ctx.changes.push({
+            type: 'remove',
+            start: node.start,
+            end: node.consequent.start - 1,
+          });
+          ctx.changes.push({
+            type: 'remove',
+            start: node.consequent.end + 1,
+            end: node.end,
+          });
+        } else {
+          // We can blow away the test
+          ctx.changes.push({
+            type: 'remove',
+            start: node.start,
+            end: node.consequent.start - 1,
+          });
+
+          if (node.alternate) {
+            ctx.skip.add(node.alternate);
+            // We can blow away the alternate but we need to start and the end of the consequent + 1 char
+            ctx.changes.push({
+              type: 'remove',
+              start: node.consequent.end + 1,
+              end: node.alternate.end,
+            });
+          }
         }
       } else if (
         isStringLiteral(node.test.right) &&
@@ -373,16 +429,37 @@ function visitAndSkipBranches(
         if (isIdentifier(rootObject.object)) {
           ctx.replacedSymbols.add(rootObject.object);
         } // if (process.env.NODE_ENV === 'development') {}
-        ctx.replacements.push({
-          start: (node.test.left as any).start,
-          end: (node.test.left as any).end,
-          replacement: JSON.stringify(ctx.nodeEnv),
-        });
 
         if (!test(node.test.right.value, ctx.nodeEnv)) {
           ctx.skip.add(node.consequent);
-        } else if (node.alternate) {
-          ctx.skip.add(node.alternate);
+          // We can blow away the alternate but we need to start and the end of the consequent + 1 char
+          ctx.changes.push({
+            type: 'remove',
+            start: node.start,
+            end: node.consequent.start - 1,
+          });
+          ctx.changes.push({
+            type: 'remove',
+            start: node.consequent.end + 1,
+            end: node.end,
+          });
+        } else {
+          // We can blow away the test
+          ctx.changes.push({
+            type: 'remove',
+            start: node.start,
+            end: node.consequent.start - 1,
+          });
+
+          if (node.alternate) {
+            ctx.skip.add(node.alternate);
+            // We can blow away the alternate but we need to start and the end of the consequent + 1 char
+            ctx.changes.push({
+              type: 'remove',
+              start: node.consequent.end + 1,
+              end: node.alternate.end,
+            });
+          }
         }
       }
     }
@@ -394,12 +471,12 @@ function visitRequires(
   _parent: NodeWithParent | null,
   ctx: DependencyVisitorContext
 ) {
-  if (isCallExpression(node) && isNodeWithStartAndEnd(node.callee)) {
+  if (isCallExpression(node)) {
     const callee = node.callee;
-    if (isIdentifier(callee) && isNodeWithStartAndEnd(callee) && callee.name === 'require') {
+    if (isIdentifier(callee) && callee.name === 'require') {
       const firstArg = node.arguments[0];
 
-      if (isStringLiteral(firstArg) && isNodeWithStartAndEnd(firstArg)) {
+      if (isStringLiteral(firstArg)) {
         ctx.requires.push({
           spec: { start: firstArg.start, end: firstArg.end, value: firstArg.value },
           callee: { start: callee.start, end: callee.end },
@@ -416,7 +493,7 @@ function visitRequires(
     ) {
       const firstArg = node.arguments[0];
 
-      if (isStringLiteral(firstArg) && isNodeWithStartAndEnd(firstArg)) {
+      if (isStringLiteral(firstArg)) {
         ctx.requireResolves.push({
           spec: { start: firstArg.start, end: firstArg.end, value: firstArg.value },
           callee: { start: callee.start, end: callee.end },

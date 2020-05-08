@@ -42,9 +42,9 @@ function visit<TContext>(
   parent: NodeWithParent | null,
   ctx: TContext,
   enter?: EnterFunction<TContext>,
-  leave?: LeaveFunction<TContext>,
-  prop?: string,
-  index?: number
+  leave?: LeaveFunction<TContext>
+  // prop?: string,
+  // index?: number
 ) {
   if (!node) return;
 
@@ -53,7 +53,7 @@ function visit<TContext>(
   if (enter) {
     const _shouldSkip = shouldSkip;
     shouldSkip = false;
-    enter.call(context, node, parent, ctx, prop, index);
+    enter.call(context, node, parent, ctx);
     const skipped = shouldSkip;
     shouldSkip = _shouldSkip;
 
@@ -66,20 +66,29 @@ function visit<TContext>(
       (key) => key !== 'parent' && typeof (node as any)[key] === 'object'
     ));
 
+  const children = [] as NodeWithParent[];
+
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
     const value = (node as any)[key] as NodeWithParent | NodeWithParent[];
 
     if (Array.isArray(value)) {
-      for (let j = 0; j < value.length; j++) {
-        visit(value[j], node, ctx, enter, leave, key, j);
-      }
+      children.push(...value);
+      // for (let j = 0; j < value.length; j++) {
+      //   visit(value[j], node, ctx, enter, leave);
+      // }
     } else if (value && value.type) {
-      visit(value, node, ctx, enter, leave, key);
+      children.push(value);
     }
   }
 
+  children.sort((a, b) => a.start - b.start);
+
+  for (const child of children) {
+    visit(child, node, ctx, enter, leave);
+  }
+
   if (leave) {
-    leave(node, parent, ctx, prop, index);
+    leave(node, parent, ctx);
   }
 }

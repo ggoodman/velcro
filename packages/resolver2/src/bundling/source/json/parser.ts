@@ -1,15 +1,14 @@
 import { ParseError } from '../../../error';
 import { ParserFunction, SyntaxKind } from '../../parsing';
 
-export const parse: ParserFunction = function parseJson(ctx, uri, content) {
+export const parse: ParserFunction = function parseJson(uri, code) {
   try {
-    const code = ctx.decoder.decode(content);
     JSON.parse(code);
 
     return {
       code,
       dependencies: [],
-      replacements: [],
+      changes: [],
       syntax: SyntaxKind.JSON,
     };
   } catch (err) {

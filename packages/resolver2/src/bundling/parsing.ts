@@ -1,4 +1,3 @@
-import { ResolverContext } from '../context';
 import { Uri } from '../uri';
 import { DEFAULT_SHIM_GLOBALS, NODE_CORE_SHIMS } from './shims';
 import { SourceModuleDependency } from './sourceModuleDependency';
@@ -10,22 +9,33 @@ export interface ParseOptions {
 }
 
 export type ParserFunction = (
-  ctx: ResolverContext,
   uri: Uri,
-  content: ArrayBuffer,
+  code: string,
   options: ParseOptions
 ) => {
   code: string;
   dependencies: SourceModuleDependency[];
-  replacements: Replacement[];
+  changes: CodeChange[];
   syntax: SyntaxKind;
 };
 
-export type Replacement = {
-  start: number;
-  end: number;
-  replacement: string;
-};
+export type CodeChange =
+  | {
+      type: 'appendRight';
+      start: number;
+      value: string;
+    }
+  | {
+      type: 'remove';
+      start: number;
+      end: number;
+    }
+  | {
+      type: 'overwrite';
+      start: number;
+      end: number;
+      value: string;
+    };
 
 export enum SyntaxKind {
   JavaScript = 'JavaScript',
