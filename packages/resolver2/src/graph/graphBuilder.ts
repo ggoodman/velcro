@@ -86,6 +86,8 @@ class GraphBuilder {
       resetVisits: true,
     });
 
+    this.onError(() => ctx.dispose());
+
     for (const uri of entrypoints) {
       ctx.runInChildContext('GraphBuilder.doAddUnresolvedUri', uri, (ctx) =>
         this.doAddUnresolvedUri(ctx, uri, SourceModuleDependency.fromEntrypoint(uri))
@@ -97,7 +99,7 @@ class GraphBuilder {
       while (this.pendingModuleOperations.size) {
         await Promise.all(this.pendingModuleOperations.values());
       }
-    } catch {
+    } catch (err) {
       throw new GraphBuildError(this.errors);
     }
 

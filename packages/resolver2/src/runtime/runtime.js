@@ -108,7 +108,6 @@ export function createRuntime(velcro) {
      * @param {Module} module
      */
     resolveSpecAgainstImportMap(spec, module) {
-      console.log('resolveSpecAgainstImportMap', spec, module.importMap);
       const importMap = module.importMap;
 
       if (!importMap.scopes) {

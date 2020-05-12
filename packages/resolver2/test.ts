@@ -2,6 +2,7 @@ import { read, request } from '@hapi/wreck';
 import * as MemFs from 'memfs';
 import { CancellationToken } from 'ts-primitives';
 import { CanceledError } from './src/error';
+import { Graph } from './src/graph/graph';
 import { buildGraph } from './src/graph/graphBuilder';
 import { Resolver } from './src/resolver';
 import { CdnStrategy } from './src/strategy/cdn';
@@ -42,13 +43,10 @@ async function main() {
         name: 'test',
         version: '1.0.0',
         dependencies: {
-          '@emotion/core': '^10.0.28',
-          react: '^16.10.0',
-          'react-dom': '^16.10.0',
+          'react-ui': '^1.0.0-beta.25',
         },
       }),
-      'index.js':
-        'module.exports = { "emotion": require("@emotion/core"), "react": require("react"), "react-dom": require("react-dom") };',
+      'index.js': 'module.exports = require("react-ui");',
     },
     '/'
   );
@@ -63,13 +61,16 @@ async function main() {
   });
 
   const start = process.hrtime();
-  let graph;
+  let graph: Graph;
   try {
     graph = await buildGraph({
       entrypoints: [Uri.file('')],
       resolver,
       nodeEnv: 'development',
     });
+  } catch (err) {
+    console.trace(err);
+    return;
   } finally {
     const delta = process.hrtime(start);
 
@@ -78,8 +79,9 @@ async function main() {
     await polly.stop();
   }
 
-  console.log(graph.toString());
-  return graph;
+  for (const chunk of graph.splitChunks()) {
+    console.log(chunk.toString());
+  }
 }
 
 main();
