@@ -48,6 +48,14 @@ export class MapSet<K, V> {
     return values ? values.has(value) : false;
   }
 
+  *entries(): IterableIterator<[K, V]> {
+    for (const [key, values] of this._data.entries()) {
+      for (const value of values) {
+        yield [key, value];
+      }
+    }
+  }
+
   *values(): IterableIterator<V> {
     for (const values of this._data.values()) {
       yield* values.values();

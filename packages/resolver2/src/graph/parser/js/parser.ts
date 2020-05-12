@@ -1,4 +1,3 @@
-import { Token } from 'acorn';
 import { BinaryOperator, Function, Identifier, MemberExpression, Node, Pattern } from 'estree';
 import { CodeChange, ParserFunction, SyntaxKind } from '../../parsing';
 import { SourceModuleDependency } from '../../sourceModuleDependency';
@@ -60,24 +59,22 @@ export const parse: ParserFunction = function parseJavaScript(
   };
 
   try {
-    let lastToken: Token | undefined;
+    // let lastToken: Token | undefined;
     const ast = parseAst(result.code, {
-      onComment: (_isBlock, _test, start, end) => {
-        result.changes.push({ type: 'remove', start, end });
-      },
+      // onComment: (_isBlock, _test, start, end) => {
+      //   result.changes.push({ type: 'remove', start, end });
+      // },
       // onInsertedSemicolon(lastTokEnd) {
       //   result.changes.push({ type: 'appendRight', position: lastTokEnd, value: ';' });
       // },
-      onToken: (token) => {
-        const start = lastToken ? lastToken.end + 1 : 0;
-        const end = token.start;
-
-        if (end > start) {
-          result.changes.push({ type: 'remove', start, end });
-        }
-
-        lastToken = token;
-      },
+      // onToken: (token) => {
+      //   const start = lastToken ? lastToken.end + 1 : 0;
+      //   const end = token.start;
+      //   if (end > start) {
+      //     result.changes.push({ type: 'remove', start, end });
+      //   }
+      //   lastToken = token;
+      // },
     });
 
     traverse(ast, visitorCtx, scopingAndRequiresVisitor);
@@ -359,9 +356,6 @@ function visitAndSkipBranches(
   _parent: NodeWithParent | null,
   ctx: DependencyVisitorContext
 ) {
-  if (isIfStatement(node) && node.start > 1400 && node.start < 1500) {
-    debugger;
-  }
   if (isIfStatement(node) && isBinaryExpression(node.test)) {
     const tests = {
       '!=': (l: string, r: string) => l != r,
@@ -389,32 +383,32 @@ function visitAndSkipBranches(
         if (!test(node.test.left.value, ctx.nodeEnv)) {
           ctx.skip.add(node.consequent);
           // We can blow away the alternate but we need to start and the end of the consequent + 1 char
-          ctx.changes.push({
-            type: 'remove',
-            start: node.start,
-            end: node.consequent.start - 1,
-          });
-          ctx.changes.push({
-            type: 'remove',
-            start: node.consequent.end + 1,
-            end: node.end,
-          });
+          // ctx.changes.push({
+          //   type: 'remove',
+          //   start: node.start,
+          //   end: node.consequent.start - 1,
+          // });
+          // ctx.changes.push({
+          //   type: 'remove',
+          //   start: node.consequent.end + 1,
+          //   end: node.end,
+          // });
         } else {
           // We can blow away the test
-          ctx.changes.push({
-            type: 'remove',
-            start: node.start,
-            end: node.consequent.start - 1,
-          });
+          // ctx.changes.push({
+          //   type: 'remove',
+          //   start: node.start,
+          //   end: node.consequent.start - 1,
+          // });
 
           if (node.alternate) {
             ctx.skip.add(node.alternate);
             // We can blow away the alternate but we need to start and the end of the consequent + 1 char
-            ctx.changes.push({
-              type: 'remove',
-              start: node.consequent.end + 1,
-              end: node.alternate.end,
-            });
+            // ctx.changes.push({
+            //   type: 'remove',
+            //   start: node.consequent.end + 1,
+            //   end: node.alternate.end,
+            // });
           }
         }
       } else if (
@@ -433,32 +427,32 @@ function visitAndSkipBranches(
         if (!test(node.test.right.value, ctx.nodeEnv)) {
           ctx.skip.add(node.consequent);
           // We can blow away the alternate but we need to start and the end of the consequent + 1 char
-          ctx.changes.push({
-            type: 'remove',
-            start: node.start,
-            end: node.consequent.start - 1,
-          });
-          ctx.changes.push({
-            type: 'remove',
-            start: node.consequent.end + 1,
-            end: node.end,
-          });
+          // ctx.changes.push({
+          //   type: 'remove',
+          //   start: node.start,
+          //   end: node.consequent.start - 1,
+          // });
+          // ctx.changes.push({
+          //   type: 'remove',
+          //   start: node.consequent.end + 1,
+          //   end: node.end,
+          // });
         } else {
           // We can blow away the test
-          ctx.changes.push({
-            type: 'remove',
-            start: node.start,
-            end: node.consequent.start - 1,
-          });
+          // ctx.changes.push({
+          //   type: 'remove',
+          //   start: node.start,
+          //   end: node.consequent.start - 1,
+          // });
 
           if (node.alternate) {
             ctx.skip.add(node.alternate);
             // We can blow away the alternate but we need to start and the end of the consequent + 1 char
-            ctx.changes.push({
-              type: 'remove',
-              start: node.consequent.end + 1,
-              end: node.alternate.end,
-            });
+            // ctx.changes.push({
+            //   type: 'remove',
+            //   start: node.consequent.end + 1,
+            //   end: node.alternate.end,
+            // });
           }
         }
       }

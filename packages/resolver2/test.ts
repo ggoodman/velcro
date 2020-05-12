@@ -1,8 +1,8 @@
 import { read, request } from '@hapi/wreck';
 import * as MemFs from 'memfs';
 import { CancellationToken } from 'ts-primitives';
-import { createBundle } from './src/bundling/bundler';
 import { CanceledError } from './src/error';
+import { buildGraph } from './src/graph/graphBuilder';
 import { Resolver } from './src/resolver';
 import { CdnStrategy } from './src/strategy/cdn';
 import { CompoundStrategy } from './src/strategy/compound';
@@ -33,7 +33,7 @@ async function fetchBufferWithWreck(href: string, token: CancellationToken) {
 }
 
 async function main() {
-  polly.record();
+  // polly.record();
   polly.replay();
 
   const rootFs = MemFs.Volume.fromJSON(
@@ -48,12 +48,12 @@ async function main() {
         },
       }),
       'index.js':
-        'module.exports = { "emotion": require("@emotion/core"), "package": require("./package"), "react": require("react"), "react-dom": require("react-dom") };',
+        'module.exports = { "emotion": require("@emotion/core"), "react": require("react"), "react-dom": require("react-dom") };',
     },
     '/'
   );
   const fsStrategy = new FsStrategy({ fs: MemFs.createFsFromVolume(rootFs) as FsInterface });
-  const cdnStrategy = new CdnStrategy(fetchBufferWithWreck, 'unpkg');
+  const cdnStrategy = new CdnStrategy(fetchBufferWithWreck, 'jsdelivr');
   const strategy = new CompoundStrategy({
     strategies: [cdnStrategy, fsStrategy],
   });
@@ -62,22 +62,24 @@ async function main() {
     packageMain: ['main'],
   });
 
+  const start = process.hrtime();
   let graph;
   try {
-    console.time('add');
-    graph = await createBundle({
+    graph = await buildGraph({
       entrypoints: [Uri.file('')],
       resolver,
-      nodeEnv: 'production',
+      nodeEnv: 'development',
     });
   } finally {
-    console.timeEnd('add');
+    const delta = process.hrtime(start);
+
+    console.error(delta[0] * 1_000 + delta[1] / 1_000_000);
 
     await polly.stop();
   }
 
+  console.log(graph.toString());
   return graph;
-  // console.dir(graph, { compact: true, depth: 4 });
 }
 
 main();

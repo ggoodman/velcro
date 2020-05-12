@@ -30,9 +30,20 @@ type ResolveResult =
   | {
       found: false;
       uri: null;
+      parentPackageJson?: { packageJson: PackageJson; uri: Uri };
     }
-  | { found: true; uri: null; rootUri: Uri }
-  | { found: true; uri: Uri; rootUri: Uri };
+  | {
+      found: true;
+      uri: null;
+      parentPackageJson?: { packageJson: PackageJson; uri: Uri };
+      rootUri: Uri;
+    }
+  | {
+      found: true;
+      uri: Uri;
+      parentPackageJson?: { packageJson: PackageJson; uri: Uri };
+      rootUri: Uri;
+    };
 
 export enum VisitKind {
   Directory = 'Directory',
@@ -178,6 +189,41 @@ export class ResolverContext {
     this.#tokenSource.dispose(true);
   }
 
+  forOperation(
+    operationName: string,
+    uri: { toString(): string },
+    options: { resetPath?: boolean; resetVisits?: boolean } = {}
+  ) {
+    const encodedOperation = encodePathNode(operationName, uri);
+
+    if (this.#path.includes(encodedOperation)) {
+      const formattedPath = this.#path
+        .map((segment) => {
+          const { operationName, uri } = decodePathNode(segment);
+
+          return `${operationName}(${uri.toString()})`;
+        })
+        .join(' -> ');
+
+      throw this._wrapError(
+        new Error(
+          `Detected a recursive call to the operation '${operationName}' for '${uri.toString()}' at path '${formattedPath}'`
+        )
+      );
+    }
+
+    return new ResolverContext({
+      cache: this.#cache,
+      decoder: this.#decoder,
+      path: options.resetPath ? [] : this.#path.concat(encodedOperation),
+      resolver: this.#resolver,
+      settings: this.#settings,
+      strategy: this.#strategy,
+      token: this.#tokenSource.token,
+      visits: options.resetVisits ? new Visits(uri) : this.#visits.child(uri),
+    });
+  }
+
   getCanonicalUrl(uri: Uri) {
     const method = this.#strategy.getCanonicalUrl;
     const receiver = this.#strategy;
@@ -306,34 +352,7 @@ export class ResolverContext {
     options: { resetPath: boolean; resetVisits: boolean },
     contextFn: (ctx: ResolverContext) => T
   ) {
-    const encodedOperation = encodePathNode(operationName, uri);
-
-    if (this.#path.includes(encodedOperation)) {
-      const formattedPath = this.#path
-        .map((segment) => {
-          const { operationName, uri } = decodePathNode(segment);
-
-          return `${operationName}(${uri.toString()})`;
-        })
-        .join(' -> ');
-
-      throw this._wrapError(
-        new Error(
-          `Detected a recursive call to the operation '${operationName}' for '${uri.toString()}' at path '${formattedPath}'`
-        )
-      );
-    }
-
-    const ctx = new ResolverContext({
-      cache: this.#cache,
-      decoder: this.#decoder,
-      path: options.resetPath ? [] : this.#path.concat(encodedOperation),
-      resolver: this.#resolver,
-      settings: this.#settings,
-      strategy: this.#strategy,
-      token: this.#tokenSource.token,
-      visits: options.resetVisits ? new Visits(uri) : this.#visits.child(uri),
-    });
+    const ctx = this.forOperation(operationName, uri, options);
 
     ctx.debug('%s(%s)', operationName, uri);
 
@@ -481,29 +500,41 @@ async function resolve(ctx: ResolverContext, url: Uri | string): Promise<Resolve
     );
   }
 
-  if (
+  const resolveReturn =
     Uri.equals(rootUriWithoutTrailingSlash, canonicalizationResult.uri) ||
     Uri.equals(rootUri, canonicalizationResult.uri)
-  ) {
-    return ctx.runInChildContext('resolveAsDirectory', canonicalizationResult.uri, (ctx) =>
-      resolveAsDirectory(
-        ctx,
-        canonicalizationResult.uri,
-        resolveRootResult.uri,
-        settingsResult.settings
-      )
-    );
-  }
+      ? ctx.runInChildContext('resolveAsDirectory', canonicalizationResult.uri, (ctx) =>
+          resolveAsDirectory(
+            ctx,
+            canonicalizationResult.uri,
+            resolveRootResult.uri,
+            settingsResult.settings
+          )
+        )
+      : ctx.runInChildContext('resolveAsFile', canonicalizationResult.uri, (ctx) =>
+          resolveAsFile(
+            ctx,
+            canonicalizationResult.uri,
+            resolveRootResult.uri,
+            settingsResult.settings,
+            null
+          )
+        );
+  const readParentPackageJsonReturn = ctx.readParentPackageJson(uri);
+  const resolveAndPackageJson = all([resolveReturn, readParentPackageJsonReturn], ctx.token);
+  const [resolveResult, readParentPackageJsonResult] = isThenable(resolveAndPackageJson)
+    ? await resolveAndPackageJson
+    : resolveAndPackageJson;
 
-  return ctx.runInChildContext('resolveAsFile', canonicalizationResult.uri, (ctx) =>
-    resolveAsFile(
-      ctx,
-      canonicalizationResult.uri,
-      resolveRootResult.uri,
-      settingsResult.settings,
-      null
-    )
-  );
+  return {
+    ...resolveResult,
+    parentPackageJson: readParentPackageJsonResult.found
+      ? {
+          packageJson: readParentPackageJsonResult.packageJson,
+          uri: readParentPackageJsonResult.uri,
+        }
+      : undefined,
+  };
 }
 
 async function resolveAsDirectory(
@@ -590,6 +621,8 @@ async function resolveAsFile(
         : undefined;
     if (parentPackageJsonResult && parentPackageJsonResult.found) {
       ctx.recordVisit(parentPackageJsonResult.uri, VisitKind.File);
+
+      packageJson = parentPackageJsonResult.packageJson;
 
       if (
         parentPackageJsonResult.packageJson.browser &&
@@ -734,7 +767,7 @@ async function readParentPackageJson(ctx: ResolverContext, url: string | Uri) {
     (readResult as any)[CACHE] = visitedDirs.map((uri) => [uri.toString(), { ...readResult, uri }]);
   }
 
-  return readResult;
+  return readResult as ReadParentPackageJsonResultInternal;
 }
 
 async function readParentPackageJsonInternal(
