@@ -13,6 +13,7 @@
   "license": "ISC",
   "devDependencies": {
     "0x": "^4.9.1",
+    "@ampproject/remapping": "^0.2.0",
     "@ggoodman/channels": "^0.2.0",
     "@ggoodman/ts-lab": "^1.0.3",
     "@ggoodman/ts-lib-tools": "^0.4.0",
@@ -24,6 +25,7 @@
     "@pollyjs/persister-fs": "^4.0.4",
     "@types/estree": "0.0.44",
     "@types/jest": "^25.2.1",
+    "@types/js-base64": "^2.3.1",
     "@types/pollyjs__adapter-node-http": "^2.0.0",
     "@types/pollyjs__core": "^4.0.0",
     "@types/pollyjs__persister-fs": "^2.0.0",
@@ -38,6 +40,7 @@
     "@velcro/node-libs": "^0.27.0",
     "acorn": "^7.1.1",
     "buntis": "^0.2.1",
+    "js-base64": "^2.5.2",
     "magic-string": "^0.25.7",
     "memfs": "^3.1.2",
     "meriyah": "^1.9.12",

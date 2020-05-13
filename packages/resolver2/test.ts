@@ -80,7 +80,14 @@ async function main() {
   }
 
   for (const chunk of graph.splitChunks()) {
-    console.log(chunk.toString());
+    const build = chunk.buildForStaticRuntime({
+      href: 'chunk.js',
+      injectRuntime: true,
+    });
+    const { promises: fs } = await import('fs');
+
+    await fs.writeFile('./chunk.js', `${build.code}\n//# sourceMappingURL=${build.href}.map\n`);
+    await fs.writeFile('./chunk.js.map', `${build.sourceMapString}\n`);
   }
 }
 

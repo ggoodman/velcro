@@ -10,6 +10,7 @@ import {
   VelcroStaticRuntime,
 } from '../runtime/types';
 import { Uri } from '../uri';
+import { ChunkOutput } from './chunkOutput';
 
 type NotUndefined<T> = T extends undefined ? never : T;
 
@@ -20,7 +21,9 @@ export namespace Chunk {
     sourceModules: Iterable<SourceModule>;
   }
 
-  export interface ToStringOptions {
+  export type ToStringOptions = ToStringOptionsWithHref | ToStringOptionsBase;
+
+  export interface ToStringOptionsBase {
     /**
      * Toggle whether to inject the runtime in the generated code.
      *
@@ -31,11 +34,12 @@ export namespace Chunk {
      * instance of it will be exposed as `Velcro.runtime`.
      */
     injectRuntime?: boolean;
-
+  }
+  export interface ToStringOptionsWithHref extends ToStringOptionsBase {
     /**
-     * Toggle whether to produce sourcemaps
+     * Url at which this file is expected to be reached
      */
-    sourceMaps?: 'inline';
+    href: string;
   }
 }
 
@@ -62,7 +66,7 @@ export class Chunk {
     }
   }
 
-  toString(options: Chunk.ToStringOptions = {}) {
+  buildForStaticRuntime<T extends Chunk.ToStringOptions = Chunk.ToStringOptionsBase>(options?: T) {
     const velcroModuleFactoryParts = velcroModuleFactory
       .toString()
       .split(velcroModuleFactory.splitString);
@@ -98,13 +102,7 @@ export class Chunk {
     }
 
     const velcroStaticRuntime: VelcroStaticRuntime = { defs: {} };
-    // const ident: VelcroModuleIdentification = {
-    //   name: chunk.parentPackageJson.packageJson.name,
-    //   version: chunk.parentPackageJson.packageJson.version,
-    //   path: chunk.parsedSpec?.path ?? '',
-    // };
 
-    // bundle.prepend(`  velcro.loc[${JSON.stringify(chunk.href)}] = ${JSON.stringify(ident)};\n`);
     bundle.prepend(`(${velcroChunkWrapperParts[0]}`.replace(velcroChunkWrapper.name, ''));
     bundle.append(
       `${velcroChunkWrapperParts[1]})(Velcro = typeof Velcro === 'undefined' ? ${JSON.stringify(
@@ -112,15 +110,14 @@ export class Chunk {
       )} : Velcro);\n`
     );
 
-    if (options.injectRuntime) {
+    if (options?.injectRuntime) {
       bundle.append(`\nVelcro.runtime = ${createRuntime.toString()}(Velcro);\n`);
     }
 
-    const code = bundle.toString();
-
-    return {
-      code,
-      sourceMap,
-    };
+    return new ChunkOutput<T extends { href: string } ? string : undefined>(
+      bundle,
+      this.sourceModules,
+      (options as any)?.href
+    );
   }
 }
