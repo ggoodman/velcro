@@ -31,6 +31,11 @@ export namespace Chunk {
      * instance of it will be exposed as `Velcro.runtime`.
      */
     injectRuntime?: boolean;
+
+    /**
+     * Toggle whether to produce sourcemaps
+     */
+    sourceMaps?: 'inline';
   }
 }
 
@@ -111,7 +116,11 @@ export class Chunk {
       bundle.append(`\nVelcro.runtime = ${createRuntime.toString()}(Velcro);\n`);
     }
 
+    const code = bundle.toString();
 
-    return bundle.toString();
+    return {
+      code,
+      sourceMap,
+    };
   }
 }
