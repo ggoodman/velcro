@@ -1,8 +1,8 @@
 import { CancellationToken, CancellationTokenSource } from 'ts-primitives';
 import { ResolverContext } from './context';
-import { Decoder } from './decoder';
 import { Settings } from './settings';
 import { ResolverStrategy } from './strategy';
+import { Uri } from './uri';
 
 export interface ResolveOptions {
   ctx?: ResolverContext;
@@ -10,13 +10,57 @@ export interface ResolveOptions {
 }
 
 export class Resolver {
-  readonly decoder = new Decoder();
-  readonly settings: Settings;
-  readonly strategy: ResolverStrategy;
+  // private readonly decoder = new Decoder();
+  private readonly rootCtx: ResolverContext;
+  private readonly settings: Settings;
+  private readonly strategy: ResolverStrategy;
+  private readonly tokenSource = new CancellationTokenSource();
 
   constructor(strategy: ResolverStrategy, settings: Settings) {
     this.settings = settings;
     this.strategy = strategy;
+    this.rootCtx = ResolverContext.create(
+      this,
+      this.strategy,
+      this.settings,
+      this.tokenSource.token
+    );
+  }
+
+  canResolve(uri: Uri) {
+    return this.rootCtx.canResolve(uri);
+  }
+
+  getCanonicalUrl(uri: Uri) {
+    return this.rootCtx.getCanonicalUrl(uri);
+  }
+
+  getResolveRoot(uri: Uri) {
+    return this.rootCtx.getResolveRoot(uri);
+  }
+
+  getSettings(uri: Uri) {
+    return this.rootCtx.getSettings(uri);
+  }
+
+  getUrlForBareModule(name: string, spec: string, path: string) {
+    return this.rootCtx.getUrlForBareModule(name, spec, path);
+  }
+
+  listEntries(uri: Uri) {
+    return this.rootCtx.listEntries(uri);
+  }
+
+  readFileContent(uri: Uri) {
+    return this.rootCtx.readFileContent(uri);
+  }
+
+  readParentPackageJson(uri: Uri) {
+    return this.rootCtx.readParentPackageJson(uri);
+  }
+
+  resolve(uri: Uri) {
+    return this.rootCtx.resolve(uri);
   }
 
   createResolverContext() {

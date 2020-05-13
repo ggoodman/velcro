@@ -103,9 +103,25 @@ export function createRuntime(velcro) {
     }
 
     /**
+     * Inject a pre-existing module
+     *
+     * @template T
+     * @param {string} id Identifier of module
+     * @param {T} exports Value that represents the exported interface of the module
+     */
+    inject(id, exports) {
+      const module = new Module(this, id, Object.create(null));
+
+      module.module.exports = exports;
+
+      this.modules[id] = module;
+    }
+
+    /**
      *
      * @param {string} spec
      * @param {Module} module
+     * @private
      */
     resolveSpecAgainstImportMap(spec, module) {
       const importMap = module.importMap;

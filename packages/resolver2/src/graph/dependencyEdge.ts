@@ -1,5 +1,5 @@
-import { SourceModuleDependency } from '../bundling/sourceModuleDependency';
 import { Visit } from '../context';
+import { SourceModuleDependency } from '../graph/sourceModuleDependency';
 import { Uri } from '../uri';
 
 export interface DependencyEdge {

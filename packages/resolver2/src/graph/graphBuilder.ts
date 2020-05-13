@@ -23,14 +23,44 @@ import { DEFAULT_SHIM_GLOBALS, NODE_CORE_SHIMS } from './shims';
 import { SourceModule } from './sourceModule';
 import { SourceModuleDependency } from './sourceModuleDependency';
 
+type ExternalTestFunction = (
+  dependency: SourceModuleDependency,
+  fromSourceModule: SourceModule
+) => boolean;
+
 export interface BuildGraphOptions {
   entrypoints: Uri[];
+  /**
+   * Function used to signal whether a given dependency should be treated as external or not.
+   *
+   * An external dependency means that the graph traversal will not continue through that
+   * dependency. The dependency must be injected at runtime.
+   *
+   * Example for building:
+   *
+   * ```ts
+   * const graph = await buildGraph({
+   *   resolver,
+   *   external: (dep) =>
+   *     dep.kind === SourceModuleDependencyKing.Require &&
+   *     dep.spec === 'external'
+   * });
+   * ```
+   *
+   * Example at runtime:
+   *
+   * ```ts
+   * velcro.inject('external', externalModule);
+   * ```
+   */
+  external?: ExternalTestFunction;
   nodeEnv?: string;
   resolver: Resolver;
 }
 
-export async function buildGraph(options: BuildGraphOptions) {
+export function buildGraph(options: BuildGraphOptions) {
   const graphBuilder = new GraphBuilder({
+    external: options.external,
     nodeEnv: options.nodeEnv || 'development',
     resolver: options.resolver,
   });
@@ -40,6 +70,7 @@ export async function buildGraph(options: BuildGraphOptions) {
 
 namespace GraphBuilder {
   export interface Options {
+    external?: ExternalTestFunction;
     nodeEnv?: string;
     resolver: Resolver;
   }
@@ -49,6 +80,7 @@ class GraphBuilder {
   private readonly disposer = new DisposableStore();
   private readonly edges = new Set<DependencyEdge>();
   private readonly errors = [] as { ctx: ResolverContext; err: Error }[];
+  private readonly external?: ExternalTestFunction;
   private readonly nodeEnv: string;
   private readonly resolver: Resolver;
   private readonly rootCtx: ResolverContext;
@@ -61,6 +93,7 @@ class GraphBuilder {
   constructor(options: GraphBuilder.Options) {
     this.resolver = options.resolver;
     this.rootCtx = this.resolver.createResolverContext();
+    this.external = options.external;
     this.nodeEnv = options.nodeEnv || 'development';
 
     this.disposer.add(this.rootCtx);
@@ -249,11 +282,13 @@ class GraphBuilder {
         this.sourceModules.set(sourceModule.href, sourceModule);
 
         for (const dependency of sourceModule.dependencies) {
-          ctx.runInIsolatedContext(
-            'GraphBuilder.doAddModuleDependency',
-            `${href}|${dependency.spec}`,
-            (ctx) => this.doAddModuleDependency(ctx, sourceModule, dependency)
-          );
+          if (!this.external || !this.external(dependency, sourceModule)) {
+            ctx.runInIsolatedContext(
+              'GraphBuilder.doAddModuleDependency',
+              `${href}|${dependency.spec}`,
+              (ctx) => this.doAddModuleDependency(ctx, sourceModule, dependency)
+            );
+          }
         }
       },
       (err) => {

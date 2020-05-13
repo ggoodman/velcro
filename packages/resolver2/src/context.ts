@@ -60,20 +60,20 @@ export type Visit =
       uri: Uri;
     };
 
-interface ReadParentPackageJsonResultInternalFound {
+export interface ReadParentPackageJsonResultInternalFound {
   found: true;
   packageJson: PackageJson;
   uri: Uri;
   visitedDirs: Uri[];
 }
 
-interface ReadParentPackageJsonResultInternalNotFound {
+export interface ReadParentPackageJsonResultInternalNotFound {
   found: false;
   packageJson: null;
   uri: null;
 }
 
-type ReadParentPackageJsonResultInternal =
+export type ReadParentPackageJsonResultInternal =
   | ReadParentPackageJsonResultInternalFound
   | ReadParentPackageJsonResultInternalNotFound;
 
@@ -231,7 +231,7 @@ export class ResolverContext {
     const href = uri.toString();
 
     return this.runInChildContext(operationName, uri, (ctx) =>
-      this.runWithCache(operationName, href, method, receiver, ctx, uri)
+      ctx.runWithCache(operationName, href, method, receiver, ctx, uri)
     );
   }
 
@@ -242,7 +242,7 @@ export class ResolverContext {
     const href = uri.toString();
 
     return this.runInChildContext(operationName, uri, (ctx) =>
-      this.runWithCache(operationName, href, method, receiver, ctx, uri)
+      ctx.runWithCache(operationName, href, method, receiver, ctx, uri)
     );
   }
 
@@ -253,7 +253,7 @@ export class ResolverContext {
     const href = uri.toString();
 
     return this.runInChildContext(operationName, uri, (ctx) =>
-      this.runWithCache(operationName, href, method, receiver, ctx, uri)
+      ctx.runWithCache(operationName, href, method, receiver, ctx, uri)
     );
   }
 
@@ -273,7 +273,7 @@ export class ResolverContext {
     const href = `${name}@${spec}${path}`;
 
     return this.runInChildContext(operationName, href, (ctx) =>
-      this.runWithCache(operationName, href, method, receiver, ctx, name, spec, path)
+      ctx.runWithCache(operationName, href, method, receiver, ctx, name, spec, path)
     );
   }
 
@@ -284,7 +284,7 @@ export class ResolverContext {
     const href = uri.toString();
 
     return this.runInChildContext(operationName, uri, (ctx) =>
-      this.runWithCache(operationName, href, method, receiver, ctx, uri)
+      ctx.runWithCache(operationName, href, method, receiver, ctx, uri)
     );
   }
 
@@ -295,7 +295,7 @@ export class ResolverContext {
     const href = uri.toString();
 
     return this.runInChildContext(operationName, uri, (ctx) =>
-      this.runWithCache(operationName, href, method, receiver, ctx, uri)
+      ctx.runWithCache(operationName, href, method, receiver, ctx, uri)
     );
   }
 
@@ -321,7 +321,7 @@ export class ResolverContext {
     const href = uri.toString();
 
     return this.runInChildContext(operationName, uri, (ctx) =>
-      this.runWithCache(operationName, href, method, receiver, ctx, uri)
+      ctx.runWithCache(operationName, href, method, receiver, ctx, uri)
     );
   }
 
@@ -455,7 +455,7 @@ export class ResolverContext {
       if (typeof args[0] === 'string') {
         args[0] = ' '.repeat(this.#path.length) + args[0];
       }
-      console.debug(...args);
+      console.error(...args);
     }
   }
 }
