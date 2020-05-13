@@ -26,9 +26,6 @@ export function createRuntime(velcro) {
     }
   }
 
-  /**
-   * @implements {import('./types').VelcroStaticRuntime}
-   */
   class Runtime {
     /**
      *

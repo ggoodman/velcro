@@ -19,6 +19,19 @@ export namespace Chunk {
     rootUri: Uri;
     sourceModules: Iterable<SourceModule>;
   }
+
+  export interface ToStringOptions {
+    /**
+     * Toggle whether to inject the runtime in the generated code.
+     *
+     * An instance of the runtime is important as it is what will actually schedule
+     * and execute code built for Velcro.
+     *
+     * When `injectRuntime` is `true`, the runtime code will be injected and the
+     * instance of it will be exposed as `Velcro.runtime`.
+     */
+    injectRuntime?: boolean;
+  }
 }
 
 export class Chunk {
@@ -44,7 +57,7 @@ export class Chunk {
     }
   }
 
-  toString() {
+  toString(options: Chunk.ToStringOptions = {}) {
     const velcroModuleFactoryParts = velcroModuleFactory
       .toString()
       .split(velcroModuleFactory.splitString);
@@ -93,7 +106,11 @@ export class Chunk {
         velcroStaticRuntime
       )} : Velcro);\n`
     );
-    bundle.append(`\nVelcro.runtime = ${createRuntime.toString()}(Velcro);\n`);
+
+    if (options.injectRuntime) {
+      bundle.append(`\nVelcro.runtime = ${createRuntime.toString()}(Velcro);\n`);
+    }
+
 
     return bundle.toString();
   }
