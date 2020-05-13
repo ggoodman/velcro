@@ -1,7 +1,7 @@
 import { Thenable } from 'ts-primitives';
 import { ResolverContext } from './context';
 import { Settings } from './settings';
-import { Uri } from './uri';
+import { Uri } from './util/uri';
 
 export enum ResolvedEntryKind {
   File = 'file',
@@ -61,7 +61,6 @@ export interface ResolverStrategy {
     ctx: ResolverContext,
     uri: Uri
   ): SettingsResult | Thenable<SettingsResult>;
-  canResolve(this: ResolverStrategy, ctx: ResolverContext, uri: Uri): boolean;
   listEntries(
     this: ResolverStrategy,
     ctx: ResolverContext,
@@ -74,6 +73,10 @@ export interface ResolverStrategy {
   ): ReadFileContentResult | Thenable<ReadFileContentResult>;
 }
 
+export interface ResolverStrategyWithRoot extends ResolverStrategy {
+  rootUri: Uri;
+}
+
 export abstract class AbstractResolverStrategy implements ResolverStrategy {
   getCanonicalUrl(
     _ctx: ResolverContext,
@@ -83,8 +86,6 @@ export abstract class AbstractResolverStrategy implements ResolverStrategy {
       uri,
     };
   }
-
-  abstract canResolve(ctx: ResolverContext, _uri: Uri): ReturnType<ResolverStrategy['canResolve']>;
 
   getSettings(ctx: ResolverContext, _uri: Uri): ReturnType<ResolverStrategy['getSettings']> {
     return {
@@ -101,4 +102,11 @@ export abstract class AbstractResolverStrategy implements ResolverStrategy {
     ctx: ResolverContext,
     uri: Uri
   ): ReturnType<ResolverStrategy['readFileContent']>;
+}
+
+export abstract class AbstractResolverStrategyWithRoot extends AbstractResolverStrategy
+  implements ResolverStrategyWithRoot {
+  constructor(readonly rootUri: Uri) {
+    super();
+  }
 }

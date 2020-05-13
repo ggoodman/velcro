@@ -4,8 +4,8 @@
   "description": "",
   "main": "./dist/index.js",
   "scripts": {
-    "build": "ts-lib-tools build --entry src/index.ts --entry src/test.ts",
-    "build:watch": "ts-lib-tools watch --entry src/test.ts",
+    "build": "ts-lib-tools build",
+    "build:watch": "ts-lib-tools watch",
     "test": "jest"
   },
   "keywords": [],
@@ -13,12 +13,7 @@
   "license": "ISC",
   "devDependencies": {
     "0x": "^4.9.1",
-    "@ampproject/remapping": "^0.2.0",
-    "@ggoodman/channels": "^0.2.0",
-    "@ggoodman/ts-lab": "^1.0.3",
     "@ggoodman/ts-lib-tools": "^0.4.0",
-    "@hapi/code": "^8.0.1",
-    "@hapi/lab": "^22.0.4",
     "@hapi/wreck": "^17.0.0",
     "@pollyjs/adapter-node-http": "^4.0.4",
     "@pollyjs/core": "^4.0.4",
@@ -36,19 +31,14 @@
     "typescript": "^3.9.2"
   },
   "dependencies": {
-    "@paybase/csp": "^1.0.9",
+    "@ampproject/remapping": "^0.2.0",
     "@velcro/node-libs": "^0.27.0",
     "acorn": "^7.1.1",
-    "buntis": "^0.2.1",
     "js-base64": "^2.5.2",
     "magic-string": "^0.25.7",
     "memfs": "^3.1.2",
-    "meriyah": "^1.9.12",
-    "piscina": "^1.2.0",
-    "seafox": "^1.5.0",
     "semver": "^7.2.1",
-    "ts-primitives": "^2.4.0",
-    "web-worker": "^1.0.0"
+    "ts-primitives": "^2.4.0"
   },
   "prettier": {
     "printWidth": 100,

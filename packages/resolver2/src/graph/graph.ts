@@ -1,6 +1,6 @@
 import { Chunk } from '../build/chunk';
-import { MapSet } from '../mapSet';
-import { Uri } from '../uri';
+import { MapSet } from '../util/mapSet';
+import { Uri } from '../util/uri';
 import { DependencyEdge } from './dependencyEdge';
 import { SourceModule } from './sourceModule';
 

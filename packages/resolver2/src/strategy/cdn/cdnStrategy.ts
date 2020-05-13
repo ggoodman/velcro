@@ -1,60 +1,37 @@
 import { satisfies, validRange } from 'semver';
 import { basename, CancellationToken, Thenable } from 'ts-primitives';
-import { all, checkCancellation, isThenable } from '../../async';
 import { ResolverContext, Visit, VisitKind } from '../../context';
 import { EntryNotFoundError } from '../../error';
-import { PackageJson, parseBufferAsPackageJson } from '../../packageJson';
 import {
-  AbstractResolverStrategy,
+  AbstractResolverStrategyWithRoot,
   BareModuleResult,
   CanonicalizeResult,
   ListEntriesResult,
   ResolvedEntryKind,
   ResolveRootResult,
-  ResolverStrategy,
+  ResolverStrategyWithRoot,
 } from '../../strategy';
-import { Uri } from '../../uri';
+import { all, checkCancellation, isThenable } from '../../util/async';
+import { PackageJson, parseBufferAsPackageJson } from '../../util/packageJson';
+import { Uri } from '../../util/uri';
 
 interface AbstractCdn {
   name: string;
 
   isValidUrl(url: Uri): boolean;
-  normalizePackageListing(result: unknown): Directory;
-  parseUrl(url: Uri | string): Spec;
+  normalizePackageListing(result: unknown): CdnStrategy.Directory;
+  parseUrl(url: Uri | string): CdnStrategy.Spec;
   urlForPackageFile(spec: string, pathname: string): Uri;
   urlForPackageList(spec: string): Uri;
 }
 
-export type Spec = {
-  spec: string;
-  name: string;
-  version: string;
-  pathname: string;
-};
-
-export type Directory = {
-  type: ResolvedEntryKind.Directory;
-  path: string;
-  files?: ReadonlyArray<Entry>;
-};
-export type File = {
-  type: ResolvedEntryKind.File;
-  path: string;
-};
-export type Entry = Directory | File;
-
-export type UrlContentFetcher = (
-  href: string,
-  token: CancellationToken
-) => Thenable<ArrayBuffer | null>;
-
-export function isValidEntry(entry: unknown): entry is Entry {
+function isValidEntry(entry: unknown): entry is CdnStrategy.Entry {
   if (!entry || typeof entry !== 'object') return false;
 
   return isValidFile(entry) || isValidDirectory(entry);
 }
 
-export function isValidDirectory(entry: unknown): entry is Directory {
+function isValidDirectory(entry: unknown): entry is CdnStrategy.Directory {
   return (
     typeof entry === 'object' &&
     entry &&
@@ -66,7 +43,7 @@ export function isValidDirectory(entry: unknown): entry is Directory {
   );
 }
 
-export function isValidFile(entry: unknown): entry is File {
+function isValidFile(entry: unknown): entry is File {
   return (
     typeof entry === 'object' &&
     entry &&
@@ -76,7 +53,7 @@ export function isValidFile(entry: unknown): entry is File {
   );
 }
 
-function specToString(spec: Spec) {
+function specToString(spec: CdnStrategy.Spec) {
   return `${spec.spec}${spec.pathname}`;
 }
 
@@ -89,7 +66,7 @@ class JSDelivrCdn implements AbstractCdn {
     return url.scheme === JSDelivrCdn.protocol || url.authority === JSDelivrCdn.host;
   }
 
-  normalizePackageListing(result: unknown): Directory {
+  normalizePackageListing(result: unknown): CdnStrategy.Directory {
     if (!result || typeof result !== 'object') {
       throw new Error(`Unexpected package listing contents`);
     }
@@ -100,7 +77,7 @@ class JSDelivrCdn implements AbstractCdn {
       throw new Error(`Unexpected package listing contents`);
     }
 
-    const mapChildEntry = (parent: string, child: unknown): Entry => {
+    const mapChildEntry = (parent: string, child: unknown): CdnStrategy.Entry => {
       if (!child || typeof child !== 'object') {
         throw new Error(`Unexpected entry in package listing contents`);
       }
@@ -258,45 +235,64 @@ class UnpkgCdn implements AbstractCdn {
   static readonly host = 'unpkg.com';
 }
 
-export class CdnStrategy extends AbstractResolverStrategy implements ResolverStrategy {
-  readonly #cdn: AbstractCdn;
-  readonly #contentCache = new Map<
+export namespace CdnStrategy {
+  export type Spec = {
+    spec: string;
+    name: string;
+    version: string;
+    pathname: string;
+  };
+
+  export type Directory = {
+    type: ResolvedEntryKind.Directory;
+    path: string;
+    files?: ReadonlyArray<Entry>;
+  };
+  export type File = {
+    type: ResolvedEntryKind.File;
+    path: string;
+  };
+  export type Entry = Directory | File;
+
+  export type UrlContentFetcher = (
+    href: string,
+    token: CancellationToken
+  ) => Thenable<ArrayBuffer | null>;
+}
+
+export class CdnStrategy extends AbstractResolverStrategyWithRoot
+  implements ResolverStrategyWithRoot {
+  private readonly cdn: AbstractCdn;
+  private readonly contentCache = new Map<
     string,
     null | { content: ArrayBuffer } | Thenable<{ content: ArrayBuffer }>
   >();
-  readonly #locks = new Map<string, unknown | Thenable<unknown>>();
-  readonly #packageEntriesCache = new Map<string, Map<string, Directory>>();
-  readonly #packageJsonCache = new Map<
+  private readonly locks = new Map<string, unknown | Thenable<unknown>>();
+  private readonly packageEntriesCache = new Map<string, Map<string, CdnStrategy.Directory>>();
+  private readonly packageJsonCache = new Map<
     string,
     Map<string, { packageJson: PackageJson; visited: Visit[] }>
   >();
-  readonly #readUrlFn: UrlContentFetcher;
-  readonly #rootUri: Uri;
+  private readonly readUrlFn: CdnStrategy.UrlContentFetcher;
 
-  constructor(readUrlFn: UrlContentFetcher, cdn: 'jsdelivr' | 'unpkg' = 'jsdelivr') {
-    super();
+  private constructor(readUrlFn: CdnStrategy.UrlContentFetcher, cdn: AbstractCdn) {
+    super(cdn.urlForPackageFile('', ''));
 
-    this.#cdn = cdn === 'jsdelivr' ? new JSDelivrCdn() : new UnpkgCdn();
-    this.#readUrlFn = readUrlFn;
-    this.#rootUri = this.#cdn.urlForPackageFile('', '');
+    this.cdn = cdn;
+    this.readUrlFn = readUrlFn;
   }
 
   private _withRootUriCheck<T extends unknown | Thenable<unknown>>(
-    ctx: ResolverContext,
     uri: Uri,
     fn: (rootUri: Uri) => T
   ): T {
-    if (!this.canResolve(ctx, uri)) {
+    if (!Uri.isPrefixOf(this.rootUri, uri)) {
       throw new Error(
-        `This strategy is only able to handle URIs under '${this.#rootUri.toString()}' and is unable to handle '${uri.toString()}'`
+        `This strategy is only able to handle URIs under '${this.rootUri.toString()}' and is unable to handle '${uri.toString()}'`
       );
     }
 
-    return fn(this.#rootUri);
-  }
-
-  canResolve(_ctx: ResolverContext, uri: Uri) {
-    return Uri.isPrefixOf(this.#rootUri, uri);
+    return fn(this.rootUri);
   }
 
   async getUrlForBareModule(
@@ -305,15 +301,15 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
     spec: string,
     path: string
   ): Promise<BareModuleResult> {
-    const unresolvedUri = this.#cdn.urlForPackageFile(`${name}@${spec}`, path);
+    const unresolvedUri = this.cdn.urlForPackageFile(`${name}@${spec}`, path);
     const resolveReturn = await ctx.resolve(unresolvedUri);
 
     return resolveReturn;
   }
 
   getCanonicalUrl(ctx: ResolverContext, uri: Uri): Promise<CanonicalizeResult> {
-    return this._withRootUriCheck(ctx, uri, async () => {
-      const unresolvedSpec = this.#cdn.parseUrl(uri);
+    return this._withRootUriCheck(uri, async () => {
+      const unresolvedSpec = this.cdn.parseUrl(uri);
       const packageJsonReturn = ctx.runInChildContext(
         'CdnStrategy._readPackageJsonWithCache',
         specToString(unresolvedSpec),
@@ -324,7 +320,7 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
         : packageJsonReturn;
 
       return {
-        uri: this.#cdn.urlForPackageFile(
+        uri: this.cdn.urlForPackageFile(
           `${packageJson.name}@${packageJson.version}`,
           unresolvedSpec.pathname
         ),
@@ -335,31 +331,30 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
   }
 
   getResolveRoot(ctx: ResolverContext, uri: Uri): Promise<ResolveRootResult> {
-    return this._withRootUriCheck(ctx, uri, async () => {
-      const unresolvedSpec = this.#cdn.parseUrl(uri);
+    return this._withRootUriCheck(uri, async () => {
+      const unresolvedSpec = this.cdn.parseUrl(uri);
       const packageJsonReturn = this._readPackageJsonWithCache(ctx, unresolvedSpec);
       const packageJson = isThenable(packageJsonReturn)
         ? await packageJsonReturn
         : packageJsonReturn;
 
       return {
-        uri: this.#cdn.urlForPackageFile(`${packageJson.name}@${packageJson.version}`, '/'),
+        uri: this.cdn.urlForPackageFile(`${packageJson.name}@${packageJson.version}`, '/'),
       };
     });
   }
 
   getRootUrl() {
     return {
-      uri: this.#cdn.urlForPackageFile('', ''),
+      uri: this.cdn.urlForPackageFile('', ''),
     };
   }
 
   listEntries(ctx: ResolverContext, uri: Uri): Promise<ListEntriesResult> {
     return this._withRootUriCheck(
-      ctx,
       uri,
       async (): Promise<ListEntriesResult> => {
-        const unresolvedSpec = this.#cdn.parseUrl(uri);
+        const unresolvedSpec = this.cdn.parseUrl(uri);
         const results = all(
           [
             ctx.getResolveRoot(uri),
@@ -372,7 +367,7 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
         const [{ uri: resolveRootUri }, packageJson, entriesReturn] = isThenable(results)
           ? await results
           : results;
-        const canonicalizedSpec: Spec = {
+        const canonicalizedSpec: CdnStrategy.Spec = {
           name: packageJson.name,
           pathname: unresolvedSpec.pathname,
           spec: `${packageJson.name}@${packageJson.version}`,
@@ -380,11 +375,11 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
         };
 
         // Proactively cache the canonicalized package entries
-        this.#packageEntriesCache.get(packageJson.name)!.set(packageJson.version, entriesReturn);
+        this.packageEntriesCache.get(packageJson.name)!.set(packageJson.version, entriesReturn);
 
         const traversalSegments = canonicalizedSpec.pathname.split('/').filter(Boolean);
 
-        let parentEntry: Directory | undefined = entriesReturn;
+        let parentEntry: CdnStrategy.Directory | undefined = entriesReturn;
 
         while (parentEntry && traversalSegments.length) {
           const segment = traversalSegments.shift() as string;
@@ -395,7 +390,7 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
 
           parentEntry = parentEntry.files.find(
             (file) => file.type === ResolvedEntryKind.Directory && basename(file.path) === segment
-          ) as Directory | undefined;
+          ) as CdnStrategy.Directory | undefined;
         }
 
         if (!parentEntry) {
@@ -421,9 +416,9 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
   }
 
   readFileContent(ctx: ResolverContext, uri: Uri) {
-    return this._withRootUriCheck(ctx, uri, () => {
+    return this._withRootUriCheck(uri, () => {
       const uriStr = uri.toString();
-      const cached = this.#contentCache.get(uriStr);
+      const cached = this.contentCache.get(uriStr);
 
       if (cached === null) {
         return Promise.reject(new EntryNotFoundError(uri));
@@ -434,10 +429,10 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
       }
 
       ctx.recordVisit(uri, VisitKind.File);
-      const readReturn = this.#readUrlFn(uriStr, ctx.token);
+      const readReturn = this.readUrlFn(uriStr, ctx.token);
 
       if (readReturn === null) {
-        this.#contentCache.set(uriStr, null);
+        this.contentCache.set(uriStr, null);
 
         return Promise.reject(new EntryNotFoundError(uri));
       }
@@ -445,35 +440,35 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
       if (isThenable(readReturn)) {
         const wrappedReturn = readReturn.then((data) => {
           if (data === null) {
-            this.#contentCache.delete(uriStr);
+            this.contentCache.delete(uriStr);
 
             return Promise.reject(new EntryNotFoundError(uri));
           }
 
           const entry = { content: data };
 
-          this.#contentCache.set(uriStr, entry);
+          this.contentCache.set(uriStr, entry);
 
           return entry;
         });
 
-        this.#contentCache.set(uriStr, wrappedReturn);
+        this.contentCache.set(uriStr, wrappedReturn);
 
         return wrappedReturn;
       }
 
       const entry = { content: readReturn };
-      this.#contentCache.set(uriStr, entry);
+      this.contentCache.set(uriStr, entry);
 
       return entry;
     });
   }
 
-  private _readPackageEntriesWithCache(ctx: ResolverContext, spec: Spec) {
+  private _readPackageEntriesWithCache(ctx: ResolverContext, spec: CdnStrategy.Spec) {
     ctx.debug('%s._readPackageEntriesWithCache(%s)', this.constructor.name, specToString(spec));
 
     return this._withLock(`packageEntries:${spec.name}`, () => {
-      let packageEntriesCacheForModule = this.#packageEntriesCache.get(spec.name);
+      let packageEntriesCacheForModule = this.packageEntriesCache.get(spec.name);
 
       if (packageEntriesCacheForModule) {
         const exactMatch = packageEntriesCacheForModule.get(spec.version);
@@ -494,7 +489,7 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
         }
       } else {
         packageEntriesCacheForModule = new Map();
-        this.#packageEntriesCache.set(spec.name, packageEntriesCacheForModule);
+        this.packageEntriesCache.set(spec.name, packageEntriesCacheForModule);
       }
 
       return this._readPackageEntries(ctx, spec).then((rootDir) => {
@@ -505,13 +500,13 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
     });
   }
 
-  private async _readPackageEntries(ctx: ResolverContext, spec: Spec) {
+  private async _readPackageEntries(ctx: ResolverContext, spec: CdnStrategy.Spec) {
     ctx.debug('%s._readPackageEntries(%s)', this.constructor.name, specToString(spec));
 
-    const uri = this.#cdn.urlForPackageList(spec.spec);
+    const uri = this.cdn.urlForPackageList(spec.spec);
     const href = uri.toString();
     ctx.recordVisit(uri, VisitKind.Directory);
-    const data = await checkCancellation(this.#readUrlFn(href, ctx.token), ctx.token);
+    const data = await checkCancellation(this.readUrlFn(href, ctx.token), ctx.token);
 
     if (data === null) {
       throw new EntryNotFoundError(spec);
@@ -519,12 +514,12 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
 
     const dataStr = ctx.decoder.decode(data);
 
-    return this.#cdn.normalizePackageListing(JSON.parse(dataStr));
+    return this.cdn.normalizePackageListing(JSON.parse(dataStr));
   }
 
-  private _readPackageJsonWithCache(ctx: ResolverContext, spec: Spec) {
+  private _readPackageJsonWithCache(ctx: ResolverContext, spec: CdnStrategy.Spec) {
     return this._withLock(`packageJson:${spec.name}`, () => {
-      let packageJsonCacheForModule = this.#packageJsonCache.get(spec.name);
+      let packageJsonCacheForModule = this.packageJsonCache.get(spec.name);
 
       if (packageJsonCacheForModule) {
         const exactMatch = packageJsonCacheForModule.get(spec.version);
@@ -552,7 +547,7 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
         }
       } else {
         packageJsonCacheForModule = new Map();
-        this.#packageJsonCache.set(spec.name, packageJsonCacheForModule);
+        this.packageJsonCache.set(spec.name, packageJsonCacheForModule);
       }
 
       return this._readPackageJson(spec, ctx).then((packageJson) => {
@@ -563,9 +558,12 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
     });
   }
 
-  private async _readPackageJson(spec: Spec, ctx: ResolverContext): Promise<PackageJson> {
+  private async _readPackageJson(
+    spec: CdnStrategy.Spec,
+    ctx: ResolverContext
+  ): Promise<PackageJson> {
     ctx.debug('%s._readPackageJson(%s)', this.constructor.name, specToString(spec));
-    const uri = this.#cdn.urlForPackageFile(spec.spec, '/package.json');
+    const uri = this.cdn.urlForPackageFile(spec.spec, '/package.json');
     const contentReturn = ctx.readFileContent(uri);
     const contentResult = isThenable(contentReturn) ? await contentReturn : contentReturn;
 
@@ -580,11 +578,11 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
     // Since we know what the canonicalized version is now (we didn't until the promise resolved)
     // and the package.json was parsed), we can proactively seed the content cache for the
     // canonical url.
-    const canonicalHref = this.#cdn
+    const canonicalHref = this.cdn
       .urlForPackageFile(`${manifest.name}@${manifest.version}`, '/package.json')
       .toString();
 
-    this.#contentCache.set(canonicalHref, contentResult);
+    this.contentCache.set(canonicalHref, contentResult);
 
     return manifest;
   }
@@ -593,25 +591,25 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
     lockKey: string,
     fn: (...args: any[]) => T
   ): T {
-    const lock = this.#locks.get(lockKey);
+    const lock = this.locks.get(lockKey);
     const runCriticalSection = (): T => {
       const ret = fn();
 
       if (isThenable(ret)) {
         const locked = ret.then(
           (result) => {
-            this.#locks.delete(lockKey);
+            this.locks.delete(lockKey);
 
             return result;
           },
           (err) => {
-            this.#locks.delete(lockKey);
+            this.locks.delete(lockKey);
 
             return Promise.reject(err);
           }
         );
 
-        this.#locks.set(lockKey, locked);
+        this.locks.set(lockKey, locked);
 
         return ret;
       }
@@ -625,5 +623,13 @@ export class CdnStrategy extends AbstractResolverStrategy implements ResolverStr
     }
 
     return runCriticalSection();
+  }
+
+  static forJsDelivr(readUrlFn: CdnStrategy.UrlContentFetcher) {
+    return new CdnStrategy(readUrlFn, new JSDelivrCdn());
+  }
+
+  static forUnpkg(readUrlFn: CdnStrategy.UrlContentFetcher) {
+    return new CdnStrategy(readUrlFn, new UnpkgCdn());
   }
 }

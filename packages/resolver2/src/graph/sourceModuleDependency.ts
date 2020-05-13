@@ -1,4 +1,4 @@
-import { Uri } from '../uri';
+import { Uri } from '../util/uri';
 
 export enum SourceModuleDependencyKind {
   Entrypoint = 'Entrypoint',

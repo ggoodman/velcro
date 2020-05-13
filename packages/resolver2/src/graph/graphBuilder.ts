@@ -1,6 +1,5 @@
 import MagicString from 'magic-string';
 import { dirname, DisposableStore, Emitter } from 'ts-primitives';
-import { checkCancellation, isThenable } from '../async';
 import { ResolverContext, Visit } from '../context';
 import {
   DependencyNotFoundError,
@@ -9,9 +8,10 @@ import {
   isCanceledError,
   ParseError,
 } from '../error';
-import { MapSet } from '../mapSet';
 import { Resolver } from '../resolver';
-import { Uri } from '../uri';
+import { checkCancellation, isThenable } from '../util/async';
+import { MapSet } from '../util/mapSet';
+import { Uri } from '../util/uri';
 import { BareModuleSpec, parseBareModuleSpec } from './bareModules';
 import { DependencyEdge } from './dependencyEdge';
 import { GraphBuildError } from './errors';

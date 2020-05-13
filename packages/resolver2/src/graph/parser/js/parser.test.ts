@@ -1,5 +1,5 @@
 import { parseJavaScript } from '..';
-import { Uri } from '../../../uri';
+import { Uri } from '../../../util/uri';
 import { SourceModuleDependencyKind } from '../../sourceModuleDependency';
 
 jest.mock('../../../context');

@@ -1,4 +1,4 @@
-import { Uri } from '../uri';
+import { Uri } from '../util/uri';
 import { DEFAULT_SHIM_GLOBALS, NODE_CORE_SHIMS } from './shims';
 import { SourceModuleDependency } from './sourceModuleDependency';
 

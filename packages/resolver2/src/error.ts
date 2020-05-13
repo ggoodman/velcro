@@ -1,5 +1,5 @@
 import { ResolverContext } from './context';
-import { Uri } from './uri';
+import { Uri } from './util/uri';
 
 abstract class BaseError extends Error {
   readonly name = this.constructor.name;

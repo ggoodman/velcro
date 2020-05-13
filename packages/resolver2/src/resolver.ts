@@ -2,7 +2,7 @@ import { CancellationToken, CancellationTokenSource } from 'ts-primitives';
 import { ResolverContext } from './context';
 import { Settings } from './settings';
 import { ResolverStrategy } from './strategy';
-import { Uri } from './uri';
+import { Uri } from './util/uri';
 
 export interface ResolveOptions {
   ctx?: ResolverContext;
@@ -25,10 +25,6 @@ export class Resolver {
       this.settings,
       this.tokenSource.token
     );
-  }
-
-  canResolve(uri: Uri) {
-    return this.rootCtx.canResolve(uri);
   }
 
   getCanonicalUrl(uri: Uri) {

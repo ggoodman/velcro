@@ -1,6 +1,10 @@
 import { ResolverContext } from '../../context';
-import { AbstractResolverStrategy, ResolverStrategy } from '../../strategy';
-import { Uri } from '../../uri';
+import {
+  AbstractResolverStrategy,
+  ResolverStrategy,
+  ResolverStrategyWithRoot,
+} from '../../strategy';
+import { Uri } from '../../util/uri';
 
 type StrategyMethodsNames<
   TMethodName extends keyof ResolverStrategy =
@@ -12,11 +16,11 @@ type StrategyMethodsNames<
 > = TMethodName;
 
 interface ResolverHostFsOptions {
-  strategies: ResolverStrategy[];
+  strategies: ResolverStrategyWithRoot[];
 }
 
 export class CompoundStrategy extends AbstractResolverStrategy {
-  private readonly strategies: Set<ResolverStrategy>;
+  private readonly strategies: Set<ResolverStrategyWithRoot>;
 
   constructor(options: ResolverHostFsOptions) {
     super();
@@ -29,7 +33,7 @@ export class CompoundStrategy extends AbstractResolverStrategy {
     TMethod extends (ctx: ResolverContext, uri: Uri) => any = ResolverStrategy[TMethodName]
   >(method: TMethodName, ctx: ResolverContext, uri: Uri): ReturnType<TMethod> {
     for (const strategy of this.strategies) {
-      if (strategy.canResolve(ctx, uri)) {
+      if (Uri.isPrefixOf(strategy.rootUri, uri)) {
         return strategy[method](ctx, uri) as ReturnType<TMethod>;
       }
     }
@@ -37,16 +41,6 @@ export class CompoundStrategy extends AbstractResolverStrategy {
     return Promise.reject(
       new Error(`No strategy found whose root is a prefix of ${uri}`)
     ) as ReturnType<TMethod>;
-  }
-
-  canResolve(ctx: ResolverContext, uri: Uri) {
-    for (const strategy of this.strategies) {
-      if (strategy.canResolve(ctx, uri)) {
-        return true;
-      }
-    }
-
-    return false;
   }
 
   getCanonicalUrl(ctx: ResolverContext, uri: Uri) {

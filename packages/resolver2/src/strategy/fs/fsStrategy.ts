@@ -1,44 +1,53 @@
 import { ResolverContext } from '../../context';
 import { NotResolvableError } from '../../error';
 import {
-  AbstractResolverStrategy,
+  AbstractResolverStrategyWithRoot,
   CanonicalizeResult,
   ListEntriesResult,
   ResolvedEntryKind,
 } from '../../strategy';
-import { Uri } from '../../uri';
-import { FsInterface } from './types';
+import { Uri } from '../../util/uri';
 
-interface ResolverHostFsOptions {
-  fs: FsInterface;
-  rootUri?: Uri;
-}
+export namespace FsStrategy {
+  export type Dirent = {
+    isFile(): boolean;
+    isDirectory(): boolean;
+    name: string;
+  };
 
-export class FsStrategy extends AbstractResolverStrategy {
-  private readonly fs: FsInterface;
-  private readonly rootUri: Uri;
-
-  constructor(options: ResolverHostFsOptions) {
-    super();
-
-    this.fs = options.fs;
-    this.rootUri = options.rootUri || Uri.file('/');
+  export interface FsInterface {
+    promises: {
+      readdir(path: string, options: { encoding: 'utf-8'; withFileTypes: true }): Promise<Dirent[]>;
+      readFile(path: string): Promise<ArrayBuffer>;
+      realpath(path: string): Promise<string>;
+    };
   }
 
-  private ensureUriUnderRoot(ctx: ResolverContext, uri: Uri) {
-    if (!this.canResolve(ctx, uri)) {
+  export interface Options {
+    fs: FsInterface;
+    rootUri?: Uri;
+  }
+}
+
+export class FsStrategy extends AbstractResolverStrategyWithRoot {
+  private readonly fs: FsStrategy.FsInterface;
+
+  constructor(options: FsStrategy.Options) {
+    super(options.rootUri || Uri.file('/'));
+
+    this.fs = options.fs;
+  }
+
+  private ensureUriUnderRoot(uri: Uri) {
+    if (!Uri.isPrefixOf(this.rootUri, uri)) {
       return new NotResolvableError(
         `The URI '${uri}' is not under the root for this resolver strategy '${this.rootUri}'`
       );
     }
   }
 
-  canResolve(_ctx: ResolverContext, uri: Uri) {
-    return Uri.isPrefixOf(this.rootUri, uri);
-  }
-
-  async getCanonicalUrl(ctx: ResolverContext, uri: Uri): Promise<CanonicalizeResult> {
-    const err = this.ensureUriUnderRoot(ctx, uri);
+  async getCanonicalUrl(_ctx: ResolverContext, uri: Uri): Promise<CanonicalizeResult> {
+    const err = this.ensureUriUnderRoot(uri);
 
     if (err) {
       throw err;
@@ -65,8 +74,8 @@ export class FsStrategy extends AbstractResolverStrategy {
     return { uri: this.rootUri };
   }
 
-  getResolveRoot(ctx: ResolverContext, uri: Uri) {
-    const err = this.ensureUriUnderRoot(ctx, uri);
+  getResolveRoot(_ctx: ResolverContext, uri: Uri) {
+    const err = this.ensureUriUnderRoot(uri);
 
     if (err) {
       return Promise.reject(err);
@@ -75,8 +84,8 @@ export class FsStrategy extends AbstractResolverStrategy {
     return { uri: this.rootUri };
   }
 
-  async listEntries(ctx: ResolverContext, uri: Uri) {
-    const err = this.ensureUriUnderRoot(ctx, uri);
+  async listEntries(_ctx: ResolverContext, uri: Uri) {
+    const err = this.ensureUriUnderRoot(uri);
 
     if (err) {
       throw err;
@@ -105,8 +114,8 @@ export class FsStrategy extends AbstractResolverStrategy {
     return result;
   }
 
-  async readFileContent(ctx: ResolverContext, uri: Uri) {
-    const err = this.ensureUriUnderRoot(ctx, uri);
+  async readFileContent(_ctx: ResolverContext, uri: Uri) {
+    const err = this.ensureUriUnderRoot(uri);
 
     if (err) {
       throw err;

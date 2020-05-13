@@ -1,6 +1,6 @@
 import { Visit } from '../context';
 import { SourceModuleDependency } from '../graph/sourceModuleDependency';
-import { Uri } from '../uri';
+import { Uri } from '../util/uri';
 
 export interface DependencyEdge {
   dependency: SourceModuleDependency;

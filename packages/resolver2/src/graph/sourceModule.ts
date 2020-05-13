@@ -1,6 +1,6 @@
 import MagicString from 'magic-string';
 import { getSourceMappingUrl } from '../build/sourceMap';
-import { Uri } from '../uri';
+import { Uri } from '../util/uri';
 import { ParentPackageJson } from './parentPackageJson';
 import { SyntaxKind } from './parsing';
 import { SourceModuleDependency } from './sourceModuleDependency';

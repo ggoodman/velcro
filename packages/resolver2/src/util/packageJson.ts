@@ -1,4 +1,4 @@
-import { Decoder } from './decoder';
+import { Decoder } from '../decoder';
 
 export type PackageMainField = 'browser' | 'module' | 'jsnext:main' | 'main' | 'unpkg';
 

@@ -1,15 +1,16 @@
 import { read, request } from '@hapi/wreck';
 import * as MemFs from 'memfs';
 import { CancellationToken } from 'ts-primitives';
-import { CanceledError } from './src/error';
-import { Graph } from './src/graph/graph';
-import { buildGraph } from './src/graph/graphBuilder';
-import { Resolver } from './src/resolver';
-import { CdnStrategy } from './src/strategy/cdn';
-import { CompoundStrategy } from './src/strategy/compound';
-import { FsStrategy } from './src/strategy/fs';
-import { FsInterface } from './src/strategy/fs/types';
-import { Uri } from './src/uri';
+import {
+  buildGraph,
+  CanceledError,
+  CdnStrategy,
+  CompoundStrategy,
+  FsStrategy,
+  Graph,
+  Resolver,
+  Uri,
+} from './src';
 import { polly } from './test/lib/wreck';
 
 async function fetchBufferWithWreck(href: string, token: CancellationToken) {
@@ -50,8 +51,10 @@ async function main() {
     },
     '/'
   );
-  const fsStrategy = new FsStrategy({ fs: MemFs.createFsFromVolume(rootFs) as FsInterface });
-  const cdnStrategy = new CdnStrategy(fetchBufferWithWreck, 'jsdelivr');
+  const fsStrategy = new FsStrategy({
+    fs: MemFs.createFsFromVolume(rootFs) as FsStrategy.FsInterface,
+  });
+  const cdnStrategy = CdnStrategy.forJsDelivr(fetchBufferWithWreck);
   const strategy = new CompoundStrategy({
     strategies: [cdnStrategy, fsStrategy],
   });

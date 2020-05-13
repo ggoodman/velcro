@@ -1,7 +1,6 @@
 import { Bundle } from 'magic-string';
 import { DependencyEdge } from '../graph/dependencyEdge';
 import { SourceModule } from '../graph/sourceModule';
-import { MapSet } from '../mapSet';
 import { createRuntime } from '../runtime/runtime';
 import {
   velcroChunkWrapper,
@@ -9,7 +8,8 @@ import {
   velcroModuleFactory,
   VelcroStaticRuntime,
 } from '../runtime/types';
-import { Uri } from '../uri';
+import { MapSet } from '../util/mapSet';
+import { Uri } from '../util/uri';
 import { ChunkOutput } from './chunkOutput';
 
 type NotUndefined<T> = T extends undefined ? never : T;

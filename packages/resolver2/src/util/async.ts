@@ -1,5 +1,5 @@
 import { CancellationToken, Thenable } from 'ts-primitives';
-import { CanceledError } from './error';
+import { CanceledError } from '../error';
 
 export type Awaited<T> = T extends Thenable<infer U> ? U : T;
 

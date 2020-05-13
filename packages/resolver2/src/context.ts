@@ -1,12 +1,12 @@
 import { basename, CancellationToken, CancellationTokenSource, Thenable } from 'ts-primitives';
-import { all, Awaited, checkCancellation, isThenable } from './async';
 import { Decoder } from './decoder';
 import { CanceledError, EntryNotFoundError } from './error';
-import { PackageJson, parseBufferAsPackageJson } from './packageJson';
 import { Resolver } from './resolver';
 import { Settings } from './settings';
 import { ResolvedEntry, ResolvedEntryKind, ResolverStrategy } from './strategy';
-import { Uri } from './uri';
+import { all, Awaited, checkCancellation, isThenable } from './util/async';
+import { PackageJson, parseBufferAsPackageJson } from './util/packageJson';
+import { Uri } from './util/uri';
 
 type ReturnTypeWithVisits<
   T extends (...args: any[]) => any,
@@ -78,11 +78,11 @@ export type ReadParentPackageJsonResultInternal =
   | ReadParentPackageJsonResultInternalNotFound;
 
 class Visits {
-  #parent?: Visits;
-  #visits = [] as Visit[];
+  private readonly parent?: Visits;
+  private readonly visits = [] as Visit[];
 
   constructor(readonly uri: { toString(): string }, parent?: Visits) {
-    this.#parent = parent;
+    this.parent = parent;
   }
 
   child(uri: { toString(): string }): Visits {
@@ -90,15 +90,14 @@ class Visits {
   }
 
   push(visit: Visit) {
-    // if (!this.#parent) console.debug('[VISIT] %s -> %s [%s]', this.uri, visit.uri, visit.type);
-    if (!this.#visits.find((cmp) => cmp.type == visit.type && Uri.equals(cmp.uri, visit.uri))) {
-      this.#visits.push(visit);
-      this.#parent?.push(visit);
+    if (!this.visits.find((cmp) => cmp.type == visit.type && Uri.equals(cmp.uri, visit.uri))) {
+      this.visits.push(visit);
+      this.parent?.push(visit);
     }
   }
 
   toArray(): Visit[] {
-    return this.#parent ? this.#parent.toArray() : this.#visits.slice();
+    return this.parent ? this.parent.toArray() : this.visits.slice();
   }
 }
 
@@ -132,61 +131,38 @@ export class ResolverContext {
     });
   }
 
-  readonly #cache: ResolverContextOptions['cache'];
-  readonly #decoder: ResolverContextOptions['decoder'];
-  readonly #mapResultWithVisits = <T>(result: T) =>
-    Object.assign(result, { visited: this.#visits.toArray() });
-  readonly #path: ResolverContextOptions['path'];
-  readonly #resolver: ResolverContextOptions['resolver'];
-  readonly #settings: ResolverContextOptions['settings'];
-  readonly #strategy: ResolverContextOptions['strategy'];
-  readonly #tokenSource: CancellationTokenSource;
-  readonly #visits: Visits;
+  private readonly cache: ResolverContextOptions['cache'];
+  readonly decoder: ResolverContextOptions['decoder'];
+  private readonly mapResultWithVisits = <T>(result: T) =>
+    Object.assign(result, { visited: this.visits.toArray() });
+  readonly path: ReadonlyArray<string>;
+  private readonly resolver: ResolverContextOptions['resolver'];
+  readonly settings: Readonly<ResolverContextOptions['settings']>;
+  private readonly strategy: ResolverContextOptions['strategy'];
+  private readonly tokenSource: CancellationTokenSource;
+  private readonly visits: Visits;
 
   private constructor(options: ResolverContextOptions) {
-    this.#cache = options.cache;
-    this.#decoder = options.decoder;
-    this.#path = options.path;
-    this.#resolver = options.resolver;
-    this.#settings = options.settings;
-    this.#strategy = options.strategy;
-    this.#tokenSource = new CancellationTokenSource(options.token);
-    this.#visits = options.visits;
-  }
-
-  get decoder() {
-    return this.#decoder;
-  }
-
-  get path() {
-    return this.#path.slice() as ReadonlyArray<string>;
-  }
-
-  get settings() {
-    return this.#settings as Readonly<Settings>;
+    this.cache = options.cache;
+    this.decoder = options.decoder;
+    this.path = options.path;
+    this.resolver = options.resolver;
+    this.settings = options.settings;
+    this.strategy = options.strategy;
+    this.tokenSource = new CancellationTokenSource(options.token);
+    this.visits = options.visits;
   }
 
   get token() {
-    return this.#tokenSource.token;
+    return this.tokenSource.token;
   }
 
   get visited() {
-    return this.#visits.toArray();
-  }
-
-  canResolve(uri: Uri) {
-    const method = this.#strategy.canResolve;
-    const receiver = this.#strategy;
-    const operationName = `${this.#strategy.constructor.name}.${method.name}`;
-    const href = uri.toString();
-
-    return this.runInChildContext(operationName, uri, (ctx) =>
-      this.runWithCache(operationName, href, method, receiver, ctx, uri)
-    );
+    return this.visits.toArray();
   }
 
   dispose() {
-    this.#tokenSource.dispose(true);
+    this.tokenSource.dispose(true);
   }
 
   forOperation(
@@ -196,8 +172,8 @@ export class ResolverContext {
   ) {
     const encodedOperation = encodePathNode(operationName, uri);
 
-    if (this.#path.includes(encodedOperation)) {
-      const formattedPath = this.#path
+    if (this.path.includes(encodedOperation)) {
+      const formattedPath = this.path
         .map((segment) => {
           const { operationName, uri } = decodePathNode(segment);
 
@@ -213,21 +189,21 @@ export class ResolverContext {
     }
 
     return new ResolverContext({
-      cache: this.#cache,
-      decoder: this.#decoder,
-      path: options.resetPath ? [] : this.#path.concat(encodedOperation),
-      resolver: this.#resolver,
-      settings: this.#settings,
-      strategy: this.#strategy,
-      token: this.#tokenSource.token,
-      visits: options.resetVisits ? new Visits(uri) : this.#visits.child(uri),
+      cache: this.cache,
+      decoder: this.decoder,
+      path: options.resetPath ? [] : this.path.concat(encodedOperation),
+      resolver: this.resolver,
+      settings: this.settings,
+      strategy: this.strategy,
+      token: this.tokenSource.token,
+      visits: options.resetVisits ? new Visits(uri) : this.visits.child(uri),
     });
   }
 
   getCanonicalUrl(uri: Uri) {
-    const method = this.#strategy.getCanonicalUrl;
-    const receiver = this.#strategy;
-    const operationName = `${this.#strategy.constructor.name}.${method.name}`;
+    const method = this.strategy.getCanonicalUrl;
+    const receiver = this.strategy;
+    const operationName = `${this.strategy.constructor.name}.${method.name}`;
     const href = uri.toString();
 
     return this.runInChildContext(operationName, uri, (ctx) =>
@@ -236,9 +212,9 @@ export class ResolverContext {
   }
 
   getResolveRoot(uri: Uri) {
-    const method = this.#strategy.getResolveRoot;
-    const receiver = this.#strategy;
-    const operationName = `${this.#strategy.constructor.name}.${method.name}`;
+    const method = this.strategy.getResolveRoot;
+    const receiver = this.strategy;
+    const operationName = `${this.strategy.constructor.name}.${method.name}`;
     const href = uri.toString();
 
     return this.runInChildContext(operationName, uri, (ctx) =>
@@ -247,9 +223,9 @@ export class ResolverContext {
   }
 
   getSettings(uri: Uri) {
-    const method = this.#strategy.getSettings;
-    const receiver = this.#strategy;
-    const operationName = `${this.#strategy.constructor.name}.${method.name}`;
+    const method = this.strategy.getSettings;
+    const receiver = this.strategy;
+    const operationName = `${this.strategy.constructor.name}.${method.name}`;
     const href = uri.toString();
 
     return this.runInChildContext(operationName, uri, (ctx) =>
@@ -258,7 +234,7 @@ export class ResolverContext {
   }
 
   getUrlForBareModule(name: string, spec: string, path: string) {
-    const method = this.#strategy.getUrlForBareModule;
+    const method = this.strategy.getUrlForBareModule;
 
     if (!method) {
       return Promise.reject(
@@ -268,8 +244,8 @@ export class ResolverContext {
       );
     }
 
-    const receiver = this.#strategy;
-    const operationName = `${this.#strategy.constructor.name}.${method.name}`;
+    const receiver = this.strategy;
+    const operationName = `${this.strategy.constructor.name}.${method.name}`;
     const href = `${name}@${spec}${path}`;
 
     return this.runInChildContext(operationName, href, (ctx) =>
@@ -278,9 +254,9 @@ export class ResolverContext {
   }
 
   listEntries(uri: Uri) {
-    const method = this.#strategy.listEntries;
-    const receiver = this.#strategy;
-    const operationName = `${this.#strategy.constructor.name}.${method.name}`;
+    const method = this.strategy.listEntries;
+    const receiver = this.strategy;
+    const operationName = `${this.strategy.constructor.name}.${method.name}`;
     const href = uri.toString();
 
     return this.runInChildContext(operationName, uri, (ctx) =>
@@ -289,9 +265,9 @@ export class ResolverContext {
   }
 
   readFileContent(uri: Uri) {
-    const method = this.#strategy.readFileContent;
-    const receiver = this.#strategy;
-    const operationName = `${this.#strategy.constructor.name}.${method.name}`;
+    const method = this.strategy.readFileContent;
+    const receiver = this.strategy;
+    const operationName = `${this.strategy.constructor.name}.${method.name}`;
     const href = uri.toString();
 
     return this.runInChildContext(operationName, uri, (ctx) =>
@@ -311,7 +287,7 @@ export class ResolverContext {
   }
 
   recordVisit(uri: Uri, type: VisitKind = VisitKind.File) {
-    this.#visits.push({ type, uri });
+    this.visits.push({ type, uri });
   }
 
   resolve(uri: Uri) {
@@ -366,13 +342,13 @@ export class ResolverContext {
     target: unknown,
     ...args: Parameters<TMethod>
   ): ReturnTypeWithVisits<TMethod> {
-    let operationCache = this.#cache.get(cacheSegment) as
+    let operationCache = this.cache.get(cacheSegment) as
       | Map<string, ReturnTypeWithVisits<TMethod>>
       | undefined;
 
     if (!operationCache) {
       operationCache = new Map();
-      this.#cache.set(cacheSegment, operationCache);
+      this.cache.set(cacheSegment, operationCache);
     }
 
     const cached = operationCache.get(cacheKey);
@@ -396,7 +372,7 @@ export class ResolverContext {
       // Produce a promise that will only be settled once the cache has been updated accordingly.
       const wrappedRet = promiseRet.then(
         (result) => {
-          const mappedResult = this.#mapResultWithVisits(result);
+          const mappedResult = this.mapResultWithVisits(result);
 
           if (mappedResult[CACHE]) {
             const cacheEntries = mappedResult[CACHE] as [string, ReturnTypeWithVisits<TMethod>][];
@@ -426,7 +402,7 @@ export class ResolverContext {
       return wrappedRet as Awaited<Thenable<ReturnTypeWithVisits<TMethod>>>;
     }
 
-    const mappedResult = this.#mapResultWithVisits(ret);
+    const mappedResult = this.mapResultWithVisits(ret);
 
     if (mappedResult[CACHE]) {
       const cacheEntries = mappedResult[CACHE] as [string, ReturnTypeWithVisits<TMethod>][];
@@ -446,14 +422,14 @@ export class ResolverContext {
     err: T
   ): T & { path: { operationName: string; uri: Uri | string }[] } {
     return Object.assign(err, {
-      path: this.#path.map(decodePathNode),
+      path: this.path.map(decodePathNode),
     });
   }
 
   debug(...args: Parameters<Console['debug']>) {
     if (DEBUG) {
       if (typeof args[0] === 'string') {
-        args[0] = ' '.repeat(this.#path.length) + args[0];
+        args[0] = ' '.repeat(this.path.length) + args[0];
       }
       console.error(...args);
     }
