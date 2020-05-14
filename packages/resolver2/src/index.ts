@@ -6,4 +6,5 @@ export * from './strategy';
 export * from './strategy/cdn';
 export * from './strategy/compound';
 export * from './strategy/fs';
+export * from './strategy/memory';
 export * from './util/uri';
