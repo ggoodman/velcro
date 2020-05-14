@@ -1,6 +1,8 @@
 export * from './error';
+export * from './execute';
 export * from './graph';
 export * from './resolver';
+export * from './runtime';
 export * from './strategy';
 // Maybe remove from this package
 export * from './strategy/cdn';

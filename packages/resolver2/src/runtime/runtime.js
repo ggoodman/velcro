@@ -2,13 +2,14 @@
 'use strict';
 
 /**
- * @typedef IRuntime
+ * @typedef VelcroRuntime
+ * @property {(id: string, exports: unknown) => void} inject
  * @property {import('./types').VelcroRequire} require
  */
 
 /**
  * @param {import('./types').VelcroStaticRuntime} velcro
- * @returns {IRuntime}
+ * @returns {VelcroRuntime}
  */
 export function createRuntime(velcro) {
   class Module {
