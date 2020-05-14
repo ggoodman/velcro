@@ -2,12 +2,7 @@ import { Bundle } from 'magic-string';
 import { DependencyEdge } from '../graph/dependencyEdge';
 import { SourceModule } from '../graph/sourceModule';
 import { createRuntime } from '../runtime/runtime';
-import {
-  velcroChunkWrapper,
-  VelcroImportMap,
-  velcroModuleFactory,
-  VelcroStaticRuntime,
-} from '../runtime/types';
+import { VelcroImportMap, VelcroStaticRuntime } from '../runtime/types';
 import { MapSet } from '../util/mapSet';
 import { Uri } from '../util/uri';
 import { ChunkOutput } from './chunkOutput';
@@ -67,12 +62,12 @@ export class Chunk {
   }
 
   buildForStaticRuntime<T extends Chunk.ToStringOptions = Chunk.ToStringOptionsBase>(options?: T) {
-    const velcroModuleFactoryParts = velcroModuleFactory
-      .toString()
-      .split(velcroModuleFactory.splitString);
-    const velcroChunkWrapperParts = velcroChunkWrapper
-      .toString()
-      .split(velcroChunkWrapper.splitString);
+    // const velcroModuleFactoryParts = velcroModuleFactory
+    //   .toString()
+    //   .split(velcroModuleFactory.splitString);
+    // const velcroChunkWrapperParts = velcroChunkWrapper
+    //   .toString()
+    //   .split(velcroChunkWrapper.splitString);
 
     const bundle = new Bundle({
       separator: '\n',
@@ -93,25 +88,26 @@ export class Chunk {
       }
 
       sourceModule.source.prepend(
-        `velcro.defs[${JSON.stringify(sourceModule.uri.toString())}] = [${
-          velcroModuleFactoryParts[0]
-        }`.replace(velcroModuleFactory.name, '')
+        `velcro.defs[${JSON.stringify(
+          sourceModule.uri.toString()
+        )}] = [function(module,exports,require,__dirname,__filename){\n`
       );
-      sourceModule.source.append(`${velcroModuleFactoryParts[1]},${JSON.stringify(importMap)}];`);
+      sourceModule.source.append(`\n},${JSON.stringify(importMap)}];`);
       bundle.addSource(sourceModule.source);
     }
 
     const velcroStaticRuntime: VelcroStaticRuntime = { defs: {} };
 
-    bundle.prepend(`(${velcroChunkWrapperParts[0]}`.replace(velcroChunkWrapper.name, ''));
-    bundle.append(
-      `${velcroChunkWrapperParts[1]})(Velcro = typeof Velcro === 'undefined' ? ${JSON.stringify(
+    bundle.prepend(`(function(velcro){\n`);
+    bundle.prepend(
+      `if (typeof Velcro === 'undefined') Velcro = Object.create(null);\nif (typeof Velcro.registry === 'undefined') Velcro.registry = ${JSON.stringify(
         velcroStaticRuntime
-      )} : Velcro);\n`
+      )};\n`
     );
+    bundle.append(`\n})(Velcro.registry);\n`);
 
     if (options?.injectRuntime) {
-      bundle.append(`\nVelcro.runtime = ${createRuntime.toString()}(Velcro);\n`);
+      bundle.append(`\nVelcro.runtime = ${createRuntime.toString()}(Velcro.registry);\n`);
     }
 
     return new ChunkOutput<T extends { href: string } ? string : undefined>(

@@ -1,3 +1,5 @@
+import { encode } from '../util/base64';
+
 export class SourceMap {
   readonly file?: string;
   readonly mappings: string;
@@ -30,7 +32,7 @@ export class SourceMap {
   }
 
   toDataUri() {
-    return `data:application/json;charset=utf-8;base64,${Base64.encode(this.toString())}`;
+    return `data:application/json;charset=utf-8;base64,${encode(this.toString())}`;
   }
 }
 
