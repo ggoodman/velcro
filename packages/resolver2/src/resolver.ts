@@ -1,22 +1,24 @@
-import { CancellationToken, CancellationTokenSource } from 'ts-primitives';
+import { CancellationTokenSource } from 'ts-primitives';
 import { ResolverContext } from './context';
-import { Settings } from './settings';
-import { ResolverStrategy } from './strategy';
+import type { ResolverStrategy } from './strategy';
+import type { PackageMainField } from './util/packageJson';
 import { Uri } from './util/uri';
 
-export interface ResolveOptions {
-  ctx?: ResolverContext;
-  token?: CancellationToken;
+export namespace Resolver {
+  export interface Settings {
+    extensions: string[];
+    packageMain: PackageMainField[];
+  }
 }
 
 export class Resolver {
   // private readonly decoder = new Decoder();
   private readonly rootCtx: ResolverContext;
-  private readonly settings: Settings;
+  private readonly settings: Resolver.Settings;
   private readonly strategy: ResolverStrategy;
   private readonly tokenSource = new CancellationTokenSource();
 
-  constructor(strategy: ResolverStrategy, settings: Settings) {
+  constructor(strategy: ResolverStrategy, settings: Resolver.Settings) {
     this.settings = settings;
     this.strategy = strategy;
     this.rootCtx = ResolverContext.create(

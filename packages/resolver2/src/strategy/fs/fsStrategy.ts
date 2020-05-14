@@ -1,11 +1,6 @@
 import { ResolverContext } from '../../context';
 import { NotResolvableError } from '../../error';
-import {
-  AbstractResolverStrategyWithRoot,
-  CanonicalizeResult,
-  ListEntriesResult,
-  ResolvedEntryKind,
-} from '../../strategy';
+import { AbstractResolverStrategyWithRoot, ResolverStrategy } from '../../strategy';
 import { Uri } from '../../util/uri';
 
 export namespace FsStrategy {
@@ -46,7 +41,10 @@ export class FsStrategy extends AbstractResolverStrategyWithRoot {
     }
   }
 
-  async getCanonicalUrl(_ctx: ResolverContext, uri: Uri): Promise<CanonicalizeResult> {
+  async getCanonicalUrl(
+    _ctx: ResolverContext,
+    uri: Uri
+  ): Promise<ResolverStrategy.CanonicalizeResult> {
     const err = this.ensureUriUnderRoot(uri);
 
     if (err) {
@@ -95,17 +93,17 @@ export class FsStrategy extends AbstractResolverStrategyWithRoot {
       encoding: 'utf-8',
       withFileTypes: true,
     });
-    const result: ListEntriesResult = { entries: [] };
+    const result: ResolverStrategy.ListEntriesResult = { entries: [] };
 
     for (const entry of fsEntries) {
       if (entry.isDirectory()) {
         result.entries.push({
-          type: ResolvedEntryKind.Directory,
+          type: ResolverStrategy.EntryKind.Directory,
           uri: Uri.joinPath(uri, entry.name),
         });
       } else if (entry.isFile()) {
         result.entries.push({
-          type: ResolvedEntryKind.File,
+          type: ResolverStrategy.EntryKind.File,
           uri: Uri.joinPath(uri, entry.name),
         });
       }

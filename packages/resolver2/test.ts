@@ -10,7 +10,7 @@ import {
   Graph,
   Resolver,
   Uri,
-} from './src';
+} from './dist';
 import { polly } from './test/lib/wreck';
 
 async function fetchBufferWithWreck(href: string, token: CancellationToken) {

@@ -4,11 +4,7 @@ import { ResolverContext, Visit, VisitKind } from '../../context';
 import { EntryNotFoundError } from '../../error';
 import {
   AbstractResolverStrategyWithRoot,
-  BareModuleResult,
-  CanonicalizeResult,
-  ListEntriesResult,
-  ResolvedEntryKind,
-  ResolveRootResult,
+  ResolverStrategy,
   ResolverStrategyWithRoot,
 } from '../../strategy';
 import { all, checkCancellation, isThenable } from '../../util/async';
@@ -35,7 +31,7 @@ function isValidDirectory(entry: unknown): entry is CdnStrategy.Directory {
   return (
     typeof entry === 'object' &&
     entry &&
-    (entry as any).type === ResolvedEntryKind.Directory &&
+    (entry as any).type === ResolverStrategy.EntryKind.Directory &&
     typeof (entry as any).path === 'string' &&
     (entry as any).path &&
     (typeof (entry as any).files === 'undefined' ||
@@ -47,7 +43,7 @@ function isValidFile(entry: unknown): entry is File {
   return (
     typeof entry === 'object' &&
     entry &&
-    (entry as any).type === ResolvedEntryKind.File &&
+    (entry as any).type === ResolverStrategy.EntryKind.File &&
     typeof (entry as any).path === 'string' &&
     (entry as any).path
   );
@@ -90,20 +86,20 @@ class JSDelivrCdn implements AbstractCdn {
 
       const path = `${parent}/${name}`;
 
-      if ((child as any).type === ResolvedEntryKind.Directory) {
+      if ((child as any).type === ResolverStrategy.EntryKind.Directory) {
         const files = (child as any).files;
 
         if (!Array.isArray(files)) {
           throw new Error(`Unexpected entry in package listing contents`);
         }
         return {
-          type: ResolvedEntryKind.Directory,
+          type: ResolverStrategy.EntryKind.Directory,
           path,
           files: files.map((file) => mapChildEntry(path, file)),
         };
-      } else if ((child as any).type === ResolvedEntryKind.File) {
+      } else if ((child as any).type === ResolverStrategy.EntryKind.File) {
         return {
-          type: ResolvedEntryKind.File,
+          type: ResolverStrategy.EntryKind.File,
           path,
         };
       }
@@ -112,7 +108,7 @@ class JSDelivrCdn implements AbstractCdn {
     };
 
     return {
-      type: ResolvedEntryKind.Directory,
+      type: ResolverStrategy.EntryKind.Directory,
       path: '/',
       files: files.map((file) => mapChildEntry('', file)),
     };
@@ -244,12 +240,12 @@ export namespace CdnStrategy {
   };
 
   export type Directory = {
-    type: ResolvedEntryKind.Directory;
+    type: ResolverStrategy.EntryKind.Directory;
     path: string;
     files?: ReadonlyArray<Entry>;
   };
   export type File = {
-    type: ResolvedEntryKind.File;
+    type: ResolverStrategy.EntryKind.File;
     path: string;
   };
   export type Entry = Directory | File;
@@ -300,14 +296,14 @@ export class CdnStrategy extends AbstractResolverStrategyWithRoot
     name: string,
     spec: string,
     path: string
-  ): Promise<BareModuleResult> {
+  ): Promise<ResolverStrategy.BareModuleResult> {
     const unresolvedUri = this.cdn.urlForPackageFile(`${name}@${spec}`, path);
     const resolveReturn = await ctx.resolve(unresolvedUri);
 
     return resolveReturn;
   }
 
-  getCanonicalUrl(ctx: ResolverContext, uri: Uri): Promise<CanonicalizeResult> {
+  getCanonicalUrl(ctx: ResolverContext, uri: Uri): Promise<ResolverStrategy.CanonicalizeResult> {
     return this._withRootUriCheck(uri, async () => {
       const unresolvedSpec = this.cdn.parseUrl(uri);
       const packageJsonReturn = ctx.runInChildContext(
@@ -330,7 +326,7 @@ export class CdnStrategy extends AbstractResolverStrategyWithRoot
     // const [rootUriResult, resolveRootResult] = isThenable(results) ? await results : results;
   }
 
-  getResolveRoot(ctx: ResolverContext, uri: Uri): Promise<ResolveRootResult> {
+  getResolveRoot(ctx: ResolverContext, uri: Uri): Promise<ResolverStrategy.ResolveRootResult> {
     return this._withRootUriCheck(uri, async () => {
       const unresolvedSpec = this.cdn.parseUrl(uri);
       const packageJsonReturn = this._readPackageJsonWithCache(ctx, unresolvedSpec);
@@ -350,10 +346,10 @@ export class CdnStrategy extends AbstractResolverStrategyWithRoot
     };
   }
 
-  listEntries(ctx: ResolverContext, uri: Uri): Promise<ListEntriesResult> {
+  listEntries(ctx: ResolverContext, uri: Uri): Promise<ResolverStrategy.ListEntriesResult> {
     return this._withRootUriCheck(
       uri,
-      async (): Promise<ListEntriesResult> => {
+      async (): Promise<ResolverStrategy.ListEntriesResult> => {
         const unresolvedSpec = this.cdn.parseUrl(uri);
         const results = all(
           [
@@ -384,12 +380,13 @@ export class CdnStrategy extends AbstractResolverStrategyWithRoot
         while (parentEntry && traversalSegments.length) {
           const segment = traversalSegments.shift() as string;
 
-          if (parentEntry.type !== ResolvedEntryKind.Directory || !parentEntry.files) {
+          if (parentEntry.type !== ResolverStrategy.EntryKind.Directory || !parentEntry.files) {
             throw new EntryNotFoundError(uri);
           }
 
           parentEntry = parentEntry.files.find(
-            (file) => file.type === ResolvedEntryKind.Directory && basename(file.path) === segment
+            (file) =>
+              file.type === ResolverStrategy.EntryKind.Directory && basename(file.path) === segment
           ) as CdnStrategy.Directory | undefined;
         }
 

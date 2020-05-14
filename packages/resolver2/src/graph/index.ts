@@ -1,4 +1,4 @@
-export * from './graph';
+export type { Graph } from './graph';
 export * from './graphBuilder';
-export * from './sourceModule';
-export * from './sourceModuleDependency';
+export type { SourceModule } from './sourceModule';
+export type { SourceModuleDependency } from './sourceModuleDependency';

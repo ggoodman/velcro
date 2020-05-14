@@ -1,9 +1,8 @@
 import { basename, CancellationToken, CancellationTokenSource, Thenable } from 'ts-primitives';
 import { Decoder } from './decoder';
 import { CanceledError, EntryNotFoundError } from './error';
-import { Resolver } from './resolver';
-import { Settings } from './settings';
-import { ResolvedEntry, ResolvedEntryKind, ResolverStrategy } from './strategy';
+import type { Resolver } from './resolver';
+import { ResolverStrategy } from './strategy';
 import { all, Awaited, checkCancellation, isThenable } from './util/async';
 import { PackageJson, parseBufferAsPackageJson } from './util/packageJson';
 import { Uri } from './util/uri';
@@ -106,7 +105,7 @@ interface ResolverContextOptions {
   decoder: Decoder;
   path: string[];
   resolver: Resolver;
-  settings: Settings;
+  settings: Resolver.Settings;
   strategy: ResolverStrategy;
   token: CancellationToken;
   visits: Visits;
@@ -116,7 +115,7 @@ export class ResolverContext {
   static create(
     resolver: Resolver,
     strategy: ResolverStrategy,
-    settings: Settings,
+    settings: Resolver.Settings,
     token: CancellationToken
   ) {
     return new ResolverContext({
@@ -517,7 +516,7 @@ async function resolveAsDirectory(
   ctx: ResolverContext,
   uri: Uri,
   rootUri: Uri,
-  settings: Settings
+  settings: Resolver.Settings
 ): Promise<ResolveResult> {
   ctx.recordVisit(uri, VisitKind.Directory);
 
@@ -534,7 +533,8 @@ async function resolveAsDirectory(
   ctx.recordVisit(packageJsonUri, VisitKind.File);
 
   const packageJsonEntry = listEntriesResult.entries.find(
-    (entry) => entry.type === ResolvedEntryKind.File && Uri.equals(packageJsonUri, entry.uri)
+    (entry) =>
+      entry.type === ResolverStrategy.EntryKind.File && Uri.equals(packageJsonUri, entry.uri)
   );
 
   let packageJson: PackageJson | null = null;
@@ -571,7 +571,7 @@ async function resolveAsFile(
   ctx: ResolverContext,
   uri: Uri,
   rootUri: Uri,
-  settings: Settings,
+  settings: Resolver.Settings,
   packageJson: PackageJson | null,
   ignoreBrowserOverrides = false
 ): Promise<ResolveResult> {
@@ -642,11 +642,11 @@ async function resolveAsFile(
   const entriesResult = isThenable(entriesReturn)
     ? await checkCancellation(entriesReturn, ctx.token)
     : entriesReturn;
-  const entryDirectoryMap = new Map<string, ResolvedEntry>();
-  const entryFileMap = new Map<string, ResolvedEntry<ResolvedEntryKind.File>>();
+  const entryDirectoryMap = new Map<string, ResolverStrategy.Entry>();
+  const entryFileMap = new Map<string, ResolverStrategy.Entry<ResolverStrategy.EntryKind.File>>();
 
   for (const entry of entriesResult.entries) {
-    if (Uri.equals(entry.uri, uri) && entry.type == ResolvedEntryKind.File) {
+    if (Uri.equals(entry.uri, uri) && entry.type == ResolverStrategy.EntryKind.File) {
       // Found an exact match
       return {
         found: true,
@@ -655,14 +655,17 @@ async function resolveAsFile(
       };
     }
 
-    if (entry.type === ResolvedEntryKind.Directory) {
+    if (entry.type === ResolverStrategy.EntryKind.Directory) {
       const childFilename = Uri.getFirstPathSegmentAfterPrefix(entry.uri, containingDirUri);
 
       entryDirectoryMap.set(childFilename, entry);
-    } else if (entry.type === ResolvedEntryKind.File) {
+    } else if (entry.type === ResolverStrategy.EntryKind.File) {
       const childFilename = basename(entry.uri.path);
 
-      entryFileMap.set(childFilename, entry as ResolvedEntry<ResolvedEntryKind.File>);
+      entryFileMap.set(
+        childFilename,
+        entry as ResolverStrategy.Entry<ResolverStrategy.EntryKind.File>
+      );
     }
   }
 
@@ -691,7 +694,7 @@ async function resolveAsFile(
 
     const match = entryFileMap.get(`${filename}${ext}`);
     if (match) {
-      if (match.type !== ResolvedEntryKind.File) {
+      if (match.type !== ResolverStrategy.EntryKind.File) {
         continue;
       }
 
@@ -706,7 +709,7 @@ async function resolveAsFile(
   // First, attempt to find a matching file or directory
   const match = entryDirectoryMap.get(filename);
   if (match) {
-    if (match.type !== ResolvedEntryKind.Directory) {
+    if (match.type !== ResolverStrategy.EntryKind.Directory) {
       throw new Error(`Invariant violation ${match.type} is unexpected`);
     }
 
@@ -786,7 +789,8 @@ async function readParentPackageJsonInternal(
       : entriesReturn;
     const packageJsonUri = Uri.joinPath(dir, 'package.json');
     const packageJsonEntry = entriesResult.entries.find(
-      (entry) => entry.type === ResolvedEntryKind.File && Uri.equals(entry.uri, packageJsonUri)
+      (entry) =>
+        entry.type === ResolverStrategy.EntryKind.File && Uri.equals(entry.uri, packageJsonUri)
     );
 
     ctx.recordVisit(packageJsonUri, VisitKind.File);
