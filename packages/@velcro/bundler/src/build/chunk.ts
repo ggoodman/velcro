@@ -1,9 +1,9 @@
-import { Bundle } from 'magic-string';
+import { MapSet, Uri } from '@velcro/common';
+import * as MagicString from 'magic-string';
 import { DependencyEdge } from '../graph/dependencyEdge';
 import { SourceModule } from '../graph/sourceModule';
 import { createRuntime } from '../runtime/runtime';
 import { VelcroImportMap, VelcroStaticRuntime } from '../runtime/types';
-import { MapSet, Uri } from '@velcro/common';
 import { ChunkOutput } from './chunkOutput';
 
 type NotUndefined<T> = T extends undefined ? never : T;
@@ -68,7 +68,7 @@ export class Chunk {
     //   .toString()
     //   .split(velcroChunkWrapper.splitString);
 
-    const bundle = new Bundle({
+    const bundle = new MagicString.Bundle({
       separator: '\n',
     });
 

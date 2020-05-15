@@ -2,18 +2,16 @@ import {
   all,
   Awaited,
   CanceledError,
-  CancellationToken,
-  CancellationTokenSource,
   checkCancellation,
   Decoder,
   EntryNotFoundError,
   isThenable,
-  Thenable,
   PackageJson,
   parseBufferAsPackageJson,
+  Thenable,
   Uri,
 } from '@velcro/common';
-import { basename } from 'ts-primitives';
+import { basename, CancellationToken, CancellationTokenSource } from 'ts-primitives';
 import type { Resolver } from './resolver';
 import { ResolverStrategy } from './strategy';
 

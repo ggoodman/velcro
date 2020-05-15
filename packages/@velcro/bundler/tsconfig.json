@@ -5,6 +5,6 @@
     "lib": ["es2018", "dom"],
     "outDir": "./dist"
   },
-  "include": ["package.json", "src"],
-  "references": [{ "path": "../common" }, { "path": "../resolver" }, { "path": "../../node-libs" }]
+  // "include": ["package.json", "src"],
+  "references": [{ "path": "../common" }, { "path": "../resolver" }, { "path": "../node-libs" }]
 }

@@ -4,7 +4,6 @@ import {
   ResolverContext,
   ResolverStrategy,
 } from '@velcro/resolver';
-import { join } from 'ts-primitives';
 
 interface DirectoryEntry {
   type: ResolverStrategy.EntryKind.Directory;
@@ -144,7 +143,7 @@ export class MemoryStrategy extends AbstractResolverStrategyWithRoot {
       const entry = parent.children[filename];
 
       return {
-        uri: Uri.file(join(fsPathname, filename)),
+        uri: Uri.joinPath(this.rootUri, fsPathname, filename),
         type: entry.type,
       };
     });
@@ -191,5 +190,9 @@ export class MemoryStrategy extends AbstractResolverStrategyWithRoot {
       default:
         throw new Error(`Unsupported encoding for ${uri.toString()}: ${entry.encoding}`);
     }
+  }
+
+  uriForPath(pathname: string) {
+    return Uri.joinPath(this.rootUri, pathname);
   }
 }

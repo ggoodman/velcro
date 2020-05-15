@@ -4,6 +4,6 @@
     "composite": true,
     "lib": ["es2018", "dom"],
     "outDir": "./dist"
-  },
-  "include": ["package.json", "src"]
+  }
+  // "include": ["package.json", "src"]
 }

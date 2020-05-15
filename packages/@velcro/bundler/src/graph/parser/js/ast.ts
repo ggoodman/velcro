@@ -1,4 +1,4 @@
-import { parse as acornParse } from 'acorn';
+import * as Acorn from 'acorn';
 import {
   ArrayPattern,
   ArrowFunctionExpression,
@@ -125,7 +125,7 @@ export function isStringLiteral(node: Node): node is StringLiteral {
 }
 
 export function parse(code: string, options?: acorn.Options) {
-  return (acornParse(code, {
+  return (Acorn.parse(code, {
     ...options,
     allowReturnOutsideFunction: true,
     sourceType: 'script',

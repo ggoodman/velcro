@@ -1,6 +1,6 @@
+import type { Thenable, Uri } from '@velcro/common';
 import type { ResolverContext } from './context';
 import type { Resolver } from './resolver';
-import type { Uri, Thenable } from '@velcro/common';
 
 type MaybeThenable<T> = T | Thenable<T>;
 

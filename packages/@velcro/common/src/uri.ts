@@ -49,6 +49,10 @@ export class Uri extends URI {
     return new Uri(super.from(...args));
   }
 
+  static joinPath(...args: Parameters<typeof URI['joinPath']>) {
+    return new Uri(super.joinPath(...args));
+  }
+
   static isPrefixOf(prefix: Uri, uri: Uri) {
     return (
       prefix.authority === uri.authority &&

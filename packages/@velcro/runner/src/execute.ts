@@ -1,5 +1,4 @@
 import { buildGraph, BuildGraphOptions, VelcroRuntime } from '@velcro/bundler';
-import { Uri } from '@velcro/common';
 import { Resolver } from '@velcro/resolver';
 import { CdnStrategy } from '@velcro/strategy-cdn';
 import { CompoundStrategy } from '@velcro/strategy-compound';
@@ -22,19 +21,20 @@ export interface ExecuteOptions {
 }
 
 export async function execute(code: string, options: ExecuteOptions) {
-  const entrypointUri = Uri.file('index.js');
+  const entrypointPath = 'index.js';
   const cdnStrategy =
     options.cdn === 'unpkg'
       ? CdnStrategy.forUnpkg(options.readUrl)
       : CdnStrategy.forJsDelivr(options.readUrl);
   const memoryStrategy = new MemoryStrategy({
-    [entrypointUri.fsPath]: code,
-    [Uri.file('package.json').fsPath]: JSON.stringify({
+    [entrypointPath]: code,
+    ['package.json']: JSON.stringify({
       name: '@@velcro/execute',
       version: '0.0.0',
       dependencies: options.dependencies,
     }),
   });
+  const entrypointUri = memoryStrategy.uriForPath(entrypointPath);
   const compoundStrategy = new CompoundStrategy({ strategies: [cdnStrategy, memoryStrategy] });
   const resolver = new Resolver(compoundStrategy, {
     extensions: options.extensions || defaultExtensions,
@@ -64,5 +64,7 @@ export async function execute(code: string, options: ExecuteOptions) {
     }
   }
 
-  return velcro.require(entrypointUri.toString());
+  const result = velcro.require(entrypointUri.toString());
+
+  return result;
 }

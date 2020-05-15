@@ -1,3 +1,4 @@
+const RollupPluginAlias = require('@rollup/plugin-alias');
 const RollupPluginCommonJs = require('@rollup/plugin-commonjs');
 const RollupPluginJson = require('@rollup/plugin-json');
 const RollupPluginNodeResolve = require('@rollup/plugin-node-resolve');
@@ -28,9 +29,21 @@ function rollupConfigFactory(dirname, filename) {
   const relativeRequire = createRequire(resolve(dirname, filename));
   const PackageJson = relativeRequire('./package.json');
 
+  const velcroTypescriptModules = [
+    'bundler',
+    'common',
+    'resolver',
+    'runner',
+    'strategy-cdn',
+    'strategy-compound',
+    'strategy-fs',
+    'strategy-memory',
+  ];
+
   const typescriptPlugin = RollupPluginTs({
-    cwd: dirname,
-    exclude: ['**/node_modules/**/*'],
+    cwd: resolve(dirname, '../'),
+    tsconfig: resolve(dirname, './tsconfig.json'),
+    exclude: ['**/node_modules/**/*', '**/dist-module/**/*'],
   });
 
   return [
@@ -84,11 +97,15 @@ function rollupConfigFactory(dirname, filename) {
         sourcemap: true,
       },
       plugins: [
+        RollupPluginAlias({
+          entries: velcroTypescriptModules.map((name) => ({
+            find: `@velcro/${name}`,
+            replacement: resolve(__dirname, `./packages/@velcro/${name}/src/index.ts`),
+          })),
+        }),
         RollupPluginJson(),
         RollupPluginNodeResolve({
-          browser: true,
-          // mainFields: ['browser', 'main'],
-          // preferBuiltins: true,
+          mainFields: ['module', 'main'],
         }),
         RollupPluginCommonJs(),
         typescriptPlugin,

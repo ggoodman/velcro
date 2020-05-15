@@ -10,7 +10,7 @@ declare const Buffer: {
 export namespace Base64 {
   export const decode =
     typeof atob === 'function'
-      ? atob
+      ? (data: string) => atob(data)
       : typeof Buffer !== 'undefined'
       ? (data: string) => Buffer.from(data, 'base64').toString('utf-8')
       : () => {
@@ -21,7 +21,7 @@ export namespace Base64 {
 
   export const encode =
     typeof btoa === 'function'
-      ? btoa
+      ? (data: string) => btoa(data)
       : typeof Buffer !== 'undefined'
       ? (data: string) => Buffer.from(data).toString('base64')
       : () => {

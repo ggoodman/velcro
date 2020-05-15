@@ -1,6 +1,5 @@
 import {
   all,
-  CancellationToken,
   checkCancellation,
   EntryNotFoundError,
   isThenable,
@@ -16,7 +15,7 @@ import {
   ResolverStrategyWithRoot,
 } from '@velcro/resolver';
 import { satisfies, validRange } from 'semver';
-import { basename } from 'ts-primitives';
+import { basename, CancellationToken } from 'ts-primitives';
 
 interface AbstractCdn {
   name: string;

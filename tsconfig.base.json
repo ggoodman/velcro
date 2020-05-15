@@ -22,5 +22,17 @@
     "strict": true,
     "stripInternal": true,
     "target": "ESNext"
-  }
+  },
+  "files": [],
+  "references": [
+    { "path": "./packages/@velcro/bundler" },
+    { "path": "./packages/@velcro/common" },
+    { "path": "./packages/@velcro/node-libs" },
+    { "path": "./packages/@velcro/resolver" },
+    { "path": "./packages/@velcro/runner" },
+    { "path": "./packages/@velcro/strategy-cdn" },
+    { "path": "./packages/@velcro/strategy-compound" },
+    { "path": "./packages/@velcro/strategy-fs" },
+    { "path": "./packages/@velcro/strategy-memory" }
+  ]
 }
