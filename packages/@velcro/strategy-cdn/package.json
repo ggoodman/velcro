@@ -1,6 +1,6 @@
 {
   "name": "@velcro/strategy-cdn",
-  "version": "0.29.3",
+  "version": "0.29.4",
   "description": "Velcro resolver strategy for resolving modules from a cdn such as Unpkg or JsDelivr",
   "keywords": [
     "velcro",
@@ -55,8 +55,8 @@
   },
   "dependencies": {
     "@rollup/plugin-node-resolve": "^7.1.3",
-    "@velcro/common": "^0.29.3",
-    "@velcro/resolver": "^0.29.3",
+    "@velcro/common": "^0.29.4",
+    "@velcro/resolver": "^0.29.4",
     "semver": "^7.3.2",
     "ts-primitives": "^2.4.0"
   },
