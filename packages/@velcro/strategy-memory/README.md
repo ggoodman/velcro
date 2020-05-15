@@ -5,4 +5,4 @@
 
 Velcro strategy for resolving files from an in-memory object.
 
-[API Docs](https://github.com/ggoodman/velcro/tree/0.29.4/docs/strategy-memory.md)
+[API Docs](https://github.com/ggoodman/velcro/tree/0.29.5/docs/strategy-memory.md)

@@ -5,4 +5,4 @@
 
 Build a module graph of modules and serialize these to different formats.
 
-[API Docs](https://github.com/ggoodman/velcro/tree/0.29.4/docs/bundler.md)
+[API Docs](https://github.com/ggoodman/velcro/tree/0.29.5/docs/bundler.md)
