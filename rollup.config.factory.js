@@ -1,4 +1,3 @@
-const RollupPluginAlias = require('@rollup/plugin-alias');
 const RollupPluginCommonJs = require('@rollup/plugin-commonjs');
 const RollupPluginJson = require('@rollup/plugin-json');
 const RollupPluginNodeResolve = require('@rollup/plugin-node-resolve');
@@ -41,34 +40,64 @@ function rollupConfigFactory(dirname, filename) {
   //   'strategy-memory',
   // ];
 
-  const typescriptPlugin = RollupPluginTs({
-    cwd: dirname,
-    tsconfig: resolve(dirname, './tsconfig.json'),
-    exclude: ['**/node_modules/**/*', '**/dist-module/**/*'],
-  });
+  const createTypescriptPlugin = (emitDeclarations = false) =>
+    RollupPluginTs({
+      cwd: dirname,
+      tsconfig: {
+        fileName: resolve(dirname, './tsconfig.json'),
+        hook: (config) => ({
+          ...config,
+          declaration: emitDeclarations,
+          declarationMap: emitDeclarations,
+        }),
+      },
+      transpileOnly: !emitDeclarations,
+      exclude: ['node_modules/**', '**/*.mjs'],
+    });
 
   return [
     {
       input: resolve(dirname, './src/index.ts'),
-      output: [
-        {
-          file: resolve(dirname, PackageJson.main),
-          format: 'commonjs',
-          sourcemap: true,
-        },
-        {
-          file: resolve(dirname, PackageJson.module),
-          format: 'esm',
-          sourcemap: true,
-        },
-      ],
+      output: {
+        file: resolve(dirname, PackageJson.main),
+        format: 'commonjs',
+        sourcemap: true,
+      },
       external(id) {
         return PackageJson.dependencies && Object.hasOwnProperty.call(PackageJson.dependencies, id);
+      },
+      onwarn: (msg, warn) => {
+        if (!/Circular/.test(msg)) {
+          warn(msg);
+        }
       },
       plugins: [
         RollupPluginJson(),
         RollupPluginNodeResolve(),
-        typescriptPlugin,
+        createTypescriptPlugin(true),
+        RollupPluginInjectProcessEnv({ NODE_ENV: 'production' }),
+      ],
+    },
+    {
+      input: resolve(dirname, './src/index.ts'),
+      output: {
+        file: resolve(dirname, PackageJson.module),
+        format: 'esm',
+        sourcemap: true,
+      },
+
+      external(id) {
+        return PackageJson.dependencies && Object.hasOwnProperty.call(PackageJson.dependencies, id);
+      },
+      onwarn: (msg, warn) => {
+        if (!/Circular/.test(msg)) {
+          warn(msg);
+        }
+      },
+      plugins: [
+        RollupPluginJson(),
+        RollupPluginNodeResolve(),
+        createTypescriptPlugin(),
         RollupPluginInjectProcessEnv({ NODE_ENV: 'production' }),
       ],
     },
@@ -82,10 +111,15 @@ function rollupConfigFactory(dirname, filename) {
       external(id) {
         return PackageJson.dependencies && Object.hasOwnProperty.call(PackageJson.dependencies, id);
       },
+      onwarn: (msg, warn) => {
+        if (!/Circular/.test(msg)) {
+          warn(msg);
+        }
+      },
       plugins: [
         RollupPluginJson(),
         RollupPluginNodeResolve({ browser: true, mainFields: ['browser', 'module', 'main'] }),
-        typescriptPlugin,
+        createTypescriptPlugin(),
         RollupPluginInjectProcessEnv({ NODE_ENV: 'production' }),
       ],
     },
@@ -97,31 +131,22 @@ function rollupConfigFactory(dirname, filename) {
         name: PackageJson.name.replace(/^@velcro\/(.*)$/, (_match, name) => toUmdName(name)),
         sourcemap: true,
       },
+      onwarn: (msg, warn) => {
+        if (!/Circular/.test(msg)) {
+          warn(msg);
+        }
+      },
       plugins: [
-        // RollupPluginAlias({
-        //   entries: {
-        //     acorn: resolve(__dirname, 'packages/@velcro/bundler/node_modules/acorn/dist/acorn.js'),
-        //     '@ampproject/remapping': resolve(__dirname, 'packages/@velcro/bundler/node_modules/@ampproject/dist/acorn.js'),
-        //   },
-        // }),
         RollupPluginJson(),
         RollupPluginNodeResolve({
           mainFields: ['module', 'main'],
-          // customResolveOptions: {
-          //   packageFilter(pkg) {
-          //     if (pkg.name === 'acorn') {
-          //       delete pkg.module;
-          //     }
-
-          //     return pkg;
-          //   },
-          // },
         }),
         RollupPluginCommonJs(),
-        RollupPluginSucrase({
-          exclude: ['node_modules/**'],
-          transforms: ['typescript'],
-        }),
+        dirname.endsWith('runner')
+          ? RollupPluginSucrase({
+              transforms: ['typescript'],
+            })
+          : createTypescriptPlugin(),
         RollupPluginInjectProcessEnv({ NODE_ENV: 'production' }),
         terser({
           mangle: {
