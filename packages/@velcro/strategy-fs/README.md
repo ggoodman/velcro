@@ -4,3 +4,5 @@
 ![NPM](https://img.shields.io/npm/l/@velcro/strategy-fs?style=flat-square)
 
 Velcro resolver strategy backed by an fs-compatible object
+
+[API Docs](https://github.com/ggoodman/velcro/tree/0.29.0/docs/strategy-fs.md)

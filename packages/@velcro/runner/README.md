@@ -4,3 +4,5 @@
 ![NPM](https://img.shields.io/npm/l/@velcro/runner?style=flat-square)
 
 Opinionated tool for easily bundling and running code from anywhere
+
+[API Docs](https://github.com/ggoodman/velcro/tree/0.29.0/docs/runner.md)

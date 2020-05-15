@@ -1,6 +1,7 @@
 const RollupPluginCommonJs = require('@rollup/plugin-commonjs');
 const RollupPluginJson = require('@rollup/plugin-json');
 const RollupPluginNodeResolve = require('@rollup/plugin-node-resolve');
+const RollupPluginReplace = require('@rollup/plugin-replace');
 const RollupPluginSucrase = require('@rollup/plugin-sucrase');
 const RollupPluginTs = require('@wessberg/rollup-plugin-ts');
 const { createRequire } = require('module');
@@ -74,6 +75,7 @@ function rollupConfigFactory(dirname, filename) {
       plugins: [
         RollupPluginJson(),
         RollupPluginNodeResolve(),
+        RollupPluginReplace({ __VERSION__: PackageJson.version }),
         createTypescriptPlugin(true),
         RollupPluginInjectProcessEnv({ NODE_ENV: 'production' }),
       ],
@@ -97,6 +99,7 @@ function rollupConfigFactory(dirname, filename) {
       plugins: [
         RollupPluginJson(),
         RollupPluginNodeResolve(),
+        RollupPluginReplace({ __VERSION__: PackageJson.version }),
         createTypescriptPlugin(),
         RollupPluginInjectProcessEnv({ NODE_ENV: 'production' }),
       ],
@@ -119,6 +122,7 @@ function rollupConfigFactory(dirname, filename) {
       plugins: [
         RollupPluginJson(),
         RollupPluginNodeResolve({ browser: true, mainFields: ['browser', 'module', 'main'] }),
+        RollupPluginReplace({ __VERSION__: PackageJson.version }),
         createTypescriptPlugin(),
         RollupPluginInjectProcessEnv({ NODE_ENV: 'production' }),
       ],
@@ -142,6 +146,7 @@ function rollupConfigFactory(dirname, filename) {
           mainFields: ['module', 'main'],
         }),
         RollupPluginCommonJs(),
+        RollupPluginReplace({ __VERSION__: PackageJson.version }),
         dirname.endsWith('runner')
           ? RollupPluginSucrase({
               transforms: ['typescript'],

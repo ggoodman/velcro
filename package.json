@@ -5,9 +5,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "rollup -c",
+    "build": "rm -rf ./packages/@velcro/*/dist && lerna run build",
+    "build:api": "lerna run build:api",
+    "build:docs": "npx api-documenter markdown -i ./api/** -o docs",
     "predeploy": "cd packages/playground && npm run build",
     "deploy": "gh-pages -d packages/playground/build",
+    "postpublish": "lerna run build:api && lerna run build:readme && npm run build:docs",
     "start": "cd packages/playground && npm run start",
     "test": "lerna run test"
   },
@@ -19,6 +22,8 @@
   "author": "Geoff Goodman <geoff@goodman.dev> (https://geoff.goodman.dev)",
   "license": "MIT",
   "devDependencies": {
+    "@microsoft/api-documenter": "^7.8.1",
+    "@microsoft/api-extractor": "^7.8.1",
     "@rollup/plugin-alias": "^3.1.0",
     "@rollup/plugin-commonjs": "^11.1.0",
     "@rollup/plugin-json": "^4.0.3",

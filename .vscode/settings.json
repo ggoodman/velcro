@@ -21,5 +21,6 @@
       "source.organizeImports": true
     },
     "editor.formatOnSave": true
-  }
+  },
+  "files.associations": { "*.json": "jsonc" }
 }
