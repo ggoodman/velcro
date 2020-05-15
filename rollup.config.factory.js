@@ -1,6 +1,8 @@
+const RollupPluginAlias = require('@rollup/plugin-alias');
 const RollupPluginCommonJs = require('@rollup/plugin-commonjs');
 const RollupPluginJson = require('@rollup/plugin-json');
 const RollupPluginNodeResolve = require('@rollup/plugin-node-resolve');
+const RollupPluginSucrase = require('@rollup/plugin-sucrase');
 const RollupPluginTs = require('@wessberg/rollup-plugin-ts');
 const { createRequire } = require('module');
 const { resolve } = require('path');
@@ -40,7 +42,7 @@ function rollupConfigFactory(dirname, filename) {
   // ];
 
   const typescriptPlugin = RollupPluginTs({
-    cwd: __dirname,
+    cwd: dirname,
     tsconfig: resolve(dirname, './tsconfig.json'),
     exclude: ['**/node_modules/**/*', '**/dist-module/**/*'],
   });
@@ -97,17 +99,29 @@ function rollupConfigFactory(dirname, filename) {
       },
       plugins: [
         // RollupPluginAlias({
-        //   entries: velcroTypescriptModules.map((name) => ({
-        //     find: `@velcro/${name}`,
-        //     replacement: resolve(__dirname, `./packages/@velcro/${name}/src/index.ts`),
-        //   })),
+        //   entries: {
+        //     acorn: resolve(__dirname, 'packages/@velcro/bundler/node_modules/acorn/dist/acorn.js'),
+        //     '@ampproject/remapping': resolve(__dirname, 'packages/@velcro/bundler/node_modules/@ampproject/dist/acorn.js'),
+        //   },
         // }),
         RollupPluginJson(),
         RollupPluginNodeResolve({
           mainFields: ['module', 'main'],
+          // customResolveOptions: {
+          //   packageFilter(pkg) {
+          //     if (pkg.name === 'acorn') {
+          //       delete pkg.module;
+          //     }
+
+          //     return pkg;
+          //   },
+          // },
         }),
         RollupPluginCommonJs(),
-        typescriptPlugin,
+        RollupPluginSucrase({
+          exclude: ['node_modules/**'],
+          transforms: ['typescript'],
+        }),
         RollupPluginInjectProcessEnv({ NODE_ENV: 'production' }),
         terser({
           mangle: {

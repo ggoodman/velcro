@@ -9,7 +9,7 @@
     "esModuleInterop": true,
     "incremental": true,
     "lib": ["es2018"],
-    "module": "commonjs",
+    "module": "esnext",
     "moduleResolution": "node",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
