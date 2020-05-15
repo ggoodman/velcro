@@ -1,0 +1,47 @@
+{
+  "name": "@velcro/common",
+  "version": "0.27.0",
+  "description": "Common utilities and types shared by the velcro ecosystem",
+  "keywords": [
+    "velcro"
+  ],
+  "author": "Geoff Goodman <ggoodman@gmail.com>",
+  "homepage": "https://github.com/ggoodman/velcro",
+  "license": "MIT",
+  "browser": "./dist/dist-browser/index.js",
+  "main": "./dist/dist-main/index.js",
+  "module": "./dist/dist-module/index.mjs",
+  "unpkg": "./dist/dist-unpkg/index.min.js",
+  "types": "./dist/dist-main/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:ggoodman/velcro.git"
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "prepack": "npm run build"
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^11.1.0",
+    "@rollup/plugin-json": "^4.0.3",
+    "@rollup/plugin-node-resolve": "^7.1.3",
+    "@wessberg/rollup-plugin-ts": "^1.2.24",
+    "rollup": "^2.10.0",
+    "rollup-plugin-inject-process-env": "^1.2.0",
+    "rollup-plugin-terser": "^5.3.0",
+    "typescript": "^3.9.2"
+  },
+  "prettier": {
+    "printWidth": 100,
+    "singleQuote": true
+  },
+  "dependencies": {
+    "ts-primitives": "^2.4.0"
+  }
+}
