@@ -9,8 +9,8 @@
     "build:api": "lerna run build:api",
     "build:docs": "npx api-documenter markdown -i ./api/** -o docs",
     "predeploy": "cd packages/playground && npm run build",
+    "postversion": "lerna run build:api && lerna run build:readme && npm run build:docs",
     "deploy": "gh-pages -d packages/playground/build",
-    "postpublish": "lerna run build:api && lerna run build:readme && npm run build:docs",
     "start": "cd packages/playground && npm run start",
     "test": "lerna run test"
   },

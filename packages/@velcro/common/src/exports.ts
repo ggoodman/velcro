@@ -1,4 +1,4 @@
-export { version } from '../package.json';
+export const version = '__VERSION__';
 export * from './async';
 export * from './base64';
 export * from './decoder';

@@ -1,3 +1,3 @@
-export { version } from '../package.json';
+export const version = '__VERSION__';
 
 export * from './compoundStrategy';
