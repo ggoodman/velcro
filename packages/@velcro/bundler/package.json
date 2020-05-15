@@ -16,7 +16,7 @@
   "license": "MIT",
   "browser": "./dist/dist-browser/index.js",
   "main": "./dist/dist-main/index.js",
-  "module": "./dist/dist-module/index.mjs",
+  "module": "./dist/dist-module/index.js",
   "unpkg": "./dist/dist-unpkg/index.min.js",
   "types": "./dist/dist-main/index.d.ts",
   "files": [
@@ -60,5 +60,6 @@
     "acorn": "^7.2.0",
     "magic-string": "^0.25.7",
     "ts-primitives": "^2.4.0"
-  }
+  },
+  "gitHead": "4a44dfc05c89d85f127e1eb9d34ff6690e285bb2"
 }

@@ -16,7 +16,7 @@
   "license": "MIT",
   "browser": "./dist/dist-browser/index.js",
   "main": "./dist/dist-main/index.js",
-  "module": "./dist/dist-module/index.mjs",
+  "module": "./dist/dist-module/index.js",
   "unpkg": "./dist/dist-unpkg/index.min.js",
   "types": "./dist/dist-main/index.d.ts",
   "files": [
@@ -57,5 +57,6 @@
     "@velcro/strategy-cdn": "^0.28.0",
     "@velcro/strategy-compound": "^0.28.0",
     "@velcro/strategy-memory": "^0.28.0"
-  }
+  },
+  "gitHead": "4a44dfc05c89d85f127e1eb9d34ff6690e285bb2"
 }
