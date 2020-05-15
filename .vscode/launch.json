@@ -7,12 +7,34 @@
     {
       "type": "node",
       "request": "launch",
+      "name": "Debug resolver2",
+      "cwd": "${workspaceRoot}/packages/resolver2",
+      "program": "${workspaceRoot}/packages/resolver2/node_modules/.bin/lab",
+      "args": [
+        "-fSv",
+        "--transform",
+        "./test/lib/typescript.js"
+      ],
+      "outputCapture": "std",
+      "skipFiles": [
+        "<node_internals>/**/*.js"
+      ]
+    },
+    {
+      "type": "node",
+      "request": "launch",
       "name": "[runtime] Run tests",
       "cwd": "${workspaceRoot}/packages/runtime",
       "program": "${workspaceRoot}/packages/runtime/node_modules/.bin/lab",
-      "args": ["-fSv", "--transform", "./test/lib/typescript.js"],
+      "args": [
+        "-fSv",
+        "--transform",
+        "./test/lib/typescript.js"
+      ],
       "outputCapture": "std",
-      "skipFiles": ["<node_internals>/**/*.js"]
+      "skipFiles": [
+        "<node_internals>/**/*.js"
+      ]
       // "sourceMaps": true
     }
   ]
