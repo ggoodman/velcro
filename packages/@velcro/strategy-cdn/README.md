@@ -5,4 +5,4 @@
 
 Velcro resolver strategy for resolving modules from a cdn such as Unpkg or JsDelivr.
 
-[API Docs](https://github.com/ggoodman/velcro/tree/0.29.0/docs/strategy-cdn.md)
+[API Docs](https://github.com/ggoodman/velcro/tree/0.29.4/docs/strategy-cdn.md)

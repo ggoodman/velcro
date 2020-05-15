@@ -1,0 +1,659 @@
+{
+  "metadata": {
+    "toolPackage": "@microsoft/api-extractor",
+    "toolVersion": "7.8.1",
+    "schemaVersion": 1003,
+    "oldestForwardsCompatibleVersion": 1001
+  },
+  "kind": "Package",
+  "canonicalReference": "@velcro/strategy-fs!",
+  "docComment": "",
+  "name": "@velcro/strategy-fs",
+  "members": [
+    {
+      "kind": "EntryPoint",
+      "canonicalReference": "@velcro/strategy-fs!",
+      "name": "",
+      "members": [
+        {
+          "kind": "Class",
+          "canonicalReference": "@velcro/strategy-fs!FsStrategy:class",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "declare class FsStrategy extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "AbstractResolverStrategyWithRoot",
+              "canonicalReference": "@velcro/resolver!~AbstractResolverStrategyWithRoot:class"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "FsStrategy",
+          "members": [
+            {
+              "kind": "Constructor",
+              "canonicalReference": "@velcro/strategy-fs!FsStrategy:constructor(1)",
+              "docComment": "/**\n * Constructs a new instance of the `FsStrategy` class\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "constructor(options: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "FsStrategy.Options",
+                  "canonicalReference": "@velcro/strategy-fs!~FsStrategy.Options:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ");"
+                }
+              ],
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "options",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/strategy-fs!FsStrategy#getCanonicalUrl:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getCanonicalUrl(_ctx: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ResolverContext",
+                  "canonicalReference": "@velcro/resolver!~ResolverContext:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", uri: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/common!~Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ResolverStrategy.CanonicalizeResult",
+                  "canonicalReference": "@velcro/resolver!~ResolverStrategy.CanonicalizeResult:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 9
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "_ctx",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "parameterName": "uri",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  }
+                }
+              ],
+              "name": "getCanonicalUrl"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/strategy-fs!FsStrategy#getResolveRoot:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getResolveRoot(_ctx: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ResolverContext",
+                  "canonicalReference": "@velcro/resolver!~ResolverContext:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", uri: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/common!~Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<never> | {\n        uri: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/common!~Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 9
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "_ctx",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "parameterName": "uri",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  }
+                }
+              ],
+              "name": "getResolveRoot"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/strategy-fs!FsStrategy#getRootUrl:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getRootUrl(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        uri: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/common!~Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "getRootUrl"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/strategy-fs!FsStrategy#listEntries:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "listEntries(_ctx: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ResolverContext",
+                  "canonicalReference": "@velcro/resolver!~ResolverContext:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", uri: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/common!~Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ResolverStrategy.ListEntriesResult",
+                  "canonicalReference": "@velcro/resolver!~ResolverStrategy.ListEntriesResult:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 9
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "_ctx",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "parameterName": "uri",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  }
+                }
+              ],
+              "name": "listEntries"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/strategy-fs!FsStrategy#readFileContent:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readFileContent(_ctx: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ResolverContext",
+                  "canonicalReference": "@velcro/resolver!~ResolverContext:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", uri: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/common!~Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<{\n        content: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ArrayBuffer",
+                  "canonicalReference": "!ArrayBuffer:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n    }>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 9
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "_ctx",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "parameterName": "uri",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  }
+                }
+              ],
+              "name": "readFileContent"
+            }
+          ],
+          "extendsTokenRange": {
+            "startIndex": 1,
+            "endIndex": 3
+          },
+          "implementsTokenRanges": []
+        },
+        {
+          "kind": "Namespace",
+          "canonicalReference": "@velcro/strategy-fs!FsStrategy:namespace",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "declare namespace FsStrategy "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "FsStrategy",
+          "members": [
+            {
+              "kind": "TypeAlias",
+              "canonicalReference": "@velcro/strategy-fs!FsStrategy.Dirent:type",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "type Dirent = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        isFile(): boolean;\n        isDirectory(): boolean;\n        name: string;\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "Dirent",
+              "typeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "Interface",
+              "canonicalReference": "@velcro/strategy-fs!FsStrategy.FsInterface:interface",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "interface FsInterface "
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "FsInterface",
+              "members": [
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "@velcro/strategy-fs!FsStrategy.FsInterface#promises:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "promises: "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "{\n            readdir(path: string, options: {\n                encoding: \"utf-8\";\n                withFileTypes: true;\n            }): "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "Promise",
+                      "canonicalReference": "!Promise:interface"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "<"
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "Dirent",
+                      "canonicalReference": "@velcro/strategy-fs!~FsStrategy.Dirent:type"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "[]>;\n            readFile(path: string): "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "Promise",
+                      "canonicalReference": "!Promise:interface"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "<"
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "ArrayBuffer",
+                      "canonicalReference": "!ArrayBuffer:interface"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ">;\n            realpath(path: string): "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "Promise",
+                      "canonicalReference": "!Promise:interface"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "<string>;\n        }"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "releaseTag": "Public",
+                  "name": "promises",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 12
+                  }
+                }
+              ],
+              "extendsTokenRanges": []
+            },
+            {
+              "kind": "Interface",
+              "canonicalReference": "@velcro/strategy-fs!FsStrategy.Options:interface",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "interface Options "
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "Options",
+              "members": [
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "@velcro/strategy-fs!FsStrategy.Options#fs:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "fs: "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "FsInterface",
+                      "canonicalReference": "@velcro/strategy-fs!~FsStrategy.FsInterface:interface"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "releaseTag": "Public",
+                  "name": "fs",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "@velcro/strategy-fs!FsStrategy.Options#rootUri:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "rootUri?: "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "Uri",
+                      "canonicalReference": "@velcro/common!~Uri:class"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "releaseTag": "Public",
+                  "name": "rootUri",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "extendsTokenRanges": []
+            }
+          ]
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "@velcro/strategy-fs!Velcro:var",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "Velcro: "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    StrategyFs: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "exportsNS",
+              "canonicalReference": "@velcro/strategy-fs!~exportsNS:namespace"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n}"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "Velcro",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 4
+          }
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "@velcro/strategy-fs!version:var",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "version = \"0.29.3\""
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "version",
+          "variableTypeTokenRange": {
+            "startIndex": 0,
+            "endIndex": 0
+          }
+        }
+      ]
+    }
+  ]
+}

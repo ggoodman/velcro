@@ -5,4 +5,4 @@
 
 Resolver strategy that delegates operations to child strategies
 
-[API Docs](https://github.com/ggoodman/velcro/tree/0.29.0/docs/strategy-compound.md)
+[API Docs](https://github.com/ggoodman/velcro/tree/0.29.4/docs/strategy-compound.md)

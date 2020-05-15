@@ -1,0 +1,874 @@
+{
+  "metadata": {
+    "toolPackage": "@microsoft/api-extractor",
+    "toolVersion": "7.8.1",
+    "schemaVersion": 1003,
+    "oldestForwardsCompatibleVersion": 1001
+  },
+  "kind": "Package",
+  "canonicalReference": "@velcro/strategy-cdn!",
+  "docComment": "",
+  "name": "@velcro/strategy-cdn",
+  "members": [
+    {
+      "kind": "EntryPoint",
+      "canonicalReference": "@velcro/strategy-cdn!",
+      "name": "",
+      "members": [
+        {
+          "kind": "Class",
+          "canonicalReference": "@velcro/strategy-cdn!CdnStrategy:class",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "declare class CdnStrategy extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "AbstractResolverStrategyWithRoot",
+              "canonicalReference": "@velcro/resolver!~AbstractResolverStrategyWithRoot:class"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            },
+            {
+              "kind": "Content",
+              "text": "implements "
+            },
+            {
+              "kind": "Reference",
+              "text": "ResolverStrategyWithRoot",
+              "canonicalReference": "@velcro/resolver!~ResolverStrategyWithRoot:interface"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "CdnStrategy",
+          "members": [
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/strategy-cdn!CdnStrategy.forJsDelivr:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "static forJsDelivr(readUrlFn: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "CdnStrategy.UrlContentFetcher",
+                  "canonicalReference": "@velcro/strategy-cdn!~CdnStrategy.UrlContentFetcher:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "CdnStrategy",
+                  "canonicalReference": "@velcro/strategy-cdn!~CdnStrategy:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": true,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "readUrlFn",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "forJsDelivr"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/strategy-cdn!CdnStrategy.forUnpkg:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "static forUnpkg(readUrlFn: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "CdnStrategy.UrlContentFetcher",
+                  "canonicalReference": "@velcro/strategy-cdn!~CdnStrategy.UrlContentFetcher:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "CdnStrategy",
+                  "canonicalReference": "@velcro/strategy-cdn!~CdnStrategy:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": true,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "readUrlFn",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "forUnpkg"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/strategy-cdn!CdnStrategy#getCanonicalUrl:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getCanonicalUrl(ctx: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ResolverContext",
+                  "canonicalReference": "@velcro/resolver!~ResolverContext:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", uri: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/common!~Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ResolverStrategy.CanonicalizeResult",
+                  "canonicalReference": "@velcro/resolver!~ResolverStrategy.CanonicalizeResult:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 9
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "ctx",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "parameterName": "uri",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  }
+                }
+              ],
+              "name": "getCanonicalUrl"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/strategy-cdn!CdnStrategy#getResolveRoot:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getResolveRoot(ctx: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ResolverContext",
+                  "canonicalReference": "@velcro/resolver!~ResolverContext:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", uri: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/common!~Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ResolverStrategy.ResolveRootResult",
+                  "canonicalReference": "@velcro/resolver!~ResolverStrategy.ResolveRootResult:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 9
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "ctx",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "parameterName": "uri",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  }
+                }
+              ],
+              "name": "getResolveRoot"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/strategy-cdn!CdnStrategy#getRootUrl:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getRootUrl(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        uri: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/common!~Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "getRootUrl"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/strategy-cdn!CdnStrategy#getUrlForBareModule:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "getUrlForBareModule(ctx: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ResolverContext",
+                  "canonicalReference": "@velcro/resolver!~ResolverContext:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", name: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", spec: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", path: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ResolverStrategy.BareModuleResult",
+                  "canonicalReference": "@velcro/resolver!~ResolverStrategy.BareModuleResult:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 9,
+                "endIndex": 13
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "ctx",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "parameterName": "name",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  }
+                },
+                {
+                  "parameterName": "spec",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 5,
+                    "endIndex": 6
+                  }
+                },
+                {
+                  "parameterName": "path",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 7,
+                    "endIndex": 8
+                  }
+                }
+              ],
+              "name": "getUrlForBareModule"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/strategy-cdn!CdnStrategy#listEntries:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "listEntries(ctx: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ResolverContext",
+                  "canonicalReference": "@velcro/resolver!~ResolverContext:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", uri: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/common!~Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ResolverStrategy.ListEntriesResult",
+                  "canonicalReference": "@velcro/resolver!~ResolverStrategy.ListEntriesResult:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 9
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "ctx",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "parameterName": "uri",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  }
+                }
+              ],
+              "name": "listEntries"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/strategy-cdn!CdnStrategy#readFileContent:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readFileContent(ctx: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ResolverContext",
+                  "canonicalReference": "@velcro/resolver!~ResolverContext:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", uri: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/common!~Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        content: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ArrayBuffer",
+                  "canonicalReference": "!ArrayBuffer:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n    } | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Thenable",
+                  "canonicalReference": "@velcro/common!~Thenable:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<{\n        content: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ArrayBuffer",
+                  "canonicalReference": "!ArrayBuffer:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n    }>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 12
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "ctx",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "parameterName": "uri",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  }
+                }
+              ],
+              "name": "readFileContent"
+            }
+          ],
+          "extendsTokenRange": {
+            "startIndex": 1,
+            "endIndex": 3
+          },
+          "implementsTokenRanges": [
+            {
+              "startIndex": 4,
+              "endIndex": 6
+            }
+          ]
+        },
+        {
+          "kind": "Namespace",
+          "canonicalReference": "@velcro/strategy-cdn!CdnStrategy:namespace",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "declare namespace CdnStrategy "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "CdnStrategy",
+          "members": [
+            {
+              "kind": "TypeAlias",
+              "canonicalReference": "@velcro/strategy-cdn!CdnStrategy.Directory:type",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "type Directory = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        type: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ResolverStrategy.EntryKind.Directory",
+                  "canonicalReference": "@velcro/resolver!~ResolverStrategy.EntryKind.Directory:member"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n        path: string;\n        files?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ReadonlyArray",
+                  "canonicalReference": "!ReadonlyArray:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Entry",
+                  "canonicalReference": "@velcro/strategy-cdn!~CdnStrategy.Entry:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">;\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "Directory",
+              "typeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 8
+              }
+            },
+            {
+              "kind": "TypeAlias",
+              "canonicalReference": "@velcro/strategy-cdn!CdnStrategy.Entry:type",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "type Entry = "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Directory",
+                  "canonicalReference": "@velcro/strategy-cdn!~CdnStrategy.Directory:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "File",
+                  "canonicalReference": "@velcro/strategy-cdn!~CdnStrategy.File:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "Entry",
+              "typeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "TypeAlias",
+              "canonicalReference": "@velcro/strategy-cdn!CdnStrategy.File:type",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "type File = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        type: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ResolverStrategy.EntryKind.File",
+                  "canonicalReference": "@velcro/resolver!~ResolverStrategy.EntryKind.File:member"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n        path: string;\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "File",
+              "typeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 4
+              }
+            },
+            {
+              "kind": "TypeAlias",
+              "canonicalReference": "@velcro/strategy-cdn!CdnStrategy.Spec:type",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "type Spec = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        spec: string;\n        name: string;\n        version: string;\n        pathname: string;\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "Spec",
+              "typeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "TypeAlias",
+              "canonicalReference": "@velcro/strategy-cdn!CdnStrategy.UrlContentFetcher:type",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "type UrlContentFetcher = "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(href: string, token: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "CancellationToken",
+                  "canonicalReference": "ts-primitives!~CancellationToken:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ") => "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Thenable",
+                  "canonicalReference": "@velcro/common!~Thenable:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ArrayBuffer",
+                  "canonicalReference": "!ArrayBuffer:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | null>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "UrlContentFetcher",
+              "typeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 8
+              }
+            }
+          ]
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "@velcro/strategy-cdn!Velcro:var",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "Velcro: "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    StrategyCdn: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "exportsNS",
+              "canonicalReference": "@velcro/strategy-cdn!~exportsNS:namespace"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n}"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "Velcro",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 4
+          }
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "@velcro/strategy-cdn!version:var",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "version = \"0.29.3\""
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "version",
+          "variableTypeTokenRange": {
+            "startIndex": 0,
+            "endIndex": 0
+          }
+        }
+      ]
+    }
+  ]
+}
