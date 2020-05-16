@@ -33,7 +33,8 @@
     "build": "rollup -c",
     "build:api": "api-extractor run --local -c ./api-extractor.json",
     "build:readme": "cat README.md | sed \"s~tree/.*/docs~tree/$(jq -r .version package.json)/docs~g\" > README.md",
-    "preversion": "npm run build"
+    "preversion": "npm run build",
+    "version": "npm run build:api && npm run build:readme"
   },
   "prettier": {
     "printWidth": 100,
