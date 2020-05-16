@@ -50,7 +50,6 @@
   },
   "dependencies": {
     "@rollup/plugin-node-resolve": "^7.1.3",
-    "b2a": "^1.1.2",
     "ts-primitives": "^2.4.0"
   },
   "gitHead": "f63b45ad688f2fe9768349afeaf449c016bf33ef"

@@ -1,5 +1,3 @@
-import { atob, btoa } from 'b2a';
-
 declare const Buffer: {
   from(
     buf: BufferSource | string,
@@ -13,8 +11,22 @@ export namespace Base64 {
   export const decode =
     typeof Buffer !== 'undefined'
       ? (data: string) => Buffer.from(data, 'base64').toString('utf-8')
-      : atob;
+      : typeof atob === 'function'
+      ? (data: string) => decodeURIComponent(escape(atob(data)))
+      : (_data: string) => {
+          throw new Error(
+            'The environment has neither the Buffer nor btoa functions. Please consider polyfilling one of these apis.'
+          );
+        };
 
   export const encode =
-    typeof Buffer !== 'undefined' ? (data: string) => Buffer.from(data).toString('base64') : btoa;
+    typeof Buffer !== 'undefined'
+      ? (data: string) => Buffer.from(data).toString('base64')
+      : typeof btoa === 'function'
+      ? (data: string) => btoa(unescape(encodeURIComponent(data)))
+      : (_data: string) => {
+          throw new Error(
+            'The environment has neither the Buffer nor btoa functions. Please consider polyfilling one of these apis.'
+          );
+        };
 }
