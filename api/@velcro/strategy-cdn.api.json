@@ -858,7 +858,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.29.4\""
+              "text": "version = \"0.29.5\""
             }
           ],
           "releaseTag": "Public",
