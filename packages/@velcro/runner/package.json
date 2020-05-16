@@ -32,7 +32,7 @@
   "scripts": {
     "build": "rollup -c",
     "build:api": "api-extractor run --local -c ./api-extractor.json",
-    "build:readme": "cat README.md | sed \"s~tree/.*/docs~tree/$(jq -r .version package.json)/docs~g\" > README.md",
+    "build:readme": "cat README.md | sed \"s~tree/.*/docs~tree/v${npm_package_version}/docs~g\" > README.md",
     "preversion": "npm run build",
     "version": "npm run build:api && npm run build:readme"
   },

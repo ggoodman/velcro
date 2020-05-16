@@ -146,7 +146,9 @@ function rollupConfigFactory(dirname, filename) {
           mainFields: ['module', 'main'],
         }),
         RollupPluginCommonJs(),
-        RollupPluginReplace({ __VERSION__: PackageJson.version }),
+        RollupPluginReplace({
+          __VERSION__: process.env.npm_package_version || PackageJson.version,
+        }),
         dirname.endsWith('runner')
           ? RollupPluginSucrase({
               transforms: ['typescript'],
