@@ -4479,7 +4479,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.29.5\""
+              "text": "version = \"0.29.6\""
             }
           ],
           "releaseTag": "Public",
