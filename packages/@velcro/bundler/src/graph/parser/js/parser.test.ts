@@ -2,10 +2,6 @@ import { Uri } from '@velcro/common';
 import { parseJavaScript } from '..';
 import { SourceModuleDependencyKind } from '../../sourceModuleDependency';
 
-jest.mock('../../../context');
-jest.mock('../../../resolver');
-jest.mock('../../../strategy');
-
 describe('JavaScript parser', () => {
   test('discovers unbound symbols', () => {
     const testOne = (code: string, expectedSpecs: string[], nodeEnv = 'development') => {

@@ -2,6 +2,7 @@
   "compilerOptions": {
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
     "composite": true,
     "declaration": true,
     "declarationMap": true,
@@ -13,6 +14,9 @@
     "moduleResolution": "node",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "paths": {
+      "@velcro/*": ["./packages/@velcro/*/src"]
+    },
     "pretty": true,
     "resolveJsonModule": true,
     "rootDir": "./",
