@@ -8,6 +8,8 @@ import {
   isThenable,
   PackageJson,
   parseBufferAsPackageJson,
+  parseBufferAsPartialPackageJson,
+  PartialPackageJson,
   Thenable,
   Uri,
 } from '@velcro/common';
@@ -410,7 +412,7 @@ export class ResolverContext {
       if (typeof args[0] === 'string') {
         args[0] = ' '.repeat(this.path.length) + args[0];
       }
-      console.error(...args);
+      console.warn(...args);
     }
   }
 }
@@ -461,7 +463,7 @@ async function resolve(ctx: ResolverContext, url: Uri | string): Promise<Resolve
       ? ctx.runInChildContext('resolveAsDirectory', canonicalizationResult.uri, (ctx) =>
           resolveAsDirectory(
             ctx,
-            canonicalizationResult.uri,
+            Uri.ensureTrailingSlash(canonicalizationResult.uri),
             resolveRootResult.uri,
             settingsResult.settings
           )
@@ -545,7 +547,7 @@ async function resolveAsDirectory(
       entry.type === ResolverStrategy.EntryKind.File && Uri.equals(packageJsonUri, entry.uri)
   );
 
-  let packageJson: PackageJson | null = null;
+  let packageJson: PartialPackageJson | null = null;
 
   if (packageJsonEntry) {
     const packageJsonContentReturn = ctx.readFileContent(packageJsonUri);
@@ -553,7 +555,7 @@ async function resolveAsDirectory(
       ? await checkCancellation(packageJsonContentReturn, ctx.token)
       : packageJsonContentReturn;
 
-    packageJson = parseBufferAsPackageJson(
+    packageJson = parseBufferAsPartialPackageJson(
       ctx.decoder,
       packageJsonContentResult.content,
       uri.toString()
@@ -580,7 +582,7 @@ async function resolveAsFile(
   uri: Uri,
   rootUri: Uri,
   settings: Resolver.Settings,
-  packageJson: PackageJson | null,
+  packageJson: PartialPackageJson | null,
   ignoreBrowserOverrides = false
 ): Promise<ResolveResult> {
   if (uri.path === '' || uri.path === '/') {
@@ -722,7 +724,7 @@ async function resolveAsFile(
     }
 
     return ctx.runInChildContext('resolveAsDirectory', match.uri, (ctx) =>
-      resolveAsDirectory(ctx, match.uri, rootUri, settings)
+      resolveAsDirectory(ctx, Uri.ensureTrailingSlash(match.uri), rootUri, settings)
     );
   }
 

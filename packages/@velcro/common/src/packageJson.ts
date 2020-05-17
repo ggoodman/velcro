@@ -2,9 +2,9 @@ import { Decoder } from './decoder';
 
 export type PackageMainField = 'browser' | 'module' | 'jsnext:main' | 'main' | 'unpkg';
 
-export type PackageJson = {
-  name: string;
-  version: string;
+export interface PartialPackageJson {
+  name?: string;
+  version?: string;
   browser?: string | { [key: string]: false | string };
   main?: string;
   module?: string;
@@ -13,7 +13,28 @@ export type PackageJson = {
   devDependencies?: { [key: string]: string };
   peerDependencies?: { [key: string]: string };
   unpkg?: string;
-};
+}
+export interface PackageJson extends PartialPackageJson {
+  name: string;
+  version: string;
+}
+
+export function isValidPartialPackageJson(json: unknown): json is PartialPackageJson {
+  return (
+    typeof json === 'object' &&
+    json !== null &&
+    !hasInvalidOptionalStringField(json as any, 'name') &&
+    !hasInvalidOptionalStringField(json as any, 'version') &&
+    !hasInvalidBrowserField(json as any) &&
+    !hasInvalidOptionalStringField(json as any, 'main') &&
+    !hasInvalidOptionalStringField(json as any, 'module') &&
+    !hasInvalidOptionalStringField(json as any, 'jsnext:main') &&
+    !hasInvalidOptionalStringField(json as any, 'unpkg') &&
+    !hasInvalidDependenciesField(json as any, 'dependencies') &&
+    !hasInvalidDependenciesField(json as any, 'devDependencies') &&
+    !hasInvalidDependenciesField(json as any, 'peerDependencies')
+  );
+}
 
 export function isValidPackageJson(json: unknown): json is PackageJson {
   return (
@@ -73,6 +94,20 @@ function hasInvalidDependenciesField(json: any, field: string) {
   );
 }
 
+export function parseBufferAsPartialPackageJson(
+  decoder: Decoder,
+  content: ArrayBuffer,
+  spec: string
+): PartialPackageJson {
+  try {
+    const text = decoder.decode(content);
+
+    return parseTextAsPartialPackageJson(text, spec);
+  } catch (err) {
+    throw new Error(`Error decoding manifest buffer for package ${spec}: ${err.message}`);
+  }
+}
+
 export function parseBufferAsPackageJson(
   decoder: Decoder,
   content: ArrayBuffer,
@@ -87,7 +122,7 @@ export function parseBufferAsPackageJson(
   }
 }
 
-function parseTextAsPackageJson(text: string, spec: string): PackageJson {
+function parseTextAsPartialPackageJson(text: string, spec: string): PartialPackageJson {
   let json: unknown;
 
   try {
@@ -95,6 +130,16 @@ function parseTextAsPackageJson(text: string, spec: string): PackageJson {
   } catch (err) {
     throw new Error(`Error parsing manifest as json for package ${spec}: ${err.message}`);
   }
+
+  if (!isValidPartialPackageJson(json)) {
+    throw new Error(`Invalid manifest for the package ${spec}`);
+  }
+
+  return json;
+}
+
+function parseTextAsPackageJson(text: string, spec: string): PackageJson {
+  const json = parseTextAsPartialPackageJson(text, spec);
 
   if (!isValidPackageJson(json)) {
     throw new Error(`Invalid manifest for the package ${spec}`);
