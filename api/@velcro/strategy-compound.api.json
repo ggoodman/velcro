@@ -27,7 +27,7 @@
             {
               "kind": "Reference",
               "text": "AbstractResolverStrategy",
-              "canonicalReference": "@velcro/resolver!~AbstractResolverStrategy:class"
+              "canonicalReference": "@velcro/strategy-compound!AbstractResolverStrategy:class"
             },
             {
               "kind": "Content",
@@ -40,7 +40,7 @@
             {
               "kind": "Reference",
               "text": "ResolverStrategy",
-              "canonicalReference": "@velcro/resolver!~ResolverStrategy:interface"
+              "canonicalReference": "@velcro/strategy-compound!ResolverStrategy:interface"
             },
             {
               "kind": "Content",
@@ -93,7 +93,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverContext",
-                  "canonicalReference": "@velcro/resolver!~ResolverContext:class"
+                  "canonicalReference": "@velcro/strategy-compound!ResolverContext:class"
                 },
                 {
                   "kind": "Content",
@@ -102,7 +102,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/strategy-compound!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -111,7 +111,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverStrategy.CanonicalizeResult",
-                  "canonicalReference": "@velcro/resolver!~ResolverStrategy.CanonicalizeResult:interface"
+                  "canonicalReference": "@velcro/strategy-compound!ResolverStrategy.CanonicalizeResult:interface"
                 },
                 {
                   "kind": "Content",
@@ -120,7 +120,7 @@
                 {
                   "kind": "Reference",
                   "text": "Thenable",
-                  "canonicalReference": "@velcro/common!~Thenable:interface"
+                  "canonicalReference": "@velcro/strategy-compound!Thenable:interface"
                 },
                 {
                   "kind": "Content",
@@ -129,7 +129,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverStrategy.CanonicalizeResult",
-                  "canonicalReference": "@velcro/resolver!~ResolverStrategy.CanonicalizeResult:interface"
+                  "canonicalReference": "@velcro/strategy-compound!ResolverStrategy.CanonicalizeResult:interface"
                 },
                 {
                   "kind": "Content",
@@ -177,7 +177,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverContext",
-                  "canonicalReference": "@velcro/resolver!~ResolverContext:class"
+                  "canonicalReference": "@velcro/strategy-compound!ResolverContext:class"
                 },
                 {
                   "kind": "Content",
@@ -186,7 +186,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/strategy-compound!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -195,7 +195,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverStrategy.ResolveRootResult",
-                  "canonicalReference": "@velcro/resolver!~ResolverStrategy.ResolveRootResult:interface"
+                  "canonicalReference": "@velcro/strategy-compound!ResolverStrategy.ResolveRootResult:interface"
                 },
                 {
                   "kind": "Content",
@@ -204,7 +204,7 @@
                 {
                   "kind": "Reference",
                   "text": "Thenable",
-                  "canonicalReference": "@velcro/common!~Thenable:interface"
+                  "canonicalReference": "@velcro/strategy-compound!Thenable:interface"
                 },
                 {
                   "kind": "Content",
@@ -213,7 +213,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverStrategy.ResolveRootResult",
-                  "canonicalReference": "@velcro/resolver!~ResolverStrategy.ResolveRootResult:interface"
+                  "canonicalReference": "@velcro/strategy-compound!ResolverStrategy.ResolveRootResult:interface"
                 },
                 {
                   "kind": "Content",
@@ -261,7 +261,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverContext",
-                  "canonicalReference": "@velcro/resolver!~ResolverContext:class"
+                  "canonicalReference": "@velcro/strategy-compound!ResolverContext:class"
                 },
                 {
                   "kind": "Content",
@@ -294,7 +294,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverStrategy.BareModuleResult",
-                  "canonicalReference": "@velcro/resolver!~ResolverStrategy.BareModuleResult:type"
+                  "canonicalReference": "@velcro/strategy-compound!ResolverStrategy.BareModuleResult:type"
                 },
                 {
                   "kind": "Content",
@@ -303,7 +303,7 @@
                 {
                   "kind": "Reference",
                   "text": "Thenable",
-                  "canonicalReference": "@velcro/common!~Thenable:interface"
+                  "canonicalReference": "@velcro/strategy-compound!Thenable:interface"
                 },
                 {
                   "kind": "Content",
@@ -312,7 +312,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverStrategy.BareModuleResult",
-                  "canonicalReference": "@velcro/resolver!~ResolverStrategy.BareModuleResult:type"
+                  "canonicalReference": "@velcro/strategy-compound!ResolverStrategy.BareModuleResult:type"
                 },
                 {
                   "kind": "Content",
@@ -374,7 +374,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverContext",
-                  "canonicalReference": "@velcro/resolver!~ResolverContext:class"
+                  "canonicalReference": "@velcro/strategy-compound!ResolverContext:class"
                 },
                 {
                   "kind": "Content",
@@ -383,7 +383,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/strategy-compound!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -392,7 +392,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverStrategy.ListEntriesResult",
-                  "canonicalReference": "@velcro/resolver!~ResolverStrategy.ListEntriesResult:interface"
+                  "canonicalReference": "@velcro/strategy-compound!ResolverStrategy.ListEntriesResult:interface"
                 },
                 {
                   "kind": "Content",
@@ -401,7 +401,7 @@
                 {
                   "kind": "Reference",
                   "text": "Thenable",
-                  "canonicalReference": "@velcro/common!~Thenable:interface"
+                  "canonicalReference": "@velcro/strategy-compound!Thenable:interface"
                 },
                 {
                   "kind": "Content",
@@ -410,7 +410,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverStrategy.ListEntriesResult",
-                  "canonicalReference": "@velcro/resolver!~ResolverStrategy.ListEntriesResult:interface"
+                  "canonicalReference": "@velcro/strategy-compound!ResolverStrategy.ListEntriesResult:interface"
                 },
                 {
                   "kind": "Content",
@@ -458,7 +458,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverContext",
-                  "canonicalReference": "@velcro/resolver!~ResolverContext:class"
+                  "canonicalReference": "@velcro/strategy-compound!ResolverContext:class"
                 },
                 {
                   "kind": "Content",
@@ -467,7 +467,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/strategy-compound!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -476,7 +476,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverStrategy.ReadFileContentResult",
-                  "canonicalReference": "@velcro/resolver!~ResolverStrategy.ReadFileContentResult:interface"
+                  "canonicalReference": "@velcro/strategy-compound!ResolverStrategy.ReadFileContentResult:interface"
                 },
                 {
                   "kind": "Content",
@@ -485,7 +485,7 @@
                 {
                   "kind": "Reference",
                   "text": "Thenable",
-                  "canonicalReference": "@velcro/common!~Thenable:interface"
+                  "canonicalReference": "@velcro/strategy-compound!Thenable:interface"
                 },
                 {
                   "kind": "Content",
@@ -494,7 +494,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverStrategy.ReadFileContentResult",
-                  "canonicalReference": "@velcro/resolver!~ResolverStrategy.ReadFileContentResult:interface"
+                  "canonicalReference": "@velcro/strategy-compound!ResolverStrategy.ReadFileContentResult:interface"
                 },
                 {
                   "kind": "Content",
@@ -579,7 +579,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.29.6\""
+              "text": "version = \"0.29.7\""
             }
           ],
           "releaseTag": "Public",

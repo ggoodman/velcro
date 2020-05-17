@@ -29,12 +29,16 @@
 |  [isCanceledError(err)](./common.iscancelederror.md) |  |
 |  [isThenable(object)](./common.isthenable.md) |  |
 |  [isValidPackageJson(json)](./common.isvalidpackagejson.md) |  |
+|  [isValidPartialPackageJson(json)](./common.isvalidpartialpackagejson.md) |  |
 |  [parseBufferAsPackageJson(decoder, content, spec)](./common.parsebufferaspackagejson.md) |  |
+|  [parseBufferAsPartialPackageJson(decoder, content, spec)](./common.parsebufferaspartialpackagejson.md) |  |
 
 ## Interfaces
 
 |  Interface | Description |
 |  --- | --- |
+|  [PackageJson](./common.packagejson.md) |  |
+|  [PartialPackageJson](./common.partialpackagejson.md) |  |
 |  [Thenable](./common.thenable.md) |  |
 
 ## Namespaces
@@ -55,6 +59,5 @@
 |  Type Alias | Description |
 |  --- | --- |
 |  [Awaited](./common.awaited.md) |  |
-|  [PackageJson](./common.packagejson.md) |  |
 |  [PackageMainField](./common.packagemainfield.md) |  |
 

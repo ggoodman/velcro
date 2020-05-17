@@ -5,4 +5,4 @@
 
 Common utilities and types shared by the velcro ecosystem.
 
-[API Docs](https://github.com/ggoodman/velcro/tree/v0.29.7/docs/bundler.md)
+[API Docs](https://github.com/ggoodman/velcro/tree/v0.29.8/docs/bundler.md)

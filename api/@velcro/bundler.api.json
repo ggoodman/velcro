@@ -98,7 +98,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/bundler!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -179,7 +179,7 @@
                 {
                   "kind": "Reference",
                   "text": "Resolver",
-                  "canonicalReference": "@velcro/resolver!~Resolver:class"
+                  "canonicalReference": "@velcro/bundler!Resolver:class"
                 },
                 {
                   "kind": "Content",
@@ -362,7 +362,7 @@
                     {
                       "kind": "Reference",
                       "text": "Uri",
-                      "canonicalReference": "@velcro/common!~Uri:class"
+                      "canonicalReference": "@velcro/bundler!Uri:class"
                     },
                     {
                       "kind": "Content",
@@ -445,7 +445,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/bundler!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -454,7 +454,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/bundler!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -696,7 +696,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/bundler!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -803,7 +803,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/bundler!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -846,7 +846,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/bundler!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -1310,7 +1310,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.29.6\""
+              "text": "version = \"0.29.7\""
             }
           ],
           "releaseTag": "Public",

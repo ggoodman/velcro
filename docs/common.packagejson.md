@@ -2,29 +2,18 @@
 
 [Home](./index.md) &gt; [@velcro/common](./common.md) &gt; [PackageJson](./common.packagejson.md)
 
-## PackageJson type
+## PackageJson interface
 
 <b>Signature:</b>
 
 ```typescript
-type PackageJson = {
-    name: string;
-    version: string;
-    browser?: string | {
-        [key: string]: false | string;
-    };
-    main?: string;
-    module?: string;
-    "jsnext:main"?: string;
-    dependencies?: {
-        [key: string]: string;
-    };
-    devDependencies?: {
-        [key: string]: string;
-    };
-    peerDependencies?: {
-        [key: string]: string;
-    };
-    unpkg?: string;
-};
+interface PackageJson extends PartialPackageJson 
 ```
+
+## Properties
+
+|  Property | Type | Description |
+|  --- | --- | --- |
+|  [name](./common.packagejson.name.md) | string |  |
+|  [version](./common.packagejson.version.md) | string |  |
+
