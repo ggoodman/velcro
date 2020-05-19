@@ -29,13 +29,30 @@ interface FileInputWithEncoding {
 type Entry = DirectoryEntry | FileEntry;
 type FileInput = string | FileInputWithEncoding;
 
+const encodeText =
+  typeof TextEncoder === 'function'
+    ? (function () {
+        const encoder = new TextEncoder();
+
+        return function encodeText(data: string): ArrayBuffer {
+          return encoder.encode(data).buffer;
+        };
+      })()
+    : typeof Buffer === 'function'
+    ? function encodeText(data: string): ArrayBuffer {
+        return Buffer.from(data);
+      }
+    : function encodeText(_data: string): ArrayBuffer {
+        throw new Error(
+          'The environment provides neither TextEncoder nor Buffer. Please consider polyfilling one of these APIs.'
+        );
+      };
+
 export class MemoryStrategy extends AbstractResolverStrategyWithRoot {
   private readonly root: DirectoryEntry = {
     type: ResolverStrategy.EntryKind.Directory,
     children: {},
   };
-
-  private readonly textEncoder = new TextEncoder();
 
   constructor(files: Record<string, FileInput>, rootUri = Uri.parse('memory:/')) {
     super(Uri.ensureTrailingSlash(rootUri));
@@ -184,7 +201,7 @@ export class MemoryStrategy extends AbstractResolverStrategyWithRoot {
       }
       case FileEncoding.UTF8: {
         return {
-          content: this.textEncoder.encode(entry.content).buffer,
+          content: encodeText(entry.content),
         };
       }
       default:
