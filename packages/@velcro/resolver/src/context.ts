@@ -542,16 +542,6 @@ async function resolveBareModule(ctx: ResolverContext, uri: Uri, parsedSpec: Bar
   let locatorPath = parsedSpec.path;
 
   if (!locatorSpec) {
-    const builtIn = NODE_CORE_SHIMS[parsedSpec.name];
-
-    if (builtIn) {
-      locatorName = builtIn.name;
-      locatorSpec = builtIn.spec;
-      locatorPath = builtIn.path;
-    }
-  }
-
-  if (!locatorSpec) {
     const resolveRootReturn = ctx.getResolveRoot(uri);
     const resolveRootResult = isThenable(resolveRootReturn)
       ? await checkCancellation(resolveRootReturn, ctx.token)
@@ -591,7 +581,18 @@ async function resolveBareModule(ctx: ResolverContext, uri: Uri, parsedSpec: Bar
         break;
       }
 
-      nextUri = parentPackageJsonResult.uri;
+      nextUri = Uri.joinPath(parentPackageJsonResult.uri, '..');
+      console.debug({ nextUri });
+    }
+  }
+
+  if (!locatorSpec) {
+    const builtIn = NODE_CORE_SHIMS[parsedSpec.name];
+
+    if (builtIn) {
+      locatorName = builtIn.name;
+      locatorSpec = builtIn.spec;
+      locatorPath = builtIn.path;
     }
   }
 

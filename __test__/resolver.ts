@@ -21,6 +21,21 @@ describe('Velcro.Resolver', () => {
     expect(result.uri!.toString()).toEqual('https://cdn.jsdelivr.net/npm/htm@3.0.4/react/index.js');
   });
 
+  it('will resolve react-dom/server', async () => {
+    const strategy = CdnStrategy.forJsDelivr(readUrl);
+    const resolver = new Resolver(strategy, {
+      extensions: ['.js', '.json'],
+      packageMain: ['browser', 'main'],
+    });
+
+    const result = await resolver.getUrlForBareModule('react-dom', '16.13.1', '/server');
+
+    expect(result.found).toBe(true);
+    expect(result.uri!.toString()).toEqual(
+      'https://cdn.jsdelivr.net/npm/react-dom@16.13.1/server.browser.js'
+    );
+  });
+
   it('will resolve htm from htm/react', async () => {
     const strategy = CdnStrategy.forJsDelivr(readUrl);
     const resolver = new Resolver(strategy, {

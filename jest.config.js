@@ -97,7 +97,7 @@ module.exports = {
         '^@velcro/node-libs/(.*)$': '<rootDir>/packages/@velcro/node-libs/$1',
         '^@velcro/(.*)$': '<rootDir>/packages/@velcro/$1/src',
       },
-      preset: 'ts-jest',
+      preset: 'ts-jest/presets/js-with-ts',
       testEnvironment: 'node',
       testMatch: ['<rootDir>/__test__/**/*.ts'],
       globals: {
@@ -121,7 +121,7 @@ module.exports = {
         '^@velcro/node-libs/(.*)$': '<rootDir>/packages/@velcro/node-libs/$1',
         '^@velcro/(.*)$': '<rootDir>/packages/@velcro/$1/src',
       },
-      preset: 'ts-jest',
+      preset: 'ts-jest/presets/js-with-ts',
       testEnvironment: 'node',
       testMatch: [`<rootDir>/packages/${name}/**/*.test.ts`],
       globals: {

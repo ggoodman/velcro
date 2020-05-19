@@ -37,7 +37,7 @@ export class MemoryStrategy extends AbstractResolverStrategyWithRoot {
 
   private readonly textEncoder = new TextEncoder();
 
-  constructor(files: Record<string, FileInput>, rootUri = Uri.parse('memory:///')) {
+  constructor(files: Record<string, FileInput>, rootUri = Uri.parse('memory:/')) {
     super(Uri.ensureTrailingSlash(rootUri));
 
     for (const pathname in files) {
