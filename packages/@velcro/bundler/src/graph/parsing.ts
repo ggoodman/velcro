@@ -1,9 +1,8 @@
 import { Uri } from '@velcro/common';
-import { DEFAULT_SHIM_GLOBALS, NODE_CORE_SHIMS } from './shims';
+import { DEFAULT_SHIM_GLOBALS } from './shims';
 import { SourceModuleDependency } from './sourceModuleDependency';
 
 export interface ParseOptions {
-  environmentModules: typeof NODE_CORE_SHIMS;
   globalModules: typeof DEFAULT_SHIM_GLOBALS;
   nodeEnv: string;
 }

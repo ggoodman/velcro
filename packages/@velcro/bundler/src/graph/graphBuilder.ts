@@ -11,15 +11,14 @@ import {
 } from '@velcro/common';
 import { Resolver, ResolverContext } from '@velcro/resolver';
 import MagicString from 'magic-string';
-import { dirname, DisposableStore, Emitter } from 'ts-primitives';
-import { BareModuleSpec, parseBareModuleSpec } from './bareModules';
+import { DisposableStore, Emitter } from 'ts-primitives';
 import { DependencyEdge } from './dependencyEdge';
 import { GraphBuildError } from './errors';
 import { Graph } from './graph';
 import { ParentPackageJson } from './parentPackageJson';
 import { parseJavaScript, parseJson } from './parser';
 import { ParserFunction } from './parsing';
-import { DEFAULT_SHIM_GLOBALS, NODE_CORE_SHIMS } from './shims';
+import { DEFAULT_SHIM_GLOBALS } from './shims';
 import { SourceModule } from './sourceModule';
 import { SourceModuleDependency } from './sourceModuleDependency';
 
@@ -236,7 +235,6 @@ class GraphBuilder {
           uri,
           () =>
             parser(uri, code, {
-              environmentModules: NODE_CORE_SHIMS,
               globalModules: DEFAULT_SHIM_GLOBALS,
               nodeEnv: this.nodeEnv,
             })
@@ -359,7 +357,7 @@ class GraphBuilder {
 }
 
 async function addUnresolvedUri(ctx: ResolverContext, uri: Uri) {
-  const resolveResult = await ctx.resolve(uri);
+  const resolveResult = await ctx.resolveUri(uri);
 
   if (!resolveResult.found) {
     throw new EntryNotFoundError(`Entry point not found: ${uri}`);
@@ -381,41 +379,18 @@ async function resolveDependency(
   sourceModule: SourceModule,
   dependency: SourceModuleDependency
 ) {
-  const parsedSpec = parseBareModuleSpec(dependency.spec);
-
-  return parsedSpec
-    ? ctx.runInChildContext('resolveBareModule', sourceModule.uri, (ctx) =>
-        resolveBareModule(ctx, sourceModule, parsedSpec, dependency)
-      )
-    : ctx.runInChildContext('resolveRelativeUri', sourceModule.uri, (ctx) =>
-        resolveRelativeUri(ctx, sourceModule, dependency.spec)
-      );
-}
-
-async function resolveRelativeUri(
-  ctx: ResolverContext,
-  sourceModule: SourceModule,
-  pathname: string
-) {
-  const uri = Uri.joinPath(
-    Uri.from({
-      ...sourceModule.uri,
-      path: dirname(sourceModule.uri.path),
-    }),
-    pathname
-  );
-  const resolveReturn = ctx.resolve(uri);
+  const resolveReturn = ctx.resolve(dependency.spec, sourceModule.uri);
   const resolveResult = isThenable(resolveReturn)
     ? await checkCancellation(resolveReturn, ctx.token)
     : resolveReturn;
 
   if (!resolveResult.found) {
-    throw new DependencyNotFoundError(pathname, sourceModule);
+    throw new DependencyNotFoundError(dependency.spec, sourceModule);
   }
 
   if (!resolveResult.uri) {
     // TODO: Inject empty module
-    throw new EntryExcludedError(pathname);
+    throw new EntryExcludedError(dependency.spec);
   }
 
   return {
@@ -423,90 +398,5 @@ async function resolveRelativeUri(
     parentPackageJson: resolveResult.parentPackageJson,
     rootUri: resolveResult.rootUri,
     visited: resolveResult.visited,
-  };
-}
-
-async function resolveBareModule(
-  ctx: ResolverContext,
-  sourceModule: SourceModule,
-  parsedSpec: BareModuleSpec,
-  dependency: SourceModuleDependency
-) {
-  let locatorName = parsedSpec.name;
-  let locatorSpec = parsedSpec.spec;
-  let locatorPath = parsedSpec.path;
-
-  if (!locatorSpec) {
-    const parentPackageJsonReturn = ctx.readParentPackageJson(sourceModule.uri);
-    const parentPackageJsonResult = isThenable(parentPackageJsonReturn)
-      ? await checkCancellation(parentPackageJsonReturn, ctx.token)
-      : parentPackageJsonReturn;
-
-    if (!parentPackageJsonResult.found) {
-      throw new DependencyNotFoundError(parsedSpec.nameSpec, sourceModule.uri);
-    }
-
-    const dependencies = {
-      ...(parentPackageJsonResult.packageJson.devDependencies || {}),
-      ...(parentPackageJsonResult.packageJson.peerDependencies || {}),
-      ...(parentPackageJsonResult.packageJson.dependencies || {}),
-    };
-
-    locatorSpec = dependencies[parsedSpec.name];
-  }
-
-  if (!locatorSpec) {
-    const builtIn = NODE_CORE_SHIMS[parsedSpec.name];
-
-    if (builtIn) {
-      locatorName = builtIn.name;
-      locatorSpec = builtIn.spec;
-      locatorPath = builtIn.path;
-    }
-  }
-
-  if (!locatorSpec) {
-    throw new DependencyNotFoundError(parsedSpec.nameSpec, sourceModule.uri);
-  }
-
-  dependency.locator = { name: locatorName, spec: locatorSpec, path: locatorPath };
-
-  const bareModuleUriReturn = ctx.getUrlForBareModule(locatorName, locatorSpec, locatorPath);
-  const bareModuleUriResult = isThenable(bareModuleUriReturn)
-    ? await checkCancellation(bareModuleUriReturn, ctx.token)
-    : bareModuleUriReturn;
-
-  if (!bareModuleUriResult.found) {
-    throw new DependencyNotFoundError(parsedSpec.nameSpec, sourceModule);
-  }
-
-  if (!bareModuleUriResult.uri) {
-    // TODO: Inject empty module
-    throw new EntryExcludedError(parsedSpec.nameSpec);
-  }
-
-  const resolveReturn = ctx.resolve(bareModuleUriResult.uri);
-  const resolveResult = isThenable(resolveReturn)
-    ? await checkCancellation(resolveReturn, ctx.token)
-    : resolveReturn;
-
-  if (resolveResult.parentPackageJson) {
-    dependency.locator.version = resolveResult.parentPackageJson.packageJson.version;
-  }
-
-  if (!resolveResult.found) {
-    throw new DependencyNotFoundError(parsedSpec.nameSpec, sourceModule);
-  }
-
-  if (!resolveResult.uri) {
-    // TODO: Inject empty module
-    throw new EntryExcludedError(parsedSpec.nameSpec);
-  }
-
-  return {
-    uri: resolveResult.uri,
-    rootUri: resolveResult.rootUri,
-    visited: resolveResult.visited,
-    parentPackageJson: resolveResult.parentPackageJson,
   };
 }

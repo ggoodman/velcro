@@ -304,7 +304,7 @@ export class CdnStrategy extends AbstractResolverStrategyWithRoot
     path: string
   ): Promise<ResolverStrategy.BareModuleResult> {
     const unresolvedUri = this.cdn.urlForPackageFile(`${name}@${spec}`, path);
-    const resolveReturn = await ctx.resolve(unresolvedUri);
+    const resolveReturn = await ctx.resolveUri(unresolvedUri);
 
     return resolveReturn;
   }

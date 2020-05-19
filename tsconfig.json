@@ -2,24 +2,25 @@
   "compilerOptions": {
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
-    "baseUrl": ".",
+    "baseUrl": "./",
     "composite": true,
     "declaration": true,
     "declarationMap": true,
     "downlevelIteration": true,
     "esModuleInterop": true,
     "incremental": true,
-    "lib": ["es2018"],
+    "lib": ["dom", "es2018"],
     "module": "esnext",
     "moduleResolution": "node",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "outDir": "__out__",
     "paths": {
       "@velcro/*": ["./packages/@velcro/*/src"]
     },
     "pretty": true,
     "resolveJsonModule": true,
-    "rootDir": "./",
+    "rootDir": ".",
     "skipDefaultLibCheck": true,
     "skipLibCheck": true,
     "sourceMap": true,
@@ -27,7 +28,8 @@
     "stripInternal": true,
     "target": "ESNext"
   },
-  "files": [],
+  // "files": ["__test__"],
+  "include": ["__test__"],
   "references": [
     { "path": "./packages/@velcro/bundler" },
     { "path": "./packages/@velcro/common" },

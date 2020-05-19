@@ -1,10 +1,11 @@
 {
-  "extends": "../../../tsconfig.base.json",
+  "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "composite": true,
     "lib": ["es2018", "dom"],
     "outDir": "./dist"
+    // "rootDir": "."
   },
-  // "include": ["package.json", "src"],
+  "include": ["src"],
   "references": [{ "path": "../common" }]
 }

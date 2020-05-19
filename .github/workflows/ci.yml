@@ -1,0 +1,23 @@
+name: CI
+on: [push]
+jobs:
+  build:
+    name: ${{ matrix.node-version }} ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macOS-latest, windows-latest, ubuntu-latest]
+        node-version: [10, 12, 14]
+    steps:
+      - uses: actions/checkout@v1
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: Install
+        run: npm i
+      - name: Lerna bootstrap
+        run: npx lerna bootstrap
+      - name: Tests
+        run: npm run test

@@ -28,16 +28,16 @@ export class Resolver {
     );
   }
 
-  getCanonicalUrl(uri: Uri) {
-    return this.rootCtx.getCanonicalUrl(uri);
+  getCanonicalUrl(uri: string | Uri) {
+    return this.rootCtx.getCanonicalUrl(typeof uri === 'string' ? Uri.parse(uri) : uri);
   }
 
   getResolveRoot(uri: Uri) {
-    return this.rootCtx.getResolveRoot(uri);
+    return this.rootCtx.getResolveRoot(typeof uri === 'string' ? Uri.parse(uri) : uri);
   }
 
   getSettings(uri: Uri) {
-    return this.rootCtx.getSettings(uri);
+    return this.rootCtx.getSettings(typeof uri === 'string' ? Uri.parse(uri) : uri);
   }
 
   getUrlForBareModule(name: string, spec: string, path: string) {
@@ -45,19 +45,23 @@ export class Resolver {
   }
 
   listEntries(uri: Uri) {
-    return this.rootCtx.listEntries(uri);
+    return this.rootCtx.listEntries(typeof uri === 'string' ? Uri.parse(uri) : uri);
   }
 
   readFileContent(uri: Uri) {
-    return this.rootCtx.readFileContent(uri);
+    return this.rootCtx.readFileContent(typeof uri === 'string' ? Uri.parse(uri) : uri);
   }
 
   readParentPackageJson(uri: Uri) {
-    return this.rootCtx.readParentPackageJson(uri);
+    return this.rootCtx.readParentPackageJson(typeof uri === 'string' ? Uri.parse(uri) : uri);
   }
 
-  resolve(uri: Uri) {
-    return this.rootCtx.resolve(uri);
+  resolve(spec: string | Uri, fromUri?: Uri | string) {
+    if (Uri.isUri(spec)) {
+      return this.rootCtx.resolveUri(spec);
+    }
+
+    return this.rootCtx.resolve(spec, fromUri);
   }
 
   createResolverContext() {

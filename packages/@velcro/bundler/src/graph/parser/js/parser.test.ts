@@ -6,7 +6,6 @@ describe('JavaScript parser', () => {
   test('discovers unbound symbols', () => {
     const testOne = (code: string, expectedSpecs: string[], nodeEnv = 'development') => {
       const parseResult = parseJavaScript(Uri.file('/index.js'), code, {
-        environmentModules: {},
         globalModules: {},
         nodeEnv,
       });
@@ -24,7 +23,6 @@ describe('JavaScript parser', () => {
   test('prunes branches based on process.env.NODE_ENV', () => {
     const testOne = (code: string, expectedSpecs: string[], nodeEnv = 'development') => {
       const parseResult = parseJavaScript(Uri.file('/index.js'), code, {
-        environmentModules: {},
         globalModules: {},
         nodeEnv,
       });
@@ -60,7 +58,6 @@ describe('JavaScript parser', () => {
   test('will not inject dependencies if the value will be replaced', () => {
     const testOne = (code: string, expectedSpecs: string[], nodeEnv = 'development') => {
       const parseResult = parseJavaScript(Uri.file('/index.js'), code, {
-        environmentModules: {},
         globalModules: {
           process: { spec: '@@process' },
         },

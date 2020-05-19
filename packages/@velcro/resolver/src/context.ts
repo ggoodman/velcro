@@ -4,6 +4,8 @@ import {
   CanceledError,
   checkCancellation,
   Decoder,
+  DependencyNotFoundError,
+  EntryExcludedError,
   EntryNotFoundError,
   isThenable,
   PackageJson,
@@ -13,8 +15,10 @@ import {
   Thenable,
   Uri,
 } from '@velcro/common';
-import { basename, CancellationToken, CancellationTokenSource } from 'ts-primitives';
+import { basename, CancellationToken, CancellationTokenSource, dirname } from 'ts-primitives';
+import { BareModuleSpec, parseBareModuleSpec } from './bareModules';
 import type { Resolver } from './resolver';
+import { NODE_CORE_SHIMS } from './shims';
 import { ResolverStrategy } from './strategy';
 
 type ReturnTypeWithVisits<
@@ -271,7 +275,25 @@ export class ResolverContext {
     this.visits.push({ type, uri });
   }
 
-  resolve(uri: Uri) {
+  resolve(spec: string, fromUri?: Uri | string) {
+    const method = resolveDependency;
+    const receiver = null;
+    const operationName = method.name;
+
+    return this.runInChildContext(operationName, `${spec}|${fromUri}`, (ctx) =>
+      ctx.runWithCache(
+        operationName,
+        `${spec}|${fromUri}`,
+        method,
+        receiver,
+        ctx,
+        Uri.isUri(fromUri) ? fromUri : Uri.parse(fromUri || 'velcro:///root'),
+        spec
+      )
+    );
+  }
+
+  resolveUri(uri: Uri) {
     const method = resolve;
     const receiver = null;
     const operationName = method.name;
@@ -494,6 +516,110 @@ async function resolve(ctx: ResolverContext, url: Uri | string): Promise<Resolve
   };
 }
 
+async function resolveDependency(ctx: ResolverContext, fromUri: Uri, spec: string) {
+  const parsedSpec = parseBareModuleSpec(spec);
+
+  if (parsedSpec) {
+    return ctx.runInChildContext('resolveBareModule', fromUri, (ctx) =>
+      resolveBareModule(ctx, fromUri, parsedSpec)
+    );
+  }
+
+  const relativeUri = Uri.joinPath(
+    Uri.from({
+      ...fromUri,
+      path: dirname(fromUri.path),
+    }),
+    spec
+  );
+
+  return ctx.runInChildContext('resolve', relativeUri, (ctx) => resolve(ctx, relativeUri));
+}
+
+async function resolveBareModule(ctx: ResolverContext, uri: Uri, parsedSpec: BareModuleSpec) {
+  let locatorName = parsedSpec.name;
+  let locatorSpec = parsedSpec.spec;
+  let locatorPath = parsedSpec.path;
+
+  if (!locatorSpec) {
+    const builtIn = NODE_CORE_SHIMS[parsedSpec.name];
+
+    if (builtIn) {
+      locatorName = builtIn.name;
+      locatorSpec = builtIn.spec;
+      locatorPath = builtIn.path;
+    }
+  }
+
+  if (!locatorSpec) {
+    const resolveRootReturn = ctx.getResolveRoot(uri);
+    const resolveRootResult = isThenable(resolveRootReturn)
+      ? await checkCancellation(resolveRootReturn, ctx.token)
+      : resolveRootReturn;
+
+    let nextUri = uri;
+
+    while (Uri.isPrefixOf(resolveRootResult.uri, nextUri)) {
+      const parentPackageJsonReturn = ctx.readParentPackageJson(uri);
+      const parentPackageJsonResult = isThenable(parentPackageJsonReturn)
+        ? await checkCancellation(parentPackageJsonReturn, ctx.token)
+        : parentPackageJsonReturn;
+
+      if (!parentPackageJsonResult.found) {
+        throw new DependencyNotFoundError(parsedSpec.nameSpec, uri);
+      }
+
+      if (parentPackageJsonResult.packageJson.name === parsedSpec.name) {
+        // We found a parent directory that *IS* the module we're looking for
+        const directoryUri = Uri.ensureTrailingSlash(
+          Uri.joinPath(parentPackageJsonResult.uri, '../')
+        );
+        return ctx.runInChildContext('resolveAsDirectory', directoryUri, (ctx) =>
+          resolveAsDirectory(ctx, directoryUri, resolveRootResult.uri, ctx.settings)
+        );
+      }
+
+      const dependencies = {
+        ...(parentPackageJsonResult.packageJson.devDependencies || {}),
+        ...(parentPackageJsonResult.packageJson.peerDependencies || {}),
+        ...(parentPackageJsonResult.packageJson.dependencies || {}),
+      };
+
+      locatorSpec = dependencies[parsedSpec.name];
+
+      if (locatorSpec) {
+        break;
+      }
+
+      nextUri = parentPackageJsonResult.uri;
+    }
+  }
+
+  if (!locatorSpec) {
+    throw new DependencyNotFoundError(parsedSpec.nameSpec, uri);
+  }
+
+  const bareModuleUriReturn = ctx.getUrlForBareModule(locatorName, locatorSpec, locatorPath);
+  const bareModuleUriResult = isThenable(bareModuleUriReturn)
+    ? await checkCancellation(bareModuleUriReturn, ctx.token)
+    : bareModuleUriReturn;
+
+  if (!bareModuleUriResult.found) {
+    throw new DependencyNotFoundError(parsedSpec.nameSpec, uri);
+  }
+
+  if (!bareModuleUriResult.uri) {
+    // TODO: Inject empty module
+    throw new EntryExcludedError(parsedSpec.nameSpec);
+  }
+
+  const resolveReturn = ctx.resolveUri(bareModuleUriResult.uri);
+  const resolveResult = isThenable(resolveReturn)
+    ? await checkCancellation(resolveReturn, ctx.token)
+    : resolveReturn;
+
+  return resolveResult;
+}
 export namespace ResolverContext {
   export interface Options {
     cache: Map<string, Map<string, unknown>>;
@@ -731,8 +857,7 @@ async function resolveAsFile(
   throw new EntryNotFoundError(uri);
 }
 
-async function readParentPackageJson(ctx: ResolverContext, url: string | Uri) {
-  const uri = Uri.isUri(url) ? url : Uri.parse(url);
+async function readParentPackageJson(ctx: ResolverContext, uri: Uri) {
   const canonicalizationReturn = ctx.getCanonicalUrl(uri);
   const resolveRootReturn = ctx.getResolveRoot(uri);
   const bothResolved = all([canonicalizationReturn, resolveRootReturn], ctx.token);

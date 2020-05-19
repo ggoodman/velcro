@@ -64,7 +64,7 @@
     "@velcro/resolver": "^0.29.8",
     "acorn": "^7.2.0",
     "magic-string": "^0.25.7",
-    "ts-primitives": "^2.4.0"
+    "ts-primitives": "^3.0.1"
   },
   "gitHead": "f63b45ad688f2fe9768349afeaf449c016bf33ef"
 }
