@@ -51,7 +51,6 @@ export async function execute(code: string, options: ExecuteOptions) {
     injectRuntime: true,
   });
   const codeWithStart = `${build.code}\n\nreturn Velcro.runtime;\n`;
-  (await import('fs')).promises.writeFile(`${process.cwd()}/code.js`, codeWithStart);
   const runtimeCode = options.sourceMap
     ? `${codeWithStart}\n//# sourceMappingURL=${build.sourceMapDataUri}`
     : codeWithStart;
