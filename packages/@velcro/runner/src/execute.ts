@@ -5,8 +5,7 @@ import { CompoundStrategy } from '@velcro/strategy-compound';
 import { MemoryStrategy } from '@velcro/strategy-memory';
 
 const defaultExtensions: Resolver.Settings['extensions'] = ['.js', '.json'];
-const defaultPackageMain: Resolver.Settings['packageMain'] =
-  typeof window === 'object' ? ['browser', 'main'] : ['main'];
+const defaultPackageMain: Resolver.Settings['packageMain'] = ['browser', 'main'];
 
 export interface ExecuteOptions {
   cdn?: 'jsdelivr' | 'unpkg';
@@ -52,6 +51,7 @@ export async function execute(code: string, options: ExecuteOptions) {
     injectRuntime: true,
   });
   const codeWithStart = `${build.code}\n\nreturn Velcro.runtime;\n`;
+  (await import('fs')).promises.writeFile(`${process.cwd()}/code.js`, codeWithStart);
   const runtimeCode = options.sourceMap
     ? `${codeWithStart}\n//# sourceMappingURL=${build.sourceMapDataUri}`
     : codeWithStart;

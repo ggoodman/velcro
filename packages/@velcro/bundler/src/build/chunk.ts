@@ -1,5 +1,5 @@
 import { MapSet, Uri } from '@velcro/common';
-import * as MagicString from 'magic-string';
+import { Bundle } from 'magic-string';
 import { DependencyEdge } from '../graph/dependencyEdge';
 import { SourceModule } from '../graph/sourceModule';
 import { createRuntime } from '../runtime/runtime';
@@ -7,35 +7,6 @@ import { VelcroImportMap, VelcroStaticRuntime } from '../runtime/types';
 import { ChunkOutput } from './chunkOutput';
 
 type NotUndefined<T> = T extends undefined ? never : T;
-
-export namespace Chunk {
-  export interface Options {
-    edges: Iterable<DependencyEdge>;
-    rootUri: Uri;
-    sourceModules: Iterable<SourceModule>;
-  }
-
-  export type ToStringOptions = ToStringOptionsWithHref | ToStringOptionsBase;
-
-  export interface ToStringOptionsBase {
-    /**
-     * Toggle whether to inject the runtime in the generated code.
-     *
-     * An instance of the runtime is important as it is what will actually schedule
-     * and execute code built for Velcro.
-     *
-     * When `injectRuntime` is `true`, the runtime code will be injected and the
-     * instance of it will be exposed as `Velcro.runtime`.
-     */
-    injectRuntime?: boolean;
-  }
-  export interface ToStringOptionsWithHref extends ToStringOptionsBase {
-    /**
-     * Url at which this file is expected to be reached
-     */
-    href: string;
-  }
-}
 
 export class Chunk {
   private readonly edgesFrom = new MapSet<string, DependencyEdge>();
@@ -68,7 +39,7 @@ export class Chunk {
     //   .toString()
     //   .split(velcroChunkWrapper.splitString);
 
-    const bundle = new MagicString.Bundle({
+    const bundle = new Bundle({
       separator: '\n',
     });
 
@@ -114,5 +85,34 @@ export class Chunk {
       this.sourceModules,
       options && (options as any).href
     );
+  }
+}
+
+export namespace Chunk {
+  export interface Options {
+    edges: Iterable<DependencyEdge>;
+    rootUri: Uri;
+    sourceModules: Iterable<SourceModule>;
+  }
+
+  export type ToStringOptions = ToStringOptionsWithHref | ToStringOptionsBase;
+
+  export interface ToStringOptionsBase {
+    /**
+     * Toggle whether to inject the runtime in the generated code.
+     *
+     * An instance of the runtime is important as it is what will actually schedule
+     * and execute code built for Velcro.
+     *
+     * When `injectRuntime` is `true`, the runtime code will be injected and the
+     * instance of it will be exposed as `Velcro.runtime`.
+     */
+    injectRuntime?: boolean;
+  }
+  export interface ToStringOptionsWithHref extends ToStringOptionsBase {
+    /**
+     * Url at which this file is expected to be reached
+     */
+    href: string;
   }
 }

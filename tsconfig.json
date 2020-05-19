@@ -26,7 +26,7 @@
     "sourceMap": true,
     "strict": true,
     "stripInternal": true,
-    "target": "ESNext"
+    "target": "ES2020"
   },
   // "files": ["__test__"],
   "include": ["__test__"],
