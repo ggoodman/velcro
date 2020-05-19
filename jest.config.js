@@ -118,7 +118,8 @@ module.exports = {
     ].map((name) => ({
       displayName: name,
       moduleNameMapper: {
-        '^@velcro/(.*)$': '<rootDir>/packages/@velcro/$1',
+        '^@velcro/node-libs/(.*)$': '<rootDir>/packages/@velcro/node-libs/$1',
+        '^@velcro/(.*)$': '<rootDir>/packages/@velcro/$1/src',
       },
       preset: 'ts-jest',
       testEnvironment: 'node',
