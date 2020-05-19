@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-getCanonicalUrl(uri: Uri): (ResolverStrategy.CanonicalizeResult & {
+getCanonicalUrl(uri: string | Uri): (ResolverStrategy.CanonicalizeResult & {
         visited: ResolverContext.Visit[];
     }) | import("@velcro/common").Thenable<ResolverStrategy.CanonicalizeResult & {
         visited: ResolverContext.Visit[];
@@ -18,7 +18,7 @@ getCanonicalUrl(uri: Uri): (ResolverStrategy.CanonicalizeResult & {
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  uri | Uri |  |
+|  uri | string \| Uri |  |
 
 <b>Returns:</b>
 

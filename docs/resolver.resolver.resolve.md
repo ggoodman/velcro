@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-resolve(uri: Uri): import("@velcro/common").Thenable<({
+resolve(spec: string | Uri, fromUri?: Uri | string): import("@velcro/common").Thenable<({
         found: false;
         uri: null;
         parentPackageJson?: {
@@ -43,7 +43,8 @@ resolve(uri: Uri): import("@velcro/common").Thenable<({
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  uri | Uri |  |
+|  spec | string \| Uri |  |
+|  fromUri | Uri \| string |  |
 
 <b>Returns:</b>
 
