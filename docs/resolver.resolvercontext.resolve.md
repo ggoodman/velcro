@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-resolve(spec: string, fromUri?: Uri | string): Thenable<({
+resolve(spec: string, fromUri: Uri): Thenable<({
         found: false;
         uri: null;
         parentPackageJson?: {
@@ -44,7 +44,7 @@ resolve(spec: string, fromUri?: Uri | string): Thenable<({
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  spec | string |  |
-|  fromUri | Uri \| string |  |
+|  fromUri | Uri |  |
 
 <b>Returns:</b>
 

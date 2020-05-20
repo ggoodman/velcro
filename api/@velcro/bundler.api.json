@@ -198,6 +198,525 @@
         },
         {
           "kind": "Class",
+          "canonicalReference": "@velcro/bundler!Chunk:class",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "declare class Chunk "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "Chunk",
+          "members": [
+            {
+              "kind": "Constructor",
+              "canonicalReference": "@velcro/bundler!Chunk:constructor(1)",
+              "docComment": "/**\n * Constructs a new instance of the `Chunk` class\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "constructor(options: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Chunk.Options",
+                  "canonicalReference": "@velcro/bundler!~Chunk.Options:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ");"
+                }
+              ],
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "options",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/bundler!Chunk#buildForStaticRuntime:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "buildForStaticRuntime(options?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Chunk.ToStringOptions",
+                  "canonicalReference": "@velcro/bundler!~Chunk.ToStringOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ChunkOutput",
+                  "canonicalReference": "@velcro/bundler!~ChunkOutput:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "options",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "buildForStaticRuntime"
+            }
+          ],
+          "implementsTokenRanges": []
+        },
+        {
+          "kind": "Namespace",
+          "canonicalReference": "@velcro/bundler!Chunk:namespace",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "declare namespace Chunk "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "Chunk",
+          "members": [
+            {
+              "kind": "Interface",
+              "canonicalReference": "@velcro/bundler!Chunk.Options:interface",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "interface Options "
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "Options",
+              "members": [
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "@velcro/bundler!Chunk.Options#edges:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "edges: "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "Iterable",
+                      "canonicalReference": "!Iterable:interface"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "<"
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "DependencyEdge",
+                      "canonicalReference": "@velcro/bundler!~DependencyEdge:interface"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ">"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "releaseTag": "Public",
+                  "name": "edges",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 5
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "@velcro/bundler!Chunk.Options#rootUri:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "rootUri: "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "Uri",
+                      "canonicalReference": "@velcro/bundler!Uri:class"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "releaseTag": "Public",
+                  "name": "rootUri",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "@velcro/bundler!Chunk.Options#sourceModules:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "sourceModules: "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "Iterable",
+                      "canonicalReference": "!Iterable:interface"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "<"
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "SourceModule",
+                      "canonicalReference": "@velcro/bundler!~SourceModule:class"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ">"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "releaseTag": "Public",
+                  "name": "sourceModules",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 5
+                  }
+                }
+              ],
+              "extendsTokenRanges": []
+            },
+            {
+              "kind": "Interface",
+              "canonicalReference": "@velcro/bundler!Chunk.ToStringOptions:interface",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "interface ToStringOptions "
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "ToStringOptions",
+              "members": [
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "@velcro/bundler!Chunk.ToStringOptions#injectRuntime:member",
+                  "docComment": "/**\n * Toggle whether to inject the runtime in the generated code.\n *\n * An instance of the runtime is important as it is what will actually schedule and execute code built for Velcro.\n *\n * When `injectRuntime` is `true`, the runtime code will be injected and the instance of it will be exposed as `Velcro.runtime`.\n */\n",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "injectRuntime?: "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "boolean"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "releaseTag": "Public",
+                  "name": "injectRuntime",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "extendsTokenRanges": []
+            }
+          ]
+        },
+        {
+          "kind": "Class",
+          "canonicalReference": "@velcro/bundler!ChunkOutput:class",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "declare class ChunkOutput "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "ChunkOutput",
+          "members": [
+            {
+              "kind": "Constructor",
+              "canonicalReference": "@velcro/bundler!ChunkOutput:constructor(1)",
+              "docComment": "/**\n * Constructs a new instance of the `ChunkOutput` class\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "constructor(bundle: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Bundle",
+                  "canonicalReference": "magic-string!Bundle:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", sourceModules: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Map",
+                  "canonicalReference": "!Map:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<string, "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "SourceModule",
+                  "canonicalReference": "@velcro/bundler!~SourceModule:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", uri: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/bundler!Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ");"
+                }
+              ],
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "bundle",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "parameterName": "sourceModules",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 7
+                  }
+                },
+                {
+                  "parameterName": "uri",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 8,
+                    "endIndex": 9
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@velcro/bundler!ChunkOutput#code:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "get code(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "code",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@velcro/bundler!ChunkOutput#href:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "get href(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "href",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@velcro/bundler!ChunkOutput#sourceMap:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "get sourceMap(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "SourceMap",
+                  "canonicalReference": "@velcro/bundler!~SourceMap:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "sourceMap",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@velcro/bundler!ChunkOutput#sourceMapDataUri:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "get sourceMapDataUri(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "sourceMapDataUri",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@velcro/bundler!ChunkOutput#sourceMapString:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "get sourceMapString(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "sourceMapString",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@velcro/bundler!ChunkOutput#uri:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly uri: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/bundler!Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "uri",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false
+            }
+          ],
+          "implementsTokenRanges": []
+        },
+        {
+          "kind": "Class",
           "canonicalReference": "@velcro/bundler!Graph:class",
           "docComment": "",
           "excerptTokens": [
@@ -1310,7 +1829,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.29.8\""
+              "text": "version = \"0.29.9\""
             }
           ],
           "releaseTag": "Public",

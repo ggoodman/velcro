@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-declare function execute(code: string, options: ExecuteOptions): Promise<unknown>;
+declare function execute<T = unknown>(code: string, options: ExecuteOptions): Promise<T>;
 ```
 
 ## Parameters
@@ -19,5 +19,5 @@ declare function execute(code: string, options: ExecuteOptions): Promise<unknown
 
 <b>Returns:</b>
 
-Promise&lt;unknown&gt;
+Promise&lt;T&gt;
 

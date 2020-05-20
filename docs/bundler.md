@@ -8,6 +8,8 @@
 
 |  Class | Description |
 |  --- | --- |
+|  [Chunk](./bundler.chunk.md) |  |
+|  [ChunkOutput](./bundler.chunkoutput.md) |  |
 |  [Graph](./bundler.graph.md) |  |
 |  [SourceModule](./bundler.sourcemodule.md) |  |
 |  [SourceModuleDependency](./bundler.sourcemoduledependency.md) |  |
@@ -28,6 +30,7 @@
 
 |  Namespace | Description |
 |  --- | --- |
+|  [Chunk](./bundler.chunk.md) |  |
 |  [Graph](./bundler.graph.md) |  |
 
 ## Variables

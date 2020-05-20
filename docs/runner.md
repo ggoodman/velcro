@@ -8,12 +8,14 @@
 
 |  Function | Description |
 |  --- | --- |
+|  [build(code, options)](./runner.build.md) |  |
 |  [execute(code, options)](./runner.execute.md) |  |
 
 ## Interfaces
 
 |  Interface | Description |
 |  --- | --- |
+|  [BuildOptions](./runner.buildoptions.md) |  |
 |  [ExecuteOptions](./runner.executeoptions.md) |  |
 
 ## Variables
