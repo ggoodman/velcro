@@ -211,3 +211,37 @@ interface ResolverStrategy {
   ): MaybeThenable<ResolverStrategy.ReadFileContentResult>;
 }
 ```
+
+## Contributing
+
+Velcro is organized as a monorepo with inter-module dependencies managed by [lerna](https://github.com/lerna/lerna).
+
+**Initial setup:**
+
+```sh
+# Install top-level developement dependencies
+npm install
+
+# Bootstrap package-level dependencies and set up symlinks between packages
+npx lerna bootstrap
+```
+
+**Running tests:**
+
+Running tests currently does _not_ rely on having built packages. [Jest](https://jestjs.io) is used with [ts-jest](https://github.com/kulshekhar/ts-jest) to run unit and integration tests. Jest is set up such that each package is its own logical [project](https://jestjs.io/docs/en/configuration#projects-arraystring--projectconfig) and a further project is configured for top-level integration tests.
+
+Jest is configured with [`moduleNameMapper`](https://jestjs.io/docs/en/configuration#modulenamemapper-objectstring-string--arraystring) settings that are designed to match the `paths` mappings in the `tsconfig.json` file.
+
+Tests can be run via the `test` package script:
+
+```sh
+npm run test
+```
+
+**Building:**
+
+Building velcro is also orchestrated by `lerna` and the actual building is done by [Rollup](https://rollupjs.org).
+
+```sh
+npm run build
+```
