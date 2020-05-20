@@ -8,6 +8,7 @@ const { createRequire } = require('module');
 const { resolve } = require('path');
 const RollupPluginInjectProcessEnv = require('rollup-plugin-inject-process-env');
 const { terser } = require('rollup-plugin-terser');
+const Typescript = require('typescript');
 
 function toUmdName(name) {
   let umdName = 'Velcro.';
@@ -53,6 +54,7 @@ function rollupConfigFactory(dirname, filename) {
         }),
       },
       transpileOnly: !emitDeclarations,
+      typescript: Typescript,
       exclude: ['node_modules/**', '**/*.mjs'],
     });
 

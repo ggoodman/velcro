@@ -1,4 +1,5 @@
-import { buildGraph, BuildGraphOptions, VelcroRuntime } from '@velcro/bundler';
+import { buildGraph, BuildGraphOptions, ChunkOutput, VelcroRuntime } from '@velcro/bundler';
+import { Uri } from '@velcro/common/src';
 import { Resolver } from '@velcro/resolver';
 import { CdnStrategy } from '@velcro/strategy-cdn';
 import { CompoundStrategy } from '@velcro/strategy-compound';
@@ -22,7 +23,10 @@ export interface ExecuteOptions extends BuildOptions {
   injectModules?: { [id: string]: unknown };
 }
 
-export async function build(code: string, options: BuildOptions) {
+export async function build(
+  code: string,
+  options: BuildOptions
+): Promise<{ entrypointUri: Uri; output: ChunkOutput }> {
   const entrypointPath = 'index.js';
   const cdnStrategy =
     options.cdn === 'unpkg'
