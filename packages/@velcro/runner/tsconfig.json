@@ -8,5 +8,12 @@
   },
   "exclude": ["**/node_modules/**/*"],
   "include": ["src"],
-  "references": [{ "path": "../bundler" }, { "path": "../common" }, { "path": "../resolver" }]
+  "references": [
+    { "path": "../bundler" },
+    { "path": "../common" },
+    { "path": "../resolver" },
+    { "path": "../strategy-cdn" },
+    { "path": "../strategy-compound" },
+    { "path": "../strategy-memory" }
+  ]
 }
