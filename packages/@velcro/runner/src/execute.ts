@@ -57,7 +57,7 @@ export async function build(code: string, options: BuildOptions) {
   return { entrypointUri, output };
 }
 
-export async function execute<T = unknown>(code: string, options: ExecuteOptions) {
+export async function execute<T = unknown>(code: string, options: ExecuteOptions): Promise<T> {
   const { entrypointUri, output } = await build(code, options);
   const codeWithStart = `${output.code}\n\nreturn Velcro.runtime;\n`;
   const runtimeCode = options.sourceMap
