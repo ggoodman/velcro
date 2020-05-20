@@ -3,14 +3,6 @@ import { Chunk } from '../build/chunk';
 import { DependencyEdge } from './dependencyEdge';
 import { SourceModule } from './sourceModule';
 
-export namespace Graph {
-  export interface Options {
-    edges: Iterable<DependencyEdge>;
-    rootUri: Uri;
-    sourceModules: Iterable<SourceModule>;
-  }
-}
-
 export class Graph {
   private readonly edgesFrom = new MapSet<string, DependencyEdge>();
   private readonly edgesTo = new MapSet<string, DependencyEdge>();
@@ -42,5 +34,13 @@ export class Graph {
         sourceModules: this.sourceModules.values(),
       }),
     ];
+  }
+}
+
+export namespace Graph {
+  export interface Options {
+    edges: Iterable<DependencyEdge>;
+    rootUri: Uri;
+    sourceModules: Iterable<SourceModule>;
   }
 }
