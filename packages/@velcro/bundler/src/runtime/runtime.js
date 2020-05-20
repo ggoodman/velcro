@@ -54,11 +54,11 @@ export function createRuntime(velcro) {
        * @param {string} spec
        */
       function require(spec) {
-        let module = runtime.modules[spec];
+        const id = runtime.resolveSpecAgainstImportMap(spec, fromModule);
+
+        let module = runtime.modules[id];
 
         if (!module) {
-          const id = runtime.resolveSpecAgainstImportMap(spec, fromModule);
-
           const moduleDefinition = runtime.defs[id];
 
           if (!moduleDefinition) {
