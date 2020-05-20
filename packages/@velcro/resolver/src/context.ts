@@ -112,7 +112,7 @@ export class ResolverContext {
       settings,
       strategy,
       token,
-      visits: new Visits(Uri.parse('velcro:///root')),
+      visits: new Visits(Uri.parse('velcro:/root')),
     });
   }
 
@@ -275,21 +275,14 @@ export class ResolverContext {
     this.visits.push({ type, uri });
   }
 
-  resolve(spec: string, fromUri?: Uri | string) {
+  resolve(spec: string, fromUri: Uri) {
     const method = resolveDependency;
     const receiver = null;
     const operationName = method.name;
+    const href = `${fromUri}|${spec}`;
 
-    return this.runInChildContext(operationName, `${spec}|${fromUri}`, (ctx) =>
-      ctx.runWithCache(
-        operationName,
-        `${spec}|${fromUri}`,
-        method,
-        receiver,
-        ctx,
-        Uri.isUri(fromUri) ? fromUri : Uri.parse(fromUri || 'velcro:///root'),
-        spec
-      )
+    return this.runInChildContext(operationName, href, (ctx) =>
+      ctx.runWithCache(operationName, href, method, receiver, ctx, fromUri, spec)
     );
   }
 
@@ -457,8 +450,7 @@ function decodePathNode(node: string) {
   };
 }
 
-async function resolve(ctx: ResolverContext, url: Uri | string): Promise<ResolveResult> {
-  const uri = Uri.isUri(url) ? url : Uri.parse(url);
+async function resolve(ctx: ResolverContext, uri: Uri): Promise<ResolveResult> {
   const bothResolved = all(
     [ctx.getCanonicalUrl(uri), ctx.getResolveRoot(uri), ctx.getSettings(uri)],
     ctx.token
@@ -533,7 +525,7 @@ async function resolveDependency(ctx: ResolverContext, fromUri: Uri, spec: strin
     spec
   );
 
-  return ctx.runInChildContext('resolve', relativeUri, (ctx) => resolve(ctx, relativeUri));
+  return ctx.runInChildContext('resolveUri', relativeUri, (ctx) => resolve(ctx, relativeUri));
 }
 
 async function resolveBareModule(ctx: ResolverContext, uri: Uri, parsedSpec: BareModuleSpec) {
@@ -542,14 +534,26 @@ async function resolveBareModule(ctx: ResolverContext, uri: Uri, parsedSpec: Bar
   let locatorPath = parsedSpec.path;
 
   if (!locatorSpec) {
+    ctx.debug('No locator spec, trying via package.json for %s from %s', parsedSpec.nameSpec, uri);
     const resolveRootReturn = ctx.getResolveRoot(uri);
     const resolveRootResult = isThenable(resolveRootReturn)
       ? await checkCancellation(resolveRootReturn, ctx.token)
       : resolveRootReturn;
 
     let nextUri = uri;
+    let maxIterations = 10;
 
     while (Uri.isPrefixOf(resolveRootResult.uri, nextUri)) {
+      ctx.debug(
+        'looking for parent package json for %s from %s at %s',
+        parsedSpec.nameSpec,
+        uri,
+        nextUri
+      );
+      if (--maxIterations <= 0) {
+        throw new Error('Max iterations reached');
+      }
+
       const parentPackageJsonReturn = ctx.readParentPackageJson(uri);
       const parentPackageJsonResult = isThenable(parentPackageJsonReturn)
         ? await checkCancellation(parentPackageJsonReturn, ctx.token)
@@ -582,11 +586,19 @@ async function resolveBareModule(ctx: ResolverContext, uri: Uri, parsedSpec: Bar
       }
 
       nextUri = Uri.joinPath(parentPackageJsonResult.uri, '..');
-      console.debug({ nextUri });
+
+      if (Uri.equals(nextUri, resolveRootResult.uri)) {
+        break;
+      }
     }
   }
 
   if (!locatorSpec) {
+    ctx.debug(
+      'No locator spec, trying via NODE_CORE_SHIMS for %s from %s',
+      parsedSpec.nameSpec,
+      uri
+    );
     const builtIn = NODE_CORE_SHIMS[parsedSpec.name];
 
     if (builtIn) {

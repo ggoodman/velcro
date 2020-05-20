@@ -56,11 +56,7 @@ export class Resolver {
     return this.rootCtx.readParentPackageJson(typeof uri === 'string' ? Uri.parse(uri) : uri);
   }
 
-  resolve(spec: string | Uri, fromUri?: Uri | string) {
-    if (Uri.isUri(spec)) {
-      return this.rootCtx.resolveUri(spec);
-    }
-
+  resolveBareModuleFrom(spec: string, fromUri: Uri) {
     return this.rootCtx.resolve(spec, fromUri);
   }
 

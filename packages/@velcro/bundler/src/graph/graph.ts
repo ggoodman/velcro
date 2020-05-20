@@ -38,7 +38,7 @@ export class Graph {
     return [
       new Chunk({
         edges: this.edgesFrom.values(),
-        rootUri: this.rootUri,
+        rootUri: Uri.joinPath(this.rootUri, './chunk/0.js'),
         sourceModules: this.sourceModules.values(),
       }),
     ];

@@ -21,7 +21,7 @@ describe('Velcro.runner', () => {
     expect(result).toEqual('hello world');
   });
 
-  it.only('will reander hello world using react-dom/server', async () => {
+  it('will render hello world using react-dom/server', async () => {
     const code = `
       const React = require('react');
       const ReactDOMServer = require('react-dom/server');
@@ -40,5 +40,21 @@ describe('Velcro.runner', () => {
     });
 
     expect(result).toEqual('<h1 data-reactroot="">hello world</h1>');
+  });
+
+  it('will require the events shim', async () => {
+    const code = `
+      module.exports = require('events');
+    `;
+    const { EventEmitter } = await execute<typeof import('events')>(code, {
+      readUrl,
+      nodeEnv: 'production',
+    });
+
+    expect(typeof EventEmitter).toBe('function');
+
+    const ee = new EventEmitter();
+
+    expect(typeof ee.on).toBe('function');
   });
 });

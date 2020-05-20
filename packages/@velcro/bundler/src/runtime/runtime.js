@@ -38,7 +38,7 @@ export function createRuntime(velcro) {
       this.defs = velcro.defs;
       /** @type {Record<string, Module | undefined>} */
       this.modules = Object.create(null);
-      this.root = new Module(this, 'velcro://root', {});
+      this.root = new Module(this, 'velcro:/root', {});
       this.require = this.createRequire(this.root);
     }
 

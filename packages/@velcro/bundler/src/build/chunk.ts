@@ -31,7 +31,7 @@ export class Chunk {
     }
   }
 
-  buildForStaticRuntime<T extends Chunk.ToStringOptions = Chunk.ToStringOptionsBase>(options?: T) {
+  buildForStaticRuntime(options?: Chunk.ToStringOptions) {
     // const velcroModuleFactoryParts = velcroModuleFactory
     //   .toString()
     //   .split(velcroModuleFactory.splitString);
@@ -80,11 +80,7 @@ export class Chunk {
       bundle.append(`\nVelcro.runtime = ${createRuntime.toString()}(Velcro.registry);\n`);
     }
 
-    return new ChunkOutput<T extends { href: string } ? string : undefined>(
-      bundle,
-      this.sourceModules,
-      options && (options as any).href
-    );
+    return new ChunkOutput(bundle, this.sourceModules, this.rootUri);
   }
 }
 
@@ -95,9 +91,7 @@ export namespace Chunk {
     sourceModules: Iterable<SourceModule>;
   }
 
-  export type ToStringOptions = ToStringOptionsWithHref | ToStringOptionsBase;
-
-  export interface ToStringOptionsBase {
+  export interface ToStringOptions {
     /**
      * Toggle whether to inject the runtime in the generated code.
      *
@@ -108,11 +102,5 @@ export namespace Chunk {
      * instance of it will be exposed as `Velcro.runtime`.
      */
     injectRuntime?: boolean;
-  }
-  export interface ToStringOptionsWithHref extends ToStringOptionsBase {
-    /**
-     * Url at which this file is expected to be reached
-     */
-    href: string;
   }
 }

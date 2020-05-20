@@ -83,7 +83,7 @@ class GraphBuilder {
   private readonly nodeEnv: string;
   private readonly resolver: Resolver;
   private readonly rootCtx: ResolverContext;
-  private readonly rootUri = Uri.parse('velcro:///root');
+  private readonly rootUri = Uri.parse('velcro:/root');
   private readonly pendingModuleOperations = new MapSet<string, Promise<unknown>>();
   private readonly sourceModules = new Map<string, SourceModule>();
 
@@ -162,7 +162,7 @@ class GraphBuilder {
 
     const href = sourceModule.href;
     const operation = ctx.runInChildContext(
-      'resolveDependency',
+      'GraphBuilder.resolveDependency',
       `${href}|${dependency.spec}`,
       (ctx) => resolveDependency(ctx, sourceModule, dependency)
     );

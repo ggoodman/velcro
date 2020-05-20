@@ -1,10 +1,10 @@
 import remapping from '@ampproject/remapping';
+import { Base64, Uri } from '@velcro/common';
 import { Bundle } from 'magic-string';
 import { SourceModule } from '../graph/sourceModule';
 import { SourceMap } from './sourceMap';
-import { Base64 } from '@velcro/common';
 
-export class ChunkOutput<T extends string | undefined> {
+export class ChunkOutput {
   private cachedCode?: string;
   private cachedSourceMap?: SourceMap;
   private cachedSourceMapDataUri?: string;
@@ -13,7 +13,7 @@ export class ChunkOutput<T extends string | undefined> {
   constructor(
     private readonly bundle: Bundle,
     private readonly sourceModules: Map<string, SourceModule>,
-    readonly href: T
+    readonly uri: Uri
   ) {}
 
   get code() {
@@ -22,6 +22,10 @@ export class ChunkOutput<T extends string | undefined> {
     }
 
     return this.cachedCode!;
+  }
+
+  get href() {
+    return this.uri.toString();
   }
 
   get sourceMap() {
