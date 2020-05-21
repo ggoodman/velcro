@@ -112,6 +112,11 @@ export class Chunk {
               });
             }
           `);
+          break;
+        }
+        case SyntaxKind.JSON: {
+          sourceModule.source.prepend('module.exports = ');
+          break;
         }
       }
 

@@ -42,6 +42,22 @@ describe('Velcro.runner', () => {
     expect(result).toMatchInlineSnapshot(`"<h1 data-reactroot=\\"\\">hello world</h1>"`);
   });
 
+  it('will read package.json for react', async () => {
+    const code = `
+      module.exports = require('react/package.json');
+    `;
+    const result = await execute<{ name: string; version: string }>(code, {
+      dependencies: {
+        react: '16.13.1',
+      },
+      readUrl,
+      nodeEnv: 'production',
+    });
+
+    expect(result.name).toBe('react');
+    expect(result.version).toBe('16.13.1');
+  });
+
   it('will run more complex package using react-dom/server', async () => {
     const code = `
       const React = require('react');
