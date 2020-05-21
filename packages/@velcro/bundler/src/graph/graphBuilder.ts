@@ -16,7 +16,7 @@ import { DependencyEdge } from './dependencyEdge';
 import { GraphBuildError } from './errors';
 import { Graph } from './graph';
 import { ParentPackageJson } from './parentPackageJson';
-import { parseJavaScript, parseJson } from './parser';
+import { parseCss, parseJavaScript, parseJson } from './parser';
 import { ParserFunction } from './parsing';
 import { DEFAULT_SHIM_GLOBALS } from './shims';
 import { SourceModule } from './sourceModule';
@@ -350,6 +350,10 @@ class GraphBuilder {
 
     if (path.endsWith('.js')) {
       return parseJavaScript;
+    }
+
+    if (path.endsWith('.css')) {
+      return parseCss;
     }
 
     throw new ParseError(uri, 'No suitable parser was found');

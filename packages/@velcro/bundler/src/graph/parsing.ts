@@ -37,6 +37,7 @@ export type CodeChange =
     };
 
 export enum SyntaxKind {
+  CSS = 'CSS',
   JavaScript = 'JavaScript',
   JSON = 'JSON',
 }

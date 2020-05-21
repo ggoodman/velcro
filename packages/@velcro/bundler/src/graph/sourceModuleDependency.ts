@@ -1,6 +1,7 @@
 import { Uri } from '@velcro/common';
 
 export enum SourceModuleDependencyKind {
+  CssImport = 'CssImport',
   Entrypoint = 'Entrypoint',
   Require = 'Require',
   RequireResolve = 'RequireResolve',

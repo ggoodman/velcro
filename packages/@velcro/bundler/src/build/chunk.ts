@@ -1,6 +1,7 @@
 import { MapSet, Uri } from '@velcro/common';
 import { Bundle } from 'magic-string';
 import { DependencyEdge } from '../graph/dependencyEdge';
+import { SyntaxKind } from '../graph/parsing';
 import { SourceModule } from '../graph/sourceModule';
 import { createRuntime } from '../runtime/runtime';
 import { VelcroImportMap, VelcroStaticRuntime } from '../runtime/types';
@@ -54,6 +55,63 @@ export class Chunk {
       if (edgesFrom) {
         for (const edge of edgesFrom) {
           moduleScopes[edge.dependency.spec] = edge.toUri.toString();
+        }
+      }
+
+      switch (sourceModule.syntax) {
+        case SyntaxKind.CSS: {
+          const cssCode = sourceModule.source.original;
+          const BACKSLASH = '\\'.charCodeAt(0);
+          const SINGLE_QUOTE = "'".charCodeAt(0);
+          const NL = '\n'.charCodeAt(0);
+          const CR = '\r'.charCodeAt(0);
+
+          let escaped = false;
+
+          for (let i = 0; i < cssCode.length; i++) {
+            const char = cssCode.charCodeAt(i);
+
+            if (char === BACKSLASH) {
+              escaped = !escaped;
+              continue;
+            }
+
+            if (!escaped) {
+              // Escape certain characters (if not already escaped)
+              switch (char) {
+                case CR:
+                case NL:
+                  sourceModule.source.overwrite(i, i + 1, ' ');
+                  break;
+                case SINGLE_QUOTE:
+                  sourceModule.source.prependRight(i, '\\');
+                  break;
+              }
+            }
+
+            escaped = false;
+          }
+
+          sourceModule.source.prepend(`
+            function reload(){
+              var styleTag = document.createElement("style");
+              styleTag.type = "text/css";
+              styleTag.innerHTML = '`);
+          sourceModule.source.append(`';
+              document.head.appendChild(styleTag);
+              return function() {    
+                if (styleTag && styleTag.parentElement) {
+                  styleTag.parentElement.removeChild(styleTag);
+                }
+              };
+            };
+            var remove = reload();
+            if (module.hot && module.hot.dispose) {
+              module.hot.dispose(function() {
+                remove();
+              });
+            }
+          `);
         }
       }
 
