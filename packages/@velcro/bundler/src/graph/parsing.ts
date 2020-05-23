@@ -1,4 +1,5 @@
 import { Uri } from '@velcro/common';
+import MagicString from 'magic-string';
 import { DEFAULT_SHIM_GLOBALS } from './shims';
 import { SourceModuleDependency } from './sourceModuleDependency';
 
@@ -12,10 +13,8 @@ export type ParserFunction = (
   code: string,
   options: ParseOptions
 ) => {
-  code: string;
+  code: MagicString;
   dependencies: SourceModuleDependency[];
-  changes: CodeChange[];
-  syntax: SyntaxKind;
 };
 
 export type CodeChange =

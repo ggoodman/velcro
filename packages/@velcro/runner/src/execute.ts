@@ -1,9 +1,11 @@
-import { buildGraph, BuildGraphOptions, ChunkOutput, VelcroRuntime } from '@velcro/bundler';
+import { buildGraph, BuildGraphOptions, ChunkOutput, Plugin, VelcroRuntime } from '@velcro/bundler';
 import { Uri } from '@velcro/common/src';
 import { Resolver } from '@velcro/resolver';
 import { CdnStrategy } from '@velcro/strategy-cdn';
 import { CompoundStrategy } from '@velcro/strategy-compound';
 import { MemoryStrategy } from '@velcro/strategy-memory';
+
+export { cssPlugin } from './plugins/css';
 
 const defaultExtensions: Resolver.Settings['extensions'] = ['.js', '.json'];
 const defaultPackageMain: Resolver.Settings['packageMain'] = ['browser', 'main'];
@@ -14,6 +16,7 @@ export interface BuildOptions {
   extensions?: Resolver.Settings['extensions'];
   external?: BuildGraphOptions['external'];
   nodeEnv?: string;
+  plugins?: Plugin[];
   packageMain?: Resolver.Settings['packageMain'];
   readUrl: CdnStrategy.UrlContentFetcher;
   sourceMap?: boolean;
@@ -52,6 +55,7 @@ export async function build(
     entrypoints: [entrypointUri],
     resolver,
     nodeEnv: options.nodeEnv || 'development',
+    plugins: options.plugins,
   });
   const [chunk] = graph.splitChunks();
   const output = chunk.buildForStaticRuntime({
@@ -67,6 +71,7 @@ export async function execute<T = unknown>(code: string, options: ExecuteOptions
   const runtimeCode = options.sourceMap
     ? `${codeWithStart}\n//# sourceMappingURL=${output.sourceMapDataUri}`
     : codeWithStart;
+
   const runtimeFn = new Function(runtimeCode) as () => VelcroRuntime;
   const velcro = runtimeFn();
 

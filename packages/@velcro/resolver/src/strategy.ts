@@ -4,43 +4,6 @@ import type { Resolver } from './resolver';
 
 type MaybeThenable<T> = T | Thenable<T>;
 
-export namespace ResolverStrategy {
-  export enum EntryKind {
-    File = 'file',
-    Directory = 'directory',
-  }
-
-  export interface Entry<TKind extends EntryKind = EntryKind> {
-    uri: Uri;
-    type: TKind;
-  }
-
-  export type BareModuleResult = {
-    found: boolean;
-    uri: Uri | null;
-  };
-
-  export interface CanonicalizeResult {
-    uri: Uri;
-  }
-
-  export interface ResolveRootResult {
-    uri: Uri;
-  }
-
-  export interface SettingsResult {
-    settings: Resolver.Settings;
-  }
-
-  export interface ListEntriesResult {
-    entries: Entry[];
-  }
-
-  export interface ReadFileContentResult {
-    content: ArrayBuffer;
-  }
-}
-
 export interface ResolverStrategy {
   /**
    * Produce a url given the components of a bare module specifier.
@@ -145,6 +108,43 @@ export interface ResolverStrategyWithRoot extends ResolverStrategy {
    * uris according to each strategy's `rootUri`.
    */
   rootUri: Uri;
+}
+
+export namespace ResolverStrategy {
+  export enum EntryKind {
+    File = 'file',
+    Directory = 'directory',
+  }
+
+  export interface Entry<TKind extends EntryKind = EntryKind> {
+    uri: Uri;
+    type: TKind;
+  }
+
+  export type BareModuleResult = {
+    found: boolean;
+    uri: Uri | null;
+  };
+
+  export interface CanonicalizeResult {
+    uri: Uri;
+  }
+
+  export interface ResolveRootResult {
+    uri: Uri;
+  }
+
+  export interface SettingsResult {
+    settings: Resolver.Settings;
+  }
+
+  export interface ListEntriesResult {
+    entries: Entry[];
+  }
+
+  export interface ReadFileContentResult {
+    content: ArrayBuffer;
+  }
 }
 
 export abstract class AbstractResolverStrategy implements ResolverStrategy {
