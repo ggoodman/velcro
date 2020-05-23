@@ -193,7 +193,7 @@ export class PluginManager {
         sourceMaps.push(sourceMap);
       } else {
         try {
-          const sourceMapUri = Uri.joinPath(uri, sourceMapRef);
+          const sourceMapUri = Uri.joinPath(uri, `../${sourceMapRef}`);
           const result = await ctx.readFileContent(sourceMapUri);
           const sourceMap = JSON.parse(ctx.decoder.decode(result.content)) as ISourceMap;
 
