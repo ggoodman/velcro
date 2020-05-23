@@ -1,5 +1,5 @@
 import remapping from '@ampproject/remapping';
-import { Base64, Uri } from '@velcro/common';
+import { Uri } from '@velcro/common';
 import { Bundle } from 'magic-string';
 import { SourceModule } from '../graph/sourceModule';
 import { SourceMap } from './sourceMap';
@@ -62,6 +62,26 @@ export class ChunkOutput {
 
     // In case a source map seems to be self-referential, avoid crashing
     const seen = new Set<SourceModule>();
+    const loader: Parameters<typeof remapping>[1] = (uri) => {
+      const sourceModule = this.sourceModules.get(uri);
+      if (sourceModule) {
+        if (seen.has(sourceModule)) {
+          return null;
+        }
+
+        seen.add(sourceModule);
+
+        if (sourceModule.sourceMaps.length) {
+          return remapping(
+            sourceModule.sourceMaps as Parameters<typeof remapping>[0],
+            loader,
+            false
+          );
+        }
+      }
+
+      return null;
+    };
     const remapped = remapping(
       {
         file: inputMap.file,
@@ -71,37 +91,7 @@ export class ChunkOutput {
         sourcesContent: inputMap.sourcesContent,
         version: 3,
       },
-      (uri: string) => {
-        const sourceModule = this.sourceModules.get(uri);
-
-        if (sourceModule && sourceModule.sourceMappingUrl) {
-          if (seen.has(sourceModule)) {
-            return null;
-          }
-
-          seen.add(sourceModule);
-
-          const match = sourceModule.sourceMappingUrl.match(
-            /^data:application\/json;(?:charset=([^;]+);)?base64,(.*)$/
-          );
-
-          if (match) {
-            if (match[1] && match[1] !== 'utf-8') {
-              return null;
-            }
-
-            try {
-              const decoded = JSON.parse(Base64.decode(match[2]));
-
-              return decoded;
-            } catch (err) {
-              return null;
-            }
-          }
-        }
-
-        return null;
-      },
+      loader,
       false
     );
 

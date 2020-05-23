@@ -56,14 +56,15 @@ export class Chunk {
           moduleScopes[edge.dependency.spec] = edge.toUri.toString();
         }
       }
+      const sourceModuleCode = sourceModule.source;
 
-      sourceModule.source.prepend(
+      sourceModuleCode.prepend(
         `velcro.defs[${JSON.stringify(
           sourceModule.uri.toString()
         )}] = [function(module,exports,require,__dirname,__filename){\n`
       );
-      sourceModule.source.append(`\n},${JSON.stringify(importMap)}];`);
-      bundle.addSource(sourceModule.source);
+      sourceModuleCode.append(`\n},${JSON.stringify(importMap)}];`);
+      bundle.addSource(sourceModuleCode);
     }
 
     const velcroStaticRuntime: VelcroStaticRuntime = { defs: {} };

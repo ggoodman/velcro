@@ -1,23 +1,11 @@
-import {
-  checkCancellation,
-  DependencyNotFoundError,
-  EntryExcludedError,
-  EntryNotFoundError,
-  isCanceledError,
-  isThenable,
-  MapSet,
-  ParseError,
-  Uri,
-} from '@velcro/common';
+import { isCanceledError, MapSet, Uri } from '@velcro/common';
 import { Resolver, ResolverContext } from '@velcro/resolver';
-import MagicString from 'magic-string';
 import { DisposableStore, Emitter } from 'ts-primitives';
+import { Plugin, PluginManager } from '../plugins';
+import { parse } from './commonjs';
 import { DependencyEdge } from './dependencyEdge';
 import { GraphBuildError } from './errors';
 import { Graph } from './graph';
-import { ParentPackageJson } from './parentPackageJson';
-import { parseJavaScript, parseJson } from './parser';
-import { ParserFunction } from './parsing';
 import { DEFAULT_SHIM_GLOBALS } from './shims';
 import { SourceModule } from './sourceModule';
 import { SourceModuleDependency } from './sourceModuleDependency';
@@ -54,6 +42,7 @@ export interface BuildGraphOptions {
    */
   external?: ExternalTestFunction;
   nodeEnv?: string;
+  plugins?: Plugin[];
   resolver: Resolver;
 }
 
@@ -61,6 +50,7 @@ export function buildGraph(options: BuildGraphOptions) {
   const graphBuilder = new GraphBuilder({
     external: options.external,
     nodeEnv: options.nodeEnv || 'development',
+    plugins: options.plugins || [],
     resolver: options.resolver,
   });
 
@@ -71,6 +61,7 @@ namespace GraphBuilder {
   export interface Options {
     external?: ExternalTestFunction;
     nodeEnv?: string;
+    plugins: Plugin[];
     resolver: Resolver;
   }
 }
@@ -85,6 +76,7 @@ class GraphBuilder {
   private readonly rootCtx: ResolverContext;
   private readonly rootUri = Uri.parse('velcro:/root');
   private readonly pendingModuleOperations = new MapSet<string, Promise<unknown>>();
+  private readonly pluginManager: PluginManager;
   private readonly sourceModules = new Map<string, SourceModule>();
 
   private readonly onErrorEmitter = new Emitter<{ ctx: ResolverContext; err: Error }>();
@@ -94,6 +86,7 @@ class GraphBuilder {
     this.rootCtx = this.resolver.createResolverContext();
     this.external = options.external;
     this.nodeEnv = options.nodeEnv || 'development';
+    this.pluginManager = new PluginManager(options.plugins);
 
     this.disposer.add(this.rootCtx);
     this.disposer.add(
@@ -151,136 +144,34 @@ class GraphBuilder {
     this.edges.add({ dependency, fromUri, toUri, visited });
   }
 
-  private doAddModuleDependency(
-    ctx: ResolverContext,
-    sourceModule: SourceModule,
-    dependency: SourceModuleDependency
-  ) {
-    if (ctx.token.isCancellationRequested) {
-      return;
-    }
-
-    const href = sourceModule.href;
-    const operation = ctx.runInChildContext(
-      'GraphBuilder.resolveDependency',
-      `${href}|${dependency.spec}`,
-      (ctx) => resolveDependency(ctx, sourceModule, dependency)
-    );
-
-    operation.then(
-      (resolveResult) => {
-        this.pendingModuleOperations.delete(href, operation);
-
-        const dependencyHref = resolveResult.uri.toString();
-
-        this.addEdge(sourceModule.uri, resolveResult.uri, resolveResult.visited, dependency);
-
-        // To avoid circularity
-        if (this.sourceModules.has(dependencyHref)) {
-          return;
-        }
-
-        // If we already have pending operations for the same Uri, we can
-        // assume that the module either already exists or soon will and
-        // should not be re-read.
-        if (this.pendingModuleOperations.has(dependencyHref)) {
-          return;
-        }
-
-        ctx.runInChildContext('GraphBuilder.doAddResolvedUri', resolveResult.uri, (ctx) =>
-          this.doAddResolvedUri(
-            ctx,
-            resolveResult.uri,
-            resolveResult.rootUri,
-            resolveResult.parentPackageJson
-          )
-        );
-      },
-      (err) => {
-        this.pendingModuleOperations.delete(href, operation);
-        if (!isCanceledError(err)) {
-          this.onErrorEmitter.fire({ ctx, err });
-        }
-      }
-    );
-
-    this.pendingModuleOperations.add(href, operation);
-  }
-
-  private doAddResolvedUri(
-    ctx: ResolverContext,
-    uri: Uri,
-    rootUri: Uri,
-    parentPackageJson?: ParentPackageJson
-  ) {
+  private doAddLoadedUri(ctx: ResolverContext, uri: Uri, rootUri: Uri, code: string) {
     if (ctx.token.isCancellationRequested) {
       return;
     }
 
     const href = uri.toString();
-    const operation = ctx.runInChildContext('readFileContent', uri, (ctx) =>
-      readFileContent(ctx, uri)
+    const operation = ctx.runInChildContext(
+      'GraphBuilder.pluginManager.executeTransform',
+      href,
+      (ctx) => this.pluginManager.executeTransform(ctx, uri, code)
     );
 
     operation.then(
-      (contentResult) => {
+      (transformResult) => {
         this.pendingModuleOperations.delete(href, operation);
 
-        const parser = this.getParserForUri(uri);
-        // console.time(`parseFile(${href})`);
-        const code = ctx.decoder.decode(contentResult.content);
-
-        const { dependencies, changes, syntax } = ctx.runInChildContext(
-          `parse[${parser.name}]`,
-          uri,
-          () =>
-            parser(uri, code, {
-              globalModules: DEFAULT_SHIM_GLOBALS,
-              nodeEnv: this.nodeEnv,
-            })
-        );
-        // console.timeEnd(`parseFile(${href})`);
-
-        const magicString = new MagicString(code, { filename: href, indentExclusionRanges: [] });
-
-        changes.sort((a, b) => a.start - b.start);
-
-        let lastPos = 0;
-
-        for (const change of changes) {
-          if (change.start < lastPos) {
-            continue;
-          }
-          switch (change.type) {
-            case 'appendRight':
-              magicString.appendRight(change.start, change.value);
-              lastPos = change.start;
-              break;
-            case 'remove':
-              if (change.start < change.end) {
-                magicString.remove(change.start, change.end);
-                lastPos = change.end;
-              }
-              break;
-            case 'overwrite':
-              if (change.start < change.end) {
-                magicString.overwrite(change.start, change.end, change.value, {
-                  contentOnly: true,
-                  storeName: true,
-                });
-                lastPos = change.end;
-              }
-              break;
-          }
-        }
+        const parseResult = parse(uri, transformResult.code, {
+          globalModules: DEFAULT_SHIM_GLOBALS,
+          nodeEnv: this.nodeEnv,
+        });
 
         const sourceModule = new SourceModule(
           uri,
           rootUri,
-          parentPackageJson,
-          magicString,
-          syntax,
-          new Set(dependencies)
+          parseResult.code,
+          new Set(parseResult.dependencies),
+          transformResult.sourceMaps,
+          transformResult.visited
         );
         this.sourceModules.set(sourceModule.href, sourceModule);
 
@@ -305,29 +196,44 @@ class GraphBuilder {
     this.pendingModuleOperations.add(href, operation);
   }
 
-  private doAddUnresolvedUri(ctx: ResolverContext, uri: Uri, dependency: SourceModuleDependency) {
+  private doAddModuleDependency(
+    ctx: ResolverContext,
+    sourceModule: SourceModule,
+    dependency: SourceModuleDependency
+  ) {
     if (ctx.token.isCancellationRequested) {
       return;
     }
 
-    const href = uri.toString();
-    const operation = ctx.runInChildContext('addUnresolvedUri', uri, (ctx) =>
-      addUnresolvedUri(ctx, uri)
+    const href = sourceModule.href;
+    const operation = ctx.runInChildContext(
+      'GraphBuilder.pluginManager.executeResolveDependency',
+      `${href}|${dependency.spec}`,
+      (ctx) => this.pluginManager.executeResolveDependency(ctx, dependency, sourceModule)
     );
 
     operation.then(
       (resolveResult) => {
         this.pendingModuleOperations.delete(href, operation);
 
-        this.addEdge(this.rootUri, resolveResult.uri, resolveResult.visited, dependency);
+        const dependencyHref = resolveResult.uri.toString();
+
+        this.addEdge(sourceModule.uri, resolveResult.uri, resolveResult.visited, dependency);
+
+        // To avoid circularity
+        if (this.sourceModules.has(dependencyHref)) {
+          return;
+        }
+
+        // If we already have pending operations for the same Uri, we can
+        // assume that the module either already exists or soon will and
+        // should not be re-read.
+        if (this.pendingModuleOperations.has(dependencyHref)) {
+          return;
+        }
 
         ctx.runInChildContext('GraphBuilder.doAddResolvedUri', resolveResult.uri, (ctx) =>
-          this.doAddResolvedUri(
-            ctx,
-            resolveResult.uri,
-            resolveResult.rootUri,
-            resolveResult.parentPackageJson
-          )
+          this.doAddResolvedUri(ctx, resolveResult.uri, resolveResult.rootUri)
         );
       },
       (err) => {
@@ -341,62 +247,65 @@ class GraphBuilder {
     this.pendingModuleOperations.add(href, operation);
   }
 
-  private getParserForUri(uri: Uri): ParserFunction {
-    const path = uri.path;
-
-    if (path.endsWith('.json')) {
-      return parseJson;
+  private doAddResolvedUri(ctx: ResolverContext, uri: Uri, rootUri: Uri) {
+    if (ctx.token.isCancellationRequested) {
+      return;
     }
 
-    if (path.endsWith('.js')) {
-      return parseJavaScript;
+    const href = uri.toString();
+    const operation = ctx.runInChildContext('GraphBuilder.pluginManager.executeLoad', uri, (ctx) =>
+      this.pluginManager.executeLoad(ctx, uri)
+    );
+
+    operation.then(
+      (loadResult) => {
+        this.pendingModuleOperations.delete(href, operation);
+
+        ctx.runInChildContext('GraphBuilder.doAddLoadedUri', uri, (ctx) =>
+          this.doAddLoadedUri(ctx, uri, rootUri, loadResult.code)
+        );
+      },
+      (err) => {
+        this.pendingModuleOperations.delete(href, operation);
+        if (!isCanceledError(err)) {
+          this.onErrorEmitter.fire({ ctx, err });
+        }
+      }
+    );
+
+    this.pendingModuleOperations.add(href, operation);
+  }
+
+  private doAddUnresolvedUri(ctx: ResolverContext, uri: Uri, dependency: SourceModuleDependency) {
+    if (ctx.token.isCancellationRequested) {
+      return;
     }
 
-    throw new ParseError(uri, 'No suitable parser was found');
+    const href = uri.toString();
+    const operation = ctx.runInChildContext(
+      'GraphBuilder.pluginManager.executeResolveEntrypoint',
+      uri,
+      (ctx) => this.pluginManager.executeResolveEntrypoint(ctx, uri)
+    );
+
+    operation.then(
+      (resolveResult) => {
+        this.pendingModuleOperations.delete(href, operation);
+
+        this.addEdge(this.rootUri, resolveResult.uri, resolveResult.visited, dependency);
+
+        ctx.runInChildContext('GraphBuilder.doAddResolvedUri', resolveResult.uri, (ctx) =>
+          this.doAddResolvedUri(ctx, resolveResult.uri, resolveResult.rootUri)
+        );
+      },
+      (err) => {
+        this.pendingModuleOperations.delete(href, operation);
+        if (!isCanceledError(err)) {
+          this.onErrorEmitter.fire({ ctx, err });
+        }
+      }
+    );
+
+    this.pendingModuleOperations.add(href, operation);
   }
-}
-
-async function addUnresolvedUri(ctx: ResolverContext, uri: Uri) {
-  const resolveResult = await ctx.resolveUri(uri);
-
-  if (!resolveResult.found) {
-    throw new EntryNotFoundError(`Entry point not found: ${uri}`);
-  }
-
-  if (!resolveResult.uri) {
-    throw new EntryExcludedError(uri);
-  }
-
-  return resolveResult;
-}
-
-async function readFileContent(ctx: ResolverContext, uri: Uri) {
-  return ctx.readFileContent(uri);
-}
-
-async function resolveDependency(
-  ctx: ResolverContext,
-  sourceModule: SourceModule,
-  dependency: SourceModuleDependency
-) {
-  const resolveReturn = ctx.resolve(dependency.spec, sourceModule.uri);
-  const resolveResult = isThenable(resolveReturn)
-    ? await checkCancellation(resolveReturn, ctx.token)
-    : resolveReturn;
-
-  if (!resolveResult.found) {
-    throw new DependencyNotFoundError(dependency.spec, sourceModule);
-  }
-
-  if (!resolveResult.uri) {
-    // TODO: Inject empty module
-    throw new EntryExcludedError(dependency.spec);
-  }
-
-  return {
-    uri: resolveResult.uri,
-    parentPackageJson: resolveResult.parentPackageJson,
-    rootUri: resolveResult.rootUri,
-    visited: resolveResult.visited,
-  };
 }

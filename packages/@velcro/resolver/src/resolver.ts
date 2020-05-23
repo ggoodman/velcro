@@ -3,13 +3,6 @@ import { CancellationTokenSource } from 'ts-primitives';
 import { ResolverContext } from './context';
 import type { ResolverStrategy } from './strategy';
 
-export namespace Resolver {
-  export interface Settings {
-    extensions: string[];
-    packageMain: PackageMainField[];
-  }
-}
-
 export class Resolver {
   // private readonly decoder = new Decoder();
   private readonly rootCtx: ResolverContext;
@@ -69,5 +62,12 @@ export class Resolver {
         dispose: tokenSource.dispose.bind(tokenSource, true),
       }
     );
+  }
+}
+
+export namespace Resolver {
+  export interface Settings {
+    extensions: string[];
+    packageMain: PackageMainField[];
   }
 }

@@ -1,6 +1,9 @@
+import { Uri } from '@velcro/common/src';
 import type { BinaryOperator, Function, Identifier, MemberExpression, Node, Pattern } from 'estree';
-import { CodeChange, ParserFunction, SyntaxKind } from '../../parsing';
-import { SourceModuleDependency } from '../../sourceModuleDependency';
+import MagicString from 'magic-string';
+import { ParserFunction } from '../parsing';
+import { DEFAULT_SHIM_GLOBALS } from '../shims';
+import { SourceModuleDependency } from '../sourceModuleDependency';
 import {
   isArrayPattern,
   isArrowFunctionExpression,
@@ -35,32 +38,30 @@ declare module 'estree' {
   }
 }
 
-export const parse: ParserFunction = function parseJavaScript(
-  uri,
-  code,
-  options
+export const parse = function parseJavaScript(
+  uri: Uri,
+  code: string,
+  options: {
+    globalModules: typeof DEFAULT_SHIM_GLOBALS;
+    nodeEnv: string;
+  }
 ): ReturnType<ParserFunction> {
-  const visitorCtx: DependencyVisitorContext = Object.assign(Object.create(null), {
+  const visitorCtx: DependencyVisitorContext = {
     unboundSymbols: new Map(),
     locals: new Map(),
+    magicString: new MagicString(code, { filename: uri.toString(), indentExclusionRanges: [] }),
     nodeEnv: options.nodeEnv,
     replacedSymbols: new Set<Identifier>(),
-    changes: [],
     requires: [],
     requireResolves: [],
     skip: new Set(),
-  });
-
-  const result: ReturnType<ParserFunction> = {
-    code,
-    dependencies: [],
-    changes: visitorCtx.changes,
-    syntax: SyntaxKind.JavaScript,
+    skipTransform: new Set(),
   };
+  const dependencies = [] as SourceModuleDependency[];
 
   try {
     // let lastToken: Token | undefined;
-    const ast = parseAst(result.code, {
+    const ast = parseAst(code, {
       // onComment: (_isBlock, _test, start, end) => {
       //   result.changes.push({ type: 'remove', start, end });
       // },
@@ -80,6 +81,7 @@ export const parse: ParserFunction = function parseJavaScript(
     traverse(ast, visitorCtx, scopingAndRequiresVisitor);
     traverse(ast, visitorCtx, collectGlobalsVisitor);
   } catch (err) {
+    // console.log(code);
     throw new Error(`Error parsing ${uri}: ${err.message}`);
   }
 
@@ -95,7 +97,7 @@ export const parse: ParserFunction = function parseJavaScript(
     locations.push({ start: requireDependency.spec.start, end: requireDependency.spec.end });
   }
   for (const [spec, locations] of requiresBySpec) {
-    result.dependencies.push(SourceModuleDependency.fromRequire(spec, locations));
+    dependencies.push(SourceModuleDependency.fromRequire(spec, locations));
   }
 
   // Handle require.resolve
@@ -110,20 +112,21 @@ export const parse: ParserFunction = function parseJavaScript(
     locations.push({ start: requireDependency.spec.start, end: requireDependency.spec.end });
   }
   for (const [spec, locations] of requireResolvesBySpec) {
-    result.dependencies.push(SourceModuleDependency.fromRequireResolve(spec, locations));
+    dependencies.push(SourceModuleDependency.fromRequireResolve(spec, locations));
   }
 
   for (const [symbolName, locations] of visitorCtx.unboundSymbols) {
     const shim = options.globalModules[symbolName];
 
     if (shim) {
-      result.dependencies.push(
-        SourceModuleDependency.fromGloblaObject(shim.spec, locations, shim.export)
-      );
+      dependencies.push(SourceModuleDependency.fromGloblaObject(shim.spec, locations, shim.export));
     }
   }
 
-  return result;
+  return {
+    code: visitorCtx.magicString,
+    dependencies,
+  };
 };
 
 export type CommonJsRequire = {
@@ -137,14 +140,15 @@ export type CommonJsRequireResolve = {
 };
 
 export type DependencyVisitorContext = {
-  readonly changes: CodeChange[];
   readonly unboundSymbols: Map<string, Node[]>;
   readonly locals: Map<Node, { [identifier: string]: boolean }>;
+  readonly magicString: MagicString;
   readonly nodeEnv: string;
   readonly requires: CommonJsRequire[];
   readonly replacedSymbols: Set<Identifier>;
   readonly requireResolves: CommonJsRequireResolve[];
   readonly skip: Set<Node>;
+  readonly skipTransform: Set<Node>;
 };
 
 export const scopingAndRequiresVisitor: Visitor<DependencyVisitorContext> = {
@@ -158,15 +162,29 @@ export const scopingAndRequiresVisitor: Visitor<DependencyVisitorContext> = {
     visitRequires(node, parent, ctx);
   },
   leave(node, _parent, ctx) {
-    if (isMemberExpression(node) && memberExpressionMatches(node, 'process.env.NODE_ENV')) {
-      ctx.changes.push({
-        type: 'overwrite',
-        start: node.start,
-        end: node.end,
-        value: JSON.stringify(ctx.nodeEnv),
-      });
+    let skipped = false;
+    let nextCheck: NodeWithParent<Node> | undefined = node;
 
+    while (nextCheck) {
+      if (ctx.skipTransform.has(nextCheck)) {
+        skipped = true;
+        break;
+      }
+
+      nextCheck = nextCheck.parent as NodeWithParent<Node> | undefined;
+    }
+
+    if (
+      !skipped &&
+      isMemberExpression(node) &&
+      memberExpressionMatches(node, 'process.env.NODE_ENV')
+    ) {
+      ctx.magicString.overwrite(node.start, node.end, JSON.stringify(ctx.nodeEnv), {
+        contentOnly: true,
+        storeName: true,
+      });
       ctx.skip.add(node);
+      ctx.skipTransform.add(node);
     }
   },
 };
@@ -378,32 +396,26 @@ function visitAndSkipBranches(
         if (isIdentifier(rootObject.object)) {
           ctx.replacedSymbols.add(rootObject.object);
         }
+
+        ctx.skipTransform.add(node.test.right);
+
         // if ('development' === process.env.NODE_ENV) {}
 
         if (!test(node.test.left.value, ctx.nodeEnv)) {
           ctx.skip.add(node.consequent);
           // We can blow away the consequent
-          ctx.changes.push({
-            type: 'remove',
-            start: node.start,
-            end: node.alternate ? node.alternate.start : node.consequent.end,
-          });
+          ctx.magicString.remove(
+            node.start,
+            node.alternate ? node.alternate.start : node.consequent.end
+          );
         } else {
           // We can blow away the test
-          ctx.changes.push({
-            type: 'remove',
-            start: node.start,
-            end: node.consequent.start - 1,
-          });
+          ctx.magicString.remove(node.start, node.consequent.start - 1);
 
           if (node.alternate) {
             ctx.skip.add(node.alternate);
             // We can blow away the alternate but we need to start and the end of the consequent + 1 char
-            ctx.changes.push({
-              type: 'remove',
-              start: node.consequent.end + 1,
-              end: node.alternate.end,
-            });
+            ctx.magicString.remove(node.consequent.end + 1, node.alternate.end);
           }
         }
       } else if (
@@ -417,32 +429,27 @@ function visitAndSkipBranches(
         }
         if (isIdentifier(rootObject.object)) {
           ctx.replacedSymbols.add(rootObject.object);
-        } // if (process.env.NODE_ENV === 'development') {}
+        }
+
+        ctx.skipTransform.add(node.test.left);
+
+        // if (process.env.NODE_ENV === 'development') {}
 
         if (!test(node.test.right.value, ctx.nodeEnv)) {
           ctx.skip.add(node.consequent);
           // We can blow away the consequent
-          ctx.changes.push({
-            type: 'remove',
-            start: node.start,
-            end: node.alternate ? node.alternate.start : node.consequent.end,
-          });
+          ctx.magicString.remove(
+            node.start,
+            node.alternate ? node.alternate.start : node.consequent.end
+          );
         } else {
           // We can blow away the test and the alternate
-          ctx.changes.push({
-            type: 'remove',
-            start: node.start,
-            end: node.consequent.start - 1,
-          });
+          ctx.magicString.remove(node.start, node.consequent.start - 1);
 
           if (node.alternate) {
             ctx.skip.add(node.alternate);
             // We can blow away the alternate but we need to start and the end of the consequent + 1 char
-            ctx.changes.push({
-              type: 'remove',
-              start: node.consequent.end + 1,
-              end: node.alternate.end,
-            });
+            ctx.magicString.remove(node.consequent.end + 1, node.alternate.end);
           }
         }
       }

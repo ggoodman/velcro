@@ -1,23 +1,18 @@
 import { Uri } from '@velcro/common';
+import { ResolverContext } from '@velcro/resolver/src';
 import MagicString from 'magic-string';
-import { getSourceMappingUrl } from '../build/sourceMap';
-import { ParentPackageJson } from './parentPackageJson';
-import { SyntaxKind } from './parsing';
+import { ISourceMap } from '../build/sourceMap';
 import { SourceModuleDependency } from './sourceModuleDependency';
 
 export class SourceModule {
-  sourceMappingUrl: string;
-
   constructor(
     readonly uri: Uri,
     readonly rootUri: Uri,
-    readonly parentPackageJson: ParentPackageJson | undefined,
     readonly source: MagicString,
-    readonly syntax: SyntaxKind,
-    readonly dependencies: Set<SourceModuleDependency>
-  ) {
-    this.sourceMappingUrl = getSourceMappingUrl(source.original);
-  }
+    readonly dependencies: Set<SourceModuleDependency>,
+    readonly sourceMaps: ISourceMap[],
+    readonly visits: ResolverContext.Visit[]
+  ) {}
 
   get href() {
     return this.uri.toString();
