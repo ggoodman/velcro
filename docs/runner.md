@@ -9,6 +9,7 @@
 |  Function | Description |
 |  --- | --- |
 |  [build(code, options)](./runner.build.md) |  |
+|  [cssPlugin()](./runner.cssplugin.md) |  |
 |  [execute(code, options)](./runner.execute.md) |  |
 
 ## Interfaces

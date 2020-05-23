@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-resolver: Resolver;
+resolver: Resolver$0;
 ```

@@ -277,6 +277,36 @@
             },
             {
               "kind": "PropertySignature",
+              "canonicalReference": "@velcro/runner!BuildOptions#plugins:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "plugins?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Plugin",
+                  "canonicalReference": "!unknown"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "plugins",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            },
+            {
+              "kind": "PropertySignature",
               "canonicalReference": "@velcro/runner!BuildOptions#readUrl:member",
               "docComment": "",
               "excerptTokens": [
@@ -328,6 +358,34 @@
             }
           ],
           "extendsTokenRanges": []
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "@velcro/runner!cssPlugin:function(1)",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "declare function cssPlugin(): "
+            },
+            {
+              "kind": "Reference",
+              "text": "Plugin",
+              "canonicalReference": "!unknown"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "returnTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [],
+          "name": "cssPlugin"
         },
         {
           "kind": "Function",

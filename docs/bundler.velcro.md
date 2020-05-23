@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-Velcro: {
+Velcro$0: {
     Bundler: typeof exportsNS;
 }
 ```

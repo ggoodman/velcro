@@ -25,6 +25,9 @@
 |  Interface | Description |
 |  --- | --- |
 |  [BuildGraphOptions](./bundler.buildgraphoptions.md) |  |
+|  [Plugin\_2](./bundler.plugin_2.md) |  |
+|  [PluginLoadContext](./bundler.pluginloadcontext.md) |  |
+|  [PluginTransformContext](./bundler.plugintransformcontext.md) |  |
 
 ## Namespaces
 
@@ -44,5 +47,7 @@
 
 |  Type Alias | Description |
 |  --- | --- |
+|  [PluginLoadResult](./bundler.pluginloadresult.md) |  |
+|  [PluginTransformResult](./bundler.plugintransformresult.md) |  |
 |  [VelcroRuntime](./bundler.velcroruntime.md) |  |
 

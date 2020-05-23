@@ -9,7 +9,7 @@ Constructs a new instance of the `SourceModule` class
 <b>Signature:</b>
 
 ```typescript
-constructor(uri: Uri, rootUri: Uri, parentPackageJson: ParentPackageJson | undefined, source: MagicString, syntax: SyntaxKind, dependencies: Set<SourceModuleDependency>);
+constructor(uri: Uri, rootUri: Uri, source: MagicString, dependencies: Set<SourceModuleDependency>, sourceMaps: ISourceMap[], visits: ResolverContext.Visit[]);
 ```
 
 ## Parameters
@@ -18,8 +18,8 @@ constructor(uri: Uri, rootUri: Uri, parentPackageJson: ParentPackageJson | undef
 |  --- | --- | --- |
 |  uri | Uri |  |
 |  rootUri | Uri |  |
-|  parentPackageJson | ParentPackageJson \| undefined |  |
 |  source | MagicString |  |
-|  syntax | SyntaxKind |  |
 |  dependencies | Set&lt;SourceModuleDependency&gt; |  |
+|  sourceMaps | ISourceMap\[\] |  |
+|  visits | ResolverContext.Visit\[\] |  |
 
