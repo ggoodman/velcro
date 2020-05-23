@@ -68,6 +68,19 @@ Oh, and did I forget to mention that source-maps are tracked the whole way throu
 
 The source map for a build can be produced in one of several formats via getters on the `Build` instance.
 
+### 🔌 Plugins
+
+Velcro bundling can be customized by providing a list of `plugins` to the Bundler. A plugin is an object with a `name: string` property and that implements any of the following hooks:
+
+- `resolveEntrypoint(ctx, uri) => { uri, rootUri } | undefined`: Resolve a file reference passed as one of the entrypoints to `buildGraph`. _Note: This API may change to accept a string spec instead of a `Uri`_. This hook will be run sequentially for each plugin until the first one resolves a value.
+- `resolveDependency(ctx, dependency, fromModule): { uri, rootUri } | undefined`: Resolve a dependency from an already-resolved source module. This may be a relative or absolute (?) `Uri` and may also be a bare module specifier. This allows a plugin to, for example, override the default resolution to inject (or mock) any dependency. This hook will be run sequentially for each plugin until the first one resolves a value.
+- `load(ctx, uri): { code } | undefined`: Given a resolved entrypoint or dependency, this hook allows a plugin to override how the _code_ is loaded for a given `Uri`. This hook will be run sequentially for each plugin until the first one resolves a value.
+- `transform(ctx, uri, code): { code, sourceMap } | undefined`: Having loaded the code at a given `Uri`, this hook allows a plugin to provide custom logic to transform the loaded code into JavaScript. _Note that the resulting JavaScript must be a CommonJS module._ This hook will be run sequentially for all Plugins that provide it with the output of one feeding into the input of the next.
+
+Any hook may optionally return a `Promise` for the specified result signature.
+
+For details on the signature of each of these methods, please consult the [API docs for plugins](./docs/bundler.plugin_2.md).
+
 ## ✨ Magic
 
 With this sort of pattern, different components can be composed to provide higher-level, opinionated tools like the [`@velcro/runner`](./packages/@velcro/runner).
