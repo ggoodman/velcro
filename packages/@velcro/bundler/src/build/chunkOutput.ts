@@ -1,8 +1,9 @@
-import remapping from '@ampproject/remapping';
 import { Uri } from '@velcro/common';
-import { Bundle } from 'magic-string';
+import { Bundle, SourceMapSegment } from 'magic-string';
+import { encode } from 'sourcemap-codec';
 import { SourceModule } from '../graph/sourceModule';
 import { SourceMap } from './sourceMap';
+import { Link, Source } from './sourceMapTree';
 
 export class ChunkOutput {
   private cachedCode?: string;
@@ -54,55 +55,80 @@ export class ChunkOutput {
 
   private generateSourceMap() {
     const inputMap = this.bundle.generateDecodedMap({
-      includeContent: true,
-      hires: false,
+      includeContent: false,
+      hires: true,
       source: this.href,
-      file: this.href,
     });
 
-    // In case a source map seems to be self-referential, avoid crashing
-    const seen = new Set<SourceModule>();
-    const loader: Parameters<typeof remapping>[1] = (uri) => {
-      const sourceModule = this.sourceModules.get(uri);
-      if (sourceModule) {
-        if (seen.has(sourceModule)) {
-          return null;
+    const sourceMapTree = new Link(
+      inputMap,
+      inputMap.sources.map((sourceHref) => {
+        const sourceModule = this.sourceModules.get(sourceHref);
+
+        if (!sourceModule) {
+          return new Source(sourceHref, 'SOURCEMAP ERROR');
         }
 
-        seen.add(sourceModule);
+        return sourceModule.sourceMapsTree;
+      })
+    );
+    const sourceMapTreeMappings = sourceMapTree.traceMappings();
 
-        if (sourceModule.sourceMaps.length) {
-          return remapping(
-            sourceModule.sourceMaps as Parameters<typeof remapping>[0],
-            loader,
-            false
-          );
+    if (sourceMapTreeMappings instanceof Error) {
+      return new SourceMap({
+        file: inputMap.file,
+        mappings: '',
+        names: [],
+        sources: [],
+        version: 3,
+        sourcesContent: [],
+      });
+    }
+
+    // Loop through generated mappings, removing mappings that are character-by-character increments
+    // from the previous mapping. Since we generated a hires bundle, this will shrink the resolution
+    // back down to something not unnecessarily large.
+    for (const line of sourceMapTreeMappings.mappings) {
+      let lastSegment: SourceMapSegment | null = null;
+      const shrinkedLine: SourceMapSegment[] = [];
+
+      for (const segment of line) {
+        if (lastSegment && lastSegment.length >= 4 && lastSegment.length === segment.length) {
+          // We will only push the segment if it is not, effectively a direct cursor move of the
+          // last one.
+          // For example:
+          //   lastSegment = [1, 0, 0, 1] // Generated column 1, original column 1 of the 0th file, 0th line
+          //   segment = [2, 0, 0, 2] // Generated column 2, original column 2 of the 0th file, 0th line
+          // Given that, we can see that this segment is not adding any _new_ information so we can skip it.
+          if (
+            lastSegment.length >= 4 &&
+            (lastSegment[0] + 1 !== segment[0] ||
+              lastSegment[1] !== segment[1] ||
+              lastSegment[2] !== segment[2] ||
+              lastSegment[3]! + 1 !== segment[3] ||
+              lastSegment[4] !== segment[4])
+          ) {
+            shrinkedLine.push(segment);
+          }
+        } else {
+          shrinkedLine.push(segment);
         }
+
+        lastSegment = segment;
       }
 
-      return null;
-    };
-    const remapped = remapping(
-      {
-        file: inputMap.file,
-        mappings: inputMap.mappings,
-        names: inputMap.names,
-        sources: inputMap.sources,
-        sourcesContent: inputMap.sourcesContent,
-        version: 3,
-      },
-      loader,
-      false
-    );
+      line.splice(0, line.length, ...shrinkedLine);
+    }
 
-    return new SourceMap({
-      file: inputMap.file,
-      mappings: remapped.mappings,
-      names: remapped.names,
-      sources: remapped.sources,
-      version: remapped.version,
-      sourceRoot: remapped.sourceRoot,
-      sourcesContent: remapped.sourcesContent,
+    const sourceMap = new SourceMap({
+      file: this.href,
+      mappings: encode(sourceMapTreeMappings.mappings),
+      names: sourceMapTreeMappings.names,
+      sources: sourceMapTreeMappings.sources,
+      version: 3,
+      sourcesContent: sourceMapTreeMappings.sourcesContent,
     });
+
+    return sourceMap;
   }
 }

@@ -1,4 +1,3 @@
-import { Uri } from '@velcro/common/src';
 import type { BinaryOperator, Function, Identifier, MemberExpression, Node, Pattern } from 'estree';
 import MagicString from 'magic-string';
 import { ParserFunction } from '../parsing';
@@ -39,7 +38,6 @@ declare module 'estree' {
 }
 
 export const parse = function parseJavaScript(
-  uri: Uri,
   code: string,
   options: {
     globalModules: typeof DEFAULT_SHIM_GLOBALS;
@@ -49,7 +47,7 @@ export const parse = function parseJavaScript(
   const visitorCtx: DependencyVisitorContext = {
     unboundSymbols: new Map(),
     locals: new Map(),
-    magicString: new MagicString(code, { filename: uri.toString(), indentExclusionRanges: [] }),
+    magicString: new MagicString(code),
     nodeEnv: options.nodeEnv,
     replacedSymbols: new Set<Identifier>(),
     requires: [],
@@ -59,31 +57,26 @@ export const parse = function parseJavaScript(
   };
   const dependencies = [] as SourceModuleDependency[];
 
-  try {
-    // let lastToken: Token | undefined;
-    const ast = parseAst(code, {
-      // onComment: (_isBlock, _test, start, end) => {
-      //   result.changes.push({ type: 'remove', start, end });
-      // },
-      // onInsertedSemicolon(lastTokEnd) {
-      //   result.changes.push({ type: 'appendRight', position: lastTokEnd, value: ';' });
-      // },
-      // onToken: (token) => {
-      //   const start = lastToken ? lastToken.end + 1 : 0;
-      //   const end = token.start;
-      //   if (end > start) {
-      //     result.changes.push({ type: 'remove', start, end });
-      //   }
-      //   lastToken = token;
-      // },
-    });
+  // let lastToken: Token | undefined;
+  const ast = parseAst(code, {
+    // onComment: (_isBlock, _test, start, end) => {
+    //   result.changes.push({ type: 'remove', start, end });
+    // },
+    // onInsertedSemicolon(lastTokEnd) {
+    //   result.changes.push({ type: 'appendRight', position: lastTokEnd, value: ';' });
+    // },
+    // onToken: (token) => {
+    //   const start = lastToken ? lastToken.end + 1 : 0;
+    //   const end = token.start;
+    //   if (end > start) {
+    //     result.changes.push({ type: 'remove', start, end });
+    //   }
+    //   lastToken = token;
+    // },
+  });
 
-    traverse(ast, visitorCtx, scopingAndRequiresVisitor);
-    traverse(ast, visitorCtx, collectGlobalsVisitor);
-  } catch (err) {
-    // console.log(code);
-    throw new Error(`Error parsing ${uri}: ${err.message}`);
-  }
+  traverse(ast, visitorCtx, scopingAndRequiresVisitor);
+  traverse(ast, visitorCtx, collectGlobalsVisitor);
 
   // Handle explicit requires
   const requiresBySpec = new Map<string, Array<{ start: number; end: number }>>();
@@ -153,6 +146,10 @@ export type DependencyVisitorContext = {
 
 export const scopingAndRequiresVisitor: Visitor<DependencyVisitorContext> = {
   enter(node, parent, ctx) {
+    // Get AST-node level locations in the source map
+    ctx.magicString.addSourcemapLocation(node.start);
+    ctx.magicString.addSourcemapLocation(node.end);
+
     if (ctx.skip.has(node)) {
       return this.skip();
     }

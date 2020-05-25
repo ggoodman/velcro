@@ -7,8 +7,9 @@ import {
   Uri,
 } from '@velcro/common';
 import { ResolverContext } from '@velcro/resolver';
-import MagicString from 'magic-string';
-import { decodeDataUriAsSourceMap, getSourceMappingUrl, ISourceMap } from '../build/sourceMap';
+import MagicString, { DecodedSourceMap, SourceMap } from 'magic-string';
+import { decodeDataUriAsSourceMap, getSourceMappingUrl } from '../build/sourceMap';
+import { Link, Source } from '../build/sourceMapTree';
 import { SourceModule, SourceModuleDependency } from '../graph';
 import {
   Plugin,
@@ -70,16 +71,12 @@ export class PluginManager {
       },
       transform: async ({}, id, code) => {
         if (id.path.endsWith('.json')) {
-          const magicString = new MagicString(code, {
-            filename: id.toString(),
-            indentExclusionRanges: [],
-          });
-
+          const magicString = new MagicString(code);
           magicString.prepend('module.exports = ');
 
           return {
-            code: magicString.toString(),
-            sourceMaps: [magicString.generateMap({ includeContent: true })],
+            code,
+            sourceMap: magicString.generateDecodedMap(),
           };
         }
       },
@@ -168,41 +165,48 @@ export class PluginManager {
       code = ctx.decoder.decode(code);
     }
 
-    /**
-     * Array of sourcemaps where the most transformed is first and the least (most original)
-     * are last.
-     */
-    const sourceMaps = [] as ISourceMap[];
     const pluginCtx: PluginTransformContext = Object.assign(ctx, {
-      get magicString() {
-        return new MagicString(code as string, {
-          filename: uri.toString(),
-          indentExclusionRanges: [],
-        });
+      createMagicString() {
+        return new MagicString(code as string);
       },
     });
+
+    let sourceMapTree: Source | Link = new Source(uri.toString(), code);
 
     // Figure out if our original code, itself has a sourcemap.
     // For now, we will not recurse beyond that depth.
     const sourceMapRef = getSourceMappingUrl(code);
-
     if (sourceMapRef) {
-      const sourceMap = decodeDataUriAsSourceMap(sourceMapRef);
+      let sourceMap: DecodedSourceMap | SourceMap | null = decodeDataUriAsSourceMap(sourceMapRef);
 
-      if (sourceMap) {
-        sourceMaps.push(sourceMap);
-      } else {
+      if (!sourceMap) {
         try {
           const sourceMapUri = Uri.joinPath(uri, `../${sourceMapRef}`);
           const result = await ctx.readFileContent(sourceMapUri);
-          const sourceMap = JSON.parse(ctx.decoder.decode(result.content)) as ISourceMap;
-
-          sourceMaps.push(sourceMap);
+          sourceMap = JSON.parse(ctx.decoder.decode(result.content)) as
+            | DecodedSourceMap
+            | SourceMap;
         } catch {
           // Do nothing
         }
       }
+
+      if (sourceMap) {
+        const sources = sourceMap.sources;
+        const sourcesContent = sourceMap.sourcesContent || [];
+        const baseSources = [] as Source[];
+
+        for (const idx in sources) {
+          if (sources[idx] && sourcesContent[idx]) {
+            baseSources.push(new Source(sources[idx]!, sourcesContent[idx]!));
+          }
+        }
+
+        sourceMapTree = new Link(sourceMap, baseSources);
+      }
     }
+
+    const visited = [] as ResolverContext.Visit[];
 
     for (const plugin of this.plugins) {
       if (typeof plugin.transform === 'function') {
@@ -215,26 +219,22 @@ export class PluginManager {
           continue;
         }
 
-        code = transformResult.code;
-
-        if (transformResult.sourceMaps) {
-          for (const sourceMap of transformResult.sourceMaps) {
-            sourceMaps.unshift(sourceMap);
-          }
+        if (transformResult.sourceMap) {
+          sourceMapTree = new Link(transformResult.sourceMap, [sourceMapTree]);
         }
 
-        return {
-          code: transformResult.code,
-          sourceMaps,
-          visited: transformResult.visited || [],
-        };
+        code = transformResult.code;
+
+        if (transformResult.visited) {
+          visited.push(...transformResult.visited);
+        }
       }
     }
 
     return {
       code,
-      sourceMaps,
-      visited: [],
+      sourceMapTree,
+      visited,
     };
   }
 }

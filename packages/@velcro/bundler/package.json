@@ -58,7 +58,6 @@
     "typescript": "^3.9.2"
   },
   "dependencies": {
-    "@ampproject/remapping": "^0.2.0",
     "@rollup/plugin-node-resolve": "^7.1.3",
     "@velcro/common": "^0.31.0",
     "@velcro/node-libs": "^0.31.0",

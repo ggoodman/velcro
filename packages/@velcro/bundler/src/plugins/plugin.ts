@@ -1,7 +1,6 @@
 import { Thenable, Uri } from '@velcro/common';
 import { ResolverContext } from '@velcro/resolver';
-import MagicString from 'magic-string';
-import { ISourceMap } from '../build/sourceMap';
+import MagicString, { SourceMapSegment } from 'magic-string';
 import { SourceModule, SourceModuleDependency } from '../graph';
 
 type MaybeThenable<T> = T | Thenable<T>;
@@ -51,11 +50,14 @@ export type PluginResolveEntrypointResult = {
 };
 
 export interface PluginTransformContext extends PluginContext {
-  readonly magicString: MagicString;
+  createMagicString(): MagicString;
 }
 
 export type PluginTransformResult = {
   code: string;
-  sourceMaps?: ISourceMap[];
+  sourceMap?: {
+    mappings: SourceMapSegment[][];
+    names: string[];
+  };
   visited?: ResolverContext.Visit[];
 };
