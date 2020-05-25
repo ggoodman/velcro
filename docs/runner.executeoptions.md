@@ -15,4 +15,5 @@ interface ExecuteOptions extends BuildOptions
 |  Property | Type | Description |
 |  --- | --- | --- |
 |  [injectModules](./runner.executeoptions.injectmodules.md) | { \[id: string\]: unknown; } |  |
+|  [sourceMap](./runner.executeoptions.sourcemap.md) | boolean |  |
 

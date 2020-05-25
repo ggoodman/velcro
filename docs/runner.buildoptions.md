@@ -22,5 +22,4 @@ interface BuildOptions
 |  [packageMain](./runner.buildoptions.packagemain.md) | Resolver.Settings\["packageMain"\] |  |
 |  [plugins](./runner.buildoptions.plugins.md) | Plugin\[\] |  |
 |  [readUrl](./runner.buildoptions.readurl.md) | CdnStrategy.UrlContentFetcher |  |
-|  [sourceMap](./runner.buildoptions.sourcemap.md) | boolean |  |
 
