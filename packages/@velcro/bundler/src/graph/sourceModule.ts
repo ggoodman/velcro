@@ -1,7 +1,7 @@
 import { Uri } from '@velcro/common';
-import { ResolverContext } from '@velcro/resolver/src';
+import { ResolverContext } from '@velcro/resolver';
 import MagicString from 'magic-string';
-import { ISourceMap } from '../build/sourceMap';
+import { Link, Source } from '../build/sourceMapTree';
 import { SourceModuleDependency } from './sourceModuleDependency';
 
 export class SourceModule {
@@ -10,7 +10,7 @@ export class SourceModule {
     readonly rootUri: Uri,
     readonly source: MagicString,
     readonly dependencies: Set<SourceModuleDependency>,
-    readonly sourceMaps: ISourceMap[],
+    readonly sourceMapsTree: Source | Link,
     readonly visits: ResolverContext.Visit[]
   ) {}
 

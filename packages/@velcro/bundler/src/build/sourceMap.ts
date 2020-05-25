@@ -1,7 +1,6 @@
-import remapping from '@ampproject/remapping';
 import { Base64 } from '@velcro/common';
-
-export type ISourceMap = Omit<Extract<Parameters<typeof remapping>[0], { version: 3 }>, 'version'>;
+import { DecodedSourceMap } from 'magic-string';
+import { decode } from 'sourcemap-codec';
 
 export class SourceMap {
   readonly file?: string;
@@ -53,7 +52,7 @@ export function getSourceMappingUrl(str: string) {
   return lastMatch[1];
 }
 
-export function decodeDataUriAsSourceMap(href: string) {
+export function decodeDataUriAsSourceMap(href: string): DecodedSourceMap | null {
   const match = href.match(/^data:application\/json;(?:charset=([^;]+);)?base64,(.*)$/);
 
   if (match) {
@@ -62,7 +61,21 @@ export function decodeDataUriAsSourceMap(href: string) {
     }
 
     try {
-      const decoded = JSON.parse(Base64.decode(match[2])) as ISourceMap;
+      const decoded = JSON.parse(Base64.decode(match[2]));
+
+      if (decoded.mappings === '') {
+        return {
+          file: '',
+          mappings: [],
+          names: [],
+          sources: [],
+          sourcesContent: [],
+        };
+      }
+
+      if (typeof decoded.mappings === 'string') {
+        decoded.mappings = decode(decoded.mappings);
+      }
 
       return decoded;
     } catch (err) {

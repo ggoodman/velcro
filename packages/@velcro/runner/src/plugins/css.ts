@@ -3,12 +3,13 @@ import { Plugin } from '@velcro/bundler';
 export function cssPlugin(): Plugin {
   return {
     name: 'cssPlugin',
-    transform({ magicString }, uri, code) {
+    transform(ctx, uri, code) {
       if (!uri.path.endsWith('.css')) {
         return;
       }
 
       const cssCode = code;
+      const magicString = ctx.createMagicString();
       const BACKSLASH = '\\'.charCodeAt(0);
       const SINGLE_QUOTE = "'".charCodeAt(0);
       const NL = '\n'.charCodeAt(0);
@@ -29,7 +30,7 @@ export function cssPlugin(): Plugin {
           switch (char) {
             case CR:
             case NL:
-              magicString.overwrite(i, i + 1, ' ');
+              magicString.overwrite(i, i + 1, '\\n');
               break;
             case SINGLE_QUOTE:
               magicString.prependRight(i, '\\');
@@ -67,7 +68,7 @@ export function cssPlugin(): Plugin {
 
       return {
         code: magicString.toString(),
-        sourceMaps: [magicString.generateDecodedMap()],
+        sourceMap: magicString.generateDecodedMap(),
       };
     },
   };
