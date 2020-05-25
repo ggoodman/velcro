@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-transform?(ctx: PluginTransformContext, id: Uri, code: string): MaybeThenable$0<PluginTransformResult | undefined>;
+transform?(ctx: PluginTransformContext, id: Uri, code: string): MaybeThenable<PluginTransformResult | undefined>;
 ```
 
 ## Parameters
@@ -20,5 +20,5 @@ transform?(ctx: PluginTransformContext, id: Uri, code: string): MaybeThenable$0<
 
 <b>Returns:</b>
 
-MaybeThenable$0&lt;PluginTransformResult \| undefined&gt;
+MaybeThenable&lt;PluginTransformResult \| undefined&gt;
 

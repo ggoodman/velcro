@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-resolveDependency?(ctx: PluginResolveDependencyContext, dependency: SourceModuleDependency, fromModule: SourceModule): MaybeThenable$0<PluginResolveDependencyResult | undefined>;
+resolveDependency?(ctx: PluginResolveDependencyContext, dependency: SourceModuleDependency, fromModule: SourceModule): MaybeThenable<PluginResolveDependencyResult | undefined>;
 ```
 
 ## Parameters
@@ -20,5 +20,5 @@ resolveDependency?(ctx: PluginResolveDependencyContext, dependency: SourceModule
 
 <b>Returns:</b>
 
-MaybeThenable$0&lt;PluginResolveDependencyResult \| undefined&gt;
+MaybeThenable&lt;PluginResolveDependencyResult \| undefined&gt;
 

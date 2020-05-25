@@ -10,9 +10,9 @@
 interface PluginTransformContext extends PluginContext 
 ```
 
-## Properties
+## Methods
 
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [magicString](./bundler.plugintransformcontext.magicstring.md) | MagicString |  |
+|  Method | Description |
+|  --- | --- |
+|  [createMagicString()](./bundler.plugintransformcontext.createmagicstring.md) |  |
 

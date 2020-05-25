@@ -208,7 +208,7 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "Resolver$0",
+                  "text": "Resolver",
                   "canonicalReference": "@velcro/bundler!Resolver:class"
                 },
                 {
@@ -1010,8 +1010,8 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "MaybeThenable$0",
-                  "canonicalReference": "@velcro/bundler!~MaybeThenable$0:type"
+                  "text": "MaybeThenable",
+                  "canonicalReference": "@velcro/bundler!~MaybeThenable:type"
                 },
                 {
                   "kind": "Content",
@@ -1118,8 +1118,8 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "MaybeThenable$0",
-                  "canonicalReference": "@velcro/bundler!~MaybeThenable$0:type"
+                  "text": "MaybeThenable",
+                  "canonicalReference": "@velcro/bundler!~MaybeThenable:type"
                 },
                 {
                   "kind": "Content",
@@ -1199,8 +1199,8 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "MaybeThenable$0",
-                  "canonicalReference": "@velcro/bundler!~MaybeThenable$0:type"
+                  "text": "MaybeThenable",
+                  "canonicalReference": "@velcro/bundler!~MaybeThenable:type"
                 },
                 {
                   "kind": "Content",
@@ -1281,8 +1281,8 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "MaybeThenable$0",
-                  "canonicalReference": "@velcro/bundler!~MaybeThenable$0:type"
+                  "text": "MaybeThenable",
+                  "canonicalReference": "@velcro/bundler!~MaybeThenable:type"
                 },
                 {
                   "kind": "Content",
@@ -1422,13 +1422,13 @@
           "name": "PluginTransformContext",
           "members": [
             {
-              "kind": "PropertySignature",
-              "canonicalReference": "@velcro/bundler!PluginTransformContext#magicString:member",
+              "kind": "MethodSignature",
+              "canonicalReference": "@velcro/bundler!PluginTransformContext#createMagicString:member(1)",
               "docComment": "",
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "readonly magicString: "
+                  "text": "createMagicString(): "
                 },
                 {
                   "kind": "Reference",
@@ -1440,12 +1440,14 @@
                   "text": ";"
                 }
               ],
-              "releaseTag": "Public",
-              "name": "magicString",
-              "propertyTypeTokenRange": {
+              "returnTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2
-              }
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "createMagicString"
             }
           ],
           "extendsTokenRanges": [
@@ -1466,16 +1468,16 @@
             },
             {
               "kind": "Content",
-              "text": "{\n    code: string;\n    sourceMaps?: "
+              "text": "{\n    code: string;\n    sourceMap?: {\n        mappings: "
             },
             {
               "kind": "Reference",
-              "text": "ISourceMap",
-              "canonicalReference": "@velcro/bundler!~ISourceMap:type"
+              "text": "SourceMapSegment",
+              "canonicalReference": "magic-string!SourceMapSegment:type"
             },
             {
               "kind": "Content",
-              "text": "[];\n    visited?: "
+              "text": "[][];\n        names: string[];\n    };\n    visited?: "
             },
             {
               "kind": "Reference",
@@ -1567,16 +1569,21 @@
                 },
                 {
                   "kind": "Content",
-                  "text": ", sourceMaps: "
+                  "text": ", sourceMapsTree: "
                 },
                 {
                   "kind": "Reference",
-                  "text": "ISourceMap",
-                  "canonicalReference": "@velcro/bundler!~ISourceMap:type"
+                  "text": "Source",
+                  "canonicalReference": "@velcro/bundler!~Source:class"
                 },
                 {
                   "kind": "Content",
-                  "text": "[]"
+                  "text": " | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Link",
+                  "canonicalReference": "@velcro/bundler!~Link:class"
                 },
                 {
                   "kind": "Content",
@@ -1628,17 +1635,17 @@
                   }
                 },
                 {
-                  "parameterName": "sourceMaps",
+                  "parameterName": "sourceMapsTree",
                   "parameterTypeTokenRange": {
                     "startIndex": 12,
-                    "endIndex": 14
+                    "endIndex": 15
                   }
                 },
                 {
                   "parameterName": "visits",
                   "parameterTypeTokenRange": {
-                    "startIndex": 15,
-                    "endIndex": 17
+                    "startIndex": 16,
+                    "endIndex": 18
                   }
                 }
               ]
@@ -1791,21 +1798,26 @@
             },
             {
               "kind": "Property",
-              "canonicalReference": "@velcro/bundler!SourceModule#sourceMaps:member",
+              "canonicalReference": "@velcro/bundler!SourceModule#sourceMapsTree:member",
               "docComment": "",
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "readonly sourceMaps: "
+                  "text": "readonly sourceMapsTree: "
                 },
                 {
                   "kind": "Reference",
-                  "text": "ISourceMap",
-                  "canonicalReference": "@velcro/bundler!~ISourceMap:type"
+                  "text": "Source",
+                  "canonicalReference": "@velcro/bundler!~Source:class"
                 },
                 {
                   "kind": "Content",
-                  "text": "[]"
+                  "text": " | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Link",
+                  "canonicalReference": "@velcro/bundler!~Link:class"
                 },
                 {
                   "kind": "Content",
@@ -1813,10 +1825,10 @@
                 }
               ],
               "releaseTag": "Public",
-              "name": "sourceMaps",
+              "name": "sourceMapsTree",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
-                "endIndex": 3
+                "endIndex": 4
               },
               "isStatic": false
             },
@@ -2306,7 +2318,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "Velcro$0: "
+              "text": "Velcro: "
             },
             {
               "kind": "Content",
@@ -2370,7 +2382,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version$0 = \"__VERSION__\""
+              "text": "version = \"0.31.1\""
             }
           ],
           "releaseTag": "Public",

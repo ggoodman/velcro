@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-resolveEntrypoint?(ctx: PluginResolveEntrypointContext, uri: Uri): MaybeThenable$0<PluginResolveEntrypointResult | undefined>;
+resolveEntrypoint?(ctx: PluginResolveEntrypointContext, uri: Uri): MaybeThenable<PluginResolveEntrypointResult | undefined>;
 ```
 
 ## Parameters
@@ -19,5 +19,5 @@ resolveEntrypoint?(ctx: PluginResolveEntrypointContext, uri: Uri): MaybeThenable
 
 <b>Returns:</b>
 
-MaybeThenable$0&lt;PluginResolveEntrypointResult \| undefined&gt;
+MaybeThenable&lt;PluginResolveEntrypointResult \| undefined&gt;
 

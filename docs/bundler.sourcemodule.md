@@ -14,7 +14,7 @@ declare class SourceModule
 
 |  Constructor | Modifiers | Description |
 |  --- | --- | --- |
-|  [(constructor)(uri, rootUri, source, dependencies, sourceMaps, visits)](./bundler.sourcemodule._constructor_.md) |  | Constructs a new instance of the <code>SourceModule</code> class |
+|  [(constructor)(uri, rootUri, source, dependencies, sourceMapsTree, visits)](./bundler.sourcemodule._constructor_.md) |  | Constructs a new instance of the <code>SourceModule</code> class |
 
 ## Properties
 
@@ -25,7 +25,7 @@ declare class SourceModule
 |  [rootHref](./bundler.sourcemodule.roothref.md) |  | string |  |
 |  [rootUri](./bundler.sourcemodule.rooturi.md) |  | Uri |  |
 |  [source](./bundler.sourcemodule.source.md) |  | MagicString |  |
-|  [sourceMaps](./bundler.sourcemodule.sourcemaps.md) |  | ISourceMap\[\] |  |
+|  [sourceMapsTree](./bundler.sourcemodule.sourcemapstree.md) |  | Source \| Link |  |
 |  [uri](./bundler.sourcemodule.uri.md) |  | Uri |  |
 |  [visits](./bundler.sourcemodule.visits.md) |  | ResolverContext.Visit\[\] |  |
 

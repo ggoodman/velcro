@@ -9,7 +9,10 @@
 ```typescript
 type PluginTransformResult = {
     code: string;
-    sourceMaps?: ISourceMap[];
+    sourceMap?: {
+        mappings: SourceMapSegment[][];
+        names: string[];
+    };
     visited?: ResolverContext.Visit[];
 };
 ```

@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-load?(ctx: PluginLoadContext, id: string): MaybeThenable$0<PluginLoadResult | undefined>;
+load?(ctx: PluginLoadContext, id: string): MaybeThenable<PluginLoadResult | undefined>;
 ```
 
 ## Parameters
@@ -19,5 +19,5 @@ load?(ctx: PluginLoadContext, id: string): MaybeThenable$0<PluginLoadResult | un
 
 <b>Returns:</b>
 
-MaybeThenable$0&lt;PluginLoadResult \| undefined&gt;
+MaybeThenable&lt;PluginLoadResult \| undefined&gt;
 

@@ -33,5 +33,5 @@ velcro.inject('external', externalModule);
  |
 |  [nodeEnv](./bundler.buildgraphoptions.nodeenv.md) | string |  |
 |  [plugins](./bundler.buildgraphoptions.plugins.md) | Plugin\[\] |  |
-|  [resolver](./bundler.buildgraphoptions.resolver.md) | Resolver$0 |  |
+|  [resolver](./bundler.buildgraphoptions.resolver.md) | Resolver |  |
 
