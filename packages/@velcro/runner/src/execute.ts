@@ -22,8 +22,8 @@ export interface BuildOptions {
 }
 
 export interface ExecuteOptions extends BuildOptions {
-  injectModules?: { [id: string]: unknown };
   sourceMap?: boolean;
+  injectModules?: { [id: string]: unknown };
 }
 
 export async function build(
@@ -66,6 +66,22 @@ export async function build(
 }
 
 export async function execute<T = unknown>(code: string, options: ExecuteOptions): Promise<T> {
+  if (options.injectModules) {
+    const injectedModuleSpecs = new Set(Object.keys(options.injectModules));
+    const optionsExternal = options.external;
+    const isExternal: BuildGraphOptions['external'] = (dependency, fromSourceModule) => {
+      if (injectedModuleSpecs.has(dependency.spec)) {
+        return true;
+      }
+
+      return typeof optionsExternal === 'function'
+        ? optionsExternal(dependency, fromSourceModule)
+        : false;
+    };
+
+    options.external = isExternal;
+  }
+
   const { entrypointUri, output } = await build(code, options);
   const codeWithStart = `${output.code}\n\nreturn Velcro.runtime;\n`;
   const runtimeCode = options.sourceMap
