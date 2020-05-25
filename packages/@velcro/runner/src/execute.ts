@@ -19,11 +19,11 @@ export interface BuildOptions {
   plugins?: Plugin[];
   packageMain?: Resolver.Settings['packageMain'];
   readUrl: CdnStrategy.UrlContentFetcher;
-  sourceMap?: boolean;
 }
 
 export interface ExecuteOptions extends BuildOptions {
   injectModules?: { [id: string]: unknown };
+  sourceMap?: boolean;
 }
 
 export async function build(

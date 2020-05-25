@@ -160,16 +160,10 @@ class GraphBuilder {
       (transformResult) => {
         this.pendingModuleOperations.delete(href, operation);
 
-        let parseResult;
-        try {
-          parseResult = parse(transformResult.code, {
-            globalModules: DEFAULT_SHIM_GLOBALS,
-            nodeEnv: this.nodeEnv,
-          });
-        } catch (err) {
-          throw new Error(`Error parsing '${href}': ${err.message}`);
-        }
-
+        const parseResult = parse(uri, transformResult.code, {
+          globalModules: DEFAULT_SHIM_GLOBALS,
+          nodeEnv: this.nodeEnv,
+        });
         const sourceModule = new SourceModule(
           uri,
           rootUri,

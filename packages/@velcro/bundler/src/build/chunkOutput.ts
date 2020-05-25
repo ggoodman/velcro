@@ -60,6 +60,8 @@ export class ChunkOutput {
       source: this.href,
     });
 
+    console.log('inputMap', inputMap);
+
     const sourceMapTree = new Link(
       inputMap,
       inputMap.sources.map((sourceHref) => {
@@ -69,7 +71,11 @@ export class ChunkOutput {
           return new Source(sourceHref, 'SOURCEMAP ERROR');
         }
 
-        return sourceModule.sourceMapsTree;
+        // The source module's `source` magic string gets cloned and further modified
+        // in the chunk-building step so we need to represent a new Link.
+        return new Link(sourceModule.source.generateDecodedMap({ hires: true }), [
+          sourceModule.sourceMapsTree,
+        ]);
       })
     );
     const sourceMapTreeMappings = sourceMapTree.traceMappings();
