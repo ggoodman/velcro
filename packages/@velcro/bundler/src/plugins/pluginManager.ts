@@ -69,13 +69,13 @@ export class PluginManager {
 
         return resolveResult;
       },
-      transform: async ({}, id, code) => {
+      transform: async ({ createMagicString }, id) => {
         if (id.path.endsWith('.json')) {
-          const magicString = new MagicString(code);
+          const magicString = createMagicString();
           magicString.prepend('module.exports = ');
 
           return {
-            code,
+            code: magicString.toString(),
             sourceMap: magicString.generateDecodedMap(),
           };
         }

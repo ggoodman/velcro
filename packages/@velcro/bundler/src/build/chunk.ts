@@ -56,7 +56,7 @@ export class Chunk {
           moduleScopes[edge.dependency.spec] = edge.toUri.toString();
         }
       }
-      const sourceModuleCode = sourceModule.source;
+      const sourceModuleCode = sourceModule.source.clone();
 
       sourceModuleCode.prepend(
         `velcro.defs[${JSON.stringify(
