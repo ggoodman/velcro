@@ -60,8 +60,6 @@ export class ChunkOutput {
       source: this.href,
     });
 
-    console.log('inputMap', inputMap);
-
     const sourceMapTree = new Link(
       inputMap,
       inputMap.sources.map((sourceHref) => {
