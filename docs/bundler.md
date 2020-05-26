@@ -11,7 +11,7 @@
 |  [Chunk](./bundler.chunk.md) |  |
 |  [ChunkOutput](./bundler.chunkoutput.md) |  |
 |  [Graph](./bundler.graph.md) |  |
-|  [SourceModule](./bundler.sourcemodule.md) |  |
+|  [SourceModule](./bundler.sourcemodule.md) | This function attempts to compensate for the loss of precision when lower layers of source maps have higher precision than upper layers, leading to a loss of fidelity.<!-- -->The code was lifted from \[Alec Larson\](https://github.com/aleclarson)'s \[fork of sorcery\](https://github.com/aleclarson/sorcery/blob/3934a3f38a6d8604fc9dbaa576cbb6e4d733040f/src/blend.js).<!-- -->NOTE: This function mutates the given node. \[Alec Larson\](https://github.com/aleclarson) 2018 |
 |  [SourceModuleDependency](./bundler.sourcemoduledependency.md) |  |
 
 ## Functions
