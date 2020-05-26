@@ -13,7 +13,7 @@
     "preversion": "npm test",
     "version": "npm run build:docs && git add .",
     "start": "cd packages/playground && npm run start",
-    "test": "jest"
+    "test": "jest --verbose"
   },
   "repository": {
     "type": "git",
