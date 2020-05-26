@@ -1,5 +1,5 @@
 import { Uri } from '@velcro/common';
-import { Bundle, SourceMapSegment } from 'magic-string';
+import { Bundle } from 'magic-string';
 import { encode } from 'sourcemap-codec';
 import { SourceModule } from '../graph/sourceModule';
 import { SourceMap } from './sourceMap';
@@ -56,7 +56,7 @@ export class ChunkOutput {
   private generateSourceMap() {
     const inputMap = this.bundle.generateDecodedMap({
       includeContent: false,
-      hires: true,
+      hires: false,
       source: this.href,
     });
 
@@ -71,7 +71,7 @@ export class ChunkOutput {
 
         // The source module's `source` magic string gets cloned and further modified
         // in the chunk-building step so we need to represent a new Link.
-        return new Link(sourceModule.source.generateDecodedMap({ hires: true }), [
+        return new Link(sourceModule.source.generateDecodedMap({ hires: false }), [
           sourceModule.sourceMapsTree,
         ]);
       })
@@ -92,37 +92,37 @@ export class ChunkOutput {
     // Loop through generated mappings, removing mappings that are character-by-character increments
     // from the previous mapping. Since we generated a hires bundle, this will shrink the resolution
     // back down to something not unnecessarily large.
-    for (const line of sourceMapTreeMappings.mappings) {
-      let lastSegment: SourceMapSegment | null = null;
-      const shrinkedLine: SourceMapSegment[] = [];
+    // for (const line of sourceMapTreeMappings.mappings) {
+    //   let lastSegment: SourceMapSegment | null = null;
+    //   const shrinkedLine: SourceMapSegment[] = [];
 
-      for (const segment of line) {
-        if (lastSegment && lastSegment.length >= 4 && lastSegment.length === segment.length) {
-          // We will only push the segment if it is not, effectively a direct cursor move of the
-          // last one.
-          // For example:
-          //   lastSegment = [1, 0, 0, 1] // Generated column 1, original column 1 of the 0th file, 0th line
-          //   segment = [2, 0, 0, 2] // Generated column 2, original column 2 of the 0th file, 0th line
-          // Given that, we can see that this segment is not adding any _new_ information so we can skip it.
-          if (
-            lastSegment.length >= 4 &&
-            (lastSegment[0] + 1 !== segment[0] ||
-              lastSegment[1] !== segment[1] ||
-              lastSegment[2] !== segment[2] ||
-              lastSegment[3]! + 1 !== segment[3] ||
-              lastSegment[4] !== segment[4])
-          ) {
-            shrinkedLine.push(segment);
-          }
-        } else {
-          shrinkedLine.push(segment);
-        }
+    //   for (const segment of line) {
+    //     if (lastSegment && lastSegment.length >= 4 && lastSegment.length === segment.length) {
+    //       // We will only push the segment if it is not, effectively a direct cursor move of the
+    //       // last one.
+    //       // For example:
+    //       //   lastSegment = [1, 0, 0, 1] // Generated column 1, original column 1 of the 0th file, 0th line
+    //       //   segment = [2, 0, 0, 2] // Generated column 2, original column 2 of the 0th file, 0th line
+    //       // Given that, we can see that this segment is not adding any _new_ information so we can skip it.
+    //       if (
+    //         lastSegment.length >= 4 &&
+    //         (lastSegment[0] + 1 !== segment[0] ||
+    //           lastSegment[1] !== segment[1] ||
+    //           lastSegment[2] !== segment[2] ||
+    //           lastSegment[3]! + 1 !== segment[3] ||
+    //           lastSegment[4] !== segment[4])
+    //       ) {
+    //         shrinkedLine.push(segment);
+    //       }
+    //     } else {
+    //       shrinkedLine.push(segment);
+    //     }
 
-        lastSegment = segment;
-      }
+    //     lastSegment = segment;
+    //   }
 
-      line.splice(0, line.length, ...shrinkedLine);
-    }
+    //   // line.splice(0, line.length, ...shrinkedLine);
+    // }
 
     const sourceMap = new SourceMap({
       file: this.href,

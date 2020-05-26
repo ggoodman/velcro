@@ -64,6 +64,27 @@ describe('Velcro.runner', () => {
     expect(result).toMatchInlineSnapshot(`"<h1 data-reactroot=\\"\\">hello world</h1>"`);
   });
 
+  it('will render hello world using `htm/preact`', async () => {
+    const code = `
+      const { html } = require('htm/preact');
+      const render = require('preact-render-to-string');
+
+      const App = html\`<h1>Hello world</h1>\`;
+
+      module.exports = render(App);
+    `;
+    const result = await execute(code, {
+      dependencies: {
+        htm: '^3.0.4',
+        'preact-render-to-string': '^5.1.8',
+      },
+      readUrl,
+      nodeEnv: 'development',
+    });
+
+    expect(result).toMatchInlineSnapshot(`"<h1>Hello world</h1>"`);
+  });
+
   it('will run more complex package using react-dom/server', async () => {
     const code = `
       const React = require('react');
