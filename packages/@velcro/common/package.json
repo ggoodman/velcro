@@ -1,6 +1,6 @@
 {
   "name": "@velcro/common",
-  "version": "0.33.0",
+  "version": "0.34.0",
   "description": "Common utilities and types shared by the velcro ecosystem",
   "keywords": [
     "velcro"

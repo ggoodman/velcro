@@ -5,4 +5,4 @@
 
 Resolve references to absolute urls using the node module resolution algorithm using an generic host interface
 
-[API Docs](https://github.com/ggoodman/velcro/tree/v0.33.0/docs/resolver.md)
+[API Docs](https://github.com/ggoodman/velcro/tree/v0.34.0/docs/resolver.md)
