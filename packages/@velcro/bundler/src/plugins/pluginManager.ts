@@ -179,17 +179,22 @@ export class PluginManager {
     if (sourceMapRef) {
       let sourceMap: DecodedSourceMap | SourceMap | null = decodeDataUriAsSourceMap(sourceMapRef);
 
-      if (!sourceMap) {
-        try {
-          const sourceMapUri = Uri.joinPath(uri, `../${sourceMapRef}`);
-          const result = await ctx.readFileContent(sourceMapUri);
-          sourceMap = JSON.parse(ctx.decoder.decode(result.content)) as
-            | DecodedSourceMap
-            | SourceMap;
-        } catch {
-          // Do nothing
-        }
-      }
+      // if (!sourceMap) {
+      //   try {
+      //     const sourceMapUri = Uri.joinPath(uri, `../${sourceMapRef}`);
+      //     const result = await ctx.readFileContent(sourceMapUri);
+      //     sourceMap = JSON.parse(ctx.decoder.decode(result.content)) as
+      //       | DecodedSourceMap
+      //       | SourceMap;
+
+      //     sourceMap.file = sourceMapUri.toString();
+      //     sourceMap.sources = sourceMap.sources.map((source) =>
+      //       Uri.joinPath(sourceMapUri, `../${source}`).toString()
+      //     );
+      //   } catch {
+      //     // Do nothing
+      //   }
+      // }
 
       if (sourceMap) {
         const sources = sourceMap.sources;

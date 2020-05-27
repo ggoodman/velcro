@@ -69,11 +69,10 @@ export class ChunkOutput {
           return new Source(sourceHref, 'SOURCEMAP ERROR');
         }
 
-        // The source module's `source` magic string gets cloned and further modified
-        // in the chunk-building step so we need to represent a new Link.
-        return new Link(sourceModule.source.generateDecodedMap({ hires: false }), [
-          sourceModule.sourceMapsTree,
-        ]);
+        // All of the transformations included in the source module's magicString
+        // were baked into the bundle already. We just need to map these into any
+        // earlier sources.
+        return sourceModule.sourceMapsTree;
       })
     );
     const sourceMapTreeMappings = sourceMapTree.traceMappings();

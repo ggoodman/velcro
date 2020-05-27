@@ -1,6 +1,7 @@
 /**
  * @jest-environment jsdom
  */
+
 import { cssPlugin, execute } from '@velcro/runner';
 import fetch from 'cross-fetch';
 
@@ -34,7 +35,6 @@ describe('Velcro.runner', () => {
       dependencies: {
         'github-markdown-css': '4.0.0',
       },
-
       nodeEnv: 'production',
       plugins: [cssPlugin()],
       readUrl,
