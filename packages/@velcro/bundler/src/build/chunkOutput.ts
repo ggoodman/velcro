@@ -56,7 +56,7 @@ export class ChunkOutput {
   private generateSourceMap() {
     const inputMap = this.bundle.generateDecodedMap({
       includeContent: false,
-      hires: false,
+      hires: true,
       source: this.href,
     });
 
