@@ -30,7 +30,12 @@ export function cssPlugin(): Plugin {
           switch (char) {
             case CR:
             case NL:
-              magicString.overwrite(i, i + 1, '\\n');
+              // Break the resulting JavaScript string across new lines
+              // so that original css lines have a 1:1 with JavaScript lines.
+              // This allows the resulting source-map to correct show the
+              // original source whereas if the source had been collapsed to
+              // a JavaScript string on a single line, all the detail is lost.
+              magicString.overwrite(i, i + 1, "'\n+'");
               break;
             case SINGLE_QUOTE:
               magicString.prependRight(i, '\\');
