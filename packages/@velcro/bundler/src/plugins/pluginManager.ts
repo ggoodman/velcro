@@ -8,7 +8,11 @@ import {
 } from '@velcro/common';
 import { ResolverContext } from '@velcro/resolver';
 import MagicString, { DecodedSourceMap, SourceMap } from 'magic-string';
-import { decodeDataUriAsSourceMap, getSourceMappingUrl } from '../build/sourceMap';
+import {
+  decodeDataUriAsSourceMap,
+  getSourceMappingUrl,
+  updateSourceMappingUrl,
+} from '../build/sourceMap';
 import { Link, Source } from '../build/sourceMapTree';
 import { SourceModule, SourceModuleDependency } from '../graph';
 import {
@@ -179,22 +183,11 @@ export class PluginManager {
     if (sourceMapRef) {
       let sourceMap: DecodedSourceMap | SourceMap | null = decodeDataUriAsSourceMap(sourceMapRef);
 
-      // if (!sourceMap) {
-      //   try {
-      //     const sourceMapUri = Uri.joinPath(uri, `../${sourceMapRef}`);
-      //     const result = await ctx.readFileContent(sourceMapUri);
-      //     sourceMap = JSON.parse(ctx.decoder.decode(result.content)) as
-      //       | DecodedSourceMap
-      //       | SourceMap;
+      if (!sourceMap) {
+        const sourceMapUri = Uri.joinPath(uri, `../${sourceMapRef}`);
 
-      //     sourceMap.file = sourceMapUri.toString();
-      //     sourceMap.sources = sourceMap.sources.map((source) =>
-      //       Uri.joinPath(sourceMapUri, `../${source}`).toString()
-      //     );
-      //   } catch {
-      //     // Do nothing
-      //   }
-      // }
+        code = updateSourceMappingUrl(code, sourceMapUri.toString());
+      }
 
       if (sourceMap) {
         const sources = sourceMap.sources;

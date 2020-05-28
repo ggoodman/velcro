@@ -38,8 +38,8 @@ export class SourceMap {
   }
 }
 
-export function getSourceMappingUrl(str: string) {
-  const re = /(?:\/\/[@#][\s]*(?:source)MappingURL=([^\s'"]+)[\s]*$)|(?:\/\*[@#][\s]*(?:source)MappingURL=([^\s*'"]+)[\s]*(?:\*\/)[\s]*$)/gm;
+function getSourceMappingUrlMatch(str: string) {
+  const re = /(?:(?:\/\/|\/\*)[@#][\s]*(?:source)MappingURL=([^\s'"]+)[\s]*$)|(?:\/\*[@#][\s]*(?:source)MappingURL=([^\s*'"]+)[\s]*(?:\*\/)[\s]*$)/gm;
   // Keep executing the search to find the *last* sourceMappingURL to avoid
   // picking up sourceMappingURLs from comments, strings, etc.
   let lastMatch: RegExpExecArray | null = null;
@@ -47,9 +47,23 @@ export function getSourceMappingUrl(str: string) {
 
   while ((match = re.exec(str))) lastMatch = match;
 
+  return lastMatch;
+}
+
+export function getSourceMappingUrl(str: string) {
+  const lastMatch = getSourceMappingUrlMatch(str);
+
   if (!lastMatch) return '';
 
   return lastMatch[1];
+}
+
+export function updateSourceMappingUrl(str: string, url: string) {
+  const lastMatch = getSourceMappingUrlMatch(str);
+
+  if (!lastMatch) return str;
+
+  return str.slice(0, lastMatch.index) + str.slice(lastMatch.index).replace(lastMatch[1], url);
 }
 
 export function decodeDataUriAsSourceMap(href: string): DecodedSourceMap | null {
