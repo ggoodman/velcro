@@ -15,36 +15,24 @@ export function cssPlugin(): Plugin {
       const NL = '\n'.charCodeAt(0);
       const CR = '\r'.charCodeAt(0);
 
-      let escaped = false;
-
       for (let i = 0; i < cssCode.length; i++) {
         const char = cssCode.charCodeAt(i);
-
-        if (char === BACKSLASH) {
-          escaped = !escaped;
-          continue;
+        // Escape certain characters (if not already escaped)
+        switch (char) {
+          case CR:
+          case NL:
+            // Break the resulting JavaScript string across new lines
+            // so that original css lines have a 1:1 with JavaScript lines.
+            // This allows the resulting source-map to correct show the
+            // original source whereas if the source had been collapsed to
+            // a JavaScript string on a single line, all the detail is lost.
+            magicString.overwrite(i, i + 1, "\\n'\n+'");
+            break;
+          case BACKSLASH:
+          case SINGLE_QUOTE:
+            magicString.prependRight(i, '\\');
+            break;
         }
-
-        if (!escaped) {
-          // Escape certain characters (if not already escaped)
-          switch (char) {
-            case CR:
-            case NL:
-              // Break the resulting JavaScript string across new lines
-              // so that original css lines have a 1:1 with JavaScript lines.
-              // This allows the resulting source-map to correct show the
-              // original source whereas if the source had been collapsed to
-              // a JavaScript string on a single line, all the detail is lost.
-              magicString.overwrite(i, i + 1, "\\n'\n+'");
-              break;
-            case BACKSLASH:
-            case SINGLE_QUOTE:
-              magicString.prependRight(i, '\\');
-              break;
-          }
-        }
-
-        escaped = false;
       }
 
       magicString.prepend(`
