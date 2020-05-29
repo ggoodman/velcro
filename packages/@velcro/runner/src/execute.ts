@@ -5,8 +5,6 @@ import { CdnStrategy } from '@velcro/strategy-cdn';
 import { CompoundStrategy } from '@velcro/strategy-compound';
 import { MemoryStrategy } from '@velcro/strategy-memory';
 
-export { cssPlugin } from './plugins/css';
-
 const defaultExtensions: Resolver.Settings['extensions'] = ['.js', '.json'];
 const defaultPackageMain: Resolver.Settings['packageMain'] = ['browser', 'main'];
 

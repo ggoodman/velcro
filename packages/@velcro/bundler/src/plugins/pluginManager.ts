@@ -23,8 +23,12 @@ import {
   PluginTransformContext,
 } from './plugin';
 
+interface PluginManagerOptions {
+  nodeEnv: string;
+}
+
 export class PluginManager {
-  constructor(private readonly plugins: Plugin[]) {
+  constructor(private readonly plugins: Plugin[], private readonly options: PluginManagerOptions) {
     this.plugins.push({
       name: 'builtIn',
       load: async (ctx, id) => {
@@ -88,7 +92,9 @@ export class PluginManager {
   }
 
   async executeLoad(ctx: ResolverContext, uri: Uri) {
-    const pluginCtx: PluginLoadContext = Object.assign(ctx, {});
+    const pluginCtx: PluginLoadContext = Object.assign(ctx, {
+      nodeEnv: this.options.nodeEnv,
+    });
     for (const plugin of this.plugins) {
       if (typeof plugin.load === 'function') {
         const loadReturn = plugin.load(pluginCtx, uri.toString());
@@ -115,7 +121,9 @@ export class PluginManager {
     dependency: SourceModuleDependency,
     fromModule: SourceModule
   ) {
-    const pluginCtx: PluginResolveDependencyContext = Object.assign(ctx, {});
+    const pluginCtx: PluginResolveDependencyContext = Object.assign(ctx, {
+      nodeEnv: this.options.nodeEnv,
+    });
     for (const plugin of this.plugins) {
       if (typeof plugin.resolveDependency === 'function') {
         const loadReturn = plugin.resolveDependency(pluginCtx, dependency, fromModule);
@@ -141,7 +149,9 @@ export class PluginManager {
   }
 
   async executeResolveEntrypoint(ctx: ResolverContext, uri: Uri) {
-    const pluginCtx: PluginResolveEntrypointContext = Object.assign(ctx, {});
+    const pluginCtx: PluginResolveEntrypointContext = Object.assign(ctx, {
+      nodeEnv: this.options.nodeEnv,
+    });
     for (const plugin of this.plugins) {
       if (typeof plugin.resolveEntrypoint === 'function') {
         const loadReturn = plugin.resolveEntrypoint(pluginCtx, uri);
@@ -173,6 +183,7 @@ export class PluginManager {
       createMagicString() {
         return new MagicString(code as string);
       },
+      nodeEnv: this.options.nodeEnv,
     });
 
     let sourceMapTree: Source | Link = new Source(uri.toString(), code);
