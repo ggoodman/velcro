@@ -22,8 +22,8 @@ export function sucrasePlugin(options: SucrasePluginOptions = {}): Plugin {
 
   const uriTestRx = new RegExp(`\.(?:${extensions.join('|')})$`, 'i');
 
-  const jsxPragmaRx = /\/\*\*\s*@jsx\s+(\S+)\*+\//;
-  const jsxFragmentPragmaRx = /\/\*\*\s*@jsxFragment\s+(\S+)\*+\//;
+  const jsxPragmaRx = /\/\*\*\s*@jsx\s+(\S+)\s*\*+\//;
+  const jsxFragmentPragmaRx = /\/\*\*\s*@jsxFragment\s+(\S+)\s*\*+\//;
 
   return {
     name: 'sucrasePlugin',

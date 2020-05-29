@@ -26,7 +26,7 @@
     "sourceMap": true,
     "strict": true,
     "stripInternal": true,
-    "target": "ES2020"
+    "target": "ES2018"
   },
   // "files": ["__test__"],
   "include": ["__test__"],
