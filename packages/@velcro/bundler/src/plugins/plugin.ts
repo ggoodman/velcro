@@ -24,7 +24,9 @@ export interface Plugin {
   ): MaybeThenable<PluginTransformResult | undefined>;
 }
 
-interface PluginContext extends ResolverContext {}
+interface PluginContext extends ResolverContext {
+  nodeEnv: string;
+}
 
 export interface PluginLoadContext extends PluginContext {}
 
@@ -56,7 +58,7 @@ export interface PluginTransformContext extends PluginContext {
 export type PluginTransformResult = {
   code: string;
   sourceMap?: {
-    mappings: SourceMapSegment[][];
+    mappings: SourceMapSegment[][] | string;
     names: string[];
   };
   visited?: ResolverContext.Visit[];

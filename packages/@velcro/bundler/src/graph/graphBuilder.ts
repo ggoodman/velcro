@@ -86,7 +86,9 @@ class GraphBuilder {
     this.rootCtx = this.resolver.createResolverContext();
     this.external = options.external;
     this.nodeEnv = options.nodeEnv || 'development';
-    this.pluginManager = new PluginManager(options.plugins);
+    this.pluginManager = new PluginManager(options.plugins, {
+      nodeEnv: this.nodeEnv,
+    });
 
     this.disposer.add(this.rootCtx);
     this.disposer.add(

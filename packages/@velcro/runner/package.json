@@ -62,7 +62,8 @@
     "@velcro/resolver": "^0.34.0",
     "@velcro/strategy-cdn": "^0.34.0",
     "@velcro/strategy-compound": "^0.34.0",
-    "@velcro/strategy-memory": "^0.34.0"
+    "@velcro/strategy-memory": "^0.34.0",
+    "sucrase": "^3.15.0"
   },
   "gitHead": "f63b45ad688f2fe9768349afeaf449c016bf33ef"
 }
