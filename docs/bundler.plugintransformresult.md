@@ -10,7 +10,7 @@
 type PluginTransformResult = {
     code: string;
     sourceMap?: {
-        mappings: SourceMapSegment[][];
+        mappings: SourceMapSegment[][] | string;
         names: string[];
     };
     visited?: ResolverContext.Visit[];
