@@ -37,6 +37,7 @@ export function cssPlugin(): Plugin {
               // a JavaScript string on a single line, all the detail is lost.
               magicString.overwrite(i, i + 1, "\\n'\n+'");
               break;
+            case BACKSLASH:
             case SINGLE_QUOTE:
               magicString.prependRight(i, '\\');
               break;
