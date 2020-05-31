@@ -75,4 +75,25 @@ describe('JavaScript CommonJS parser', () => {
     testOne('if (process.env.NODE_ENV !== "development") { require("hello"); }', []);
     testOne('if (process.env.NODE_ENV !== "development") { process.cwd(); }', []);
   });
+
+  test('will not inject dependencies if the value will be replaced', () => {
+    const testOne = (code: string, expectedSpecs: string[], nodeEnv = 'development') => {
+      const parseResult = parse(Uri.file('/index.js'), code, {
+        globalModules: {
+          global: { spec: '@@global' },
+        },
+        nodeEnv,
+      });
+
+      expect(
+        parseResult.dependencies
+          .filter((dep) => dep.kind === SourceModuleDependencyKind.GlobalObject)
+          .map((dep) => dep.spec)
+      ).toStrictEqual(expectedSpecs);
+    };
+
+    testOne("var isWindows = 'navigator' in global && /Win/i.test(navigator.platform);", [
+      '@@global',
+    ]);
+  });
 });
