@@ -27,7 +27,7 @@ export class SourceModuleDependency {
     return new SourceModuleDependency(SourceModuleDependencyKind.Entrypoint, uri.toString(), []);
   }
 
-  static fromGloblaObject(spec: string, locations: SourceLocation[], exportName?: string) {
+  static fromGlobalObject(spec: string, locations: SourceLocation[], exportName?: string) {
     return new SourceModuleDependency(SourceModuleDependencyKind.GlobalObject, spec, locations, {
       exportName,
     });

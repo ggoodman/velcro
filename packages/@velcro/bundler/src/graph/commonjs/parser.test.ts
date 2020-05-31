@@ -96,4 +96,22 @@ describe('JavaScript CommonJS parser', () => {
       '@@global',
     ]);
   });
+
+  test('will replace injectedGlobals with calls to require', () => {
+    const testOne = (code: string, expectedCode: string, nodeEnv = 'development') => {
+      const parseResult = parse(Uri.file('/index.js'), code, {
+        globalModules: {
+          global: { spec: '@@global' },
+        },
+        nodeEnv,
+      });
+
+      expect(parseResult.code.toString()).toEqual(expectedCode);
+    };
+
+    testOne(
+      "var isWindows = 'navigator' in global && /Win/i.test(navigator.platform);",
+      'var isWindows = \'navigator\' in require("@@global") && /Win/i.test(navigator.platform);'
+    );
+  });
 });

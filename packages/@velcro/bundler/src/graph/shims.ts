@@ -11,6 +11,9 @@ export const DEFAULT_SHIM_GLOBALS: Record<
   global: {
     spec: `@velcro/node-libs@${nodeLibsVersion}/lib/global.js`,
   },
+  globalThis: {
+    spec: `@velcro/node-libs@${nodeLibsVersion}/lib/global.js`,
+  },
   process: {
     spec: `@velcro/node-libs@${nodeLibsVersion}/lib/process.js`,
   },

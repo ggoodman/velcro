@@ -119,7 +119,15 @@ export const parse = function parseJavaScript(
     const shim = options.globalModules[symbolName];
 
     if (shim) {
-      dependencies.push(SourceModuleDependency.fromGloblaObject(shim.spec, locations, shim.export));
+      dependencies.push(SourceModuleDependency.fromGlobalObject(shim.spec, locations, shim.export));
+
+      for (const location of locations) {
+        visitorCtx.magicString.overwrite(
+          location.start,
+          location.end,
+          `require(${JSON.stringify(`${shim.spec}`)})`
+        );
+      }
     }
   }
 
