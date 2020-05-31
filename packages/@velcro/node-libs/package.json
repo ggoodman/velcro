@@ -1,6 +1,6 @@
 {
   "name": "@velcro/node-libs",
-  "version": "0.36.1",
+  "version": "0.36.2",
   "description": "A curated collection of browser-compatible shims for node core modules",
   "keywords": [
     "node",
