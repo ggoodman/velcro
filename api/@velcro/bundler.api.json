@@ -1954,12 +1954,12 @@
             },
             {
               "kind": "Method",
-              "canonicalReference": "@velcro/bundler!SourceModuleDependency.fromGloblaObject:member(1)",
+              "canonicalReference": "@velcro/bundler!SourceModuleDependency.fromGlobalObject:member(1)",
               "docComment": "",
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "static fromGloblaObject(spec: "
+                  "text": "static fromGlobalObject(spec: "
                 },
                 {
                   "kind": "Content",
@@ -2030,7 +2030,7 @@
                   }
                 }
               ],
-              "name": "fromGloblaObject"
+              "name": "fromGlobalObject"
             },
             {
               "kind": "Method",
@@ -2382,7 +2382,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.36.1\""
+              "text": "version = \"0.36.2\""
             }
           ],
           "releaseTag": "Public",

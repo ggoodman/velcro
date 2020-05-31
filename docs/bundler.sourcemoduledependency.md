@@ -25,7 +25,7 @@ declare class SourceModuleDependency
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
 |  [fromEntrypoint(uri)](./bundler.sourcemoduledependency.fromentrypoint.md) | <code>static</code> |  |
-|  [fromGloblaObject(spec, locations, exportName)](./bundler.sourcemoduledependency.fromgloblaobject.md) | <code>static</code> |  |
+|  [fromGlobalObject(spec, locations, exportName)](./bundler.sourcemoduledependency.fromglobalobject.md) | <code>static</code> |  |
 |  [fromRequire(spec, locations)](./bundler.sourcemoduledependency.fromrequire.md) | <code>static</code> |  |
 |  [fromRequireResolve(spec, locations)](./bundler.sourcemoduledependency.fromrequireresolve.md) | <code>static</code> |  |
 
