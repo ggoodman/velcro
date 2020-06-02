@@ -5,4 +5,4 @@
 
 Opinionated tool for easily bundling and running code from anywhere
 
-[API Docs](https://github.com/ggoodman/velcro/tree/v0.36.3/docs/runner.md)
+[API Docs](https://github.com/ggoodman/velcro/tree/v0.37.0/docs/runner.md)

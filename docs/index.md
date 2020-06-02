@@ -10,6 +10,8 @@
 |  --- | --- |
 |  [@velcro/bundler](./bundler.md) |  |
 |  [@velcro/common](./common.md) |  |
+|  [@velcro/plugin-css](./plugin-css.md) |  |
+|  [@velcro/plugin-sucrase](./plugin-sucrase.md) |  |
 |  [@velcro/resolver](./resolver.md) |  |
 |  [@velcro/runner](./runner.md) |  |
 |  [@velcro/strategy-cdn](./strategy-cdn.md) |  |

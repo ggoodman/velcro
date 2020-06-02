@@ -9,9 +9,7 @@
 |  Function | Description |
 |  --- | --- |
 |  [build(code, options)](./runner.build.md) |  |
-|  [cssPlugin()](./runner.cssplugin.md) |  |
 |  [execute(code, options)](./runner.execute.md) |  |
-|  [sucrasePlugin(options)](./runner.sucraseplugin.md) |  |
 
 ## Interfaces
 
@@ -19,7 +17,6 @@
 |  --- | --- |
 |  [BuildOptions](./runner.buildoptions.md) |  |
 |  [ExecuteOptions](./runner.executeoptions.md) |  |
-|  [SucrasePluginOptions](./runner.sucrasepluginoptions.md) |  |
 
 ## Variables
 

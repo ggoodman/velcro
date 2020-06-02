@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-Velcro$0: {
+Velcro: {
     Runner: typeof exportsNS;
 }
 ```

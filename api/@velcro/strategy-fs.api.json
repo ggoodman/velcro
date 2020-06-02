@@ -643,7 +643,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.36.1\""
+              "text": "version = \"0.36.2\""
             }
           ],
           "releaseTag": "Public",

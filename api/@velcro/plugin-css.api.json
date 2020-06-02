@@ -1,0 +1,66 @@
+{
+  "metadata": {
+    "toolPackage": "@microsoft/api-extractor",
+    "toolVersion": "7.8.10",
+    "schemaVersion": 1003,
+    "oldestForwardsCompatibleVersion": 1001
+  },
+  "kind": "Package",
+  "canonicalReference": "@velcro/plugin-css!",
+  "docComment": "",
+  "name": "@velcro/plugin-css",
+  "members": [
+    {
+      "kind": "EntryPoint",
+      "canonicalReference": "@velcro/plugin-css!",
+      "name": "",
+      "members": [
+        {
+          "kind": "Function",
+          "canonicalReference": "@velcro/plugin-css!cssPlugin:function(1)",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "declare function cssPlugin(): "
+            },
+            {
+              "kind": "Reference",
+              "text": "Plugin",
+              "canonicalReference": "!unknown"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "returnTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [],
+          "name": "cssPlugin"
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "@velcro/plugin-css!version:var",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "version = \"0.36.3\""
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "version",
+          "variableTypeTokenRange": {
+            "startIndex": 0,
+            "endIndex": 0
+          }
+        }
+      ]
+    }
+  ]
+}
