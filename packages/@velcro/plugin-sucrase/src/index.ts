@@ -1,2 +1,2 @@
 export const version = '__VERSION__';
-export * from './execute';
+export * from './sucrase';

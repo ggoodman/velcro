@@ -109,6 +109,8 @@ module.exports = {
     ...[
       '@velcro/bundler',
       '@velcro/common',
+      '@velcro/plugin-css',
+      '@velcro/plugin-sucrase',
       '@velcro/resolver',
       '@velcro/runner',
       '@velcro/strategy-cdn',

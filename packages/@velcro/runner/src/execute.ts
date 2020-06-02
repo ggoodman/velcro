@@ -1,5 +1,5 @@
 import { buildGraph, BuildGraphOptions, ChunkOutput, Plugin, VelcroRuntime } from '@velcro/bundler';
-import { Uri } from '@velcro/common/src';
+import { Uri } from '@velcro/common';
 import { Resolver } from '@velcro/resolver';
 import { CdnStrategy } from '@velcro/strategy-cdn';
 import { CompoundStrategy } from '@velcro/strategy-compound';
