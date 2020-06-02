@@ -3,7 +3,8 @@
  */
 
 import Wreck from '@hapi/wreck';
-import { build, cssPlugin } from '@velcro/runner';
+import { cssPlugin } from '@velcro/plugin-css';
+import { build } from '@velcro/runner';
 import { getLocator } from 'locate-character';
 import { SourceMapConsumer } from 'source-map';
 
