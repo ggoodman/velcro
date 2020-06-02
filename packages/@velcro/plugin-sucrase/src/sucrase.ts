@@ -1,4 +1,4 @@
-import { Plugin } from '@velcro/bundler';
+import type { Plugin } from '@velcro/bundler';
 import { Options, transform } from 'sucrase';
 
 export interface SucrasePluginOptions

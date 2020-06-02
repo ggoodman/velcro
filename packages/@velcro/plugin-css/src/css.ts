@@ -1,4 +1,4 @@
-import { Plugin } from '@velcro/bundler';
+import type { Plugin } from '@velcro/bundler';
 
 export function cssPlugin(): Plugin {
   return {

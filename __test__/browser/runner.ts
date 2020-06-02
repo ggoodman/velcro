@@ -2,7 +2,8 @@
  * @jest-environment jsdom
  */
 
-import { cssPlugin, execute } from '@velcro/runner';
+import { cssPlugin } from '@velcro/plugin-css';
+import { execute } from '@velcro/runner';
 import fetch from 'cross-fetch';
 
 async function readUrl(href: string) {

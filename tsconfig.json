@@ -34,6 +34,8 @@
     { "path": "./packages/@velcro/bundler" },
     { "path": "./packages/@velcro/common" },
     { "path": "./packages/@velcro/node-libs" },
+    { "path": "./packages/@velcro/plugin-css" },
+    { "path": "./packages/@velcro/plugin-sucrase" },
     { "path": "./packages/@velcro/resolver" },
     { "path": "./packages/@velcro/runner" },
     { "path": "./packages/@velcro/strategy-cdn" },
