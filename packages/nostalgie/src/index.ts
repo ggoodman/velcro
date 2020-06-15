@@ -1,3 +1,5 @@
+//@ts-expect-error
+import globalThis from '@velcro/node-libs/lib/global';
 import { refresh } from './nostalgie';
 
 if (!('document' in globalThis)) {

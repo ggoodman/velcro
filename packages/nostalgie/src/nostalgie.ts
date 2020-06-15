@@ -6,10 +6,6 @@ import { CdnStrategy } from '@velcro/strategy-cdn';
 import { CompoundStrategy } from '@velcro/strategy-compound';
 import { MemoryStrategy } from '@velcro/strategy-memory';
 
-if (!('document' in globalThis)) {
-  throw new Error('Nostalgie must be run in the main thread of a browser');
-}
-
 const readUrl = (href: string) => fetch(href).then((res) => res.arrayBuffer());
 
 let queue: Promise<unknown> = Promise.resolve();

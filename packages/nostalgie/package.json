@@ -59,6 +59,7 @@
   },
   "dependencies": {
     "@velcro/bundler": "^0.37.0",
+    "@velcro/node-libs": "^0.37.0",
     "@velcro/plugin-css": "^0.37.0",
     "@velcro/plugin-sucrase": "^0.37.0",
     "@velcro/resolver": "^0.37.0",
