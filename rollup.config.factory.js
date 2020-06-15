@@ -151,7 +151,7 @@ function rollupConfigFactory(dirname, filename) {
         RollupPluginReplace({
           __VERSION__: process.env.npm_package_version || PackageJson.version,
         }),
-        dirname.endsWith('runner')
+        dirname.endsWith('runner') || dirname.endsWith('nostalgie')
           ? RollupPluginSucrase({
               transforms: ['typescript'],
             })

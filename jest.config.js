@@ -117,6 +117,7 @@ module.exports = {
       '@velcro/strategy-compound',
       '@velcro/strategy-fs',
       '@velcro/strategy-memory',
+      'nostalgie',
     ].map((name) => ({
       displayName: name,
       moduleNameMapper: {
