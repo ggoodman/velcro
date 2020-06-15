@@ -50,7 +50,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.36.3\""
+              "text": "version = \"0.37.0\""
             }
           ],
           "releaseTag": "Public",
