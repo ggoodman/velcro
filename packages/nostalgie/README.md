@@ -24,7 +24,7 @@ The goal of this project is to let you:
 In your html markup:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/nostalgie@0.38.0/script>
+<script src="https://cdn.jsdelivr.net/npm/nostalgie@0.38.0/dist/index.umd.js"></script>
 ```
 
 The library will register a `load` even on the `window` object. The event handler will scan for all `<script type="velcro">` tags and will build and execute them sequentially.
@@ -32,14 +32,21 @@ The library will register a `load` even on the `window` object. The event handle
 Elsewhere in your html markup, use `script` tags with `type="velcro"` to author your custom code. Version resolution for references to modules therein _must_ be encoded in a `data-dependencies="<module>:<range>, <module2>:<range2>, ..."` attribute. Each such script tag must have its dependencies encoded.
 
 ```html
-<script type="velcro" data-dependencies="preact:^10.4.4">
+<script type="velcro" data-dependencies="preact:^10.4.4, github-markdown-css: ^4.0.0">
   /** @jsx h */
 
   import { h, render } from 'preact';
+  import 'github-markdown-css';
 
   const name = 'hello world';
 
-  render(<h1>Wow, such {name}</h1>)
+  render(
+    <div className="markdown-body">
+      <h1>Wow, such {name}</h1>
+      <p>With <code>jsx</code>, <code>ES modules</code> and ✨.</p>
+    </div>,
+    document.body
+  );
 </script>
 ```
 
