@@ -9,16 +9,28 @@ import { MemoryStrategy } from '@velcro/strategy-memory';
 const readUrl = (href: string) => fetch(href).then((res) => res.arrayBuffer());
 
 let queue: Promise<unknown> = Promise.resolve();
+let timeout: null | number = null;
 
-export function refresh() {
+const onChange: MutationCallback = (records) => {
+  if (timeout) {
+    clearTimeout(timeout);
+  }
+
+  timeout = (setTimeout(() => {
+    refresh(records.map((record) => record.target as HTMLScriptElement));
+    timeout = null;
+  }, 1000) as unknown) as number;
+};
+
+const observer = new MutationObserver(onChange);
+
+export function refresh(scripts: Iterable<HTMLScriptElement>) {
   const entrypointPaths: string[] = [];
   const files: Record<string, string> = {};
 
   let idx = 0;
 
-  for (const script of document.querySelectorAll('script[type=velcro]') as NodeListOf<
-    HTMLScriptElement
-  >) {
+  for (const script of scripts) {
     const scriptId = idx++;
     const basePath = `/script/${scriptId}`;
     const rawDependencies = script.dataset.dependencies;
@@ -54,6 +66,8 @@ export function refresh() {
           .then((res) => res.text())
           .then((code) => (files[`${basePath}/index.js`] = code))
           .catch((err) => {
+            const event = new CustomEvent('error', { detail: { error: err } });
+            script.dispatchEvent(event);
             console.error('Error reading the code at %s:', script.src, err);
             return '';
           })
@@ -63,6 +77,8 @@ export function refresh() {
     }
 
     entrypointPaths.push(`${basePath}/index.js`);
+
+    observer.observe(script, { childList: true });
   }
 
   const cdnStrategy = CdnStrategy.forJsDelivr(readUrl);

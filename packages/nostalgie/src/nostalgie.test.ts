@@ -18,7 +18,7 @@ describe('Velcro.nostalgie', () => {
     scriptEl.text = `document.body.innerHTML = 'hello world';`;
     document.head.appendChild(scriptEl);
 
-    await refresh();
+    await refresh(document.querySelectorAll('script[type=velcro]'));
 
     expect(document.body.innerHTML).toBe('hello world');
   });
@@ -31,7 +31,7 @@ describe('Velcro.nostalgie', () => {
       document.head.appendChild(scriptEl);
     }
 
-    await refresh();
+    await refresh(document.querySelectorAll('script[type=velcro]'));
 
     expect(document.body.innerHTML).toBe('0123456789');
   });
@@ -53,7 +53,7 @@ describe('Velcro.nostalgie', () => {
     root.id = 'root';
     document.body.appendChild(root);
 
-    await refresh();
+    await refresh(document.querySelectorAll('script[type=velcro]'));
 
     expect(document.body.innerHTML).toBe('<div id="root"><h1>Hello world</h1></div>');
   });
