@@ -16,7 +16,8 @@
     "noUnusedParameters": true,
     "outDir": "__out__",
     "paths": {
-      "@velcro/*": ["./packages/@velcro/*/src"]
+      "@velcro/*": ["./packages/@velcro/*/src"],
+      "nostalgie": ["./packages/nostalgie/src"]
     },
     "pretty": true,
     "resolveJsonModule": true,
@@ -41,6 +42,7 @@
     { "path": "./packages/@velcro/strategy-cdn" },
     { "path": "./packages/@velcro/strategy-compound" },
     { "path": "./packages/@velcro/strategy-fs" },
-    { "path": "./packages/@velcro/strategy-memory" }
+    { "path": "./packages/@velcro/strategy-memory" },
+    { "path": "./packages/nostalgie" }
   ]
 }

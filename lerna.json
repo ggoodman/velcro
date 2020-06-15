@@ -1,6 +1,4 @@
 {
-  "packages": [
-    "packages/@velcro/*"
-  ],
+  "packages": ["packages/@velcro/*", "packages/nostalgie"],
   "version": "0.37.0"
 }
