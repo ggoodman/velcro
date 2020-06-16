@@ -3,5 +3,5 @@
     "packages/@velcro/*",
     "packages/nostalgie"
   ],
-  "version": "0.39.0"
+  "version": "0.39.1"
 }
