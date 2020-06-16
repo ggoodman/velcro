@@ -11,18 +11,37 @@ const readUrl = (href: string) => fetch(href).then((res) => res.arrayBuffer());
 let queue: Promise<unknown> = Promise.resolve();
 let timeout: null | number = null;
 
+const findParentScriptTag = (node: Node) => {
+  let nextNode: Node | null = node;
+
+  while (nextNode) {
+    if (nextNode instanceof HTMLScriptElement) {
+      break;
+    }
+
+    nextNode = nextNode.parentNode;
+
+    if (!nextNode) {
+      throw new Error(`Unable to find the triggering script element`);
+    }
+  }
+
+  return nextNode;
+};
+
 const onChange: MutationCallback = (records) => {
   if (timeout) {
     clearTimeout(timeout);
   }
 
   timeout = (setTimeout(() => {
-    refresh(records.map((record) => record.target as HTMLScriptElement));
+    refresh(records.map((record) => findParentScriptTag(record.target)));
     timeout = null;
   }, 1000) as unknown) as number;
 };
 
 const observer = new MutationObserver(onChange);
+const scriptTagsToBasePaths = new WeakMap<HTMLScriptElement, string>();
 
 export function refresh(scripts: Iterable<HTMLScriptElement>) {
   const entrypointPaths: string[] = [];
@@ -31,8 +50,14 @@ export function refresh(scripts: Iterable<HTMLScriptElement>) {
   let idx = 0;
 
   for (const script of scripts) {
-    const scriptId = idx++;
-    const basePath = `/script/${scriptId}`;
+    let basePath = scriptTagsToBasePaths.get(script);
+
+    if (!basePath) {
+      const scriptId = idx++;
+      basePath = `/script/${scriptId}`;
+      scriptTagsToBasePaths.set(script, basePath);
+    }
+
     const rawDependencies = script.dataset.dependencies;
     const dependencies: Record<string, string> = {};
 
@@ -49,7 +74,7 @@ export function refresh(scripts: Iterable<HTMLScriptElement>) {
     // of this script and point to the script's entrypoint.
     files[`${basePath}/package.json`] = JSON.stringify(
       {
-        name: `script${scriptId}`,
+        name: 'script',
         version: '0.0.0',
         main: 'index.js',
         dependencies,
@@ -78,7 +103,12 @@ export function refresh(scripts: Iterable<HTMLScriptElement>) {
 
     entrypointPaths.push(`${basePath}/index.js`);
 
-    observer.observe(script, { childList: true });
+    observer.observe(script, {
+      attributes: true,
+      attributeFilter: ['data-dependencies', 'src'],
+      characterData: true,
+      subtree: true,
+    });
   }
 
   const cdnStrategy = CdnStrategy.forJsDelivr(readUrl);
