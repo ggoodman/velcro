@@ -20,7 +20,7 @@ declare class MemoryStrategy extends AbstractResolverStrategyWithRoot
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [addFile(pathname, content, encoding)](./strategy-memory.memorystrategy.addfile.md) |  |  |
+|  [addFile(pathname, content, { encoding, overwrite })](./strategy-memory.memorystrategy.addfile.md) |  |  |
 |  [getEntryAtPath(pathname)](./strategy-memory.memorystrategy.getentryatpath.md) |  |  |
 |  [getResolveRoot()](./strategy-memory.memorystrategy.getresolveroot.md) |  |  |
 |  [listEntries(\_ctx, uri)](./strategy-memory.memorystrategy.listentries.md) |  |  |

@@ -120,12 +120,20 @@
                 },
                 {
                   "kind": "Content",
-                  "text": ", encoding?: "
+                  "text": ", { encoding, overwrite }?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        encoding?: "
                 },
                 {
                   "kind": "Reference",
                   "text": "FileEncoding",
                   "canonicalReference": "@velcro/strategy-memory!~FileEncoding:enum"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n        overwrite?: boolean;\n    }"
                 },
                 {
                   "kind": "Content",
@@ -143,8 +151,8 @@
               ],
               "isStatic": false,
               "returnTypeTokenRange": {
-                "startIndex": 7,
-                "endIndex": 8
+                "startIndex": 9,
+                "endIndex": 10
               },
               "releaseTag": "Public",
               "overloadIndex": 1,
@@ -164,10 +172,10 @@
                   }
                 },
                 {
-                  "parameterName": "encoding",
+                  "parameterName": "{ encoding, overwrite }",
                   "parameterTypeTokenRange": {
                     "startIndex": 5,
-                    "endIndex": 6
+                    "endIndex": 8
                   }
                 }
               ],
@@ -502,7 +510,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.39.0\""
+              "text": "version = \"0.40.0\""
             }
           ],
           "releaseTag": "Public",

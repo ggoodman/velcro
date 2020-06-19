@@ -2879,7 +2879,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.39.0\""
+              "text": "version = \"0.40.0\""
             }
           ],
           "releaseTag": "Public",

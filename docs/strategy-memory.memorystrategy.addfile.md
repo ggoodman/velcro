@@ -7,7 +7,10 @@
 <b>Signature:</b>
 
 ```typescript
-addFile(pathname: string, content: string, encoding?: FileEncoding): FileEntry;
+addFile(pathname: string, content: string, { encoding, overwrite }?: {
+        encoding?: FileEncoding;
+        overwrite?: boolean;
+    }): FileEntry;
 ```
 
 ## Parameters
@@ -16,7 +19,7 @@ addFile(pathname: string, content: string, encoding?: FileEncoding): FileEntry;
 |  --- | --- | --- |
 |  pathname | string |  |
 |  content | string |  |
-|  encoding | FileEncoding |  |
+|  { encoding, overwrite } | { encoding?: FileEncoding; overwrite?: boolean; } |  |
 
 <b>Returns:</b>
 
