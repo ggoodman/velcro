@@ -81,6 +81,16 @@ export class Chunk {
       bundle.append(`\nVelcro.runtime = ${createRuntime.toString()}(Velcro.registry);\n`);
     }
 
+    if (options && options.invalidations) {
+      if (!options.injectRuntime) {
+        throw new Error(
+          'Setting injectRuntime to true is required when calling buildForStaticRuntime and specifying invalidations'
+        );
+      }
+
+      bundle.append(`\nVelcro.runtime.invalidate(${JSON.stringify(options.invalidations)});\n`);
+    }
+
     return new ChunkOutput(bundle, this.sourceModules, this.rootUri);
   }
 }
@@ -103,5 +113,6 @@ export namespace Chunk {
      * instance of it will be exposed as `Velcro.runtime`.
      */
     injectRuntime?: boolean;
+    invalidations?: string[];
   }
 }

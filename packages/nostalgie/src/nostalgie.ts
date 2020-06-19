@@ -58,6 +58,7 @@ const scriptTagsToBasePaths = new WeakMap<HTMLScriptElement, string>();
 
 export function refresh(scripts: Iterable<HTMLScriptElement>) {
   const entrypointPaths: string[] = [];
+  const invalidations: string[] = [];
 
   for (const script of scripts) {
     let basePath = scriptTagsToBasePaths.get(script);
@@ -97,6 +98,7 @@ export function refresh(scripts: Iterable<HTMLScriptElement>) {
       { overwrite: true }
     );
     graphBuilder.invalidate(memoryStrategy.uriForPath(`${basePath}/package.json`));
+    invalidations.push(memoryStrategy.uriForPath(`${basePath}/package.json`).toString());
 
     if (script.src) {
       // We need to load the code over http so we'll add the operation to the
@@ -107,6 +109,7 @@ export function refresh(scripts: Iterable<HTMLScriptElement>) {
           .then((code) => {
             memoryStrategy.addFile(`${basePath}/index.js`, code, { overwrite: true });
             graphBuilder.invalidate(memoryStrategy.uriForPath(`${basePath}/index.js`));
+            invalidations.push(memoryStrategy.uriForPath(`${basePath}/index.js`).toString());
           })
           .catch((err) => {
             const event = new CustomEvent('error', { detail: { error: err } });
@@ -118,6 +121,7 @@ export function refresh(scripts: Iterable<HTMLScriptElement>) {
     } else {
       memoryStrategy.addFile(`${basePath}/index.js`, script.text, { overwrite: true });
       graphBuilder.invalidate(memoryStrategy.uriForPath(`${basePath}/index.js`));
+      invalidations.push(memoryStrategy.uriForPath(`${basePath}/index.js`).toString());
     }
 
     entrypointPaths.push(`${basePath}/index.js`);

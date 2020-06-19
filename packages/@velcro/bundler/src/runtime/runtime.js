@@ -40,6 +40,8 @@ export function createRuntime(velcro) {
       this.modules = Object.create(null);
       this.root = new Module(this, 'velcro:/root', {});
       this.require = this.createRequire(this.root);
+      /** @type {Record<string, Module[] | undefined>} */
+      this.dependents = Object.create(null);
     }
 
     /**
@@ -47,32 +49,32 @@ export function createRuntime(velcro) {
      * @param {Module} fromModule
      */
     createRequire(fromModule) {
-      const runtime = this;
+      var runtime = this;
 
       /**
        *
        * @param {string} spec
        */
       function require(spec) {
-        const id = runtime.resolveSpecAgainstImportMap(spec, fromModule);
+        var id = runtime.resolveSpecAgainstImportMap(spec, fromModule);
 
-        let module = runtime.modules[id];
+        var module = runtime.modules[id];
 
         if (!module) {
-          const moduleDefinition = runtime.defs[id];
+          var moduleDefinition = runtime.defs[id];
 
           if (!moduleDefinition) {
             throw new Error(`Unable to locate module '${id}' from '${fromModule.id}`);
           }
 
-          const [factory, importMap] = moduleDefinition;
+          var [factory, importMap] = moduleDefinition;
 
           module = new Module(runtime, id, importMap);
           runtime.modules[id] = module;
 
-          const specParts = id.split('/');
-          const __filename = specParts.pop() || spec;
-          const __dirname = specParts.join('/');
+          var specParts = id.split('/');
+          var __filename = specParts.pop() || spec;
+          var __dirname = specParts.join('/');
 
           factory.call(
             module.module.exports,
@@ -83,6 +85,8 @@ export function createRuntime(velcro) {
             __filename
           );
         }
+
+        (runtime.dependents[id] = runtime.dependents[id] || []).push(fromModule);
 
         return module.module.exports;
       }
@@ -108,11 +112,36 @@ export function createRuntime(velcro) {
      * @param {T} exports Value that represents the exported interface of the module
      */
     inject(id, exports) {
-      const module = new Module(this, id, Object.create(null));
+      var module = new Module(this, id, Object.create(null));
 
       module.module.exports = exports;
 
       this.modules[id] = module;
+    }
+
+    /**
+     *
+     * @param {string[]} invalidations
+     */
+    invalidate(invalidations) {
+      var queue = invalidations.slice();
+
+      while (queue.length) {
+        var id = queue.shift();
+
+        //@ts-expect-error
+        delete this.modules[id];
+
+        /** @type {Module[] | undefined} */
+        //@ts-expect-error
+        var dependents = this.dependents[id];
+
+        if (!Array.isArray(dependents)) continue;
+
+        dependents.forEach((dependent) => {
+          queue.push(dependent.id);
+        });
+      }
     }
 
     /**
@@ -122,19 +151,19 @@ export function createRuntime(velcro) {
      * @private
      */
     resolveSpecAgainstImportMap(spec, module) {
-      const importMap = module.importMap;
+      var importMap = module.importMap;
 
       if (!importMap.scopes) {
         return spec;
       }
 
-      const scopesForId = importMap.scopes[module.id];
+      var scopesForId = importMap.scopes[module.id];
 
       if (!scopesForId) {
         return spec;
       }
 
-      const mappedId = scopesForId[spec];
+      var mappedId = scopesForId[spec];
 
       if (mappedId) {
         return mappedId;
@@ -144,7 +173,7 @@ export function createRuntime(velcro) {
     }
   }
 
-  const runtime = new Runtime(velcro);
+  var runtime = new Runtime(velcro);
 
   return runtime;
 }
