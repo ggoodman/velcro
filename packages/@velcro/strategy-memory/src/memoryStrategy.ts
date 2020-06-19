@@ -63,7 +63,7 @@ export class MemoryStrategy extends AbstractResolverStrategyWithRoot {
       if (typeof file === 'string') {
         this.addFile(pathname, file);
       } else {
-        this.addFile(pathname, file.content, file.encoding);
+        this.addFile(pathname, file.content, { encoding: file.encoding });
       }
     }
   }
@@ -86,7 +86,14 @@ export class MemoryStrategy extends AbstractResolverStrategyWithRoot {
     return parent;
   }
 
-  addFile(pathname: string, content: string, encoding: FileEncoding = FileEncoding.UTF8) {
+  addFile(
+    pathname: string,
+    content: string,
+    {
+      encoding = FileEncoding.UTF8,
+      overwrite = false,
+    }: { encoding?: FileEncoding; overwrite?: boolean } = {}
+  ) {
     const segments = pathname.split('/').filter(Boolean);
     const filename = segments.pop();
 
@@ -119,7 +126,7 @@ export class MemoryStrategy extends AbstractResolverStrategyWithRoot {
       throw new Error(`Cannot add file to a non directory entry ${pathname}`);
     }
 
-    if (parent.children[filename]) {
+    if (parent.children[filename] && !overwrite) {
       throw new Error(`Entry already exists at ${pathname}`);
     }
 

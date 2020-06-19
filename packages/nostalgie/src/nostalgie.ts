@@ -93,7 +93,8 @@ export function refresh(scripts: Iterable<HTMLScriptElement>) {
         },
         null,
         2
-      )
+      ),
+      { overwrite: true }
     );
     graphBuilder.invalidate(memoryStrategy.uriForPath(`${basePath}/package.json`));
 
@@ -104,7 +105,7 @@ export function refresh(scripts: Iterable<HTMLScriptElement>) {
         fetch(script.src)
           .then((res) => res.text())
           .then((code) => {
-            memoryStrategy.addFile(`${basePath}/index.js`, code);
+            memoryStrategy.addFile(`${basePath}/index.js`, code, { overwrite: true });
             graphBuilder.invalidate(memoryStrategy.uriForPath(`${basePath}/index.js`));
           })
           .catch((err) => {
@@ -115,7 +116,7 @@ export function refresh(scripts: Iterable<HTMLScriptElement>) {
           })
       );
     } else {
-      memoryStrategy.addFile(`${basePath}/index.js`, script.text);
+      memoryStrategy.addFile(`${basePath}/index.js`, script.text, { overwrite: true });
       graphBuilder.invalidate(memoryStrategy.uriForPath(`${basePath}/index.js`));
     }
 
