@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-external?: BuildGraphOptions["external"];
+external?: GraphBuilder.Options["external"];
 ```

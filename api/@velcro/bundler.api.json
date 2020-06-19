@@ -16,217 +16,6 @@
       "name": "",
       "members": [
         {
-          "kind": "Function",
-          "canonicalReference": "@velcro/bundler!buildGraph:function(1)",
-          "docComment": "",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "declare function buildGraph(options: "
-            },
-            {
-              "kind": "Reference",
-              "text": "BuildGraphOptions",
-              "canonicalReference": "@velcro/bundler!~BuildGraphOptions:interface"
-            },
-            {
-              "kind": "Content",
-              "text": "): "
-            },
-            {
-              "kind": "Reference",
-              "text": "Promise",
-              "canonicalReference": "!Promise:interface"
-            },
-            {
-              "kind": "Content",
-              "text": "<"
-            },
-            {
-              "kind": "Reference",
-              "text": "Graph",
-              "canonicalReference": "@velcro/bundler!~Graph:class"
-            },
-            {
-              "kind": "Content",
-              "text": ">"
-            },
-            {
-              "kind": "Content",
-              "text": ";"
-            }
-          ],
-          "returnTypeTokenRange": {
-            "startIndex": 3,
-            "endIndex": 7
-          },
-          "releaseTag": "Public",
-          "overloadIndex": 1,
-          "parameters": [
-            {
-              "parameterName": "options",
-              "parameterTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            }
-          ],
-          "name": "buildGraph"
-        },
-        {
-          "kind": "Interface",
-          "canonicalReference": "@velcro/bundler!BuildGraphOptions:interface",
-          "docComment": "",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "interface BuildGraphOptions "
-            }
-          ],
-          "releaseTag": "Public",
-          "name": "BuildGraphOptions",
-          "members": [
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@velcro/bundler!BuildGraphOptions#entrypoints:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "entrypoints: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Uri",
-                  "canonicalReference": "@velcro/bundler!Uri:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": "[]"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "releaseTag": "Public",
-              "name": "entrypoints",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 3
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@velcro/bundler!BuildGraphOptions#external:member",
-              "docComment": "/**\n * Function used to signal whether a given dependency should be treated as external or not.\n *\n * An external dependency means that the graph traversal will not continue through that dependency. The dependency must be injected at runtime.\n *\n * Example for building:\n * ```ts\n * const graph = await buildGraph({\n *   resolver,\n *   external: (dep) =>\n *     dep.kind === SourceModuleDependencyKing.Require &&\n *     dep.spec === 'external'\n * });\n * ```\n *\n * Example at runtime:\n * ```ts\n * velcro.inject('external', externalModule);\n * ```\n *\n */\n",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "external?: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ExternalTestFunction",
-                  "canonicalReference": "@velcro/bundler!~ExternalTestFunction:type"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "releaseTag": "Public",
-              "name": "external",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@velcro/bundler!BuildGraphOptions#nodeEnv:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "nodeEnv?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "releaseTag": "Public",
-              "name": "nodeEnv",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@velcro/bundler!BuildGraphOptions#plugins:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "plugins?: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Plugin",
-                  "canonicalReference": "@velcro/bundler!~Plugin:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "[]"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "releaseTag": "Public",
-              "name": "plugins",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 3
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@velcro/bundler!BuildGraphOptions#resolver:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "resolver: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Resolver",
-                  "canonicalReference": "@velcro/bundler!Resolver:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "releaseTag": "Public",
-              "name": "resolver",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            }
-          ],
-          "extendsTokenRanges": []
-        },
-        {
           "kind": "Class",
           "canonicalReference": "@velcro/bundler!Chunk:class",
           "docComment": "",
@@ -962,6 +751,384 @@
                   "propertyTypeTokenRange": {
                     "startIndex": 1,
                     "endIndex": 5
+                  }
+                }
+              ],
+              "extendsTokenRanges": []
+            }
+          ]
+        },
+        {
+          "kind": "Class",
+          "canonicalReference": "@velcro/bundler!GraphBuilder:class",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "declare class GraphBuilder "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "GraphBuilder",
+          "members": [
+            {
+              "kind": "Constructor",
+              "canonicalReference": "@velcro/bundler!GraphBuilder:constructor(1)",
+              "docComment": "/**\n * Constructs a new instance of the `GraphBuilder` class\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "constructor(options: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "GraphBuilder.Options",
+                  "canonicalReference": "@velcro/bundler!~GraphBuilder.Options:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ");"
+                }
+              ],
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "options",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/bundler!GraphBuilder#buildGraph:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "buildGraph(entrypoints: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/bundler!Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Graph",
+                  "canonicalReference": "@velcro/bundler!~Graph:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 4,
+                "endIndex": 8
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "entrypoints",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 3
+                  }
+                }
+              ],
+              "name": "buildGraph"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/bundler!GraphBuilder#dispose:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "dispose(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "dispose"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/bundler!GraphBuilder#invalidate:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "invalidate(uri: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/bundler!Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | string"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 4,
+                "endIndex": 5
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "uri",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 3
+                  }
+                }
+              ],
+              "name": "invalidate"
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@velcro/bundler!GraphBuilder#onError:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "get onError(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "import(\"ts-primitives\")."
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Event",
+                  "canonicalReference": "ts-primitives!~Event:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<{\n        ctx: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ResolverContext",
+                  "canonicalReference": "@velcro/bundler!ResolverContext:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n        err: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Error",
+                  "canonicalReference": "!Error:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n    }>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "onError",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 8
+              },
+              "isStatic": false
+            }
+          ],
+          "implementsTokenRanges": []
+        },
+        {
+          "kind": "Namespace",
+          "canonicalReference": "@velcro/bundler!GraphBuilder:namespace",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "declare namespace GraphBuilder "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "GraphBuilder",
+          "members": [
+            {
+              "kind": "Interface",
+              "canonicalReference": "@velcro/bundler!GraphBuilder.Options:interface",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "interface Options "
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "Options",
+              "members": [
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "@velcro/bundler!GraphBuilder.Options#external:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "external?: "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "ExternalTestFunction",
+                      "canonicalReference": "@velcro/bundler!~ExternalTestFunction:type"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "releaseTag": "Public",
+                  "name": "external",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "@velcro/bundler!GraphBuilder.Options#nodeEnv:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "nodeEnv?: "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "string"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "releaseTag": "Public",
+                  "name": "nodeEnv",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "@velcro/bundler!GraphBuilder.Options#plugins:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "plugins?: "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "Plugin",
+                      "canonicalReference": "@velcro/bundler!~Plugin:interface"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "[]"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "releaseTag": "Public",
+                  "name": "plugins",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 3
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "@velcro/bundler!GraphBuilder.Options#resolver:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "resolver: "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "Resolver",
+                      "canonicalReference": "@velcro/bundler!Resolver:class"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "releaseTag": "Public",
+                  "name": "resolver",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
                   }
                 }
               ],
@@ -2485,7 +2652,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.38.0\""
+              "text": "version = \"0.39.0\""
             }
           ],
           "releaseTag": "Public",

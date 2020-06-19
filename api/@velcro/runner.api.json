@@ -201,8 +201,8 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "BuildGraphOptions",
-                  "canonicalReference": "@velcro/runner!BuildGraphOptions:interface"
+                  "text": "GraphBuilder.Options",
+                  "canonicalReference": "@velcro/runner!GraphBuilder.Options:interface"
                 },
                 {
                   "kind": "Content",
@@ -536,7 +536,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.38.0\""
+              "text": "version = \"0.39.0\""
             }
           ],
           "releaseTag": "Public",

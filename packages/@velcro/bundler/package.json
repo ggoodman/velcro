@@ -1,6 +1,6 @@
 {
   "name": "@velcro/bundler",
-  "version": "0.39.0",
+  "version": "0.40.0",
   "description": "Build a module graph of modules and serialize these to different formats",
   "keywords": [
     "velcro",
@@ -57,9 +57,9 @@
     "typescript": "^3.9.2"
   },
   "dependencies": {
-    "@velcro/common": "^0.39.0",
-    "@velcro/node-libs": "^0.39.0",
-    "@velcro/resolver": "^0.39.0",
+    "@velcro/common": "^0.40.0",
+    "@velcro/node-libs": "^0.40.0",
+    "@velcro/resolver": "^0.40.0",
     "acorn": "^7.2.0",
     "magic-string": "^0.25.7",
     "ts-primitives": "^3.0.1"

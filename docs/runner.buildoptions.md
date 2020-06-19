@@ -17,7 +17,7 @@ interface BuildOptions
 |  [cdn](./runner.buildoptions.cdn.md) | "jsdelivr" \| "unpkg" |  |
 |  [dependencies](./runner.buildoptions.dependencies.md) | { \[key: string\]: string; } |  |
 |  [extensions](./runner.buildoptions.extensions.md) | Resolver.Settings\["extensions"\] |  |
-|  [external](./runner.buildoptions.external.md) | BuildGraphOptions\["external"\] |  |
+|  [external](./runner.buildoptions.external.md) | GraphBuilder.Options\["external"\] |  |
 |  [nodeEnv](./runner.buildoptions.nodeenv.md) | string |  |
 |  [packageMain](./runner.buildoptions.packagemain.md) | Resolver.Settings\["packageMain"\] |  |
 |  [plugins](./runner.buildoptions.plugins.md) | Plugin\[\] |  |
