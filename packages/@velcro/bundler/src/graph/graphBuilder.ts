@@ -15,60 +15,10 @@ type ExternalTestFunction = (
   fromSourceModule: SourceModule
 ) => boolean;
 
-export interface BuildGraphOptions {
-  entrypoints: Uri[];
-  /**
-   * Function used to signal whether a given dependency should be treated as external or not.
-   *
-   * An external dependency means that the graph traversal will not continue through that
-   * dependency. The dependency must be injected at runtime.
-   *
-   * Example for building:
-   *
-   * ```ts
-   * const graph = await buildGraph({
-   *   resolver,
-   *   external: (dep) =>
-   *     dep.kind === SourceModuleDependencyKing.Require &&
-   *     dep.spec === 'external'
-   * });
-   * ```
-   *
-   * Example at runtime:
-   *
-   * ```ts
-   * velcro.inject('external', externalModule);
-   * ```
-   */
-  external?: ExternalTestFunction;
-  nodeEnv?: string;
-  plugins?: Plugin[];
-  resolver: Resolver;
-}
-
-export function buildGraph(options: BuildGraphOptions) {
-  const graphBuilder = new GraphBuilder({
-    external: options.external,
-    nodeEnv: options.nodeEnv || 'development',
-    plugins: options.plugins || [],
-    resolver: options.resolver,
-  });
-
-  return graphBuilder.buildGraph(options.entrypoints);
-}
-
-namespace GraphBuilder {
-  export interface Options {
-    external?: ExternalTestFunction;
-    nodeEnv?: string;
-    plugins: Plugin[];
-    resolver: Resolver;
-  }
-}
-
-class GraphBuilder {
+export class GraphBuilder {
   private readonly disposer = new DisposableStore();
   private readonly edges = new Set<DependencyEdge>();
+  private readonly edgesByInvalidation = new MapSet<string, DependencyEdge>();
   private readonly errors = [] as { ctx: { path: readonly string[] }; err: Error }[];
   private readonly external?: ExternalTestFunction;
   private readonly nodeEnv: string;
@@ -78,6 +28,7 @@ class GraphBuilder {
   private readonly pendingModuleOperations = new MapSet<string, Promise<unknown>>();
   private readonly pluginManager: PluginManager;
   private readonly sourceModules = new Map<string, SourceModule>();
+  private readonly sourceModulesByInvalidation = new MapSet<string, SourceModule>();
 
   private readonly onErrorEmitter = new Emitter<{ ctx: ResolverContext; err: Error }>();
 
@@ -86,7 +37,7 @@ class GraphBuilder {
     this.rootCtx = this.resolver.createResolverContext();
     this.external = options.external;
     this.nodeEnv = options.nodeEnv || 'development';
-    this.pluginManager = new PluginManager(options.plugins, {
+    this.pluginManager = new PluginManager(options.plugins || [], {
       nodeEnv: this.nodeEnv,
     });
 
@@ -137,13 +88,39 @@ class GraphBuilder {
     });
   }
 
+  invalidate(uri: Uri | string) {
+    const href = Uri.isUri(uri) ? uri.toString() : uri;
+
+    const edges = this.edgesByInvalidation.get(href);
+    if (edges) {
+      for (const edge of edges) {
+        this.edgesByInvalidation.delete(href, edge);
+        this.edges.delete(edge);
+      }
+    }
+
+    const sourceModules = this.sourceModulesByInvalidation.get(href);
+    if (sourceModules) {
+      for (const sourceModule of sourceModules) {
+        this.sourceModulesByInvalidation.delete(href, sourceModule);
+        this.sourceModules.delete(sourceModule.href);
+      }
+    }
+  }
+
   private addEdge(
     fromUri: Uri,
     toUri: Uri,
     visited: ResolverContext.Visit[],
     dependency: SourceModuleDependency
   ) {
-    this.edges.add({ dependency, fromUri, toUri, visited });
+    const edge = { dependency, fromUri, toUri, visited };
+
+    this.edges.add(edge);
+
+    for (const visit of visited) {
+      this.edgesByInvalidation.add(visit.uri.toString(), edge);
+    }
   }
 
   private doAddLoadedUri(ctx: ResolverContext, uri: Uri, rootUri: Uri, code: string) {
@@ -175,6 +152,10 @@ class GraphBuilder {
           transformResult.visited
         );
         this.sourceModules.set(sourceModule.href, sourceModule);
+
+        for (const visit of transformResult.visited) {
+          this.sourceModulesByInvalidation.add(visit.uri.toString(), sourceModule);
+        }
 
         for (const dependency of sourceModule.dependencies) {
           if (!this.external || !this.external(dependency, sourceModule)) {
@@ -308,5 +289,14 @@ class GraphBuilder {
     );
 
     this.pendingModuleOperations.add(href, operation);
+  }
+}
+
+export namespace GraphBuilder {
+  export interface Options {
+    external?: ExternalTestFunction;
+    nodeEnv?: string;
+    plugins?: Plugin[];
+    resolver: Resolver;
   }
 }

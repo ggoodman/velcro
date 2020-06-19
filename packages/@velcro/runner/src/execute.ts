@@ -1,4 +1,4 @@
-import { buildGraph, BuildGraphOptions, ChunkOutput, Plugin, VelcroRuntime } from '@velcro/bundler';
+import { ChunkOutput, GraphBuilder, Plugin, VelcroRuntime } from '@velcro/bundler';
 import { Uri } from '@velcro/common';
 import { Resolver } from '@velcro/resolver';
 import { CdnStrategy } from '@velcro/strategy-cdn';
@@ -12,7 +12,7 @@ export interface BuildOptions {
   cdn?: 'jsdelivr' | 'unpkg';
   dependencies?: { [key: string]: string };
   extensions?: Resolver.Settings['extensions'];
-  external?: BuildGraphOptions['external'];
+  external?: GraphBuilder.Options['external'];
   nodeEnv?: string;
   plugins?: Plugin[];
   packageMain?: Resolver.Settings['packageMain'];
@@ -47,14 +47,13 @@ export async function build(
     extensions: options.extensions || defaultExtensions,
     packageMain: options.packageMain || defaultPackageMain,
   });
-
-  const graph = await buildGraph({
+  const graphBuilder = new GraphBuilder({
     external: options.external,
-    entrypoints: [entrypointUri],
     resolver,
     nodeEnv: options.nodeEnv || 'development',
     plugins: options.plugins,
   });
+  const graph = await graphBuilder.buildGraph([entrypointUri]);
   const [chunk] = graph.splitChunks();
   const output = chunk.buildForStaticRuntime({
     injectRuntime: true,
@@ -67,7 +66,7 @@ export async function execute<T = unknown>(code: string, options: ExecuteOptions
   if (options.injectModules) {
     const injectedModuleSpecs = new Set(Object.keys(options.injectModules));
     const optionsExternal = options.external;
-    const isExternal: BuildGraphOptions['external'] = (dependency, fromSourceModule) => {
+    const isExternal: GraphBuilder.Options['external'] = (dependency, fromSourceModule) => {
       if (injectedModuleSpecs.has(dependency.spec)) {
         return true;
       }

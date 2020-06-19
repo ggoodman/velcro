@@ -1,4 +1,4 @@
-import { buildGraph, GraphBuildError } from '@velcro/bundler';
+import { GraphBuilder, GraphBuildError } from '@velcro/bundler';
 import { cssPlugin } from '@velcro/plugin-css';
 import { sucrasePlugin } from '@velcro/plugin-sucrase';
 import { Resolver } from '@velcro/resolver';
@@ -7,7 +7,20 @@ import { CompoundStrategy } from '@velcro/strategy-compound';
 import { MemoryStrategy } from '@velcro/strategy-memory';
 
 const readUrl = (href: string) => fetch(href).then((res) => res.arrayBuffer());
+const cdnStrategy = CdnStrategy.forJsDelivr(readUrl);
+const memoryStrategy = new MemoryStrategy({});
+const compoundStrategy = new CompoundStrategy({ strategies: [cdnStrategy, memoryStrategy] });
+const resolver = new Resolver(compoundStrategy, {
+  extensions: ['.js', '.jsx', '.json', '.ts', '.tsx', '.mjs', '.cjs'],
+  packageMain: ['browser', 'main'],
+});
+const graphBuilder = new GraphBuilder({
+  resolver,
+  nodeEnv: 'development',
+  plugins: [cssPlugin(), sucrasePlugin({ transforms: ['imports', 'jsx', 'typescript'] })],
+});
 
+let nextScriptId = 0;
 let queue: Promise<unknown> = Promise.resolve();
 let timeout: null | number = null;
 
@@ -45,15 +58,12 @@ const scriptTagsToBasePaths = new WeakMap<HTMLScriptElement, string>();
 
 export function refresh(scripts: Iterable<HTMLScriptElement>) {
   const entrypointPaths: string[] = [];
-  const files: Record<string, string> = {};
-
-  let idx = 0;
 
   for (const script of scripts) {
     let basePath = scriptTagsToBasePaths.get(script);
 
     if (!basePath) {
-      const scriptId = idx++;
+      const scriptId = nextScriptId++;
       basePath = `/script/${scriptId}`;
       scriptTagsToBasePaths.set(script, basePath);
     }
@@ -72,16 +82,20 @@ export function refresh(scripts: Iterable<HTMLScriptElement>) {
 
     // Create a pseudo-package.json that will encode the dependencies
     // of this script and point to the script's entrypoint.
-    files[`${basePath}/package.json`] = JSON.stringify(
-      {
-        name: 'script',
-        version: '0.0.0',
-        main: 'index.js',
-        dependencies,
-      },
-      null,
-      2
+    memoryStrategy.addFile(
+      `${basePath}/package.json`,
+      JSON.stringify(
+        {
+          name: 'script',
+          version: '0.0.0',
+          main: 'index.js',
+          dependencies,
+        },
+        null,
+        2
+      )
     );
+    graphBuilder.invalidate(memoryStrategy.uriForPath(`${basePath}/package.json`));
 
     if (script.src) {
       // We need to load the code over http so we'll add the operation to the
@@ -89,7 +103,10 @@ export function refresh(scripts: Iterable<HTMLScriptElement>) {
       queue = queue.then(() =>
         fetch(script.src)
           .then((res) => res.text())
-          .then((code) => (files[`${basePath}/index.js`] = code))
+          .then((code) => {
+            memoryStrategy.addFile(`${basePath}/index.js`, code);
+            graphBuilder.invalidate(memoryStrategy.uriForPath(`${basePath}/index.js`));
+          })
           .catch((err) => {
             const event = new CustomEvent('error', { detail: { error: err } });
             script.dispatchEvent(event);
@@ -98,7 +115,8 @@ export function refresh(scripts: Iterable<HTMLScriptElement>) {
           })
       );
     } else {
-      files[`${basePath}/index.js`] = script.text;
+      memoryStrategy.addFile(`${basePath}/index.js`, script.text);
+      graphBuilder.invalidate(memoryStrategy.uriForPath(`${basePath}/index.js`));
     }
 
     entrypointPaths.push(`${basePath}/index.js`);
@@ -111,23 +129,10 @@ export function refresh(scripts: Iterable<HTMLScriptElement>) {
     });
   }
 
-  const cdnStrategy = CdnStrategy.forJsDelivr(readUrl);
-  const memoryStrategy = new MemoryStrategy(files);
-  const compoundStrategy = new CompoundStrategy({ strategies: [cdnStrategy, memoryStrategy] });
-  const resolver = new Resolver(compoundStrategy, {
-    extensions: ['.js', '.jsx', '.json', '.ts', '.tsx', '.mjs', '.cjs'],
-    packageMain: ['browser', 'main'],
-  });
-
   queue = queue.then(() => {
     const entrypointUris = entrypointPaths.map((path) => memoryStrategy.uriForPath(path));
 
-    return buildGraph({
-      entrypoints: entrypointUris,
-      resolver,
-      nodeEnv: 'development',
-      plugins: [cssPlugin(), sucrasePlugin({ transforms: ['imports', 'jsx', 'typescript'] })],
-    }).then(
+    return graphBuilder.buildGraph(entrypointUris).then(
       (graph) => {
         const [chunk] = graph.splitChunks();
         const output = chunk.buildForStaticRuntime({
