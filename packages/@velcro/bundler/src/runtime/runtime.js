@@ -2,14 +2,8 @@
 'use strict';
 
 /**
- * @typedef VelcroRuntime
- * @property {(id: string, exports: unknown) => void} inject
- * @property {import('./types').VelcroRequire} require
- */
-
-/**
  * @param {import('./types').VelcroStaticRuntime} velcro
- * @returns {VelcroRuntime}
+ * @returns {import('./runtimeInterface').VelcroRuntime}
  */
 export function createRuntime(velcro) {
   class Module {
@@ -117,6 +111,8 @@ export function createRuntime(velcro) {
       module.module.exports = exports;
 
       this.modules[id] = module;
+
+      return module;
     }
 
     /**
@@ -130,7 +126,7 @@ export function createRuntime(velcro) {
         var id = queue.shift();
 
         //@ts-expect-error
-        delete this.modules[id];
+        var deleted = delete this.modules[id];
 
         /** @type {Module[] | undefined} */
         //@ts-expect-error

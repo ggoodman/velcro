@@ -8,6 +8,7 @@ import {
   EntryExcludedError,
   EntryNotFoundError,
   isThenable,
+  MapSet,
   PackageJson,
   parseBufferAsPackageJson,
   parseBufferAsPartialPackageJson,
@@ -38,6 +39,11 @@ type ReturnTypeWithVisits<
 
 const DEBUG = process.env.NODE_DEBUG && process.env.NODE_DEBUG.match(/\bbuilder\b/);
 const CACHE = Symbol('Context.cache');
+
+type InvalidationRecord = {
+  cacheKey: string;
+  operationCache: Map<string, unknown>;
+};
 
 type ResolveResult =
   | {
@@ -106,6 +112,7 @@ export class ResolverContext {
   ) {
     return new ResolverContext({
       cache: new Map(),
+      cacheInvalidations: new MapSet(),
       decoder: new Decoder(),
       path: [],
       resolver,
@@ -117,6 +124,7 @@ export class ResolverContext {
   }
 
   private readonly cache: ResolverContext.Options['cache'];
+  private readonly cacheInvalidations: ResolverContext.Options['cacheInvalidations'];
   readonly decoder: ResolverContext.Options['decoder'];
   private readonly mapResultWithVisits = <T>(result: T) =>
     Object.assign(result, { visited: this.visits.toArray() });
@@ -129,6 +137,7 @@ export class ResolverContext {
 
   private constructor(options: ResolverContext.Options) {
     this.cache = options.cache;
+    this.cacheInvalidations = options.cacheInvalidations;
     this.decoder = options.decoder;
     this.path = options.path;
     this.resolver = options.resolver;
@@ -175,6 +184,7 @@ export class ResolverContext {
 
     return new ResolverContext({
       cache: this.cache,
+      cacheInvalidations: this.cacheInvalidations,
       decoder: this.decoder,
       path: options.resetPath ? [] : this.path.concat(encodedOperation),
       resolver: this.resolver,
@@ -236,6 +246,22 @@ export class ResolverContext {
     return this.runInChildContext(operationName, href, (ctx) =>
       ctx.runWithCache(operationName, href, method, receiver, ctx, name, spec, path)
     );
+  }
+
+  invalidate(uri: Uri) {
+    const href = uri.toString();
+    const invalidations = this.cacheInvalidations.get(href);
+    let invalidated = false;
+
+    this.cacheInvalidations.deleteAll(href);
+
+    if (invalidations) {
+      for (const { cacheKey, operationCache } of invalidations) {
+        invalidated = operationCache.delete(cacheKey) || invalidated;
+      }
+    }
+
+    return invalidated;
   }
 
   listEntries(uri: Uri) {
@@ -331,6 +357,38 @@ export class ResolverContext {
     return contextFn(ctx);
   }
 
+  private createStoreResultFn<TMethod extends (...args: any[]) => any>(
+    operationCache: Map<string, ReturnTypeWithVisits<TMethod>>,
+    cacheKey: string
+  ) {
+    return (result: ReturnTypeWithVisits<TMethod>) => {
+      const mappedResult = this.mapResultWithVisits(result);
+      const visited = mappedResult.visited as ResolverContext.Visit[];
+
+      if (mappedResult[CACHE]) {
+        const cacheEntries = mappedResult[CACHE] as [string, ReturnTypeWithVisits<TMethod>][];
+        delete mappedResult[CACHE];
+
+        for (const [cacheKey, value] of cacheEntries) {
+          operationCache.set(cacheKey, value);
+
+          for (const visit of visited) {
+            this.cacheInvalidations.add(visit.uri.toString(), { cacheKey, operationCache });
+          }
+        }
+      }
+
+      // Override the pending value with the resolved value
+      operationCache.set(cacheKey, mappedResult);
+
+      for (const visit of visited) {
+        this.cacheInvalidations.add(visit.uri.toString(), { cacheKey, operationCache });
+      }
+
+      return mappedResult;
+    };
+  }
+
   private runWithCache<TMethod extends (...args: any[]) => any>(
     cacheSegment: string,
     cacheKey: string,
@@ -357,6 +415,8 @@ export class ResolverContext {
       return cached;
     }
 
+    const cacheResult = this.createStoreResultFn(operationCache, cacheKey);
+
     this.debug('%s(%s) [MISS]', cacheSegment, cacheKey);
 
     // Nothing is cached
@@ -366,31 +426,12 @@ export class ResolverContext {
       const promiseRet = ret as Thenable<ReturnTypeWithVisits<TMethod>>;
 
       // Produce a promise that will only be settled once the cache has been updated accordingly.
-      const wrappedRet = promiseRet.then(
-        (result) => {
-          const mappedResult = this.mapResultWithVisits(result);
+      const wrappedRet = promiseRet.then(cacheResult, (err) => {
+        // Delete the entry from the cache in case it was a transient failure
+        operationCache!.delete(cacheKey);
 
-          if (mappedResult[CACHE]) {
-            const cacheEntries = mappedResult[CACHE] as [string, ReturnTypeWithVisits<TMethod>][];
-            delete mappedResult[CACHE];
-
-            for (const [cacheKey, value] of cacheEntries) {
-              operationCache!.set(cacheKey, value);
-            }
-          }
-
-          // Override the pending value with the resolved value
-          operationCache!.set(cacheKey, mappedResult);
-
-          return mappedResult;
-        },
-        (err) => {
-          // Delete the entry from the cache in case it was a transient failure
-          operationCache!.delete(cacheKey);
-
-          return Promise.reject(err);
-        }
-      );
+        return Promise.reject(err);
+      });
 
       // Set the pending value in the cache for now
       operationCache.set(cacheKey, wrappedRet as Awaited<Thenable<ReturnTypeWithVisits<TMethod>>>);
@@ -398,20 +439,7 @@ export class ResolverContext {
       return wrappedRet as Awaited<Thenable<ReturnTypeWithVisits<TMethod>>>;
     }
 
-    const mappedResult = this.mapResultWithVisits(ret);
-
-    if (mappedResult[CACHE]) {
-      const cacheEntries = mappedResult[CACHE] as [string, ReturnTypeWithVisits<TMethod>][];
-      delete mappedResult[CACHE];
-
-      for (const [cacheKey, value] of cacheEntries) {
-        operationCache!.set(cacheKey, value);
-      }
-    }
-
-    operationCache.set(cacheKey, mappedResult);
-
-    return mappedResult;
+    return cacheResult(ret);
   }
 
   private _wrapError<T extends Error>(
@@ -636,6 +664,7 @@ async function resolveBareModule(ctx: ResolverContext, uri: Uri, parsedSpec: Bar
 export namespace ResolverContext {
   export interface Options {
     cache: Map<string, Map<string, unknown>>;
+    cacheInvalidations: MapSet<string, InvalidationRecord>;
     decoder: Decoder;
     path: string[];
     resolver: Resolver;

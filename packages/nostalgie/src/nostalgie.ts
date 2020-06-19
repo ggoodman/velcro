@@ -1,4 +1,4 @@
-import { GraphBuilder, GraphBuildError } from '@velcro/bundler';
+import { GraphBuilder, GraphBuildError, VelcroRuntime } from '@velcro/bundler';
 import { cssPlugin } from '@velcro/plugin-css';
 import { sucrasePlugin } from '@velcro/plugin-sucrase';
 import { Resolver } from '@velcro/resolver';
@@ -20,6 +20,7 @@ const graphBuilder = new GraphBuilder({
   plugins: [cssPlugin(), sucrasePlugin({ transforms: ['imports', 'jsx', 'typescript'] })],
 });
 
+let nextBuildId = 0;
 let nextScriptId = 0;
 let queue: Promise<unknown> = Promise.resolve();
 let timeout: null | number = null;
@@ -47,8 +48,19 @@ const onChange: MutationCallback = (records) => {
     clearTimeout(timeout);
   }
 
+  const scripts = records.map((record) => findParentScriptTag(record.target));
+
+  for (const script of scripts) {
+    const basePath = scriptTagsToBasePaths.get(script);
+
+    if (basePath) {
+      invalidate(memoryStrategy.uriForPath(`${basePath}/package.json`).toString());
+      invalidate(memoryStrategy.uriForPath(`${basePath}/index.js`).toString());
+    }
+  }
+
   timeout = (setTimeout(() => {
-    refresh(records.map((record) => findParentScriptTag(record.target)));
+    refresh(scripts);
     timeout = null;
   }, 1000) as unknown) as number;
 };
@@ -57,8 +69,8 @@ const observer = new MutationObserver(onChange);
 const scriptTagsToBasePaths = new WeakMap<HTMLScriptElement, string>();
 
 export function refresh(scripts: Iterable<HTMLScriptElement>) {
+  const buildId = nextBuildId++;
   const entrypointPaths: string[] = [];
-  const invalidations: string[] = [];
 
   for (const script of scripts) {
     let basePath = scriptTagsToBasePaths.get(script);
@@ -97,8 +109,6 @@ export function refresh(scripts: Iterable<HTMLScriptElement>) {
       ),
       { overwrite: true }
     );
-    graphBuilder.invalidate(memoryStrategy.uriForPath(`${basePath}/package.json`));
-    invalidations.push(memoryStrategy.uriForPath(`${basePath}/package.json`).toString());
 
     if (script.src) {
       // We need to load the code over http so we'll add the operation to the
@@ -108,8 +118,6 @@ export function refresh(scripts: Iterable<HTMLScriptElement>) {
           .then((res) => res.text())
           .then((code) => {
             memoryStrategy.addFile(`${basePath}/index.js`, code, { overwrite: true });
-            graphBuilder.invalidate(memoryStrategy.uriForPath(`${basePath}/index.js`));
-            invalidations.push(memoryStrategy.uriForPath(`${basePath}/index.js`).toString());
           })
           .catch((err) => {
             const event = new CustomEvent('error', { detail: { error: err } });
@@ -120,8 +128,6 @@ export function refresh(scripts: Iterable<HTMLScriptElement>) {
       );
     } else {
       memoryStrategy.addFile(`${basePath}/index.js`, script.text, { overwrite: true });
-      graphBuilder.invalidate(memoryStrategy.uriForPath(`${basePath}/index.js`));
-      invalidations.push(memoryStrategy.uriForPath(`${basePath}/index.js`).toString());
     }
 
     entrypointPaths.push(`${basePath}/index.js`);
@@ -141,11 +147,14 @@ export function refresh(scripts: Iterable<HTMLScriptElement>) {
       (graph) => {
         const [chunk] = graph.splitChunks();
         const output = chunk.buildForStaticRuntime({
-          injectRuntime: true,
+          injectRuntime: buildId === 0,
         });
+
         const codeWithStart = `${output.code}\n\n${entrypointUris
           .map((entrypoint) => `Velcro.runtime.require(${JSON.stringify(entrypoint.toString())});`)
           .join('\n')}\n`;
+        //@ts-expect-error
+        window.codeWithStart = codeWithStart;
         const runtimeCode = `${codeWithStart}\n//# sourceMappingURL=${output.sourceMapDataUri}`;
 
         const scriptEl = document.createElement('script');
@@ -161,4 +170,35 @@ export function refresh(scripts: Iterable<HTMLScriptElement>) {
   });
 
   return queue;
+}
+
+declare const Velcro: { runtime: VelcroRuntime };
+
+function invalidate(href: string) {
+  graphBuilder.invalidate(href);
+
+  const runtime = Velcro.runtime;
+  const queue = [href];
+  const seen = new Set();
+
+  while (queue.length) {
+    const id = queue.shift()!;
+
+    if (seen.has(id)) continue;
+    seen.add(id);
+
+    const module = runtime.modules[id];
+
+    if (!module || module === runtime.root) continue;
+
+    delete runtime.modules[id];
+
+    const dependents = runtime.dependents[module.id];
+
+    if (!Array.isArray(dependents)) continue;
+
+    dependents.forEach((dependent) => {
+      queue.push(dependent.id);
+    });
+  }
 }

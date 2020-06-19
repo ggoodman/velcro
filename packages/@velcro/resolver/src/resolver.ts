@@ -5,7 +5,7 @@ import type { ResolverStrategy } from './strategy';
 
 export class Resolver {
   // private readonly decoder = new Decoder();
-  private readonly rootCtx: ResolverContext;
+  readonly rootCtx: ResolverContext;
   private readonly settings: Resolver.Settings;
   private readonly strategy: ResolverStrategy;
   private readonly tokenSource = new CancellationTokenSource();
@@ -25,16 +25,20 @@ export class Resolver {
     return this.rootCtx.getCanonicalUrl(typeof uri === 'string' ? Uri.parse(uri) : uri);
   }
 
-  getResolveRoot(uri: Uri) {
+  getResolveRoot(uri: string | Uri) {
     return this.rootCtx.getResolveRoot(typeof uri === 'string' ? Uri.parse(uri) : uri);
   }
 
-  getSettings(uri: Uri) {
+  getSettings(uri: string | Uri) {
     return this.rootCtx.getSettings(typeof uri === 'string' ? Uri.parse(uri) : uri);
   }
 
   getUrlForBareModule(name: string, spec: string, path: string) {
     return this.rootCtx.getUrlForBareModule(name, spec, path);
+  }
+
+  invalidate(uri: string | Uri) {
+    return this.rootCtx.invalidate(typeof uri === 'string' ? Uri.parse(uri) : uri);
   }
 
   listEntries(uri: Uri) {

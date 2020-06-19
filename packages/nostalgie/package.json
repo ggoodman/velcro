@@ -31,6 +31,7 @@
   },
   "scripts": {
     "build": "rollup -c",
+    "build:dev": "rollup -c --watch",
     "build:api": "api-extractor run --local -c ./api-extractor.json",
     "build:readme": "cat README.md | sed \"s~nostalgie@.*/dist~nostalgie@$(jq -r .version package.json)/dist~g\" > README.md",
     "preversion": "npm run build",

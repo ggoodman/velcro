@@ -23,6 +23,10 @@ export class SourceModuleDependency {
     readonly options: SourceModuleOptions = {}
   ) {}
 
+  static areIdentical(l: SourceModuleDependency, r: SourceModuleDependency) {
+    return l.kind === r.kind && l.spec === r.spec;
+  }
+
   static fromEntrypoint(uri: Uri) {
     return new SourceModuleDependency(SourceModuleDependencyKind.Entrypoint, uri.toString(), []);
   }

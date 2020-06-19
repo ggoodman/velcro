@@ -34,6 +34,10 @@ export class MapSet<K, V> {
     return false;
   }
 
+  deleteAll(key: K) {
+    return this._data.delete(key);
+  }
+
   get(key: K) {
     return this._data.get(key);
   }

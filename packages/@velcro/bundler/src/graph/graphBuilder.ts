@@ -18,6 +18,7 @@ type ExternalTestFunction = (
 export class GraphBuilder {
   private readonly disposer = new DisposableStore();
   private readonly edges = new Set<DependencyEdge>();
+  private readonly edgesByFromHref = new MapSet<string, DependencyEdge>();
   private readonly edgesByInvalidation = new MapSet<string, DependencyEdge>();
   private readonly errors = [] as { ctx: { path: readonly string[] }; err: Error }[];
   private readonly external?: ExternalTestFunction;
@@ -34,7 +35,7 @@ export class GraphBuilder {
 
   constructor(options: GraphBuilder.Options) {
     this.resolver = options.resolver;
-    this.rootCtx = this.resolver.createResolverContext();
+    this.rootCtx = this.resolver.rootCtx;
     this.external = options.external;
     this.nodeEnv = options.nodeEnv || 'development';
     this.pluginManager = new PluginManager(options.plugins || [], {
@@ -106,21 +107,30 @@ export class GraphBuilder {
         this.sourceModules.delete(sourceModule.href);
       }
     }
+
+    this.resolver.invalidate(uri);
   }
 
   private addEdge(
     fromUri: Uri,
+    fromRootUri: Uri,
     toUri: Uri,
+    toRootUri: Uri,
     visited: ResolverContext.Visit[],
     dependency: SourceModuleDependency
   ) {
-    const edge = { dependency, fromUri, toUri, visited };
+    const edge: DependencyEdge = { dependency, fromUri, fromRootUri, toUri, toRootUri, visited };
 
     this.edges.add(edge);
+    this.edgesByFromHref.add(fromUri.toString(), edge);
 
     for (const visit of visited) {
       this.edgesByInvalidation.add(visit.uri.toString(), edge);
     }
+    this.edgesByInvalidation.add(fromUri.toString(), edge);
+    this.edgesByInvalidation.add(toUri.toString(), edge);
+
+    return edge;
   }
 
   private doAddLoadedUri(ctx: ResolverContext, uri: Uri, rootUri: Uri, code: string) {
@@ -151,11 +161,12 @@ export class GraphBuilder {
           transformResult.sourceMapTree,
           transformResult.visited
         );
-        this.sourceModules.set(sourceModule.href, sourceModule);
 
+        this.sourceModules.set(sourceModule.href, sourceModule);
         for (const visit of transformResult.visited) {
           this.sourceModulesByInvalidation.add(visit.uri.toString(), sourceModule);
         }
+        this.sourceModulesByInvalidation.add(sourceModule.href, sourceModule);
 
         for (const dependency of sourceModule.dependencies) {
           if (!this.external || !this.external(dependency, sourceModule)) {
@@ -187,6 +198,36 @@ export class GraphBuilder {
       return;
     }
 
+    const withEdge = (edge: DependencyEdge) => {
+      const dependencyHref = edge.toUri.toString();
+
+      // To avoid circularity
+      if (this.sourceModules.has(dependencyHref)) {
+        return;
+      }
+
+      // If we already have pending operations for the same Uri, we can
+      // assume that the module either already exists or soon will and
+      // should not be re-read.
+      if (this.pendingModuleOperations.has(dependencyHref)) {
+        return;
+      }
+
+      ctx.runInChildContext('GraphBuilder.doAddResolvedUri', edge.toUri, (ctx) =>
+        this.doAddResolvedUri(ctx, edge.toUri, edge.toRootUri)
+      );
+    };
+
+    // const edgesFrom = this.edgesByFromHref.get(sourceModule.href);
+
+    // if (edgesFrom) {
+    //   for (const edge of edgesFrom) {
+    //     if (SourceModuleDependency.areIdentical(edge.dependency, dependency)) {
+    //       return withEdge(edge);
+    //     }
+    //   }
+    // }
+
     const href = sourceModule.href;
     const operation = ctx.runInChildContext(
       'GraphBuilder.pluginManager.executeResolveDependency',
@@ -198,25 +239,16 @@ export class GraphBuilder {
       (resolveResult) => {
         this.pendingModuleOperations.delete(href, operation);
 
-        const dependencyHref = resolveResult.uri.toString();
-
-        this.addEdge(sourceModule.uri, resolveResult.uri, resolveResult.visited, dependency);
-
-        // To avoid circularity
-        if (this.sourceModules.has(dependencyHref)) {
-          return;
-        }
-
-        // If we already have pending operations for the same Uri, we can
-        // assume that the module either already exists or soon will and
-        // should not be re-read.
-        if (this.pendingModuleOperations.has(dependencyHref)) {
-          return;
-        }
-
-        ctx.runInChildContext('GraphBuilder.doAddResolvedUri', resolveResult.uri, (ctx) =>
-          this.doAddResolvedUri(ctx, resolveResult.uri, resolveResult.rootUri)
+        const edge = this.addEdge(
+          sourceModule.uri,
+          sourceModule.rootUri,
+          resolveResult.uri,
+          resolveResult.rootUri,
+          resolveResult.visited,
+          dependency
         );
+
+        withEdge(edge);
       },
       (err) => {
         this.pendingModuleOperations.delete(href, operation);
@@ -274,7 +306,14 @@ export class GraphBuilder {
       (resolveResult) => {
         this.pendingModuleOperations.delete(href, operation);
 
-        this.addEdge(this.rootUri, resolveResult.uri, resolveResult.visited, dependency);
+        this.addEdge(
+          this.rootUri,
+          this.rootUri,
+          resolveResult.uri,
+          resolveResult.rootUri,
+          resolveResult.visited,
+          dependency
+        );
 
         ctx.runInChildContext('GraphBuilder.doAddResolvedUri', resolveResult.uri, (ctx) =>
           this.doAddResolvedUri(ctx, resolveResult.uri, resolveResult.rootUri)

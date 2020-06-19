@@ -1,1 +1,1 @@
-export type { VelcroRuntime } from './runtime';
+export type { VelcroRuntime } from './runtimeInterface';

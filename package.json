@@ -7,6 +7,7 @@
   "scripts": {
     "build": "rm -rf ./packages/@velcro/*/dist && lerna run build",
     "build:api": "lerna run build:api",
+    "build:dev": "lerna run --parallel build:dev",
     "build:docs": "npx api-documenter markdown -i ./api/** -o docs",
     "predeploy": "cd packages/playground && npm run build",
     "deploy": "gh-pages -d packages/playground/build",
