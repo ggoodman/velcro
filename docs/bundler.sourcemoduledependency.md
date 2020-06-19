@@ -24,6 +24,7 @@ declare class SourceModuleDependency
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
+|  [areIdentical(l, r)](./bundler.sourcemoduledependency.areidentical.md) | <code>static</code> |  |
 |  [fromEntrypoint(uri)](./bundler.sourcemoduledependency.fromentrypoint.md) | <code>static</code> |  |
 |  [fromGlobalObject(spec, locations, exportName)](./bundler.sourcemoduledependency.fromglobalobject.md) | <code>static</code> |  |
 |  [fromRequire(spec, locations)](./bundler.sourcemoduledependency.fromrequire.md) | <code>static</code> |  |

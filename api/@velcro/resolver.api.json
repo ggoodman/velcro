@@ -785,6 +785,10 @@
                   "text": "getResolveRoot(uri: "
                 },
                 {
+                  "kind": "Content",
+                  "text": "string | "
+                },
+                {
                   "kind": "Reference",
                   "text": "Uri",
                   "canonicalReference": "@velcro/resolver!Uri:class"
@@ -849,8 +853,8 @@
               ],
               "isStatic": false,
               "returnTypeTokenRange": {
-                "startIndex": 3,
-                "endIndex": 14
+                "startIndex": 4,
+                "endIndex": 15
               },
               "releaseTag": "Public",
               "overloadIndex": 1,
@@ -859,7 +863,7 @@
                   "parameterName": "uri",
                   "parameterTypeTokenRange": {
                     "startIndex": 1,
-                    "endIndex": 2
+                    "endIndex": 3
                   }
                 }
               ],
@@ -875,6 +879,10 @@
                   "text": "getSettings(uri: "
                 },
                 {
+                  "kind": "Content",
+                  "text": "string | "
+                },
+                {
                   "kind": "Reference",
                   "text": "Uri",
                   "canonicalReference": "@velcro/resolver!Uri:class"
@@ -939,8 +947,8 @@
               ],
               "isStatic": false,
               "returnTypeTokenRange": {
-                "startIndex": 3,
-                "endIndex": 14
+                "startIndex": 4,
+                "endIndex": 15
               },
               "releaseTag": "Public",
               "overloadIndex": 1,
@@ -949,7 +957,7 @@
                   "parameterName": "uri",
                   "parameterTypeTokenRange": {
                     "startIndex": 1,
-                    "endIndex": 2
+                    "endIndex": 3
                   }
                 }
               ],
@@ -1073,6 +1081,55 @@
                 }
               ],
               "name": "getUrlForBareModule"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/resolver!Resolver#invalidate:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "invalidate(uri: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/resolver!Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 4,
+                "endIndex": 5
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "uri",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 3
+                  }
+                }
+              ],
+              "name": "invalidate"
             },
             {
               "kind": "Method",
@@ -1529,6 +1586,33 @@
                 }
               ],
               "name": "resolveBareModuleFrom"
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@velcro/resolver!Resolver#rootCtx:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly rootCtx: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ResolverContext",
+                  "canonicalReference": "@velcro/resolver!~ResolverContext:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "rootCtx",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false
             }
           ],
           "implementsTokenRanges": []
@@ -2306,6 +2390,51 @@
                 }
               ],
               "name": "getUrlForBareModule"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/resolver!ResolverContext#invalidate:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "invalidate(uri: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/resolver!Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "uri",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "invalidate"
             },
             {
               "kind": "Method",
@@ -3358,6 +3487,45 @@
                   ],
                   "releaseTag": "Public",
                   "name": "cache",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 5
+                  }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "@velcro/resolver!ResolverContext.Options#cacheInvalidations:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "cacheInvalidations: "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "MapSet",
+                      "canonicalReference": "@velcro/resolver!MapSet:class"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "<string, "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "InvalidationRecord",
+                      "canonicalReference": "@velcro/resolver!~InvalidationRecord:type"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ">"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "releaseTag": "Public",
+                  "name": "cacheInvalidations",
                   "propertyTypeTokenRange": {
                     "startIndex": 1,
                     "endIndex": 5
@@ -4671,7 +4839,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.41.0\""
+              "text": "version = \"0.42.0\""
             }
           ],
           "releaseTag": "Public",

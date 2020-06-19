@@ -2,13 +2,28 @@
 
 [Home](./index.md) &gt; [@velcro/bundler](./bundler.md) &gt; [VelcroRuntime](./bundler.velcroruntime.md)
 
-## VelcroRuntime type
+## VelcroRuntime interface
 
 <b>Signature:</b>
 
 ```typescript
-type VelcroRuntime = {
-    inject: (id: string, exports: unknown) => void;
-    require: VelcroRequire;
-};
+interface VelcroRuntime 
 ```
+
+## Properties
+
+|  Property | Type | Description |
+|  --- | --- | --- |
+|  [dependents](./bundler.velcroruntime.dependents.md) | Record&lt;string, VelcroModuleInstance\[\] \| undefined&gt; |  |
+|  [modules](./bundler.velcroruntime.modules.md) | Record&lt;string, VelcroModuleInstance \| undefined&gt; |  |
+|  [require](./bundler.velcroruntime.require.md) | VelcroRequire |  |
+|  [root](./bundler.velcroruntime.root.md) | VelcroModuleInstance |  |
+
+## Methods
+
+|  Method | Description |
+|  --- | --- |
+|  [createRequire(fromModule)](./bundler.velcroruntime.createrequire.md) |  |
+|  [inject(id, exports)](./bundler.velcroruntime.inject.md) |  |
+|  [invalidate(ids)](./bundler.velcroruntime.invalidate.md) |  |
+

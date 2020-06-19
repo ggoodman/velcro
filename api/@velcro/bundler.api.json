@@ -2203,6 +2203,67 @@
           "members": [
             {
               "kind": "Method",
+              "canonicalReference": "@velcro/bundler!SourceModuleDependency.areIdentical:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "static areIdentical(l: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "SourceModuleDependency",
+                  "canonicalReference": "@velcro/bundler!~SourceModuleDependency:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", r: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "SourceModuleDependency",
+                  "canonicalReference": "@velcro/bundler!~SourceModuleDependency:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": true,
+              "returnTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 6
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "l",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "parameterName": "r",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  }
+                }
+              ],
+              "name": "areIdentical"
+            },
+            {
+              "kind": "Method",
               "canonicalReference": "@velcro/bundler!SourceModuleDependency.fromEntrypoint:member(1)",
               "docComment": "",
               "excerptTokens": [
@@ -2637,38 +2698,297 @@
           }
         },
         {
-          "kind": "TypeAlias",
-          "canonicalReference": "@velcro/bundler!VelcroRuntime:type",
+          "kind": "Interface",
+          "canonicalReference": "@velcro/bundler!VelcroRuntime:interface",
           "docComment": "",
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "type VelcroRuntime = "
-            },
-            {
-              "kind": "Content",
-              "text": "{\n    inject: (id: string, exports: unknown) => void;\n    require: "
-            },
-            {
-              "kind": "Reference",
-              "text": "VelcroRequire",
-              "canonicalReference": "@velcro/bundler!~VelcroRequire:interface"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n}"
-            },
-            {
-              "kind": "Content",
-              "text": ";"
+              "text": "interface VelcroRuntime "
             }
           ],
           "releaseTag": "Public",
           "name": "VelcroRuntime",
-          "typeTokenRange": {
-            "startIndex": 1,
-            "endIndex": 4
-          }
+          "members": [
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@velcro/bundler!VelcroRuntime#createRequire:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "createRequire(fromModule: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "VelcroModuleInstance",
+                  "canonicalReference": "@velcro/bundler!~VelcroModuleInstance:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "VelcroRequire",
+                  "canonicalReference": "@velcro/bundler!~VelcroRequire:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "fromModule",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "createRequire"
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/bundler!VelcroRuntime#dependents:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly dependents: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Record",
+                  "canonicalReference": "!Record:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<string, "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "VelcroModuleInstance",
+                  "canonicalReference": "@velcro/bundler!~VelcroModuleInstance:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[] | undefined>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "dependents",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 5
+              }
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@velcro/bundler!VelcroRuntime#inject:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "inject(id: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", exports: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "unknown"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "VelcroModuleInstance",
+                  "canonicalReference": "@velcro/bundler!~VelcroModuleInstance:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "returnTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 6
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "id",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "parameterName": "exports",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  }
+                }
+              ],
+              "name": "inject"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@velcro/bundler!VelcroRuntime#invalidate:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "invalidate(ids: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "ids",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "invalidate"
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/bundler!VelcroRuntime#modules:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly modules: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Record",
+                  "canonicalReference": "!Record:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<string, "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "VelcroModuleInstance",
+                  "canonicalReference": "@velcro/bundler!~VelcroModuleInstance:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | undefined>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "modules",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 5
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/bundler!VelcroRuntime#require:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "require: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "VelcroRequire",
+                  "canonicalReference": "@velcro/bundler!~VelcroRequire:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "require",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/bundler!VelcroRuntime#root:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly root: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "VelcroModuleInstance",
+                  "canonicalReference": "@velcro/bundler!~VelcroModuleInstance:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "root",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
         },
         {
           "kind": "Variable",
@@ -2677,7 +2997,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.41.0\""
+              "text": "version = \"0.42.0\""
             }
           ],
           "releaseTag": "Public",

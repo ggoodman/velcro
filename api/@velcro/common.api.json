@@ -1124,6 +1124,50 @@
             },
             {
               "kind": "Method",
+              "canonicalReference": "@velcro/common!MapSet#deleteAll:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "deleteAll(key: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "K"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "key",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "deleteAll"
+            },
+            {
+              "kind": "Method",
               "canonicalReference": "@velcro/common!MapSet#entries:member(1)",
               "docComment": "",
               "excerptTokens": [
@@ -2879,7 +2923,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.41.0\""
+              "text": "version = \"0.42.0\""
             }
           ],
           "releaseTag": "Public",

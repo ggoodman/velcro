@@ -22,6 +22,7 @@ declare class MapSet<K, V>
 |  --- | --- | --- |
 |  [add(key, value)](./common.mapset.add.md) |  |  |
 |  [delete(key, value)](./common.mapset.delete.md) |  |  |
+|  [deleteAll(key)](./common.mapset.deleteall.md) |  |  |
 |  [entries()](./common.mapset.entries.md) |  |  |
 |  [get(key)](./common.mapset.get.md) |  |  |
 |  [has(key)](./common.mapset.has.md) |  |  |

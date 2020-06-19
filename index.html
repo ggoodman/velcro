@@ -1,0 +1,95 @@
+<div id="root">Loading...</div>
+
+<script
+  contenteditable
+  type="velcro"
+  data-dependencies="react:^16.13.1, react-dom:^16.13.1, react-ui: ^1.0.0-beta.26"
+>
+  import React from 'react';
+  import { render } from 'react-dom';
+  import { Button, Card, Form, Input, Select, Stack, Switch, Textarea, ThemeProvider } from 'react-ui';
+  import { tokens, components } from 'react-ui/themes/light'
+
+  const App = () =>
+    <Form>
+      <Form.Header as="h2">Update profile details</Form.Header>
+      <Form.Field label="Full name" required>
+        <Input placeholder="Enter your username" />
+      </Form.Field>
+      <Form.Field label="Email">
+        <Input placeholder="Enter your email" />
+      </Form.Field>
+      <Form.Field label="Change password">
+        <Input placeholder="Enter a password" />
+      </Form.Field>
+      <Form.Field label="Weather">
+        <Select>
+          <option value="">What's the weather like?</option>
+          <option value="hot">Hot</option>
+          <option value="cold">Cold</option>
+        </Select>
+      </Form.Field>
+      <Form.Field label="Address">
+        <Textarea placeholder="Enter your address" />
+      </Form.Field>
+      <Form.Field label="Remember me">
+        <Switch />
+      </Form.Field>
+      <Stack>
+        <Button>Update profile</Button>
+        <Button variant="link">Cancel</Button>
+      </Stack>
+    </Form>;
+
+  render(
+    <ThemeProvider tokens={tokens} components={components}>
+      <App />
+    </ThemeProvider>,
+    document.getElementById('root')
+  );
+</script>
+<style>
+  body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    font-family: sans-serif;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+  }
+  #root,
+  script[contenteditable] {
+    display: block;
+    overflow: auto;
+    position: relative;
+  }
+  #root::before,
+  script[contenteditable]::before {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font: 12px monospace;
+    padding: 2px 4px;
+    background-color: #666;
+    color: #f5f5f5;
+  }
+  #root {
+    flex: 1;
+    padding: 8px;
+    border-bottom: 4px solid #666;
+  }
+  #root::before {
+    content: 'PREVIEW';
+  }
+  script[contenteditable] {
+    white-space: pre;
+    font-family: monospace;
+    caret-color: black;
+    flex: 0 0 280px;
+  }
+  script[contenteditable]::before {
+    content: 'EDITOR';
+  }
+</style>
+<script src="http://localhost:5000/packages/nostalgie/dist/index.umd.js"></script>

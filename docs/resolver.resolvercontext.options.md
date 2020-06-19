@@ -15,6 +15,7 @@ interface Options
 |  Property | Type | Description |
 |  --- | --- | --- |
 |  [cache](./resolver.resolvercontext.options.cache.md) | Map&lt;string, Map&lt;string, unknown&gt;&gt; |  |
+|  [cacheInvalidations](./resolver.resolvercontext.options.cacheinvalidations.md) | MapSet&lt;string, InvalidationRecord&gt; |  |
 |  [decoder](./resolver.resolvercontext.options.decoder.md) | Decoder |  |
 |  [path](./resolver.resolvercontext.options.path.md) | string\[\] |  |
 |  [resolver](./resolver.resolvercontext.options.resolver.md) | Resolver |  |

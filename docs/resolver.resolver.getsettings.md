@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-getSettings(uri: Uri): (ResolverStrategy.SettingsResult & {
+getSettings(uri: string | Uri): (ResolverStrategy.SettingsResult & {
         visited: ResolverContext.Visit[];
     }) | import("@velcro/common").Thenable<ResolverStrategy.SettingsResult & {
         visited: ResolverContext.Visit[];
@@ -18,7 +18,7 @@ getSettings(uri: Uri): (ResolverStrategy.SettingsResult & {
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  uri | Uri |  |
+|  uri | string \| Uri |  |
 
 <b>Returns:</b>
 

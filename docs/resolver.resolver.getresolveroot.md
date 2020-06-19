@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-getResolveRoot(uri: Uri): (ResolverStrategy.ResolveRootResult & {
+getResolveRoot(uri: string | Uri): (ResolverStrategy.ResolveRootResult & {
         visited: ResolverContext.Visit[];
     }) | import("@velcro/common").Thenable<ResolverStrategy.ResolveRootResult & {
         visited: ResolverContext.Visit[];
@@ -18,7 +18,7 @@ getResolveRoot(uri: Uri): (ResolverStrategy.ResolveRootResult & {
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  uri | Uri |  |
+|  uri | string \| Uri |  |
 
 <b>Returns:</b>
 

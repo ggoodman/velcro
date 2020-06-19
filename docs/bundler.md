@@ -23,6 +23,7 @@
 |  [Plugin\_2](./bundler.plugin_2.md) |  |
 |  [PluginLoadContext](./bundler.pluginloadcontext.md) |  |
 |  [PluginTransformContext](./bundler.plugintransformcontext.md) |  |
+|  [VelcroRuntime](./bundler.velcroruntime.md) |  |
 
 ## Namespaces
 
@@ -45,5 +46,4 @@
 |  --- | --- |
 |  [PluginLoadResult](./bundler.pluginloadresult.md) |  |
 |  [PluginTransformResult](./bundler.plugintransformresult.md) |  |
-|  [VelcroRuntime](./bundler.velcroruntime.md) |  |
 
