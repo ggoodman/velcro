@@ -278,6 +278,31 @@
                     "startIndex": 1,
                     "endIndex": 2
                   }
+                },
+                {
+                  "kind": "PropertySignature",
+                  "canonicalReference": "@velcro/bundler!Chunk.ToStringOptions#invalidations:member",
+                  "docComment": "",
+                  "excerptTokens": [
+                    {
+                      "kind": "Content",
+                      "text": "invalidations?: "
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "string[]"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": ";"
+                    }
+                  ],
+                  "releaseTag": "Public",
+                  "name": "invalidations",
+                  "propertyTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
                 }
               ],
               "extendsTokenRanges": []
@@ -2652,7 +2677,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.40.0\""
+              "text": "version = \"0.41.0\""
             }
           ],
           "releaseTag": "Public",

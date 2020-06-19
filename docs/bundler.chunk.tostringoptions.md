@@ -15,4 +15,5 @@ interface ToStringOptions
 |  Property | Type | Description |
 |  --- | --- | --- |
 |  [injectRuntime](./bundler.chunk.tostringoptions.injectruntime.md) | boolean | Toggle whether to inject the runtime in the generated code.<!-- -->An instance of the runtime is important as it is what will actually schedule and execute code built for Velcro.<!-- -->When <code>injectRuntime</code> is <code>true</code>, the runtime code will be injected and the instance of it will be exposed as <code>Velcro.runtime</code>. |
+|  [invalidations](./bundler.chunk.tostringoptions.invalidations.md) | string\[\] |  |
 

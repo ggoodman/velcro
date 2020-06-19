@@ -24,7 +24,7 @@ The goal of this project is to let you:
 In your html markup:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/nostalgie@0.41.0/dist/index.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/nostalgie@0.42.0/dist/index.umd.js"></script>
 ```
 
 The library will register a `load` even on the `window` object. The event handler will scan for all `<script type="velcro">` tags and will build and execute them sequentially.
