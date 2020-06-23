@@ -58,8 +58,7 @@
   "dependencies": {
     "@velcro/common": "^0.43.0",
     "@velcro/resolver": "^0.43.0",
-    "semver": "^7.3.2",
-    "ts-primitives": "^3.0.1"
+    "semver": "^7.3.2"
   },
   "gitHead": "f63b45ad688f2fe9768349afeaf449c016bf33ef"
 }

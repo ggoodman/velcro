@@ -109,29 +109,6 @@ function rollupConfigFactory(dirname, filename) {
     {
       input: resolve(dirname, './src/index.ts'),
       output: {
-        file: resolve(dirname, PackageJson.browser),
-        format: 'commonjs',
-        sourcemap: true,
-      },
-      external(id) {
-        return PackageJson.dependencies && Object.hasOwnProperty.call(PackageJson.dependencies, id);
-      },
-      onwarn: (msg, warn) => {
-        if (!/Circular/.test(msg)) {
-          warn(msg);
-        }
-      },
-      plugins: [
-        RollupPluginJson(),
-        RollupPluginNodeResolve({ browser: true, mainFields: ['browser', 'module', 'main'] }),
-        RollupPluginReplace({ __VERSION__: PackageJson.version }),
-        createTypescriptPlugin(),
-        RollupPluginInjectProcessEnv({ NODE_ENV: 'production' }),
-      ],
-    },
-    {
-      input: resolve(dirname, './src/index.ts'),
-      output: {
         file: resolve(dirname, PackageJson.unpkg),
         format: 'umd',
         name: PackageJson.name.replace(/^@velcro\/(.*)$/, (_match, name) => toUmdName(name)),
