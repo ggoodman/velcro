@@ -1,4 +1,4 @@
-import { version as nodeLibsVersion } from '@velcro/node-libs/package.json';
+const nodeLibsVersion = '__VERSION__';
 
 export const DEFAULT_SHIM_GLOBALS: Record<
   string,

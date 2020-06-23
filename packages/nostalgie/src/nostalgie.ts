@@ -1,4 +1,5 @@
 import { GraphBuilder, GraphBuildError, VelcroRuntime } from '@velcro/bundler';
+import { CancellationTokenSource } from '@velcro/common';
 import { cssPlugin } from '@velcro/plugin-css';
 import { sucrasePlugin } from '@velcro/plugin-sucrase';
 import { Resolver } from '@velcro/resolver';
@@ -24,6 +25,7 @@ let nextBuildId = 0;
 let nextScriptId = 0;
 let queue: Promise<unknown> = Promise.resolve();
 let timeout: null | number = null;
+let tokenSource: CancellationTokenSource | null = null;
 
 const findParentScriptTag = (node: Node) => {
   let nextNode: Node | null = node;
@@ -44,6 +46,11 @@ const findParentScriptTag = (node: Node) => {
 };
 
 const onChange: MutationCallback = (records) => {
+  if (tokenSource) {
+    tokenSource.dispose(true);
+    tokenSource = null;
+  }
+
   if (timeout) {
     clearTimeout(timeout);
   }
@@ -62,13 +69,19 @@ const onChange: MutationCallback = (records) => {
   timeout = (setTimeout(() => {
     refresh(scripts);
     timeout = null;
-  }, 1000) as unknown) as number;
+  }, 500) as unknown) as number;
 };
 
 const observer = new MutationObserver(onChange);
 const scriptTagsToBasePaths = new WeakMap<HTMLScriptElement, string>();
 
 export function refresh(scripts: Iterable<HTMLScriptElement>) {
+  if (tokenSource) {
+    tokenSource.dispose(true);
+  }
+
+  tokenSource = new CancellationTokenSource();
+
   const buildId = nextBuildId++;
   const entrypointPaths: string[] = [];
 
@@ -143,30 +156,34 @@ export function refresh(scripts: Iterable<HTMLScriptElement>) {
   queue = queue.then(() => {
     const entrypointUris = entrypointPaths.map((path) => memoryStrategy.uriForPath(path));
 
-    return graphBuilder.buildGraph(entrypointUris).then(
-      (graph) => {
-        const [chunk] = graph.splitChunks();
-        const output = chunk.buildForStaticRuntime({
-          injectRuntime: buildId === 0,
-        });
+    return graphBuilder
+      .buildGraph(entrypointUris, { token: tokenSource ? tokenSource.token : undefined })
+      .then(
+        (graph) => {
+          const [chunk] = graph.splitChunks();
+          const output = chunk.buildForStaticRuntime({
+            injectRuntime: buildId === 0,
+          });
 
-        const codeWithStart = `${output.code}\n\n${entrypointUris
-          .map((entrypoint) => `Velcro.runtime.require(${JSON.stringify(entrypoint.toString())});`)
-          .join('\n')}\n`;
-        //@ts-expect-error
-        window.codeWithStart = codeWithStart;
-        const runtimeCode = `${codeWithStart}\n//# sourceMappingURL=${output.sourceMapDataUri}`;
+          const codeWithStart = `${output.code}\n\n${entrypointUris
+            .map(
+              (entrypoint) => `Velcro.runtime.require(${JSON.stringify(entrypoint.toString())});`
+            )
+            .join('\n')}\n`;
+          //@ts-expect-error
+          window.codeWithStart = codeWithStart;
+          const runtimeCode = `${codeWithStart}\n//# sourceMappingURL=${output.sourceMapDataUri}`;
 
-        const scriptEl = document.createElement('script');
-        scriptEl.setAttribute('type', 'text/javascript');
-        scriptEl.text = runtimeCode;
+          const scriptEl = document.createElement('script');
+          scriptEl.setAttribute('type', 'text/javascript');
+          scriptEl.text = runtimeCode;
 
-        document.head.appendChild(scriptEl);
-      },
-      (err: GraphBuildError) => {
-        console.error(err, 'Graph building failed');
-      }
-    );
+          document.head.appendChild(scriptEl);
+        },
+        (err: GraphBuildError) => {
+          console.error(err, 'Graph building failed');
+        }
+      );
   });
 
   return queue;

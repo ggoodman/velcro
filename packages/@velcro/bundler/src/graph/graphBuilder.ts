@@ -1,6 +1,13 @@
-import { isCanceledError, MapSet, Uri } from '@velcro/common';
+import {
+  CancellationToken,
+  DisposableStore,
+  Emitter,
+  Event,
+  isCanceledError,
+  MapSet,
+  Uri,
+} from '@velcro/common';
 import { Resolver, ResolverContext } from '@velcro/resolver';
-import { DisposableStore, Emitter } from 'ts-primitives';
 import { Plugin, PluginManager } from '../plugins';
 import { parse } from './commonjs';
 import { DependencyEdge } from './dependencyEdge';
@@ -50,7 +57,7 @@ export class GraphBuilder {
     );
   }
 
-  get onError() {
+  get onError(): Event<{ ctx: ResolverContext; err: Error }> {
     return this.onErrorEmitter.event;
   }
 
@@ -58,7 +65,7 @@ export class GraphBuilder {
     this.disposer.dispose();
   }
 
-  async buildGraph(entrypoints: Uri[]) {
+  async buildGraph(entrypoints: Uri[], options: { token?: CancellationToken } = {}) {
     const entrypointHrefs = entrypoints.map((entrypoint) => entrypoint.toString());
     const ctx = this.rootCtx.forOperation('GraphBuilder.buildGraph', entrypointHrefs.join(','), {
       resetPath: true,
@@ -66,6 +73,14 @@ export class GraphBuilder {
     });
 
     this.onError(() => ctx.dispose());
+
+    if (options.token) {
+      if (options.token.isCancellationRequested) {
+        ctx.dispose();
+      }
+
+      options.token.onCancellationRequested(() => ctx.dispose());
+    }
 
     for (const uri of entrypoints) {
       ctx.runInChildContext('GraphBuilder.doAddUnresolvedUri', uri, (ctx) =>
@@ -223,6 +238,8 @@ export class GraphBuilder {
     // if (edgesFrom) {
     //   for (const edge of edgesFrom) {
     //     if (SourceModuleDependency.areIdentical(edge.dependency, dependency)) {
+    //       console.log('withEdge', sourceModule.href, edge.dependency.kind, edge.dependency.spec, sourceModule);
+    //       edge.dependency = dependency;
     //       return withEdge(edge);
     //     }
     //   }

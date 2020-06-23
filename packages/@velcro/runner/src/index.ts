@@ -1,5 +1,2 @@
-export * from './exports';
-
-export declare const Velcro: {
-  Runner: typeof import('./exports');
-};
+export const version = '__VERSION__';
+export * from './execute';

@@ -1,5 +1,12 @@
-export * from './exports';
-
-export declare const Velcro: {
-  Common: typeof import('./exports');
-};
+export const version = '__VERSION__';
+export * from './async';
+export * from './base64';
+export * from './cancellation';
+export * from './decoder';
+export * from './error';
+export * from './event';
+export * from './lifecycle';
+export * from './mapSet';
+export * from './packageJson';
+export * from './path';
+export * from './uri';
