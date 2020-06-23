@@ -1,4 +1,3 @@
-import { version as nodeLibsVersion } from '@velcro/node-libs/package.json';
 import { BareModuleSpec, parseBareModuleSpec } from './bareModules';
 
 export const NODE_CORE_SHIMS: Record<string, BareModuleSpec | undefined> = Object.assign(
@@ -30,7 +29,5 @@ for (const name of [
   'vm',
   'zlib',
 ]) {
-  NODE_CORE_SHIMS[name] = parseBareModuleSpec(
-    `@velcro/node-libs@${nodeLibsVersion}/lib/${name}.js`
-  )!;
+  NODE_CORE_SHIMS[name] = parseBareModuleSpec(`@velcro/node-libs@${'__VERSION__'}/lib/${name}.js`)!;
 }

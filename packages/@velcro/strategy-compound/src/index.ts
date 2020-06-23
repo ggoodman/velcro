@@ -1,5 +1,3 @@
-export * from './exports';
+export const version = '__VERSION__';
 
-export declare const Velcro: {
-  StrategyCompound: typeof import('./exports');
-};
+export * from './compoundStrategy';

@@ -1,5 +1,4 @@
-import { PackageMainField, Uri } from '@velcro/common';
-import { CancellationTokenSource } from 'ts-primitives';
+import { CancellationTokenSource, PackageMainField, Uri } from '@velcro/common';
 import { ResolverContext } from './context';
 import type { ResolverStrategy } from './strategy';
 

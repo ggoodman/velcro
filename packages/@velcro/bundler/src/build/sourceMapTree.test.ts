@@ -38,7 +38,7 @@ describe('SourceMapTree', () => {
     const consumer = await new SourceMapConsumer({
       ...mappings,
       mappings: encode(mappings.mappings),
-      version: 3,
+      version: '3',
     } as RawSourceMap);
     const locator = getLocator(parsed.code.toString(), { offsetLine: 1 });
 

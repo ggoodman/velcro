@@ -1,10 +1,14 @@
 import {
   all,
   Awaited,
+  basename,
   CanceledError,
+  CancellationToken,
+  CancellationTokenSource,
   checkCancellation,
   Decoder,
   DependencyNotFoundError,
+  dirname,
   EntryExcludedError,
   EntryNotFoundError,
   isThenable,
@@ -16,7 +20,6 @@ import {
   Thenable,
   Uri,
 } from '@velcro/common';
-import { basename, CancellationToken, CancellationTokenSource, dirname } from 'ts-primitives';
 import { BareModuleSpec, parseBareModuleSpec } from './bareModules';
 import type { Resolver } from './resolver';
 import { NODE_CORE_SHIMS } from './shims';
@@ -26,7 +29,7 @@ type ReturnTypeWithVisits<
   T extends (...args: any[]) => any,
   TReturn = ReturnType<T>
 > = TReturn extends Thenable<infer U>
-  ? Thenable<U & { visited: ResolverContext.Visit[] }>
+  ? Promise<U & { visited: ResolverContext.Visit[] }>
   : TReturn & { visited: ResolverContext.Visit[] };
 
 // type UncachedReturnType<T> = { [K in keyof T] : K extends typeof CACHE ? never : T[K] };

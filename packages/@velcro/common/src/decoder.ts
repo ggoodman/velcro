@@ -1,11 +1,3 @@
-declare const Buffer: {
-  from(
-    buf: BufferSource
-  ): {
-    toString(encoding: 'utf-8'): string;
-  };
-};
-
 export class Decoder {
   private readonly decoder: TextDecoder | undefined;
 
@@ -20,7 +12,9 @@ export class Decoder {
   }
 
   decode(buf: BufferSource): string {
-    const str = this.decoder ? this.decoder.decode(buf) : Buffer.from(buf).toString('utf-8');
+    const str = this.decoder
+      ? this.decoder.decode(buf)
+      : (Buffer as any).from(buf).toString('utf-8');
 
     return str.charCodeAt(0) === 0xfeff ? str.slice(1) : str;
   }
