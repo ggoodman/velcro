@@ -13,7 +13,6 @@ import {
   EntryNotFoundError,
   isThenable,
   MapSet,
-  PackageJson,
   parseBufferAsPackageJson,
   parseBufferAsPartialPackageJson,
   PartialPackageJson,
@@ -24,6 +23,21 @@ import { BareModuleSpec, parseBareModuleSpec } from './bareModules';
 import type { Resolver } from './resolver';
 import { NODE_CORE_SHIMS } from './shims';
 import { ResolverStrategy } from './strategy';
+
+// Re-declaring this here instead of importing from @velcro/common is a hack around @wessberg/rollup-plugin-ts
+// producing an `import('@velcro/common').PackageJson)` type reference that is unsupported by api-extractor.
+type PackageManifest = {
+  name: string;
+  version: string;
+  browser?: string | { [key: string]: false | string };
+  main?: string;
+  module?: string;
+  'jsnext:main'?: string;
+  dependencies?: { [key: string]: string };
+  devDependencies?: { [key: string]: string };
+  peerDependencies?: { [key: string]: string };
+  unpkg?: string;
+};
 
 type ReturnTypeWithVisits<
   T extends (...args: any[]) => any,
@@ -52,25 +66,25 @@ type ResolveResult =
   | {
       found: false;
       uri: null;
-      parentPackageJson?: { packageJson: PackageJson; uri: Uri };
+      parentPackageJson?: { packageJson: PackageManifest; uri: Uri };
     }
   | {
       found: true;
       uri: null;
-      parentPackageJson?: { packageJson: PackageJson; uri: Uri };
+      parentPackageJson?: { packageJson: PackageManifest; uri: Uri };
       rootUri: Uri;
     }
   | {
       found: true;
       uri: Uri;
-      parentPackageJson?: { packageJson: PackageJson; uri: Uri };
+      parentPackageJson?: { packageJson: PackageManifest; uri: Uri };
       rootUri: Uri;
     };
 
 type ReadParentPackageJsonResultInternal =
   | {
       found: true;
-      packageJson: PackageJson;
+      packageJson: PackageManifest;
       uri: Uri;
       visitedDirs: Uri[];
     }
@@ -79,6 +93,10 @@ type ReadParentPackageJsonResultInternal =
       packageJson: null;
       uri: null;
     };
+
+type StrategyResult<T> =
+  | Promise<T & { visited: ResolverContext.Visit[] }>
+  | (T & { visited: ResolverContext.Visit[] });
 
 class Visits {
   private readonly parent?: Visits;
@@ -198,7 +216,7 @@ export class ResolverContext {
     });
   }
 
-  getCanonicalUrl(uri: Uri) {
+  getCanonicalUrl(uri: Uri): StrategyResult<ResolverStrategy.CanonicalizeResult> {
     const method = this.strategy.getCanonicalUrl;
     const receiver = this.strategy;
     const operationName = `${this.strategy.constructor.name}.${method.name}`;
@@ -209,7 +227,7 @@ export class ResolverContext {
     );
   }
 
-  getResolveRoot(uri: Uri) {
+  getResolveRoot(uri: Uri): StrategyResult<ResolverStrategy.ResolveRootResult> {
     const method = this.strategy.getResolveRoot;
     const receiver = this.strategy;
     const operationName = `${this.strategy.constructor.name}.${method.name}`;
@@ -220,7 +238,7 @@ export class ResolverContext {
     );
   }
 
-  getSettings(uri: Uri) {
+  getSettings(uri: Uri): StrategyResult<ResolverStrategy.SettingsResult> {
     const method = this.strategy.getSettings;
     const receiver = this.strategy;
     const operationName = `${this.strategy.constructor.name}.${method.name}`;
@@ -231,7 +249,11 @@ export class ResolverContext {
     );
   }
 
-  getUrlForBareModule(name: string, spec: string, path: string) {
+  getUrlForBareModule(
+    name: string,
+    spec: string,
+    path: string
+  ): StrategyResult<ResolverStrategy.BareModuleResult> {
     const method = this.strategy.getUrlForBareModule;
 
     if (!method) {
@@ -267,7 +289,7 @@ export class ResolverContext {
     return invalidated;
   }
 
-  listEntries(uri: Uri) {
+  listEntries(uri: Uri): StrategyResult<ResolverStrategy.ListEntriesResult> {
     const method = this.strategy.listEntries;
     const receiver = this.strategy;
     const operationName = `${this.strategy.constructor.name}.${method.name}`;
@@ -278,7 +300,7 @@ export class ResolverContext {
     );
   }
 
-  readFileContent(uri: Uri) {
+  readFileContent(uri: Uri): StrategyResult<ResolverStrategy.ReadFileContentResult> {
     const method = this.strategy.readFileContent;
     const receiver = this.strategy;
     const operationName = `${this.strategy.constructor.name}.${method.name}`;
@@ -289,7 +311,7 @@ export class ResolverContext {
     );
   }
 
-  readParentPackageJson(uri: Uri) {
+  readParentPackageJson(uri: Uri): StrategyResult<ReadParentPackageJsonResultInternal> {
     return this.runWithCache(
       'readParentPackageJson',
       uri.toString(),
@@ -304,7 +326,7 @@ export class ResolverContext {
     this.visits.push({ type, uri });
   }
 
-  resolve(spec: string, fromUri: Uri) {
+  resolve(spec: string, fromUri: Uri): StrategyResult<ResolveResult> {
     const method = resolveDependency;
     const receiver = null;
     const operationName = method.name;
@@ -315,7 +337,7 @@ export class ResolverContext {
     );
   }
 
-  resolveUri(uri: Uri) {
+  resolveUri(uri: Uri): StrategyResult<ResolveResult> {
     const method = resolve;
     const receiver = null;
     const operationName = method.name;
