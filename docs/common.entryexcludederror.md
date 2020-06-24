@@ -9,6 +9,7 @@
 ```typescript
 declare class EntryExcludedError extends BaseError 
 ```
+<b>Extends:</b> BaseError
 
 ## Constructors
 

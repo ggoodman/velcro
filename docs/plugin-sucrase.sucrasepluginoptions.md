@@ -9,3 +9,5 @@
 ```typescript
 interface SucrasePluginOptions extends Partial<Pick<Options, "jsxFragmentPragma" | "jsxPragma" | "transforms">> 
 ```
+<b>Extends:</b> Partial&lt;Pick&lt;Options, "jsxFragmentPragma" \| "jsxPragma" \| "transforms"&gt;&gt;
+

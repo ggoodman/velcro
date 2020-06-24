@@ -20,6 +20,5 @@
 
 |  Variable | Description |
 |  --- | --- |
-|  [Velcro](./strategy-fs.velcro.md) |  |
 |  [version](./strategy-fs.version.md) |  |
 

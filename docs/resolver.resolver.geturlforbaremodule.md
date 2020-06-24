@@ -7,11 +7,11 @@
 <b>Signature:</b>
 
 ```typescript
-getUrlForBareModule(name: string, spec: string, path: string): (ResolverStrategy.BareModuleResult & {
+getUrlForBareModule(name: string, spec: string, path: string): Promise<ResolverStrategy.BareModuleResult & {
         visited: ResolverContext.Visit[];
-    }) | import("@velcro/common").Thenable<ResolverStrategy.BareModuleResult & {
+    }> | (ResolverStrategy.BareModuleResult & {
         visited: ResolverContext.Visit[];
-    }>;
+    });
 ```
 
 ## Parameters
@@ -24,5 +24,5 @@ getUrlForBareModule(name: string, spec: string, path: string): (ResolverStrategy
 
 <b>Returns:</b>
 
-(ResolverStrategy.BareModuleResult &amp; { visited: ResolverContext.Visit\[\]; }) \| import("@velcro/common").Thenable&lt;ResolverStrategy.BareModuleResult &amp; { visited: ResolverContext.Visit\[\]; }&gt;
+Promise&lt;ResolverStrategy.BareModuleResult &amp; { visited: ResolverContext.Visit\[\]; }&gt; \| (ResolverStrategy.BareModuleResult &amp; { visited: ResolverContext.Visit\[\]; })
 

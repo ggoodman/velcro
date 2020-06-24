@@ -7,11 +7,11 @@
 <b>Signature:</b>
 
 ```typescript
-getSettings(uri: string | Uri): (ResolverStrategy.SettingsResult & {
+getSettings(uri: string | Uri): Promise<ResolverStrategy.SettingsResult & {
         visited: ResolverContext.Visit[];
-    }) | import("@velcro/common").Thenable<ResolverStrategy.SettingsResult & {
+    }> | (ResolverStrategy.SettingsResult & {
         visited: ResolverContext.Visit[];
-    }>;
+    });
 ```
 
 ## Parameters
@@ -22,5 +22,5 @@ getSettings(uri: string | Uri): (ResolverStrategy.SettingsResult & {
 
 <b>Returns:</b>
 
-(ResolverStrategy.SettingsResult &amp; { visited: ResolverContext.Visit\[\]; }) \| import("@velcro/common").Thenable&lt;ResolverStrategy.SettingsResult &amp; { visited: ResolverContext.Visit\[\]; }&gt;
+Promise&lt;ResolverStrategy.SettingsResult &amp; { visited: ResolverContext.Visit\[\]; }&gt; \| (ResolverStrategy.SettingsResult &amp; { visited: ResolverContext.Visit\[\]; })
 

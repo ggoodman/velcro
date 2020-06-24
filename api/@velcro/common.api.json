@@ -1,7 +1,7 @@
 {
   "metadata": {
     "toolPackage": "@microsoft/api-extractor",
-    "toolVersion": "7.8.1",
+    "toolVersion": "7.8.12",
     "schemaVersion": 1003,
     "oldestForwardsCompatibleVersion": 1001
   },
@@ -2277,16 +2277,16 @@
         {
           "kind": "Class",
           "canonicalReference": "@velcro/common!Uri:class",
-          "docComment": "",
+          "docComment": "/**\n * Uniform Resource Identifier (URI) http://tools.ietf.org/html/rfc3986. This class is a simple parser which creates the basic component parts (http://tools.ietf.org/html/rfc3986#section-3) with minimal validation and encoding.\n * ```txt\n *       foo://example.com:8042/over/there?name=ferret#nose\n *       \\_/   \\______________/\\_________/ \\_________/ \\__/\n *        |           |            |            |        |\n *     scheme     authority       path        query   fragment\n *        |   _____________________|__\n *       / \\ /                        \\\n *       urn:example:animal:ferret:nose\n * ```\n *\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "declare class Uri extends "
+              "text": "declare class Uri implements "
             },
             {
               "kind": "Reference",
-              "text": "URI",
-              "canonicalReference": "ts-primitives!~URI:class"
+              "text": "UriComponents",
+              "canonicalReference": "@velcro/common!~UriComponents:interface"
             },
             {
               "kind": "Content",
@@ -2296,6 +2296,32 @@
           "releaseTag": "Public",
           "name": "Uri",
           "members": [
+            {
+              "kind": "Property",
+              "canonicalReference": "@velcro/common!Uri#authority:member",
+              "docComment": "/**\n * authority is the 'www.msft.com' part of 'http://www.msft.com/some/path?query#fragment'. The part between the first double slashes and the next slash.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly authority: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "authority",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false
+            },
             {
               "kind": "Method",
               "canonicalReference": "@velcro/common!Uri.ensureTrailingSlash:member(1)",
@@ -2420,30 +2446,16 @@
             },
             {
               "kind": "Method",
-              "canonicalReference": "@velcro/common!Uri.from:member(1)",
-              "docComment": "",
+              "canonicalReference": "@velcro/common!Uri.file:member(1)",
+              "docComment": "/**\n * Creates a new URI from a file system path, e.g. `c:\\my\\files`, `/usr/home`, or `\\\\server\\share\\some\\path`.\n *\n * The *difference* between `URI#parse` and `URI#file` is that the latter treats the argument as path, not as stringified-uri. E.g. `URI.file(path)` is **not the same as** `URI.parse('file://' + path)` because the path might contain characters that are interpreted (# and ?). See the following sample:\n * ```ts\n *      const good = URI.file('/coding/c#/project1');\n *      good.scheme === 'file';\n *      good.path === '/coding/c#/project1';\n *      good.fragment === '';\n *      const bad = URI.parse('file://' + '/coding/c#/project1');\n *      bad.scheme === 'file';\n *      bad.path === '/coding/c'; // path is now broken\n *      bad.fragment === '/project1';\n * ```\n *\n * @param path - A file system path (see `URI#fsPath`)\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "static from(...args: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Parameters",
-                  "canonicalReference": "!Parameters:type"
+                  "text": "static file(path: "
                 },
                 {
                   "kind": "Content",
-                  "text": "<typeof "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "URI",
-                  "canonicalReference": "ts-primitives!~URI:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": "[\"from\"]>"
+                  "text": "string"
                 },
                 {
                   "kind": "Content",
@@ -2461,21 +2473,118 @@
               ],
               "isStatic": true,
               "returnTypeTokenRange": {
-                "startIndex": 6,
-                "endIndex": 7
+                "startIndex": 3,
+                "endIndex": 4
               },
               "releaseTag": "Public",
               "overloadIndex": 1,
               "parameters": [
                 {
-                  "parameterName": "args",
+                  "parameterName": "path",
                   "parameterTypeTokenRange": {
                     "startIndex": 1,
-                    "endIndex": 5
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "file"
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@velcro/common!Uri#fragment:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly fragment: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "fragment",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/common!Uri.from:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "static from(components: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        scheme: string;\n        authority?: string;\n        path?: string;\n        query?: string;\n        fragment?: string;\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/common!~Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": true,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "components",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
                   }
                 }
               ],
               "name": "from"
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@velcro/common!Uri#fsPath:member",
+              "docComment": "/**\n * Returns a string representing the corresponding file system path of this URI. platform specific path separator.\n *\n * * Will *not* validate the path for invalid characters and semantics. * Will *not* look at the scheme of this URI. * The result shall *not* be used for display purposes but for accessing a file on disk.\n *\n * The *difference* to `URI#path` is the use of the platform specific separator and the handling\n * ```ts\n *      const u = URI.parse('file://server/c$/folder/file.txt')\n *      u.authority === 'server'\n *      u.path === '/shares/c$/file.txt'\n *      u.fsPath === '\\\\server\\c$\\folder\\file.txt'\n * ```\n *\n * Using `URI#path` to read a file (using fs-apis) would not be enough because parts of the path, namely the server name, would be missing. Therefore `URI#fsPath` exists - it's sugar to ease working with URIs that represent files on disk (`file` scheme).\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "get fsPath(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "fsPath",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false
             },
             {
               "kind": "Method",
@@ -2601,30 +2710,79 @@
             },
             {
               "kind": "Method",
-              "canonicalReference": "@velcro/common!Uri.joinPath:member(1)",
+              "canonicalReference": "@velcro/common!Uri.isUri:member(1)",
               "docComment": "",
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "static joinPath(...args: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Parameters",
-                  "canonicalReference": "!Parameters:type"
+                  "text": "static isUri(thing: "
                 },
                 {
                   "kind": "Content",
-                  "text": "<typeof "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "URI",
-                  "canonicalReference": "ts-primitives!~URI:class"
+                  "text": "any"
                 },
                 {
                   "kind": "Content",
-                  "text": "[\"joinPath\"]>"
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "thing",
+                  "canonicalReference": "@velcro/common!~thing"
+                },
+                {
+                  "kind": "Content",
+                  "text": " is "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/common!~Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": true,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 6
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "thing",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "isUri"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/common!Uri.joinPath:member(1)",
+              "docComment": "/**\n * Join a URI path with path fragments and normalizes the resulting path.\n *\n * @param uri - The input URI.\n *\n * @param pathFragment - The path fragment to add to the URI path.\n *\n * @returns The resulting URI.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "static joinPath(uri: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/common!~Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", ...pathFragment: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string[]"
                 },
                 {
                   "kind": "Content",
@@ -2642,17 +2800,24 @@
               ],
               "isStatic": true,
               "returnTypeTokenRange": {
-                "startIndex": 6,
-                "endIndex": 7
+                "startIndex": 5,
+                "endIndex": 6
               },
               "releaseTag": "Public",
               "overloadIndex": 1,
               "parameters": [
                 {
-                  "parameterName": "args",
+                  "parameterName": "uri",
                   "parameterTypeTokenRange": {
                     "startIndex": 1,
-                    "endIndex": 5
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "parameterName": "pathFragment",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
                   }
                 }
               ],
@@ -2661,29 +2826,23 @@
             {
               "kind": "Method",
               "canonicalReference": "@velcro/common!Uri.parse:member(1)",
-              "docComment": "",
+              "docComment": "/**\n * Creates a new URI from a string, e.g. `http://www.msft.com/some/path`, `file:///usr/home`, or `scheme:with/path`.\n *\n * @param value - A string which represents an URI (see `URI#toString`).\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "static parse(...args: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Parameters",
-                  "canonicalReference": "!Parameters:type"
+                  "text": "static parse(value: "
                 },
                 {
                   "kind": "Content",
-                  "text": "<typeof "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "URI",
-                  "canonicalReference": "ts-primitives!~URI:class"
+                  "text": "string"
                 },
                 {
                   "kind": "Content",
-                  "text": "[\"parse\"]>"
+                  "text": ", _strict?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
                 },
                 {
                   "kind": "Content",
@@ -2701,21 +2860,80 @@
               ],
               "isStatic": true,
               "returnTypeTokenRange": {
-                "startIndex": 6,
-                "endIndex": 7
+                "startIndex": 5,
+                "endIndex": 6
               },
               "releaseTag": "Public",
               "overloadIndex": 1,
               "parameters": [
                 {
-                  "parameterName": "args",
+                  "parameterName": "value",
                   "parameterTypeTokenRange": {
                     "startIndex": 1,
-                    "endIndex": 5
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "parameterName": "_strict",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
                   }
                 }
               ],
               "name": "parse"
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@velcro/common!Uri#path:member",
+              "docComment": "/**\n * path is the '/some/path' part of 'http://www.msft.com/some/path?query#fragment'.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly path: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "path",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@velcro/common!Uri#query:member",
+              "docComment": "/**\n * query is the 'query' part of 'http://www.msft.com/some/path?query#fragment'.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly query: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "query",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false
             },
             {
               "kind": "Method",
@@ -2724,25 +2942,21 @@
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "static revive(...args: "
+                  "text": "static revive(data: "
                 },
                 {
                   "kind": "Reference",
-                  "text": "Parameters",
-                  "canonicalReference": "!Parameters:type"
+                  "text": "UriComponents",
+                  "canonicalReference": "@velcro/common!~UriComponents:interface"
                 },
                 {
                   "kind": "Content",
-                  "text": "<typeof "
+                  "text": " | "
                 },
                 {
                   "kind": "Reference",
-                  "text": "URI",
-                  "canonicalReference": "ts-primitives!~URI:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": "[\"revive\"]>"
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/common!~Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -2760,14 +2974,77 @@
               ],
               "isStatic": true,
               "returnTypeTokenRange": {
-                "startIndex": 6,
-                "endIndex": 7
+                "startIndex": 5,
+                "endIndex": 6
               },
               "releaseTag": "Public",
               "overloadIndex": 1,
               "parameters": [
                 {
-                  "parameterName": "args",
+                  "parameterName": "data",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 4
+                  }
+                }
+              ],
+              "name": "revive"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/common!Uri.revive:member(2)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "static revive(data: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "UriComponents",
+                  "canonicalReference": "@velcro/common!~UriComponents:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/common!~Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | undefined"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/common!~Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | undefined"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": true,
+              "returnTypeTokenRange": {
+                "startIndex": 6,
+                "endIndex": 8
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 2,
+              "parameters": [
+                {
+                  "parameterName": "data",
                   "parameterTypeTokenRange": {
                     "startIndex": 1,
                     "endIndex": 5
@@ -2778,8 +3055,189 @@
             },
             {
               "kind": "Method",
-              "canonicalReference": "@velcro/common!Uri#toString:member(1)",
+              "canonicalReference": "@velcro/common!Uri.revive:member(3)",
               "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "static revive(data: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "UriComponents",
+                  "canonicalReference": "@velcro/common!~UriComponents:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/common!~Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | null"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/common!~Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | null"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": true,
+              "returnTypeTokenRange": {
+                "startIndex": 6,
+                "endIndex": 8
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 3,
+              "parameters": [
+                {
+                  "parameterName": "data",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 5
+                  }
+                }
+              ],
+              "name": "revive"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/common!Uri.revive:member(4)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "static revive(data: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "UriComponents",
+                  "canonicalReference": "@velcro/common!~UriComponents:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/common!~Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | undefined | null"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/common!~Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | undefined | null"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": true,
+              "returnTypeTokenRange": {
+                "startIndex": 6,
+                "endIndex": 8
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 4,
+              "parameters": [
+                {
+                  "parameterName": "data",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 5
+                  }
+                }
+              ],
+              "name": "revive"
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@velcro/common!Uri#scheme:member",
+              "docComment": "/**\n * scheme is the 'http' part of 'http://www.msft.com/some/path?query#fragment'. The part before the first colon.\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly scheme: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "scheme",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/common!Uri#toJSON:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "toJSON(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "UriComponents",
+                  "canonicalReference": "@velcro/common!~UriComponents:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "toJSON"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/common!Uri#toString:member(1)",
+              "docComment": "/**\n * Creates a string representation for this URI. It's guaranteed that calling `URI.parse` with the result of this function creates an URI which is equal to this URI.\n *\n * * The result shall *not* be used for display purposes but for externalization or transport. * The result will be encoded using the percentage encoding and encoding happens mostly ignore the scheme-specific encoding rules.\n *\n * @param skipEncoding - Do not encode the result, default is `false`\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -2827,25 +3285,11 @@
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "with(...args: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Parameters",
-                  "canonicalReference": "!Parameters:type"
+                  "text": "with(change: "
                 },
                 {
                   "kind": "Content",
-                  "text": "<"
-                },
-                {
-                  "kind": "Reference",
-                  "text": "URI",
-                  "canonicalReference": "ts-primitives!~URI:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": "[\"with\"]>"
+                  "text": "{\n        scheme?: string;\n        authority?: string | null;\n        path?: string | null;\n        query?: string | null;\n        fragment?: string | null;\n    }"
                 },
                 {
                   "kind": "Content",
@@ -2863,58 +3307,229 @@
               ],
               "isStatic": false,
               "returnTypeTokenRange": {
-                "startIndex": 6,
-                "endIndex": 7
+                "startIndex": 3,
+                "endIndex": 4
               },
               "releaseTag": "Public",
               "overloadIndex": 1,
               "parameters": [
                 {
-                  "parameterName": "args",
+                  "parameterName": "change",
                   "parameterTypeTokenRange": {
                     "startIndex": 1,
-                    "endIndex": 5
+                    "endIndex": 2
                   }
                 }
               ],
               "name": "with"
             }
           ],
-          "extendsTokenRange": {
-            "startIndex": 1,
-            "endIndex": 3
-          },
-          "implementsTokenRanges": []
+          "implementsTokenRanges": [
+            {
+              "startIndex": 1,
+              "endIndex": 3
+            }
+          ]
         },
         {
-          "kind": "Variable",
-          "canonicalReference": "@velcro/common!Velcro:var",
+          "kind": "Interface",
+          "canonicalReference": "@velcro/common!UriComponents:interface",
           "docComment": "",
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "Velcro: "
-            },
-            {
-              "kind": "Content",
-              "text": "{\n    Common: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "exportsNS",
-              "canonicalReference": "@velcro/common!~exportsNS:namespace"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n}"
+              "text": "interface UriComponents "
             }
           ],
           "releaseTag": "Public",
-          "name": "Velcro",
-          "variableTypeTokenRange": {
-            "startIndex": 1,
-            "endIndex": 4
-          }
+          "name": "UriComponents",
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/common!UriComponents#authority:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "authority: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "authority",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/common!UriComponents#fragment:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "fragment: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "fragment",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/common!UriComponents#path:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "path: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "path",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/common!UriComponents#query:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "query: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "query",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/common!UriComponents#scheme:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "scheme: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "scheme",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Function",
+          "canonicalReference": "@velcro/common!uriToFsPath:function(1)",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "declare function uriToFsPath(uri: "
+            },
+            {
+              "kind": "Reference",
+              "text": "Uri",
+              "canonicalReference": "@velcro/common!~Uri:class"
+            },
+            {
+              "kind": "Content",
+              "text": ", keepDriveLetterCasing: "
+            },
+            {
+              "kind": "Content",
+              "text": "boolean"
+            },
+            {
+              "kind": "Content",
+              "text": "): "
+            },
+            {
+              "kind": "Content",
+              "text": "string"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "returnTypeTokenRange": {
+            "startIndex": 5,
+            "endIndex": 6
+          },
+          "releaseTag": "Public",
+          "overloadIndex": 1,
+          "parameters": [
+            {
+              "parameterName": "uri",
+              "parameterTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "parameterName": "keepDriveLetterCasing",
+              "parameterTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              }
+            }
+          ],
+          "name": "uriToFsPath"
         },
         {
           "kind": "Variable",
@@ -2923,7 +3538,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.42.0\""
+              "text": "version = \"0.43.0\""
             }
           ],
           "releaseTag": "Public",

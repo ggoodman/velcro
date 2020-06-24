@@ -7,11 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-getUrlForBareModule(name: string, spec: string, path: string): (ResolverStrategy.BareModuleResult & {
-        visited: ResolverContext.Visit[];
-    }) | Thenable<ResolverStrategy.BareModuleResult & {
-        visited: ResolverContext.Visit[];
-    }>;
+getUrlForBareModule(name: string, spec: string, path: string): StrategyResult<ResolverStrategy.BareModuleResult>;
 ```
 
 ## Parameters
@@ -24,5 +20,5 @@ getUrlForBareModule(name: string, spec: string, path: string): (ResolverStrategy
 
 <b>Returns:</b>
 
-(ResolverStrategy.BareModuleResult &amp; { visited: ResolverContext.Visit\[\]; }) \| Thenable&lt;ResolverStrategy.BareModuleResult &amp; { visited: ResolverContext.Visit\[\]; }&gt;
+StrategyResult&lt;ResolverStrategy.BareModuleResult&gt;
 

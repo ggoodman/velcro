@@ -7,36 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-resolve(spec: string, fromUri: Uri): Thenable<({
-        found: false;
-        uri: null;
-        parentPackageJson?: {
-            packageJson: PackageJson;
-            uri: Uri;
-        } | undefined;
-    } & {
-        visited: ResolverContext.Visit[];
-    }) | ({
-        found: true;
-        uri: null;
-        parentPackageJson?: {
-            packageJson: PackageJson;
-            uri: Uri;
-        } | undefined;
-        rootUri: Uri;
-    } & {
-        visited: ResolverContext.Visit[];
-    }) | ({
-        found: true;
-        uri: Uri;
-        parentPackageJson?: {
-            packageJson: PackageJson;
-            uri: Uri;
-        } | undefined;
-        rootUri: Uri;
-    } & {
-        visited: ResolverContext.Visit[];
-    })>;
+resolve(spec: string, fromUri: Uri): StrategyResult<ResolveResult>;
 ```
 
 ## Parameters
@@ -48,5 +19,5 @@ resolve(spec: string, fromUri: Uri): Thenable<({
 
 <b>Returns:</b>
 
-Thenable&lt;({ found: false; uri: null; parentPackageJson?: { packageJson: PackageJson; uri: Uri; } \| undefined; } &amp; { visited: ResolverContext.Visit\[\]; }) \| ({ found: true; uri: null; parentPackageJson?: { packageJson: PackageJson; uri: Uri; } \| undefined; rootUri: Uri; } &amp; { visited: ResolverContext.Visit\[\]; }) \| ({ found: true; uri: Uri; parentPackageJson?: { packageJson: PackageJson; uri: Uri; } \| undefined; rootUri: Uri; } &amp; { visited: ResolverContext.Visit\[\]; })&gt;
+StrategyResult&lt;ResolveResult&gt;
 

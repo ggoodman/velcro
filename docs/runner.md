@@ -22,6 +22,5 @@
 
 |  Variable | Description |
 |  --- | --- |
-|  [Velcro](./runner.velcro.md) |  |
 |  [version](./runner.version.md) |  |
 

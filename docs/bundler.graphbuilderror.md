@@ -9,6 +9,7 @@
 ```typescript
 declare class GraphBuildError extends BaseError 
 ```
+<b>Extends:</b> BaseError
 
 ## Constructors
 

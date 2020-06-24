@@ -9,3 +9,5 @@
 ```typescript
 declare class AmbiguousModuleError extends BaseError 
 ```
+<b>Extends:</b> BaseError
+

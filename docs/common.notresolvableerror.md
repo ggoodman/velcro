@@ -9,3 +9,5 @@
 ```typescript
 declare class NotResolvableError extends BaseError 
 ```
+<b>Extends:</b> BaseError
+

@@ -7,20 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-readParentPackageJson(uri: Uri): Thenable<({
-        found: true;
-        packageJson: PackageJson;
-        uri: Uri;
-        visitedDirs: Uri[];
-    } & {
-        visited: ResolverContext.Visit[];
-    }) | ({
-        found: false;
-        packageJson: null;
-        uri: null;
-    } & {
-        visited: ResolverContext.Visit[];
-    })>;
+readParentPackageJson(uri: Uri): StrategyResult<ReadParentPackageJsonResultInternal>;
 ```
 
 ## Parameters
@@ -31,5 +18,5 @@ readParentPackageJson(uri: Uri): Thenable<({
 
 <b>Returns:</b>
 
-Thenable&lt;({ found: true; packageJson: PackageJson; uri: Uri; visitedDirs: Uri\[\]; } &amp; { visited: ResolverContext.Visit\[\]; }) \| ({ found: false; packageJson: null; uri: null; } &amp; { visited: ResolverContext.Visit\[\]; })&gt;
+StrategyResult&lt;ReadParentPackageJsonResultInternal&gt;
 

@@ -9,6 +9,7 @@
 ```typescript
 interface PluginTransformContext extends PluginContext 
 ```
+<b>Extends:</b> PluginContext
 
 ## Methods
 

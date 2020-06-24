@@ -14,6 +14,5 @@
 
 |  Variable | Description |
 |  --- | --- |
-|  [Velcro](./strategy-memory.velcro.md) |  |
 |  [version](./strategy-memory.version.md) |  |
 

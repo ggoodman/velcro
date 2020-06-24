@@ -7,11 +7,11 @@
 <b>Signature:</b>
 
 ```typescript
-getCanonicalUrl(uri: string | Uri): (ResolverStrategy.CanonicalizeResult & {
+getCanonicalUrl(uri: string | Uri): Promise<ResolverStrategy.CanonicalizeResult & {
         visited: ResolverContext.Visit[];
-    }) | import("@velcro/common").Thenable<ResolverStrategy.CanonicalizeResult & {
+    }> | (ResolverStrategy.CanonicalizeResult & {
         visited: ResolverContext.Visit[];
-    }>;
+    });
 ```
 
 ## Parameters
@@ -22,5 +22,5 @@ getCanonicalUrl(uri: string | Uri): (ResolverStrategy.CanonicalizeResult & {
 
 <b>Returns:</b>
 
-(ResolverStrategy.CanonicalizeResult &amp; { visited: ResolverContext.Visit\[\]; }) \| import("@velcro/common").Thenable&lt;ResolverStrategy.CanonicalizeResult &amp; { visited: ResolverContext.Visit\[\]; }&gt;
+Promise&lt;ResolverStrategy.CanonicalizeResult &amp; { visited: ResolverContext.Visit\[\]; }&gt; \| (ResolverStrategy.CanonicalizeResult &amp; { visited: ResolverContext.Visit\[\]; })
 

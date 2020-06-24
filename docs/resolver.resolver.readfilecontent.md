@@ -7,11 +7,11 @@
 <b>Signature:</b>
 
 ```typescript
-readFileContent(uri: Uri): (ResolverStrategy.ReadFileContentResult & {
+readFileContent(uri: Uri): Promise<ResolverStrategy.ReadFileContentResult & {
         visited: ResolverContext.Visit[];
-    }) | import("@velcro/common").Thenable<ResolverStrategy.ReadFileContentResult & {
+    }> | (ResolverStrategy.ReadFileContentResult & {
         visited: ResolverContext.Visit[];
-    }>;
+    });
 ```
 
 ## Parameters
@@ -22,5 +22,5 @@ readFileContent(uri: Uri): (ResolverStrategy.ReadFileContentResult & {
 
 <b>Returns:</b>
 
-(ResolverStrategy.ReadFileContentResult &amp; { visited: ResolverContext.Visit\[\]; }) \| import("@velcro/common").Thenable&lt;ResolverStrategy.ReadFileContentResult &amp; { visited: ResolverContext.Visit\[\]; }&gt;
+Promise&lt;ResolverStrategy.ReadFileContentResult &amp; { visited: ResolverContext.Visit\[\]; }&gt; \| (ResolverStrategy.ReadFileContentResult &amp; { visited: ResolverContext.Visit\[\]; })
 

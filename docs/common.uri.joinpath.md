@@ -4,19 +4,24 @@
 
 ## Uri.joinPath() method
 
+Join a URI path with path fragments and normalizes the resulting path.
+
 <b>Signature:</b>
 
 ```typescript
-static joinPath(...args: Parameters<typeof URI["joinPath"]>): Uri;
+static joinPath(uri: Uri, ...pathFragment: string[]): Uri;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  args | Parameters&lt;typeof URI\["joinPath"\]&gt; |  |
+|  uri | Uri | The input URI. |
+|  pathFragment | string\[\] | The path fragment to add to the URI path. |
 
 <b>Returns:</b>
 
 Uri
+
+The resulting URI.
 

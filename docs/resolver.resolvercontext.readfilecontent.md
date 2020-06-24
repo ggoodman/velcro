@@ -7,11 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-readFileContent(uri: Uri): (ResolverStrategy.ReadFileContentResult & {
-        visited: ResolverContext.Visit[];
-    }) | Thenable<ResolverStrategy.ReadFileContentResult & {
-        visited: ResolverContext.Visit[];
-    }>;
+readFileContent(uri: Uri): StrategyResult<ResolverStrategy.ReadFileContentResult>;
 ```
 
 ## Parameters
@@ -22,5 +18,5 @@ readFileContent(uri: Uri): (ResolverStrategy.ReadFileContentResult & {
 
 <b>Returns:</b>
 
-(ResolverStrategy.ReadFileContentResult &amp; { visited: ResolverContext.Visit\[\]; }) \| Thenable&lt;ResolverStrategy.ReadFileContentResult &amp; { visited: ResolverContext.Visit\[\]; }&gt;
+StrategyResult&lt;ResolverStrategy.ReadFileContentResult&gt;
 

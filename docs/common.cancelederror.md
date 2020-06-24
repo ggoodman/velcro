@@ -9,3 +9,5 @@
 ```typescript
 declare class CanceledError extends BaseError 
 ```
+<b>Extends:</b> BaseError
+

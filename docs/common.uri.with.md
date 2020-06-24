@@ -7,14 +7,20 @@
 <b>Signature:</b>
 
 ```typescript
-with(...args: Parameters<URI["with"]>): Uri;
+with(change: {
+        scheme?: string;
+        authority?: string | null;
+        path?: string | null;
+        query?: string | null;
+        fragment?: string | null;
+    }): Uri;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  args | Parameters&lt;URI\["with"\]&gt; |  |
+|  change | { scheme?: string; authority?: string \| null; path?: string \| null; query?: string \| null; fragment?: string \| null; } |  |
 
 <b>Returns:</b>
 

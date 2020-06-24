@@ -4,17 +4,20 @@
 
 ## Uri.parse() method
 
+Creates a new URI from a string, e.g. `http://www.msft.com/some/path`<!-- -->, `file:///usr/home`<!-- -->, or `scheme:with/path`<!-- -->.
+
 <b>Signature:</b>
 
 ```typescript
-static parse(...args: Parameters<typeof URI["parse"]>): Uri;
+static parse(value: string, _strict?: boolean): Uri;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  args | Parameters&lt;typeof URI\["parse"\]&gt; |  |
+|  value | string | A string which represents an URI (see <code>URI#toString</code>). |
+|  \_strict | boolean |  |
 
 <b>Returns:</b>
 

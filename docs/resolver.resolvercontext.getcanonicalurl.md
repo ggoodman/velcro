@@ -7,11 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-getCanonicalUrl(uri: Uri): (ResolverStrategy.CanonicalizeResult & {
-        visited: ResolverContext.Visit[];
-    }) | Thenable<ResolverStrategy.CanonicalizeResult & {
-        visited: ResolverContext.Visit[];
-    }>;
+getCanonicalUrl(uri: Uri): StrategyResult<ResolverStrategy.CanonicalizeResult>;
 ```
 
 ## Parameters
@@ -22,5 +18,5 @@ getCanonicalUrl(uri: Uri): (ResolverStrategy.CanonicalizeResult & {
 
 <b>Returns:</b>
 
-(ResolverStrategy.CanonicalizeResult &amp; { visited: ResolverContext.Visit\[\]; }) \| Thenable&lt;ResolverStrategy.CanonicalizeResult &amp; { visited: ResolverContext.Visit\[\]; }&gt;
+StrategyResult&lt;ResolverStrategy.CanonicalizeResult&gt;
 

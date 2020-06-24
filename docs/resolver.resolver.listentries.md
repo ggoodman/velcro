@@ -7,11 +7,11 @@
 <b>Signature:</b>
 
 ```typescript
-listEntries(uri: Uri): (ResolverStrategy.ListEntriesResult & {
+listEntries(uri: Uri): Promise<ResolverStrategy.ListEntriesResult & {
         visited: ResolverContext.Visit[];
-    }) | import("@velcro/common").Thenable<ResolverStrategy.ListEntriesResult & {
+    }> | (ResolverStrategy.ListEntriesResult & {
         visited: ResolverContext.Visit[];
-    }>;
+    });
 ```
 
 ## Parameters
@@ -22,5 +22,5 @@ listEntries(uri: Uri): (ResolverStrategy.ListEntriesResult & {
 
 <b>Returns:</b>
 
-(ResolverStrategy.ListEntriesResult &amp; { visited: ResolverContext.Visit\[\]; }) \| import("@velcro/common").Thenable&lt;ResolverStrategy.ListEntriesResult &amp; { visited: ResolverContext.Visit\[\]; }&gt;
+Promise&lt;ResolverStrategy.ListEntriesResult &amp; { visited: ResolverContext.Visit\[\]; }&gt; \| (ResolverStrategy.ListEntriesResult &amp; { visited: ResolverContext.Visit\[\]; })
 

@@ -7,11 +7,30 @@
 <b>Signature:</b>
 
 ```typescript
-resolveBareModuleFrom(spec: string, fromUri: Uri): import("@velcro/common").Thenable<({
+resolveBareModuleFrom(spec: string, fromUri: Uri): Promise<({
         found: false;
         uri: null;
         parentPackageJson?: {
-            packageJson: import("@velcro/common").PackageJson;
+            packageJson: {
+                name: string;
+                version: string;
+                browser?: string | {
+                    [key: string]: string | false;
+                } | undefined;
+                main?: string | undefined;
+                module?: string | undefined;
+                "jsnext:main"?: string | undefined;
+                dependencies?: {
+                    [key: string]: string;
+                } | undefined;
+                devDependencies?: {
+                    [key: string]: string;
+                } | undefined;
+                peerDependencies?: {
+                    [key: string]: string;
+                } | undefined;
+                unpkg?: string | undefined;
+            };
             uri: Uri;
         } | undefined;
     } & {
@@ -20,7 +39,26 @@ resolveBareModuleFrom(spec: string, fromUri: Uri): import("@velcro/common").Then
         found: true;
         uri: null;
         parentPackageJson?: {
-            packageJson: import("@velcro/common").PackageJson;
+            packageJson: {
+                name: string;
+                version: string;
+                browser?: string | {
+                    [key: string]: string | false;
+                } | undefined;
+                main?: string | undefined;
+                module?: string | undefined;
+                "jsnext:main"?: string | undefined;
+                dependencies?: {
+                    [key: string]: string;
+                } | undefined;
+                devDependencies?: {
+                    [key: string]: string;
+                } | undefined;
+                peerDependencies?: {
+                    [key: string]: string;
+                } | undefined;
+                unpkg?: string | undefined;
+            };
             uri: Uri;
         } | undefined;
         rootUri: Uri;
@@ -30,13 +68,118 @@ resolveBareModuleFrom(spec: string, fromUri: Uri): import("@velcro/common").Then
         found: true;
         uri: Uri;
         parentPackageJson?: {
-            packageJson: import("@velcro/common").PackageJson;
+            packageJson: {
+                name: string;
+                version: string;
+                browser?: string | {
+                    [key: string]: string | false;
+                } | undefined;
+                main?: string | undefined;
+                module?: string | undefined;
+                "jsnext:main"?: string | undefined;
+                dependencies?: {
+                    [key: string]: string;
+                } | undefined;
+                devDependencies?: {
+                    [key: string]: string;
+                } | undefined;
+                peerDependencies?: {
+                    [key: string]: string;
+                } | undefined;
+                unpkg?: string | undefined;
+            };
             uri: Uri;
         } | undefined;
         rootUri: Uri;
     } & {
         visited: ResolverContext.Visit[];
-    })>;
+    })> | ({
+        found: false;
+        uri: null;
+        parentPackageJson?: {
+            packageJson: {
+                name: string;
+                version: string;
+                browser?: string | {
+                    [key: string]: string | false;
+                } | undefined;
+                main?: string | undefined;
+                module?: string | undefined;
+                "jsnext:main"?: string | undefined;
+                dependencies?: {
+                    [key: string]: string;
+                } | undefined;
+                devDependencies?: {
+                    [key: string]: string;
+                } | undefined;
+                peerDependencies?: {
+                    [key: string]: string;
+                } | undefined;
+                unpkg?: string | undefined;
+            };
+            uri: Uri;
+        } | undefined;
+    } & {
+        visited: ResolverContext.Visit[];
+    }) | ({
+        found: true;
+        uri: null;
+        parentPackageJson?: {
+            packageJson: {
+                name: string;
+                version: string;
+                browser?: string | {
+                    [key: string]: string | false;
+                } | undefined;
+                main?: string | undefined;
+                module?: string | undefined;
+                "jsnext:main"?: string | undefined;
+                dependencies?: {
+                    [key: string]: string;
+                } | undefined;
+                devDependencies?: {
+                    [key: string]: string;
+                } | undefined;
+                peerDependencies?: {
+                    [key: string]: string;
+                } | undefined;
+                unpkg?: string | undefined;
+            };
+            uri: Uri;
+        } | undefined;
+        rootUri: Uri;
+    } & {
+        visited: ResolverContext.Visit[];
+    }) | ({
+        found: true;
+        uri: Uri;
+        parentPackageJson?: {
+            packageJson: {
+                name: string;
+                version: string;
+                browser?: string | {
+                    [key: string]: string | false;
+                } | undefined;
+                main?: string | undefined;
+                module?: string | undefined;
+                "jsnext:main"?: string | undefined;
+                dependencies?: {
+                    [key: string]: string;
+                } | undefined;
+                devDependencies?: {
+                    [key: string]: string;
+                } | undefined;
+                peerDependencies?: {
+                    [key: string]: string;
+                } | undefined;
+                unpkg?: string | undefined;
+            };
+            uri: Uri;
+        } | undefined;
+        rootUri: Uri;
+    } & {
+        visited: ResolverContext.Visit[];
+    });
 ```
 
 ## Parameters
@@ -48,5 +191,5 @@ resolveBareModuleFrom(spec: string, fromUri: Uri): import("@velcro/common").Then
 
 <b>Returns:</b>
 
-import("@velcro/common").Thenable&lt;({ found: false; uri: null; parentPackageJson?: { packageJson: import("@velcro/common").PackageJson; uri: Uri; } \| undefined; } &amp; { visited: ResolverContext.Visit\[\]; }) \| ({ found: true; uri: null; parentPackageJson?: { packageJson: import("@velcro/common").PackageJson; uri: Uri; } \| undefined; rootUri: Uri; } &amp; { visited: ResolverContext.Visit\[\]; }) \| ({ found: true; uri: Uri; parentPackageJson?: { packageJson: import("@velcro/common").PackageJson; uri: Uri; } \| undefined; rootUri: Uri; } &amp; { visited: ResolverContext.Visit\[\]; })&gt;
+Promise&lt;({ found: false; uri: null; parentPackageJson?: { packageJson: { name: string; version: string; browser?: string \| { \[key: string\]: string \| false; } \| undefined; main?: string \| undefined; module?: string \| undefined; "jsnext:main"?: string \| undefined; dependencies?: { \[key: string\]: string; } \| undefined; devDependencies?: { \[key: string\]: string; } \| undefined; peerDependencies?: { \[key: string\]: string; } \| undefined; unpkg?: string \| undefined; }; uri: Uri; } \| undefined; } &amp; { visited: ResolverContext.Visit\[\]; }) \| ({ found: true; uri: null; parentPackageJson?: { packageJson: { name: string; version: string; browser?: string \| { \[key: string\]: string \| false; } \| undefined; main?: string \| undefined; module?: string \| undefined; "jsnext:main"?: string \| undefined; dependencies?: { \[key: string\]: string; } \| undefined; devDependencies?: { \[key: string\]: string; } \| undefined; peerDependencies?: { \[key: string\]: string; } \| undefined; unpkg?: string \| undefined; }; uri: Uri; } \| undefined; rootUri: Uri; } &amp; { visited: ResolverContext.Visit\[\]; }) \| ({ found: true; uri: Uri; parentPackageJson?: { packageJson: { name: string; version: string; browser?: string \| { \[key: string\]: string \| false; } \| undefined; main?: string \| undefined; module?: string \| undefined; "jsnext:main"?: string \| undefined; dependencies?: { \[key: string\]: string; } \| undefined; devDependencies?: { \[key: string\]: string; } \| undefined; peerDependencies?: { \[key: string\]: string; } \| undefined; unpkg?: string \| undefined; }; uri: Uri; } \| undefined; rootUri: Uri; } &amp; { visited: ResolverContext.Visit\[\]; })&gt; \| ({ found: false; uri: null; parentPackageJson?: { packageJson: { name: string; version: string; browser?: string \| { \[key: string\]: string \| false; } \| undefined; main?: string \| undefined; module?: string \| undefined; "jsnext:main"?: string \| undefined; dependencies?: { \[key: string\]: string; } \| undefined; devDependencies?: { \[key: string\]: string; } \| undefined; peerDependencies?: { \[key: string\]: string; } \| undefined; unpkg?: string \| undefined; }; uri: Uri; } \| undefined; } &amp; { visited: ResolverContext.Visit\[\]; }) \| ({ found: true; uri: null; parentPackageJson?: { packageJson: { name: string; version: string; browser?: string \| { \[key: string\]: string \| false; } \| undefined; main?: string \| undefined; module?: string \| undefined; "jsnext:main"?: string \| undefined; dependencies?: { \[key: string\]: string; } \| undefined; devDependencies?: { \[key: string\]: string; } \| undefined; peerDependencies?: { \[key: string\]: string; } \| undefined; unpkg?: string \| undefined; }; uri: Uri; } \| undefined; rootUri: Uri; } &amp; { visited: ResolverContext.Visit\[\]; }) \| ({ found: true; uri: Uri; parentPackageJson?: { packageJson: { name: string; version: string; browser?: string \| { \[key: string\]: string \| false; } \| undefined; main?: string \| undefined; module?: string \| undefined; "jsnext:main"?: string \| undefined; dependencies?: { \[key: string\]: string; } \| undefined; devDependencies?: { \[key: string\]: string; } \| undefined; peerDependencies?: { \[key: string\]: string; } \| undefined; unpkg?: string \| undefined; }; uri: Uri; } \| undefined; rootUri: Uri; } &amp; { visited: ResolverContext.Visit\[\]; })
 

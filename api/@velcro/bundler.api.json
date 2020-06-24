@@ -1,7 +1,7 @@
 {
   "metadata": {
     "toolPackage": "@microsoft/api-extractor",
-    "toolVersion": "7.8.1",
+    "toolVersion": "7.8.12",
     "schemaVersion": 1003,
     "oldestForwardsCompatibleVersion": 1001
   },
@@ -847,6 +847,23 @@
                 },
                 {
                   "kind": "Content",
+                  "text": ", options?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        token?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "CancellationToken",
+                  "canonicalReference": "ts-primitives!~CancellationToken:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n    }"
+                },
+                {
+                  "kind": "Content",
                   "text": "): "
                 },
                 {
@@ -874,8 +891,8 @@
               ],
               "isStatic": false,
               "returnTypeTokenRange": {
-                "startIndex": 4,
-                "endIndex": 8
+                "startIndex": 8,
+                "endIndex": 12
               },
               "releaseTag": "Public",
               "overloadIndex": 1,
@@ -885,6 +902,13 @@
                   "parameterTypeTokenRange": {
                     "startIndex": 1,
                     "endIndex": 3
+                  }
+                },
+                {
+                  "parameterName": "options",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 4,
+                    "endIndex": 7
                   }
                 }
               ],
@@ -977,10 +1001,6 @@
                   "text": "get onError(): "
                 },
                 {
-                  "kind": "Content",
-                  "text": "import(\"ts-primitives\")."
-                },
-                {
                   "kind": "Reference",
                   "text": "Event",
                   "canonicalReference": "ts-primitives!~Event:interface"
@@ -1016,7 +1036,7 @@
               "name": "onError",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
-                "endIndex": 8
+                "endIndex": 7
               },
               "isStatic": false
             }
@@ -2668,36 +2688,6 @@
           "implementsTokenRanges": []
         },
         {
-          "kind": "Variable",
-          "canonicalReference": "@velcro/bundler!Velcro:var",
-          "docComment": "",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "Velcro: "
-            },
-            {
-              "kind": "Content",
-              "text": "{\n    Bundler: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "exportsNS",
-              "canonicalReference": "@velcro/bundler!~exportsNS:namespace"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n}"
-            }
-          ],
-          "releaseTag": "Public",
-          "name": "Velcro",
-          "variableTypeTokenRange": {
-            "startIndex": 1,
-            "endIndex": 4
-          }
-        },
-        {
           "kind": "Interface",
           "canonicalReference": "@velcro/bundler!VelcroRuntime:interface",
           "docComment": "",
@@ -2997,7 +2987,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.42.0\""
+              "text": "version = \"0.43.0\""
             }
           ],
           "releaseTag": "Public",

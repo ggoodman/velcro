@@ -9,6 +9,7 @@
 ```typescript
 interface ExecuteOptions extends BuildOptions 
 ```
+<b>Extends:</b> BuildOptions
 
 ## Properties
 

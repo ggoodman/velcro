@@ -7,11 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-getResolveRoot(uri: Uri): (ResolverStrategy.ResolveRootResult & {
-        visited: ResolverContext.Visit[];
-    }) | Thenable<ResolverStrategy.ResolveRootResult & {
-        visited: ResolverContext.Visit[];
-    }>;
+getResolveRoot(uri: Uri): StrategyResult<ResolverStrategy.ResolveRootResult>;
 ```
 
 ## Parameters
@@ -22,5 +18,5 @@ getResolveRoot(uri: Uri): (ResolverStrategy.ResolveRootResult & {
 
 <b>Returns:</b>
 
-(ResolverStrategy.ResolveRootResult &amp; { visited: ResolverContext.Visit\[\]; }) \| Thenable&lt;ResolverStrategy.ResolveRootResult &amp; { visited: ResolverContext.Visit\[\]; }&gt;
+StrategyResult&lt;ResolverStrategy.ResolveRootResult&gt;
 

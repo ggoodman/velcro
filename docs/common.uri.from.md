@@ -7,14 +7,20 @@
 <b>Signature:</b>
 
 ```typescript
-static from(...args: Parameters<typeof URI["from"]>): Uri;
+static from(components: {
+        scheme: string;
+        authority?: string;
+        path?: string;
+        query?: string;
+        fragment?: string;
+    }): Uri;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  args | Parameters&lt;typeof URI\["from"\]&gt; |  |
+|  components | { scheme: string; authority?: string; path?: string; query?: string; fragment?: string; } |  |
 
 <b>Returns:</b>
 

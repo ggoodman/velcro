@@ -32,6 +32,5 @@
 
 |  Variable | Description |
 |  --- | --- |
-|  [Velcro](./resolver.velcro.md) |  |
 |  [version](./resolver.version.md) |  |
 

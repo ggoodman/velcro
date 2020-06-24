@@ -1,7 +1,7 @@
 {
   "metadata": {
     "toolPackage": "@microsoft/api-extractor",
-    "toolVersion": "7.8.1",
+    "toolVersion": "7.8.12",
     "schemaVersion": 1003,
     "oldestForwardsCompatibleVersion": 1001
   },
@@ -823,42 +823,12 @@
         },
         {
           "kind": "Variable",
-          "canonicalReference": "@velcro/strategy-cdn!Velcro:var",
-          "docComment": "",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "Velcro: "
-            },
-            {
-              "kind": "Content",
-              "text": "{\n    StrategyCdn: typeof "
-            },
-            {
-              "kind": "Reference",
-              "text": "exportsNS",
-              "canonicalReference": "@velcro/strategy-cdn!~exportsNS:namespace"
-            },
-            {
-              "kind": "Content",
-              "text": ";\n}"
-            }
-          ],
-          "releaseTag": "Public",
-          "name": "Velcro",
-          "variableTypeTokenRange": {
-            "startIndex": 1,
-            "endIndex": 4
-          }
-        },
-        {
-          "kind": "Variable",
           "canonicalReference": "@velcro/strategy-cdn!version:var",
           "docComment": "",
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.42.0\""
+              "text": "version = \"0.43.0\""
             }
           ],
           "releaseTag": "Public",

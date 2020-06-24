@@ -9,6 +9,7 @@
 ```typescript
 declare class EntryNotFoundError extends BaseError 
 ```
+<b>Extends:</b> BaseError
 
 ## Constructors
 

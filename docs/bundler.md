@@ -37,7 +37,6 @@
 
 |  Variable | Description |
 |  --- | --- |
-|  [Velcro](./bundler.velcro.md) |  |
 |  [version](./bundler.version.md) |  |
 
 ## Type Aliases

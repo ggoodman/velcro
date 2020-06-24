@@ -7,7 +7,9 @@
 <b>Signature:</b>
 
 ```typescript
-buildGraph(entrypoints: Uri[]): Promise<Graph>;
+buildGraph(entrypoints: Uri[], options?: {
+        token?: CancellationToken;
+    }): Promise<Graph>;
 ```
 
 ## Parameters
@@ -15,6 +17,7 @@ buildGraph(entrypoints: Uri[]): Promise<Graph>;
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  entrypoints | Uri\[\] |  |
+|  options | { token?: CancellationToken; } |  |
 
 <b>Returns:</b>
 

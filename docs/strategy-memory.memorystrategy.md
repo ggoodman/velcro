@@ -9,6 +9,7 @@
 ```typescript
 declare class MemoryStrategy extends AbstractResolverStrategyWithRoot 
 ```
+<b>Extends:</b> AbstractResolverStrategyWithRoot
 
 ## Constructors
 

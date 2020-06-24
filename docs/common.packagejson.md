@@ -9,6 +9,7 @@
 ```typescript
 interface PackageJson extends PartialPackageJson 
 ```
+<b>Extends:</b> PartialPackageJson
 
 ## Properties
 

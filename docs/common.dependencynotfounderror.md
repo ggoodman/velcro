@@ -9,6 +9,7 @@
 ```typescript
 declare class DependencyNotFoundError extends EntryNotFoundError 
 ```
+<b>Extends:</b> EntryNotFoundError
 
 ## Constructors
 

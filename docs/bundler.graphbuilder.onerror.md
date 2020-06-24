@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-get onError(): import("ts-primitives").Event<{
+get onError(): Event<{
         ctx: ResolverContext;
         err: Error;
     }>;

@@ -18,7 +18,18 @@
 |  [MapSet](./common.mapset.md) |  |
 |  [NotResolvableError](./common.notresolvableerror.md) |  |
 |  [ParseError](./common.parseerror.md) |  |
-|  [Uri](./common.uri.md) |  |
+|  [Uri](./common.uri.md) | Uniform Resource Identifier (URI) http://tools.ietf.org/html/rfc3986. This class is a simple parser which creates the basic component parts (http://tools.ietf.org/html/rfc3986\#section-3) with minimal validation and encoding.
+```txt
+      foo://example.com:8042/over/there?name=ferret#nose
+      \_/   \______________/\_________/ \_________/ \__/
+       |           |            |            |        |
+    scheme     authority       path        query   fragment
+       |   _____________________|__
+      / \ /                        \
+      urn:example:animal:ferret:nose
+
+```
+ |
 
 ## Functions
 
@@ -32,6 +43,7 @@
 |  [isValidPartialPackageJson(json)](./common.isvalidpartialpackagejson.md) |  |
 |  [parseBufferAsPackageJson(decoder, content, spec)](./common.parsebufferaspackagejson.md) |  |
 |  [parseBufferAsPartialPackageJson(decoder, content, spec)](./common.parsebufferaspartialpackagejson.md) |  |
+|  [uriToFsPath(uri, keepDriveLetterCasing)](./common.uritofspath.md) |  |
 
 ## Interfaces
 
@@ -40,6 +52,7 @@
 |  [PackageJson](./common.packagejson.md) |  |
 |  [PartialPackageJson](./common.partialpackagejson.md) |  |
 |  [Thenable](./common.thenable.md) |  |
+|  [UriComponents](./common.uricomponents.md) |  |
 
 ## Namespaces
 
@@ -51,7 +64,6 @@
 
 |  Variable | Description |
 |  --- | --- |
-|  [Velcro](./common.velcro.md) |  |
 |  [version](./common.version.md) |  |
 
 ## Type Aliases

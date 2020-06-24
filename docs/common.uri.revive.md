@@ -7,14 +7,14 @@
 <b>Signature:</b>
 
 ```typescript
-static revive(...args: Parameters<typeof URI["revive"]>): Uri;
+static revive(data: UriComponents | Uri): Uri;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  args | Parameters&lt;typeof URI\["revive"\]&gt; |  |
+|  data | UriComponents \| Uri |  |
 
 <b>Returns:</b>
 

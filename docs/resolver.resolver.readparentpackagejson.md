@@ -7,9 +7,28 @@
 <b>Signature:</b>
 
 ```typescript
-readParentPackageJson(uri: Uri): import("@velcro/common").Thenable<({
+readParentPackageJson(uri: Uri): Promise<({
         found: true;
-        packageJson: import("@velcro/common").PackageJson;
+        packageJson: {
+            name: string;
+            version: string;
+            browser?: string | {
+                [key: string]: string | false;
+            } | undefined;
+            main?: string | undefined;
+            module?: string | undefined;
+            "jsnext:main"?: string | undefined;
+            dependencies?: {
+                [key: string]: string;
+            } | undefined;
+            devDependencies?: {
+                [key: string]: string;
+            } | undefined;
+            peerDependencies?: {
+                [key: string]: string;
+            } | undefined;
+            unpkg?: string | undefined;
+        };
         uri: Uri;
         visitedDirs: Uri[];
     } & {
@@ -20,7 +39,39 @@ readParentPackageJson(uri: Uri): import("@velcro/common").Thenable<({
         uri: null;
     } & {
         visited: ResolverContext.Visit[];
-    })>;
+    })> | ({
+        found: true;
+        packageJson: {
+            name: string;
+            version: string;
+            browser?: string | {
+                [key: string]: string | false;
+            } | undefined;
+            main?: string | undefined;
+            module?: string | undefined;
+            "jsnext:main"?: string | undefined;
+            dependencies?: {
+                [key: string]: string;
+            } | undefined;
+            devDependencies?: {
+                [key: string]: string;
+            } | undefined;
+            peerDependencies?: {
+                [key: string]: string;
+            } | undefined;
+            unpkg?: string | undefined;
+        };
+        uri: Uri;
+        visitedDirs: Uri[];
+    } & {
+        visited: ResolverContext.Visit[];
+    }) | ({
+        found: false;
+        packageJson: null;
+        uri: null;
+    } & {
+        visited: ResolverContext.Visit[];
+    });
 ```
 
 ## Parameters
@@ -31,5 +82,5 @@ readParentPackageJson(uri: Uri): import("@velcro/common").Thenable<({
 
 <b>Returns:</b>
 
-import("@velcro/common").Thenable&lt;({ found: true; packageJson: import("@velcro/common").PackageJson; uri: Uri; visitedDirs: Uri\[\]; } &amp; { visited: ResolverContext.Visit\[\]; }) \| ({ found: false; packageJson: null; uri: null; } &amp; { visited: ResolverContext.Visit\[\]; })&gt;
+Promise&lt;({ found: true; packageJson: { name: string; version: string; browser?: string \| { \[key: string\]: string \| false; } \| undefined; main?: string \| undefined; module?: string \| undefined; "jsnext:main"?: string \| undefined; dependencies?: { \[key: string\]: string; } \| undefined; devDependencies?: { \[key: string\]: string; } \| undefined; peerDependencies?: { \[key: string\]: string; } \| undefined; unpkg?: string \| undefined; }; uri: Uri; visitedDirs: Uri\[\]; } &amp; { visited: ResolverContext.Visit\[\]; }) \| ({ found: false; packageJson: null; uri: null; } &amp; { visited: ResolverContext.Visit\[\]; })&gt; \| ({ found: true; packageJson: { name: string; version: string; browser?: string \| { \[key: string\]: string \| false; } \| undefined; main?: string \| undefined; module?: string \| undefined; "jsnext:main"?: string \| undefined; dependencies?: { \[key: string\]: string; } \| undefined; devDependencies?: { \[key: string\]: string; } \| undefined; peerDependencies?: { \[key: string\]: string; } \| undefined; unpkg?: string \| undefined; }; uri: Uri; visitedDirs: Uri\[\]; } &amp; { visited: ResolverContext.Visit\[\]; }) \| ({ found: false; packageJson: null; uri: null; } &amp; { visited: ResolverContext.Visit\[\]; })
 

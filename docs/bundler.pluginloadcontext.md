@@ -9,3 +9,5 @@
 ```typescript
 interface PluginLoadContext extends PluginContext 
 ```
+<b>Extends:</b> PluginContext
+

@@ -20,6 +20,5 @@
 
 |  Variable | Description |
 |  --- | --- |
-|  [Velcro](./strategy-cdn.velcro.md) |  |
 |  [version](./strategy-cdn.version.md) |  |
 

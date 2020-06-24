@@ -9,6 +9,9 @@
 ```typescript
 declare abstract class AbstractResolverStrategyWithRoot extends AbstractResolverStrategy implements ResolverStrategyWithRoot 
 ```
+<b>Extends:</b> AbstractResolverStrategy
+
+<b>Implements:</b> ResolverStrategyWithRoot
 
 ## Constructors
 

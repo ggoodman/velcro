@@ -9,6 +9,9 @@
 ```typescript
 declare class CompoundStrategy extends AbstractResolverStrategy implements ResolverStrategy 
 ```
+<b>Extends:</b> AbstractResolverStrategy
+
+<b>Implements:</b> ResolverStrategy
 
 ## Constructors
 

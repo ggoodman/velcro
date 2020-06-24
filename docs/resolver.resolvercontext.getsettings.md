@@ -7,11 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-getSettings(uri: Uri): (ResolverStrategy.SettingsResult & {
-        visited: ResolverContext.Visit[];
-    }) | Thenable<ResolverStrategy.SettingsResult & {
-        visited: ResolverContext.Visit[];
-    }>;
+getSettings(uri: Uri): StrategyResult<ResolverStrategy.SettingsResult>;
 ```
 
 ## Parameters
@@ -22,5 +18,5 @@ getSettings(uri: Uri): (ResolverStrategy.SettingsResult & {
 
 <b>Returns:</b>
 
-(ResolverStrategy.SettingsResult &amp; { visited: ResolverContext.Visit\[\]; }) \| Thenable&lt;ResolverStrategy.SettingsResult &amp; { visited: ResolverContext.Visit\[\]; }&gt;
+StrategyResult&lt;ResolverStrategy.SettingsResult&gt;
 

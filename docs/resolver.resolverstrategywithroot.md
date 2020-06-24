@@ -9,6 +9,7 @@
 ```typescript
 interface ResolverStrategyWithRoot extends ResolverStrategy 
 ```
+<b>Extends:</b> ResolverStrategy
 
 ## Properties
 

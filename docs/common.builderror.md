@@ -9,6 +9,7 @@
 ```typescript
 declare class BuildError extends BaseError 
 ```
+<b>Extends:</b> BaseError
 
 ## Constructors
 

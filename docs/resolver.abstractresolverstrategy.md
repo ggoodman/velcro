@@ -9,6 +9,7 @@
 ```typescript
 declare abstract class AbstractResolverStrategy implements ResolverStrategy 
 ```
+<b>Implements:</b> ResolverStrategy
 
 ## Methods
 
