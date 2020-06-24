@@ -29,7 +29,7 @@
     "build:api": "api-extractor run --local -c ./api-extractor.json",
     "build:readme": "cat README.md | sed \"s~tree/.*/docs~tree/v$(jq -r .version package.json)/docs~g\" > README.md",
     "preversion": "npm run build",
-    "version": "npm run build:api && npm run build:readme"
+    "version": "npm run build:api || : && npm run build:readme"
   },
   "devDependencies": {
     "@microsoft/api-documenter": "^7.8.1",

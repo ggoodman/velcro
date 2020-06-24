@@ -35,7 +35,7 @@
     "build:api": "api-extractor run --local -c ./api-extractor.json",
     "build:readme": "cat README.md | sed \"s~nostalgie@.*/dist~nostalgie@$(jq -r .version package.json)/dist~g\" > README.md",
     "preversion": "npm run build",
-    "version": "npm run build:api && npm run build:readme"
+    "version": "npm run build:api || : && npm run build:readme"
   },
   "prettier": {
     "printWidth": 100,
