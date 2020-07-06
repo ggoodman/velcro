@@ -7,9 +7,16 @@
 <b>Signature:</b>
 
 ```typescript
-interface PluginTransformContext extends PluginContext 
+interface PluginTransformContext 
 ```
-<b>Extends:</b> PluginContext
+
+## Properties
+
+|  Property | Type | Description |
+|  --- | --- | --- |
+|  [nodeEnv](./bundler.plugintransformcontext.nodeenv.md) | string |  |
+|  [resolver](./bundler.plugintransformcontext.resolver.md) | Resolver |  |
+|  [token](./bundler.plugintransformcontext.token.md) | CancellationToken |  |
 
 ## Methods
 

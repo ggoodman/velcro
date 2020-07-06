@@ -1,7 +1,7 @@
 {
   "metadata": {
     "toolPackage": "@microsoft/api-extractor",
-    "toolVersion": "7.8.12",
+    "toolVersion": "7.9.1",
     "schemaVersion": 1003,
     "oldestForwardsCompatibleVersion": 1001
   },
@@ -375,17 +375,8 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "ArrayBuffer",
-                  "canonicalReference": "!ArrayBuffer:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": " | "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "SharedArrayBuffer",
-                  "canonicalReference": "!SharedArrayBuffer:interface"
+                  "text": "ArrayBufferLike",
+                  "canonicalReference": "!ArrayBufferLike:type"
                 },
                 {
                   "kind": "Content",
@@ -399,7 +390,7 @@
               "isStatic": false,
               "returnTypeTokenRange": {
                 "startIndex": 5,
-                "endIndex": 10
+                "endIndex": 8
               },
               "releaseTag": "Public",
               "overloadIndex": 1,
@@ -420,6 +411,50 @@
                 }
               ],
               "name": "readFileContent"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/strategy-memory!MemoryStrategy#removeFile:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "removeFile(pathname: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "pathname",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "removeFile"
             },
             {
               "kind": "Method",
@@ -480,7 +515,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.43.0\""
+              "text": "version = \"0.44.0\""
             }
           ],
           "releaseTag": "Public",

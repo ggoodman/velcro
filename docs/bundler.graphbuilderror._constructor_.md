@@ -9,17 +9,12 @@ Constructs a new instance of the `GraphBuildError` class
 <b>Signature:</b>
 
 ```typescript
-constructor(errors: {
-        err: Error;
-        ctx: {
-            path: readonly string[];
-        };
-    }[]);
+constructor(errors: Error[]);
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  errors | { err: Error; ctx: { path: readonly string\[\]; }; }\[\] |  |
+|  errors | Error\[\] |  |
 

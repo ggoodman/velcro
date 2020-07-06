@@ -7,7 +7,14 @@
 <b>Signature:</b>
 
 ```typescript
-interface PluginLoadContext extends PluginContext 
+interface PluginLoadContext 
 ```
-<b>Extends:</b> PluginContext
+
+## Properties
+
+|  Property | Type | Description |
+|  --- | --- | --- |
+|  [nodeEnv](./bundler.pluginloadcontext.nodeenv.md) | string |  |
+|  [resolver](./bundler.pluginloadcontext.resolver.md) | Resolver |  |
+|  [token](./bundler.pluginloadcontext.token.md) | CancellationToken |  |
 

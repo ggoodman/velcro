@@ -1,7 +1,7 @@
 {
   "metadata": {
     "toolPackage": "@microsoft/api-extractor",
-    "toolVersion": "7.8.12",
+    "toolVersion": "7.9.1",
     "schemaVersion": 1003,
     "oldestForwardsCompatibleVersion": 1001
   },
@@ -15,6 +15,602 @@
       "canonicalReference": "@velcro/bundler!",
       "name": "",
       "members": [
+        {
+          "kind": "Class",
+          "canonicalReference": "@velcro/bundler!Build:class",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "declare class Build "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "Build",
+          "members": [
+            {
+              "kind": "Constructor",
+              "canonicalReference": "@velcro/bundler!Build:constructor(1)",
+              "docComment": "/**\n * Constructs a new instance of the `Build` class\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "constructor(rootUri: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/bundler!Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", options?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        token?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "CancellationToken",
+                  "canonicalReference": "ts-primitives!~CancellationToken:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ");"
+                }
+              ],
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "rootUri",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "parameterName": "options",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 6
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/bundler!Build#addEdge:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "addEdge(edge: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "DependencyEdge",
+                  "canonicalReference": "@velcro/bundler!~DependencyEdge:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "edge",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "addEdge"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/bundler!Build#addSourceModule:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "addSourceModule(sourceModule: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "SourceModule",
+                  "canonicalReference": "@velcro/bundler!~SourceModule:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "sourceModule",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "addSourceModule"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/bundler!Build#cancel:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "cancel(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "cancel"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/bundler!Build#dispose:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "dispose(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "dispose"
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@velcro/bundler!Build#done:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly done: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Graph",
+                  "canonicalReference": "@velcro/bundler!~Graph:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "done",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 5
+              },
+              "isStatic": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@velcro/bundler!Build#errors:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly errors: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Error",
+                  "canonicalReference": "!Error:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "errors",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "isStatic": false
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/bundler!Build#hasSourceModule:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "hasSourceModule(href: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "href",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "hasSourceModule"
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@velcro/bundler!Build#onCompleted:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "get onCompleted(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Event",
+                  "canonicalReference": "ts-primitives!~Event:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<{\n        graph: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Graph",
+                  "canonicalReference": "@velcro/bundler!~Graph:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n    }>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "onCompleted",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 5
+              },
+              "isStatic": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@velcro/bundler!Build#onError:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "get onError(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Event",
+                  "canonicalReference": "ts-primitives!~Event:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<{\n        error: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Error",
+                  "canonicalReference": "!Error:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";\n    }>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "onError",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 5
+              },
+              "isStatic": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@velcro/bundler!Build#onProgress:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "get onProgress(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Event",
+                  "canonicalReference": "ts-primitives!~Event:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<{\n        progress: {\n            completed: number;\n            pending: number;\n        };\n    }>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "onProgress",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "isStatic": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@velcro/bundler!Build#rootUri:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly rootUri: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/bundler!Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "rootUri",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/bundler!Build#runAsync:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "runAsync(key: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", fn: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "() => "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Promise",
+                  "canonicalReference": "!Promise:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<unknown>"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 7,
+                "endIndex": 8
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "key",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "parameterName": "fn",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 6
+                  }
+                }
+              ],
+              "name": "runAsync"
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@velcro/bundler!Build#seen:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly seen: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Set",
+                  "canonicalReference": "!Set:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<unknown>"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "seen",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              },
+              "isStatic": false
+            },
+            {
+              "kind": "Property",
+              "canonicalReference": "@velcro/bundler!Build#token:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "get token(): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "CancellationToken",
+                  "canonicalReference": "ts-primitives!~CancellationToken:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "token",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false
+            }
+          ],
+          "implementsTokenRanges": []
+        },
         {
           "kind": "Class",
           "canonicalReference": "@velcro/bundler!Chunk:class",
@@ -829,12 +1425,16 @@
             },
             {
               "kind": "Method",
-              "canonicalReference": "@velcro/bundler!GraphBuilder#buildGraph:member(1)",
+              "canonicalReference": "@velcro/bundler!GraphBuilder#build:member(1)",
               "docComment": "",
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "buildGraph(entrypoints: "
+                  "text": "build(entrypoints: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "(string | "
                 },
                 {
                   "kind": "Reference",
@@ -843,7 +1443,7 @@
                 },
                 {
                   "kind": "Content",
-                  "text": "[]"
+                  "text": ")[]"
                 },
                 {
                   "kind": "Content",
@@ -851,7 +1451,7 @@
                 },
                 {
                   "kind": "Content",
-                  "text": "{\n        token?: "
+                  "text": "{\n        incremental?: boolean;\n        token?: "
                 },
                 {
                   "kind": "Reference",
@@ -868,21 +1468,8 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "Promise",
-                  "canonicalReference": "!Promise:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<"
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Graph",
-                  "canonicalReference": "@velcro/bundler!~Graph:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": ">"
+                  "text": "Build",
+                  "canonicalReference": "@velcro/bundler!~Build:class"
                 },
                 {
                   "kind": "Content",
@@ -891,8 +1478,8 @@
               ],
               "isStatic": false,
               "returnTypeTokenRange": {
-                "startIndex": 8,
-                "endIndex": 12
+                "startIndex": 9,
+                "endIndex": 10
               },
               "releaseTag": "Public",
               "overloadIndex": 1,
@@ -901,46 +1488,18 @@
                   "parameterName": "entrypoints",
                   "parameterTypeTokenRange": {
                     "startIndex": 1,
-                    "endIndex": 3
+                    "endIndex": 4
                   }
                 },
                 {
                   "parameterName": "options",
                   "parameterTypeTokenRange": {
-                    "startIndex": 4,
-                    "endIndex": 7
+                    "startIndex": 5,
+                    "endIndex": 8
                   }
                 }
               ],
-              "name": "buildGraph"
-            },
-            {
-              "kind": "Method",
-              "canonicalReference": "@velcro/bundler!GraphBuilder#dispose:member(1)",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "dispose(): "
-                },
-                {
-                  "kind": "Content",
-                  "text": "void"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "isStatic": false,
-              "returnTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              },
-              "releaseTag": "Public",
-              "overloadIndex": 1,
-              "parameters": [],
-              "name": "dispose"
+              "name": "build"
             },
             {
               "kind": "Method",
@@ -990,55 +1549,6 @@
                 }
               ],
               "name": "invalidate"
-            },
-            {
-              "kind": "Property",
-              "canonicalReference": "@velcro/bundler!GraphBuilder#onError:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "get onError(): "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Event",
-                  "canonicalReference": "ts-primitives!~Event:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": "<{\n        ctx: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "ResolverContext",
-                  "canonicalReference": "@velcro/bundler!ResolverContext:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";\n        err: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Error",
-                  "canonicalReference": "!Error:interface"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";\n    }>"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "releaseTag": "Public",
-              "name": "onError",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 7
-              },
-              "isStatic": false
             }
           ],
           "implementsTokenRanges": []
@@ -1213,17 +1723,13 @@
                   "text": "constructor(errors: "
                 },
                 {
-                  "kind": "Content",
-                  "text": "{\n        err: "
-                },
-                {
                   "kind": "Reference",
                   "text": "Error",
                   "canonicalReference": "!Error:interface"
                 },
                 {
                   "kind": "Content",
-                  "text": ";\n        ctx: {\n            path: readonly string[];\n        };\n    }[]"
+                  "text": "[]"
                 },
                 {
                   "kind": "Content",
@@ -1237,7 +1743,7 @@
                   "parameterName": "errors",
                   "parameterTypeTokenRange": {
                     "startIndex": 1,
-                    "endIndex": 4
+                    "endIndex": 3
                   }
                 }
               ]
@@ -1252,17 +1758,13 @@
                   "text": "readonly errors: "
                 },
                 {
-                  "kind": "Content",
-                  "text": "{\n        err: "
-                },
-                {
                   "kind": "Reference",
                   "text": "Error",
                   "canonicalReference": "!Error:interface"
                 },
                 {
                   "kind": "Content",
-                  "text": ";\n        ctx: {\n            path: readonly string[];\n        };\n    }[]"
+                  "text": "[]"
                 },
                 {
                   "kind": "Content",
@@ -1273,7 +1775,7 @@
               "name": "errors",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
-                "endIndex": 4
+                "endIndex": 3
               },
               "isStatic": false
             }
@@ -1658,27 +2160,91 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "interface PluginLoadContext extends "
-            },
-            {
-              "kind": "Reference",
-              "text": "PluginContext",
-              "canonicalReference": "@velcro/bundler!~PluginContext:interface"
-            },
-            {
-              "kind": "Content",
-              "text": " "
+              "text": "interface PluginLoadContext "
             }
           ],
           "releaseTag": "Public",
           "name": "PluginLoadContext",
-          "members": [],
-          "extendsTokenRanges": [
+          "members": [
             {
-              "startIndex": 1,
-              "endIndex": 3
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/bundler!PluginLoadContext#nodeEnv:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "nodeEnv: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "nodeEnv",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/bundler!PluginLoadContext#resolver:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "resolver: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Resolver",
+                  "canonicalReference": "@velcro/bundler!Resolver:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "resolver",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/bundler!PluginLoadContext#token:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "token: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "CancellationToken",
+                  "canonicalReference": "ts-primitives!~CancellationToken:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "token",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
             }
-          ]
+          ],
+          "extendsTokenRanges": []
         },
         {
           "kind": "TypeAlias",
@@ -1721,16 +2287,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "interface PluginTransformContext extends "
-            },
-            {
-              "kind": "Reference",
-              "text": "PluginContext",
-              "canonicalReference": "@velcro/bundler!~PluginContext:interface"
-            },
-            {
-              "kind": "Content",
-              "text": " "
+              "text": "interface PluginTransformContext "
             }
           ],
           "releaseTag": "Public",
@@ -1763,14 +2320,86 @@
               "overloadIndex": 1,
               "parameters": [],
               "name": "createMagicString"
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/bundler!PluginTransformContext#nodeEnv:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "nodeEnv: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "nodeEnv",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/bundler!PluginTransformContext#resolver:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "resolver: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Resolver",
+                  "canonicalReference": "@velcro/bundler!Resolver:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "resolver",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/bundler!PluginTransformContext#token:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "token: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "CancellationToken",
+                  "canonicalReference": "ts-primitives!~CancellationToken:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "token",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
             }
           ],
-          "extendsTokenRanges": [
-            {
-              "startIndex": 1,
-              "endIndex": 3
-            }
-          ]
+          "extendsTokenRanges": []
         },
         {
           "kind": "TypeAlias",
@@ -2987,7 +3616,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.43.0\""
+              "text": "version = \"0.44.0\""
             }
           ],
           "releaseTag": "Public",

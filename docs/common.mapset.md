@@ -21,6 +21,7 @@ declare class MapSet<K, V>
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
 |  [add(key, value)](./common.mapset.add.md) |  |  |
+|  [clear()](./common.mapset.clear.md) |  |  |
 |  [delete(key, value)](./common.mapset.delete.md) |  |  |
 |  [deleteAll(key)](./common.mapset.deleteall.md) |  |  |
 |  [entries()](./common.mapset.entries.md) |  |  |

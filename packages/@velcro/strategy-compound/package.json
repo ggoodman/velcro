@@ -1,6 +1,6 @@
 {
   "name": "@velcro/strategy-compound",
-  "version": "0.44.0",
+  "version": "0.45.0",
   "description": "Resolver strategy that delegates operations to child strategies",
   "keywords": [
     "velcro",
@@ -56,8 +56,8 @@
     "typescript": "^3.9.2"
   },
   "dependencies": {
-    "@velcro/common": "^0.44.0",
-    "@velcro/resolver": "^0.44.0"
+    "@velcro/common": "^0.45.0",
+    "@velcro/resolver": "^0.45.0"
   },
   "gitHead": "f63b45ad688f2fe9768349afeaf449c016bf33ef"
 }

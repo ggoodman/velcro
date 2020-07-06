@@ -8,6 +8,7 @@
 
 |  Class | Description |
 |  --- | --- |
+|  [Build](./bundler.build.md) |  |
 |  [Chunk](./bundler.chunk.md) |  |
 |  [ChunkOutput](./bundler.chunkoutput.md) |  |
 |  [Graph](./bundler.graph.md) |  |

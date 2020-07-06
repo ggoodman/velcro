@@ -26,5 +26,6 @@ declare class MemoryStrategy extends AbstractResolverStrategyWithRoot
 |  [getResolveRoot()](./strategy-memory.memorystrategy.getresolveroot.md) |  |  |
 |  [listEntries(\_ctx, uri)](./strategy-memory.memorystrategy.listentries.md) |  |  |
 |  [readFileContent(\_ctx, uri)](./strategy-memory.memorystrategy.readfilecontent.md) |  |  |
+|  [removeFile(pathname)](./strategy-memory.memorystrategy.removefile.md) |  |  |
 |  [uriForPath(pathname)](./strategy-memory.memorystrategy.uriforpath.md) |  |  |
 

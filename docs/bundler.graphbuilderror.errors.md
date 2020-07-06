@@ -7,10 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-readonly errors: {
-        err: Error;
-        ctx: {
-            path: readonly string[];
-        };
-    }[];
+readonly errors: Error[];
 ```

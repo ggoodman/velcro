@@ -21,5 +21,5 @@ declare class GraphBuildError extends BaseError
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [errors](./bundler.graphbuilderror.errors.md) |  | { err: Error; ctx: { path: readonly string\[\]; }; }\[\] |  |
+|  [errors](./bundler.graphbuilderror.errors.md) |  | Error\[\] |  |
 

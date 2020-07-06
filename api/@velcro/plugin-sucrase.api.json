@@ -1,7 +1,7 @@
 {
   "metadata": {
     "toolPackage": "@microsoft/api-extractor",
-    "toolVersion": "7.8.12",
+    "toolVersion": "7.9.1",
     "schemaVersion": 1003,
     "oldestForwardsCompatibleVersion": 1001
   },
@@ -36,7 +36,7 @@
             {
               "kind": "Reference",
               "text": "Plugin",
-              "canonicalReference": "!unknown"
+              "canonicalReference": "@velcro/plugin-sucrase!Plugin:interface"
             },
             {
               "kind": "Content",
@@ -114,7 +114,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.43.0\""
+              "text": "version = \"0.44.0\""
             }
           ],
           "releaseTag": "Public",

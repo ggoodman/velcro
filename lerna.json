@@ -1,9 +1,14 @@
 {
   "command": {
     "bootstrap": {
-      "npmClientArgs": ["--no-package-lock"]
+      "npmClientArgs": [
+        "--no-package-lock"
+      ]
     }
   },
-  "packages": ["packages/@velcro/*", "packages/nostalgie"],
-  "version": "0.44.0"
+  "packages": [
+    "packages/@velcro/*",
+    "packages/nostalgie"
+  ],
+  "version": "0.45.0"
 }

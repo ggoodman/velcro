@@ -1,7 +1,7 @@
 {
   "metadata": {
     "toolPackage": "@microsoft/api-extractor",
-    "toolVersion": "7.8.12",
+    "toolVersion": "7.9.1",
     "schemaVersion": 1003,
     "oldestForwardsCompatibleVersion": 1001
   },
@@ -1062,6 +1062,34 @@
                 }
               ],
               "name": "add"
+            },
+            {
+              "kind": "Method",
+              "canonicalReference": "@velcro/common!MapSet#clear:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "clear(): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "void"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "isStatic": false,
+              "returnTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [],
+              "name": "clear"
             },
             {
               "kind": "Method",
@@ -3538,7 +3566,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.43.0\""
+              "text": "version = \"0.44.0\""
             }
           ],
           "releaseTag": "Public",
