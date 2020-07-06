@@ -28,19 +28,22 @@ export async function build(
   code: string,
   options: BuildOptions
 ): Promise<{ entrypointUri: Uri; output: ChunkOutput }> {
-  const entrypointPath = 'index.js';
+  const entrypointPath = `index.js`;
   const cdnStrategy =
     options.cdn === 'unpkg'
       ? CdnStrategy.forUnpkg(options.readUrl)
       : CdnStrategy.forJsDelivr(options.readUrl);
-  const memoryStrategy = new MemoryStrategy({
-    [entrypointPath]: code,
-    ['package.json']: JSON.stringify({
-      name: '@@velcro/execute',
-      version: '0.0.0',
-      dependencies: options.dependencies,
-    }),
-  });
+  const memoryStrategy = new MemoryStrategy(
+    {
+      [entrypointPath]: code,
+      ['package.json']: JSON.stringify({
+        name: '@@velcro/execute',
+        version: '0.0.0',
+        dependencies: options.dependencies,
+      }),
+    },
+    Uri.parse(`velcro://${Math.random().toString(16).slice(2)}/`)
+  );
   const entrypointUri = memoryStrategy.uriForPath(entrypointPath);
   const compoundStrategy = new CompoundStrategy({ strategies: [cdnStrategy, memoryStrategy] });
   const resolver = new Resolver(compoundStrategy, {
