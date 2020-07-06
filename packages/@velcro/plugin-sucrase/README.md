@@ -5,4 +5,4 @@
 
 A sucrase plugin for Velcro that adds support for Typescript, jsx, ES Modules and more.
 
-[API Docs](https://github.com/ggoodman/velcro/tree/v0.45.0/docs/plugin-sucrase.md)
+[API Docs](https://github.com/ggoodman/velcro/tree/v0.45.1/docs/plugin-sucrase.md)

@@ -251,6 +251,27 @@
           ]
         },
         {
+          "kind": "Variable",
+          "canonicalReference": "@velcro/common!basename:var",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "basename: "
+            },
+            {
+              "kind": "Content",
+              "text": "(path: string, ext?: string | undefined) => string"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "basename",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
           "kind": "Class",
           "canonicalReference": "@velcro/common!BuildError:class",
           "docComment": "",
@@ -539,6 +560,27 @@
           "implementsTokenRanges": []
         },
         {
+          "kind": "Variable",
+          "canonicalReference": "@velcro/common!delimiter:var",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "delimiter: "
+            },
+            {
+              "kind": "Content",
+              "text": "string"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "delimiter",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
           "kind": "Class",
           "canonicalReference": "@velcro/common!DependencyNotFoundError:class",
           "docComment": "",
@@ -611,6 +653,27 @@
             "endIndex": 3
           },
           "implementsTokenRanges": []
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "@velcro/common!dirname:var",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "dirname: "
+            },
+            {
+              "kind": "Content",
+              "text": "(path: string) => string"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "dirname",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
         },
         {
           "kind": "Class",
@@ -729,6 +792,709 @@
             "endIndex": 3
           },
           "implementsTokenRanges": []
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "@velcro/common!extname:var",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "extname: "
+            },
+            {
+              "kind": "Content",
+              "text": "(path: string) => string"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "extname",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "@velcro/common!format:var",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "format: "
+            },
+            {
+              "kind": "Content",
+              "text": "(pathObject: "
+            },
+            {
+              "kind": "Reference",
+              "text": "ParsedPath",
+              "canonicalReference": "@velcro/common!~ParsedPath:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ") => string"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "format",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 4
+          }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@velcro/common!IPath:interface",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "interface IPath "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "IPath",
+          "members": [
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@velcro/common!IPath#basename:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "basename(path: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", ext?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "returnTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 6
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "path",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "parameterName": "ext",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  }
+                }
+              ],
+              "name": "basename"
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/common!IPath#delimiter:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "delimiter: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "delimiter",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@velcro/common!IPath#dirname:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "dirname(path: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "path",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "dirname"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@velcro/common!IPath#extname:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "extname(path: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "path",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "extname"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@velcro/common!IPath#format:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "format(pathObject: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ParsedPath",
+                  "canonicalReference": "@velcro/common!~ParsedPath:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "pathObject",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "format"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@velcro/common!IPath#isAbsolute:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "isAbsolute(path: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "path",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "isAbsolute"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@velcro/common!IPath#join:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "join(...paths: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "paths",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "join"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@velcro/common!IPath#normalize:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "normalize(path: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "path",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "normalize"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@velcro/common!IPath#parse:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "parse(path: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ParsedPath",
+                  "canonicalReference": "@velcro/common!~ParsedPath:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "path",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "parse"
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/common!IPath#posix:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "posix: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "IPath",
+                  "canonicalReference": "@velcro/common!~IPath:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | null"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "posix",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@velcro/common!IPath#relative:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "relative(from: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", to: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "returnTypeTokenRange": {
+                "startIndex": 5,
+                "endIndex": 6
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "from",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "parameterName": "to",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  }
+                }
+              ],
+              "name": "relative"
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@velcro/common!IPath#resolve:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "resolve(...pathSegments: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string[]"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "pathSegments",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "resolve"
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/common!IPath#sep:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "sep: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "\"\\\\\" | \"/\""
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "sep",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@velcro/common!IPath#toNamespacedPath:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "toNamespacedPath(path: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "path",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "toNamespacedPath"
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/common!IPath#win32:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "win32: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "IPath",
+                  "canonicalReference": "@velcro/common!~IPath:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | null"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "win32",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 3
+              }
+            }
+          ],
+          "extendsTokenRanges": []
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "@velcro/common!isAbsolute:var",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "isAbsolute: "
+            },
+            {
+              "kind": "Content",
+              "text": "(path: string) => boolean"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "isAbsolute",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
         },
         {
           "kind": "Function",
@@ -966,6 +1732,27 @@
             }
           ],
           "name": "isValidPartialPackageJson"
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "@velcro/common!join:var",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "join: "
+            },
+            {
+              "kind": "Content",
+              "text": "(...paths: string[]) => string"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "join",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
         },
         {
           "kind": "Class",
@@ -1442,6 +2229,27 @@
           "implementsTokenRanges": []
         },
         {
+          "kind": "Variable",
+          "canonicalReference": "@velcro/common!normalize:var",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "normalize: "
+            },
+            {
+              "kind": "Content",
+              "text": "(path: string) => string"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "normalize",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
           "kind": "Class",
           "canonicalReference": "@velcro/common!NotResolvableError:class",
           "docComment": "",
@@ -1572,6 +2380,32 @@
           "typeTokenRange": {
             "startIndex": 1,
             "endIndex": 2
+          }
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "@velcro/common!parse:var",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "parse: "
+            },
+            {
+              "kind": "Content",
+              "text": "(path: string) => "
+            },
+            {
+              "kind": "Reference",
+              "text": "ParsedPath",
+              "canonicalReference": "@velcro/common!~ParsedPath:interface"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "parse",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 3
           }
         },
         {
@@ -1725,6 +2559,147 @@
             }
           ],
           "name": "parseBufferAsPartialPackageJson"
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@velcro/common!ParsedPath:interface",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "interface ParsedPath "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "ParsedPath",
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/common!ParsedPath#base:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "base: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "base",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/common!ParsedPath#dir:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "dir: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "dir",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/common!ParsedPath#ext:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "ext: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "ext",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/common!ParsedPath#name:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "name: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "name",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/common!ParsedPath#root:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "root: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "root",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": []
         },
         {
           "kind": "Class",
@@ -2095,6 +3070,91 @@
           "extendsTokenRanges": []
         },
         {
+          "kind": "Variable",
+          "canonicalReference": "@velcro/common!posix:var",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "posix: "
+            },
+            {
+              "kind": "Reference",
+              "text": "IPath",
+              "canonicalReference": "@velcro/common!~IPath:interface"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "posix",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "@velcro/common!relative:var",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "relative: "
+            },
+            {
+              "kind": "Content",
+              "text": "(from: string, to: string) => string"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "relative",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "@velcro/common!resolve:var",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "resolve: "
+            },
+            {
+              "kind": "Content",
+              "text": "(...pathSegments: string[]) => string"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "resolve",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "@velcro/common!sep:var",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "sep: "
+            },
+            {
+              "kind": "Content",
+              "text": "\"\\\\\" | \"/\""
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "sep",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
           "kind": "Interface",
           "canonicalReference": "@velcro/common!Thenable:interface",
           "docComment": "",
@@ -2301,6 +3361,27 @@
             }
           ],
           "extendsTokenRanges": []
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "@velcro/common!toNamespacedPath:var",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "toNamespacedPath: "
+            },
+            {
+              "kind": "Content",
+              "text": "(path: string) => string"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "toNamespacedPath",
+          "variableTypeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
         },
         {
           "kind": "Class",
@@ -3566,7 +4647,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.44.0\""
+              "text": "version = \"0.45.0\""
             }
           ],
           "releaseTag": "Public",

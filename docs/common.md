@@ -49,7 +49,9 @@
 
 |  Interface | Description |
 |  --- | --- |
+|  [IPath](./common.ipath.md) |  |
 |  [PackageJson](./common.packagejson.md) |  |
+|  [ParsedPath](./common.parsedpath.md) |  |
 |  [PartialPackageJson](./common.partialpackagejson.md) |  |
 |  [Thenable](./common.thenable.md) |  |
 |  [UriComponents](./common.uricomponents.md) |  |
@@ -64,6 +66,20 @@
 
 |  Variable | Description |
 |  --- | --- |
+|  [basename](./common.basename.md) |  |
+|  [delimiter](./common.delimiter.md) |  |
+|  [dirname](./common.dirname.md) |  |
+|  [extname](./common.extname.md) |  |
+|  [format](./common.format.md) |  |
+|  [isAbsolute](./common.isabsolute.md) |  |
+|  [join](./common.join.md) |  |
+|  [normalize](./common.normalize.md) |  |
+|  [parse](./common.parse.md) |  |
+|  [posix](./common.posix.md) |  |
+|  [relative](./common.relative.md) |  |
+|  [resolve](./common.resolve.md) |  |
+|  [sep](./common.sep.md) |  |
+|  [toNamespacedPath](./common.tonamespacedpath.md) |  |
 |  [version](./common.version.md) |  |
 
 ## Type Aliases
