@@ -24,13 +24,10 @@ function toUmdName(name) {
  * Create a generic rollup config for a given directory
  *
  * @param {string} dirname
- * @param {string} filename
+ * @param {any} packageJson
  * @return {import('rollup').RollupOptions[]}
  */
-function rollupConfigFactory(dirname, filename) {
-  const relativeRequire = createRequire(resolve(dirname, filename));
-  const PackageJson = relativeRequire('./package.json');
-
+function rollupConfigFactory(dirname, packageJson) {
   const createTypescriptPlugin = (emitDeclarations = false) =>
     RollupPluginTs({
       cwd: dirname,
@@ -51,12 +48,12 @@ function rollupConfigFactory(dirname, filename) {
     {
       input: resolve(dirname, './src/index.ts'),
       output: {
-        file: resolve(dirname, PackageJson.main),
+        file: resolve(dirname, packageJson.main),
         format: 'commonjs',
         sourcemap: true,
       },
       external(id) {
-        return PackageJson.dependencies && Object.hasOwnProperty.call(PackageJson.dependencies, id);
+        return packageJson.dependencies && Object.hasOwnProperty.call(packageJson.dependencies, id);
       },
       onwarn: (msg, warn) => {
         if (!/Circular/.test(msg)) {
@@ -66,7 +63,7 @@ function rollupConfigFactory(dirname, filename) {
       plugins: [
         RollupPluginJson(),
         RollupPluginNodeResolve(),
-        RollupPluginReplace({ __VERSION__: PackageJson.version }),
+        RollupPluginReplace({ __VERSION__: packageJson.version }),
         createTypescriptPlugin(true),
         RollupPluginInjectProcessEnv({ NODE_ENV: 'production' }),
       ],
@@ -74,13 +71,13 @@ function rollupConfigFactory(dirname, filename) {
     {
       input: resolve(dirname, './src/index.ts'),
       output: {
-        file: resolve(dirname, PackageJson.module),
+        file: resolve(dirname, packageJson.module),
         format: 'esm',
         sourcemap: true,
       },
 
       external(id) {
-        return PackageJson.dependencies && Object.hasOwnProperty.call(PackageJson.dependencies, id);
+        return packageJson.dependencies && Object.hasOwnProperty.call(packageJson.dependencies, id);
       },
       onwarn: (msg, warn) => {
         if (!/Circular/.test(msg)) {
@@ -90,7 +87,7 @@ function rollupConfigFactory(dirname, filename) {
       plugins: [
         RollupPluginJson(),
         RollupPluginNodeResolve(),
-        RollupPluginReplace({ __VERSION__: PackageJson.version }),
+        RollupPluginReplace({ __VERSION__: packageJson.version }),
         createTypescriptPlugin(),
         RollupPluginInjectProcessEnv({ NODE_ENV: 'production' }),
       ],
@@ -98,9 +95,9 @@ function rollupConfigFactory(dirname, filename) {
     {
       input: resolve(dirname, './src/index.ts'),
       output: {
-        file: resolve(dirname, PackageJson.unpkg),
+        file: resolve(dirname, packageJson.unpkg),
         format: 'umd',
-        name: PackageJson.name.replace(/^@velcro\/(.*)$/, (_match, name) => toUmdName(name)),
+        name: packageJson.name.replace(/^@velcro\/(.*)$/, (_match, name) => toUmdName(name)),
         sourcemap: true,
       },
       onwarn: (msg, warn) => {
@@ -115,7 +112,7 @@ function rollupConfigFactory(dirname, filename) {
         }),
         RollupPluginCommonJs(),
         RollupPluginReplace({
-          __VERSION__: process.env.npm_package_version || PackageJson.version,
+          __VERSION__: process.env.npm_package_version || packageJson.version,
         }),
         dirname.endsWith('runner') || dirname.endsWith('nostalgie')
           ? RollupPluginSucrase({
