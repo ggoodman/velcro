@@ -159,7 +159,7 @@ export function refresh(scripts: Iterable<HTMLScriptElement>) {
       token: tokenSource ? tokenSource.token : undefined,
     });
 
-    build.done.then(
+    return build.done.then(
       (graph) => {
         const [chunk] = graph.splitChunks();
         const output = chunk.buildForStaticRuntime({
@@ -169,8 +169,6 @@ export function refresh(scripts: Iterable<HTMLScriptElement>) {
         const codeWithStart = `${output.code}\n\n${entrypointUris
           .map((entrypoint) => `Velcro.runtime.require(${JSON.stringify(entrypoint.toString())});`)
           .join('\n')}\n`;
-        //@ts-expect-error
-        window.codeWithStart = codeWithStart;
         const runtimeCode = `${codeWithStart}\n//# sourceMappingURL=${output.sourceMapDataUri}`;
 
         const scriptEl = document.createElement('script');
