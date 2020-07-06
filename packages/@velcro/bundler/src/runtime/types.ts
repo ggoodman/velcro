@@ -1,3 +1,5 @@
+import { VelcroRuntime } from './runtimeInterface';
+
 export type VelcroImportMap = {
   imports?: { [key: string]: string };
   scopes?: { [fromId: string]: { [key: string]: string | undefined } | undefined };
@@ -23,4 +25,5 @@ export type VelcroStaticRuntime = {
   defs: {
     [key: string]: [VelcroModuleFactory, VelcroImportMap] | undefined;
   };
+  runtime?: VelcroRuntime;
 };

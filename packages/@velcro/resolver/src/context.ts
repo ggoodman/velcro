@@ -13,6 +13,7 @@ import {
   EntryNotFoundError,
   isThenable,
   MapSet,
+  PackageJson,
   parseBufferAsPackageJson,
   parseBufferAsPartialPackageJson,
   PartialPackageJson,
@@ -23,21 +24,6 @@ import { BareModuleSpec, parseBareModuleSpec } from './bareModules';
 import type { Resolver } from './resolver';
 import { NODE_CORE_SHIMS } from './shims';
 import { ResolverStrategy } from './strategy';
-
-// Re-declaring this here instead of importing from @velcro/common is a hack around @wessberg/rollup-plugin-ts
-// producing an `import('@velcro/common').PackageJson)` type reference that is unsupported by api-extractor.
-type PackageManifest = {
-  name: string;
-  version: string;
-  browser?: string | { [key: string]: false | string };
-  main?: string;
-  module?: string;
-  'jsnext:main'?: string;
-  dependencies?: { [key: string]: string };
-  devDependencies?: { [key: string]: string };
-  peerDependencies?: { [key: string]: string };
-  unpkg?: string;
-};
 
 type ReturnTypeWithVisits<
   T extends (...args: any[]) => any,
@@ -54,7 +40,6 @@ type ReturnTypeWithVisits<
 //   ? Thenable<UncachedReturnType<U>>
 //   : UncachedReturnType<TReturn>;
 
-const DEBUG = process.env.NODE_DEBUG && process.env.NODE_DEBUG.match(/\bbuilder\b/);
 const CACHE = Symbol('Context.cache');
 
 type InvalidationRecord = {
@@ -66,25 +51,25 @@ type ResolveResult =
   | {
       found: false;
       uri: null;
-      parentPackageJson?: { packageJson: PackageManifest; uri: Uri };
+      parentPackageJson?: { packageJson: PackageJson; uri: Uri };
     }
   | {
       found: true;
       uri: null;
-      parentPackageJson?: { packageJson: PackageManifest; uri: Uri };
+      parentPackageJson?: { packageJson: PackageJson; uri: Uri };
       rootUri: Uri;
     }
   | {
       found: true;
       uri: Uri;
-      parentPackageJson?: { packageJson: PackageManifest; uri: Uri };
+      parentPackageJson?: { packageJson: PackageJson; uri: Uri };
       rootUri: Uri;
     };
 
 type ReadParentPackageJsonResultInternal =
   | {
       found: true;
-      packageJson: PackageManifest;
+      packageJson: PackageJson;
       uri: Uri;
       visitedDirs: Uri[];
     }
@@ -129,11 +114,13 @@ export class ResolverContext {
     resolver: Resolver,
     strategy: ResolverStrategy,
     settings: Resolver.Settings,
-    token: CancellationToken
+    token: CancellationToken,
+    options: { debug?: boolean } = {}
   ) {
     return new ResolverContext({
       cache: new Map(),
       cacheInvalidations: new MapSet(),
+      debug: !!options.debug,
       decoder: new Decoder(),
       path: [],
       resolver,
@@ -146,6 +133,7 @@ export class ResolverContext {
 
   private readonly cache: ResolverContext.Options['cache'];
   private readonly cacheInvalidations: ResolverContext.Options['cacheInvalidations'];
+  private readonly debugMode: boolean;
   readonly decoder: ResolverContext.Options['decoder'];
   private readonly mapResultWithVisits = <T>(result: T) =>
     Object.assign(result, { visited: this.visits.toArray() });
@@ -156,9 +144,10 @@ export class ResolverContext {
   private readonly tokenSource: CancellationTokenSource;
   private readonly visits: Visits;
 
-  private constructor(options: ResolverContext.Options) {
+  protected constructor(options: ResolverContext.Options) {
     this.cache = options.cache;
     this.cacheInvalidations = options.cacheInvalidations;
+    this.debugMode = options.debug;
     this.decoder = options.decoder;
     this.path = options.path;
     this.resolver = options.resolver;
@@ -206,6 +195,7 @@ export class ResolverContext {
     return new ResolverContext({
       cache: this.cache,
       cacheInvalidations: this.cacheInvalidations,
+      debug: this.debugMode,
       decoder: this.decoder,
       path: options.resetPath ? [] : this.path.concat(encodedOperation),
       resolver: this.resolver,
@@ -278,13 +268,13 @@ export class ResolverContext {
     const invalidations = this.cacheInvalidations.get(href);
     let invalidated = false;
 
-    this.cacheInvalidations.deleteAll(href);
-
     if (invalidations) {
       for (const { cacheKey, operationCache } of invalidations) {
         invalidated = operationCache.delete(cacheKey) || invalidated;
       }
     }
+
+    this.cacheInvalidations.deleteAll(href);
 
     return invalidated;
   }
@@ -305,6 +295,8 @@ export class ResolverContext {
     const receiver = this.strategy;
     const operationName = `${this.strategy.constructor.name}.${method.name}`;
     const href = uri.toString();
+
+    this.recordVisit(uri, ResolverContext.VisitKind.File);
 
     return this.runInChildContext(operationName, uri, (ctx) =>
       ctx.runWithCache(operationName, href, method, receiver, ctx, uri)
@@ -377,7 +369,7 @@ export class ResolverContext {
   ) {
     const ctx = this.forOperation(operationName, uri, options);
 
-    ctx.debug('%s(%s)', operationName, uri);
+    ctx.debug('%s(%s)', operationName, uri.toString());
 
     return contextFn(ctx);
   }
@@ -475,8 +467,8 @@ export class ResolverContext {
     });
   }
 
-  debug(...args: Parameters<Console['debug']>) {
-    if (DEBUG) {
+  debug(...args: Parameters<Console['warn']>) {
+    if (this.debugMode) {
       if (typeof args[0] === 'string') {
         args[0] = ' '.repeat(this.path.length) + args[0];
       }
@@ -587,7 +579,6 @@ async function resolveBareModule(ctx: ResolverContext, uri: Uri, parsedSpec: Bar
   let locatorPath = parsedSpec.path;
 
   if (!locatorSpec) {
-    ctx.debug('No locator spec, trying via package.json for %s from %s', parsedSpec.nameSpec, uri);
     const resolveRootReturn = ctx.getResolveRoot(uri);
     const resolveRootResult = isThenable(resolveRootReturn)
       ? await checkCancellation(resolveRootReturn, ctx.token)
@@ -597,12 +588,6 @@ async function resolveBareModule(ctx: ResolverContext, uri: Uri, parsedSpec: Bar
     let maxIterations = 10;
 
     while (Uri.isPrefixOf(resolveRootResult.uri, nextUri)) {
-      ctx.debug(
-        'looking for parent package json for %s from %s at %s',
-        parsedSpec.nameSpec,
-        uri,
-        nextUri
-      );
       if (--maxIterations <= 0) {
         throw new Error('Max iterations reached');
       }
@@ -615,6 +600,7 @@ async function resolveBareModule(ctx: ResolverContext, uri: Uri, parsedSpec: Bar
       if (!parentPackageJsonResult.found) {
         throw new DependencyNotFoundError(parsedSpec.nameSpec, uri);
       }
+      ctx.recordVisit(parentPackageJsonResult.uri, ResolverContext.VisitKind.File);
 
       if (parentPackageJsonResult.packageJson.name === parsedSpec.name) {
         // We found a parent directory that *IS* the module we're looking for
@@ -647,11 +633,6 @@ async function resolveBareModule(ctx: ResolverContext, uri: Uri, parsedSpec: Bar
   }
 
   if (!locatorSpec) {
-    ctx.debug(
-      'No locator spec, trying via NODE_CORE_SHIMS for %s from %s',
-      parsedSpec.nameSpec,
-      uri
-    );
     const builtIn = NODE_CORE_SHIMS[parsedSpec.name];
 
     if (builtIn) {
@@ -690,6 +671,7 @@ export namespace ResolverContext {
   export interface Options {
     cache: Map<string, Map<string, unknown>>;
     cacheInvalidations: MapSet<string, InvalidationRecord>;
+    debug: boolean;
     decoder: Decoder;
     path: string[];
     resolver: Resolver;
@@ -1025,7 +1007,7 @@ async function readParentPackageJsonInternal(
     const parentDir = Uri.ensureTrailingSlash(Uri.joinPath(dir, '..'));
 
     // Skip infinite recursion
-    if (Uri.equals(uri, parentDir)) {
+    if (Uri.equals(dir, parentDir) || Uri.isPrefixOf(dir, parentDir)) {
       return {
         found: false,
         packageJson: null,
@@ -1040,6 +1022,13 @@ async function readParentPackageJsonInternal(
     );
   };
 
+  if (Uri.equals(uri, containingDirUrl) || Uri.isPrefixOf(uri, containingDirUrl)) {
+    return {
+      found: false,
+      packageJson: null,
+      uri: null,
+    };
+  }
   return ctx.runInChildContext('readPackageJsonOrRecurse', containingDirUrl, (ctx) =>
     readPackageJsonOrRecurse(ctx, containingDirUrl)
   );

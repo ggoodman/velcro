@@ -1,7 +1,9 @@
-export const files = {
+export const files: Record<string, string> = {
   'package.json':
     JSON.stringify(
       {
+        name: 'react-template',
+        version: '0.0.0',
         dependencies: {
           'github-markdown-css': '^3.0.1',
           react: '^16.9.0',

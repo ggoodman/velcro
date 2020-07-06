@@ -141,6 +141,31 @@ export class MemoryStrategy extends AbstractResolverStrategyWithRoot {
     return entry;
   }
 
+  removeFile(pathname: string) {
+    const segments = pathname.split('/').filter(Boolean);
+    const filename = segments.pop();
+
+    if (!filename) {
+      return false;
+    }
+
+    let parent: Entry = this.root;
+
+    for (const segment of segments) {
+      if (!parent || parent.type !== ResolverStrategy.EntryKind.Directory) {
+        return false;
+      }
+
+      parent = parent.children[segment];
+    }
+
+    if (!parent || parent.type !== ResolverStrategy.EntryKind.Directory) {
+      return false;
+    }
+
+    return delete parent.children[filename];
+  }
+
   getResolveRoot() {
     return {
       uri: this.rootUri,

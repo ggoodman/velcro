@@ -6,11 +6,11 @@ import Preview from './Preview';
 import Sidebar from './Sidebar';
 import { EditorManager, EditorManagerContext } from '../lib/EditorManager';
 
-const PlaygroundCmp: React.FC<{ className?: string; initialPath: string; project: Record<string, string> }> = ({
-  className,
-  initialPath,
-  project,
-}) => {
+const PlaygroundCmp: React.FC<{
+  className?: string;
+  initialPath: string;
+  project: Record<string, string>;
+}> = ({ className, initialPath, project }) => {
   const editorManager = new EditorManager({ files: project, initialPath: initialPath });
 
   return (

@@ -23,28 +23,24 @@ import {
   PluginTransformContext,
 } from './plugin';
 
-interface PluginManagerOptions {
-  nodeEnv: string;
-}
-
 export class PluginManager {
-  constructor(private readonly plugins: Plugin[], private readonly options: PluginManagerOptions) {
+  constructor(private readonly plugins: Plugin[]) {
     this.plugins.push({
       name: 'builtIn',
       load: async (ctx, id) => {
         const uri = Uri.parse(id);
-        const readReturn = ctx.readFileContent(uri);
+        const readReturn = ctx.resolver.readFileContent(uri);
         const readResult = isThenable(readReturn)
           ? await checkCancellation(readReturn, ctx.token)
           : readReturn;
 
         return {
-          code: ctx.decoder.decode(readResult.content),
+          code: ctx.resolver.decode(readResult.content),
           visited: readResult.visited,
         };
       },
       resolveDependency: async (ctx, dependency, fromSourceModule) => {
-        const resolveReturn = ctx.resolve(dependency.spec, fromSourceModule.uri);
+        const resolveReturn = ctx.resolver.resolve(dependency.spec, fromSourceModule.uri);
         const resolveResult = isThenable(resolveReturn)
           ? await checkCancellation(resolveReturn, ctx.token)
           : resolveReturn;
@@ -65,7 +61,7 @@ export class PluginManager {
         };
       },
       resolveEntrypoint: async (ctx, uri) => {
-        const resolveResult = await ctx.resolveUri(uri);
+        const resolveResult = await ctx.resolver.resolve(uri);
 
         if (!resolveResult.found) {
           throw new EntryNotFoundError(`Entry point not found: ${uri}`);
@@ -91,13 +87,10 @@ export class PluginManager {
     });
   }
 
-  async executeLoad(ctx: ResolverContext, uri: Uri) {
-    const pluginCtx: PluginLoadContext = Object.assign(ctx, {
-      nodeEnv: this.options.nodeEnv,
-    });
+  async executeLoad(ctx: PluginLoadContext, uri: Uri) {
     for (const plugin of this.plugins) {
       if (typeof plugin.load === 'function') {
-        const loadReturn = plugin.load(pluginCtx, uri.toString());
+        const loadReturn = plugin.load(ctx, uri.toString());
         const loadResult = isThenable(loadReturn)
           ? await checkCancellation(loadReturn, ctx.token)
           : loadReturn;
@@ -117,16 +110,13 @@ export class PluginManager {
   }
 
   async executeResolveDependency(
-    ctx: ResolverContext,
+    ctx: PluginResolveDependencyContext,
     dependency: SourceModuleDependency,
     fromModule: SourceModule
   ) {
-    const pluginCtx: PluginResolveDependencyContext = Object.assign(ctx, {
-      nodeEnv: this.options.nodeEnv,
-    });
     for (const plugin of this.plugins) {
       if (typeof plugin.resolveDependency === 'function') {
-        const loadReturn = plugin.resolveDependency(pluginCtx, dependency, fromModule);
+        const loadReturn = plugin.resolveDependency(ctx, dependency, fromModule);
         const loadResult = isThenable(loadReturn)
           ? await checkCancellation(loadReturn, ctx.token)
           : loadReturn;
@@ -148,13 +138,10 @@ export class PluginManager {
     );
   }
 
-  async executeResolveEntrypoint(ctx: ResolverContext, uri: Uri) {
-    const pluginCtx: PluginResolveEntrypointContext = Object.assign(ctx, {
-      nodeEnv: this.options.nodeEnv,
-    });
+  async executeResolveEntrypoint(ctx: PluginResolveEntrypointContext, uri: Uri) {
     for (const plugin of this.plugins) {
       if (typeof plugin.resolveEntrypoint === 'function') {
-        const loadReturn = plugin.resolveEntrypoint(pluginCtx, uri);
+        const loadReturn = plugin.resolveEntrypoint(ctx, uri);
         const loadResult = isThenable(loadReturn)
           ? await checkCancellation(loadReturn, ctx.token)
           : loadReturn;
@@ -174,16 +161,19 @@ export class PluginManager {
     throw new Error(`No plugin was able to resolve the entrypoint '${uri.toString()}'`);
   }
 
-  async executeTransform(ctx: ResolverContext, uri: Uri, code: string | ArrayBuffer) {
+  async executeTransform(
+    ctx: Omit<PluginTransformContext, 'createMagicString'>,
+    uri: Uri,
+    code: string | ArrayBuffer
+  ) {
     if (typeof code !== 'string') {
-      code = ctx.decoder.decode(code);
+      code = ctx.resolver.decode(code);
     }
 
     const pluginCtx: PluginTransformContext = Object.assign(ctx, {
       createMagicString() {
         return new MagicString(code as string);
       },
-      nodeEnv: this.options.nodeEnv,
     });
 
     let sourceMapTree: Source | Link = new Source(uri.toString(), code);

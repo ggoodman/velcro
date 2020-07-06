@@ -1,5 +1,5 @@
-import { Thenable, Uri } from '@velcro/common';
-import { ResolverContext } from '@velcro/resolver';
+import { CancellationToken, Thenable, Uri } from '@velcro/common';
+import { Resolver, ResolverContext } from '@velcro/resolver';
 import MagicString, { SourceMapSegment } from 'magic-string';
 import { SourceModule, SourceModuleDependency } from '../graph';
 
@@ -24,18 +24,22 @@ export interface Plugin {
   ): MaybeThenable<PluginTransformResult | undefined>;
 }
 
-interface PluginContext extends ResolverContext {
+export interface PluginLoadContext {
   nodeEnv: string;
+  resolver: Resolver;
+  token: CancellationToken;
 }
-
-export interface PluginLoadContext extends PluginContext {}
 
 export type PluginLoadResult = {
   code: string;
   visited?: ResolverContext.Visit[];
 };
 
-export interface PluginResolveDependencyContext extends PluginContext {}
+export interface PluginResolveDependencyContext {
+  nodeEnv: string;
+  resolver: Resolver;
+  token: CancellationToken;
+}
 
 export type PluginResolveDependencyResult = {
   uri: Uri;
@@ -43,7 +47,11 @@ export type PluginResolveDependencyResult = {
   visited?: ResolverContext.Visit[];
 };
 
-export interface PluginResolveEntrypointContext extends PluginContext {}
+export interface PluginResolveEntrypointContext {
+  nodeEnv: string;
+  resolver: Resolver;
+  token: CancellationToken;
+}
 
 export type PluginResolveEntrypointResult = {
   uri: Uri;
@@ -51,7 +59,11 @@ export type PluginResolveEntrypointResult = {
   visited?: ResolverContext.Visit[];
 };
 
-export interface PluginTransformContext extends PluginContext {
+export interface PluginTransformContext {
+  nodeEnv: string;
+  resolver: Resolver;
+  token: CancellationToken;
+
   createMagicString(): MagicString;
 }
 

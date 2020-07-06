@@ -6,6 +6,8 @@
  * @returns {import('./runtimeInterface').VelcroRuntime}
  */
 export function createRuntime(velcro) {
+  if (velcro.runtime) return velcro.runtime;
+
   class Module {
     /**
      * @param {Runtime} runtime
@@ -170,6 +172,8 @@ export function createRuntime(velcro) {
   }
 
   var runtime = new Runtime(velcro);
+
+  velcro.runtime = runtime;
 
   return runtime;
 }

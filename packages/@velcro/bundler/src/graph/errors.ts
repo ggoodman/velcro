@@ -3,16 +3,9 @@ abstract class BaseError extends Error {
 }
 
 export class GraphBuildError extends BaseError {
-  constructor(readonly errors: { err: Error; ctx: { path: readonly string[] } }[]) {
+  constructor(readonly errors: Error[]) {
     super(
-      `Graph building failed with errors:\n${errors
-        .map(
-          (err) =>
-            `${err.err.message} at\n${err.ctx.path
-              .map((op, i) => `${' '.repeat(i + 1)}${op}`)
-              .join('\n')}`
-        )
-        .join('\n')}`
+      `Graph building failed with errors:\n${errors.map((err) => `  ${err.message}`).join('\n')}`
     );
   }
 }

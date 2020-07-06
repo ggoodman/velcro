@@ -53,7 +53,8 @@ export async function build(
     nodeEnv: options.nodeEnv || 'development',
     plugins: options.plugins,
   });
-  const graph = await graphBuilder.buildGraph([entrypointUri]);
+  const build = graphBuilder.build([entrypointUri]);
+  const graph = await build.done;
   const [chunk] = graph.splitChunks();
   const output = chunk.buildForStaticRuntime({
     injectRuntime: true,

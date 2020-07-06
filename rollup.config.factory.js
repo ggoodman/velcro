@@ -31,17 +31,6 @@ function rollupConfigFactory(dirname, filename) {
   const relativeRequire = createRequire(resolve(dirname, filename));
   const PackageJson = relativeRequire('./package.json');
 
-  // const velcroTypescriptModules = [
-  //   'bundler',
-  //   'common',
-  //   'resolver',
-  //   'runner',
-  //   'strategy-cdn',
-  //   'strategy-compound',
-  //   'strategy-fs',
-  //   'strategy-memory',
-  // ];
-
   const createTypescriptPlugin = (emitDeclarations = false) =>
     RollupPluginTs({
       cwd: dirname,

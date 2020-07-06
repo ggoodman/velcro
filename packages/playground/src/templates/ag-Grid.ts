@@ -2,6 +2,8 @@ export const files = {
   'package.json':
     JSON.stringify(
       {
+        name: 'test',
+        version: '0.0.0',
         dependencies: {
           'ag-grid-community': '^21.2.1',
           'ag-grid-react': '^21.2.1',

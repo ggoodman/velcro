@@ -155,35 +155,34 @@ export function refresh(scripts: Iterable<HTMLScriptElement>) {
 
   queue = queue.then(() => {
     const entrypointUris = entrypointPaths.map((path) => memoryStrategy.uriForPath(path));
+    const build = graphBuilder.build(entrypointUris, {
+      token: tokenSource ? tokenSource.token : undefined,
+    });
 
-    return graphBuilder
-      .buildGraph(entrypointUris, { token: tokenSource ? tokenSource.token : undefined })
-      .then(
-        (graph) => {
-          const [chunk] = graph.splitChunks();
-          const output = chunk.buildForStaticRuntime({
-            injectRuntime: buildId === 0,
-          });
+    build.done.then(
+      (graph) => {
+        const [chunk] = graph.splitChunks();
+        const output = chunk.buildForStaticRuntime({
+          injectRuntime: buildId === 0,
+        });
 
-          const codeWithStart = `${output.code}\n\n${entrypointUris
-            .map(
-              (entrypoint) => `Velcro.runtime.require(${JSON.stringify(entrypoint.toString())});`
-            )
-            .join('\n')}\n`;
-          //@ts-expect-error
-          window.codeWithStart = codeWithStart;
-          const runtimeCode = `${codeWithStart}\n//# sourceMappingURL=${output.sourceMapDataUri}`;
+        const codeWithStart = `${output.code}\n\n${entrypointUris
+          .map((entrypoint) => `Velcro.runtime.require(${JSON.stringify(entrypoint.toString())});`)
+          .join('\n')}\n`;
+        //@ts-expect-error
+        window.codeWithStart = codeWithStart;
+        const runtimeCode = `${codeWithStart}\n//# sourceMappingURL=${output.sourceMapDataUri}`;
 
-          const scriptEl = document.createElement('script');
-          scriptEl.setAttribute('type', 'text/javascript');
-          scriptEl.text = runtimeCode;
+        const scriptEl = document.createElement('script');
+        scriptEl.setAttribute('type', 'text/javascript');
+        scriptEl.text = runtimeCode;
 
-          document.head.appendChild(scriptEl);
-        },
-        (err: GraphBuildError) => {
-          console.error(err, 'Graph building failed');
-        }
-      );
+        document.head.appendChild(scriptEl);
+      },
+      (err: GraphBuildError) => {
+        console.error(err, 'Graph building failed');
+      }
+    );
   });
 
   return queue;

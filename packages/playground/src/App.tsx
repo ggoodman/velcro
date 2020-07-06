@@ -1,3 +1,4 @@
+//@ts-nocheck
 import { Global, css } from '@emotion/core';
 import styled from '@emotion/styled/macro';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -78,8 +79,8 @@ const StatusBar: React.FC = () => {
         </TooltipReference>
       ) : null}
       <Tooltip {...reloadTooltip} as={StyledTooltip}>
-        There is an update of this application ready to install. Click install reload to install the update and reload
-        the page.
+        There is an update of this application ready to install. Click install reload to install the
+        update and reload the page.
       </Tooltip>
     </StatusBarStyles>
   );
@@ -240,7 +241,11 @@ export const App: React.FC = () => {
               </Link>
             </div>
             <div>
-              <Link href="https://github.com/ggoodman/velcro" target="_blank" rel="nofollow noreferrer">
+              <Link
+                href="https://github.com/ggoodman/velcro"
+                target="_blank"
+                rel="nofollow noreferrer"
+              >
                 View on GitHub
               </Link>
             </div>
@@ -248,7 +253,6 @@ export const App: React.FC = () => {
         </Header>
         <PlaygroundWrapper>
           <Playground project={files} initialPath="index.jsx"></Playground>
-          <StatusBar></StatusBar>
         </PlaygroundWrapper>
       </AppWrapper>
     </ServiceWorkerProvider>

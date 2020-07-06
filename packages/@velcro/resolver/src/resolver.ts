@@ -3,7 +3,7 @@ import { ResolverContext } from './context';
 import type { ResolverStrategy } from './strategy';
 
 export class Resolver {
-  // private readonly decoder = new Decoder();
+  private disposed = false;
   readonly rootCtx: ResolverContext;
   private readonly settings: Resolver.Settings;
   private readonly strategy: ResolverStrategy;
@@ -16,60 +16,136 @@ export class Resolver {
       this,
       this.strategy,
       this.settings,
-      this.tokenSource.token
+      this.tokenSource.token,
+      { debug: settings.debug }
     );
   }
 
+  decode(buf: BufferSource | string): string {
+    if (typeof buf === 'string') {
+      return buf;
+    }
+
+    return this.rootCtx.decoder.decode(buf);
+  }
+
+  dispose() {
+    this.disposed = true;
+    return this.rootCtx.dispose();
+  }
+
   getCanonicalUrl(uri: string | Uri) {
-    return this.rootCtx.getCanonicalUrl(typeof uri === 'string' ? Uri.parse(uri) : uri);
+    if (this.disposed) {
+      throw new Error('Resolver has been disposed');
+    }
+
+    return this.rootCtx.runInIsolatedContext('Resolver.getCanonicalUrl', uri, (ctx) =>
+      ctx.getCanonicalUrl(typeof uri === 'string' ? Uri.parse(uri) : uri)
+    );
   }
 
   getResolveRoot(uri: string | Uri) {
-    return this.rootCtx.getResolveRoot(typeof uri === 'string' ? Uri.parse(uri) : uri);
+    if (this.disposed) {
+      throw new Error('Resolver has been disposed');
+    }
+
+    return this.rootCtx.runInIsolatedContext('Resolver.getResolveRoot', uri, (ctx) =>
+      ctx.getResolveRoot(typeof uri === 'string' ? Uri.parse(uri) : uri)
+    );
   }
 
   getSettings(uri: string | Uri) {
-    return this.rootCtx.getSettings(typeof uri === 'string' ? Uri.parse(uri) : uri);
+    if (this.disposed) {
+      throw new Error('Resolver has been disposed');
+    }
+
+    return this.rootCtx.runInIsolatedContext('Resolver.getSettings', uri, (ctx) =>
+      ctx.getSettings(typeof uri === 'string' ? Uri.parse(uri) : uri)
+    );
   }
 
   getUrlForBareModule(name: string, spec: string, path: string) {
-    return this.rootCtx.getUrlForBareModule(name, spec, path);
+    if (this.disposed) {
+      throw new Error('Resolver has been disposed');
+    }
+
+    return this.rootCtx.runInIsolatedContext(
+      'Resolver.getUrlForBareModule',
+      `${name}|${spec}|${path}`,
+      (ctx) => ctx.getUrlForBareModule(name, spec, path)
+    );
   }
 
   invalidate(uri: string | Uri) {
-    return this.rootCtx.invalidate(typeof uri === 'string' ? Uri.parse(uri) : uri);
+    if (this.disposed) {
+      throw new Error('Resolver has been disposed');
+    }
+
+    return this.rootCtx.runInIsolatedContext('Resolver.invalidate', uri, (ctx) =>
+      ctx.invalidate(typeof uri === 'string' ? Uri.parse(uri) : uri)
+    );
   }
 
   listEntries(uri: Uri) {
-    return this.rootCtx.listEntries(typeof uri === 'string' ? Uri.parse(uri) : uri);
+    if (this.disposed) {
+      throw new Error('Resolver has been disposed');
+    }
+
+    return this.rootCtx.runInIsolatedContext('Resolver.listEntries', uri, (ctx) =>
+      ctx.listEntries(typeof uri === 'string' ? Uri.parse(uri) : uri)
+    );
   }
 
   readFileContent(uri: Uri) {
-    return this.rootCtx.readFileContent(typeof uri === 'string' ? Uri.parse(uri) : uri);
+    if (this.disposed) {
+      throw new Error('Resolver has been disposed');
+    }
+
+    return this.rootCtx.runInIsolatedContext('Resolver.readFileContent', uri, (ctx) =>
+      ctx.readFileContent(typeof uri === 'string' ? Uri.parse(uri) : uri)
+    );
   }
 
   readParentPackageJson(uri: Uri) {
-    return this.rootCtx.readParentPackageJson(typeof uri === 'string' ? Uri.parse(uri) : uri);
+    if (this.disposed) {
+      throw new Error('Resolver has been disposed');
+    }
+
+    return this.rootCtx.runInIsolatedContext('Resolver.readParentPackageJson', uri, (ctx) =>
+      ctx.readParentPackageJson(typeof uri === 'string' ? Uri.parse(uri) : uri)
+    );
   }
 
-  resolveBareModuleFrom(spec: string, fromUri: Uri) {
-    return this.rootCtx.resolve(spec, fromUri);
-  }
+  resolve(spec: Uri): ReturnType<ResolverContext['resolve']>;
+  resolve(spec: string, fromUri: Uri): ReturnType<ResolverContext['resolve']>;
+  resolve(spec: string | Uri, fromUri?: Uri): ReturnType<ResolverContext['resolve']> {
+    if (this.disposed) {
+      throw new Error('Resolver has been disposed');
+    }
 
-  createResolverContext() {
-    const tokenSource = new CancellationTokenSource();
+    if (Uri.isUri(spec)) {
+      return this.rootCtx.runInIsolatedContext('Resolver.resolveUri', spec, (ctx) =>
+        ctx.resolveUri(spec)
+      );
+    }
 
-    return Object.assign(
-      ResolverContext.create(this, this.strategy, this.settings, tokenSource.token),
-      {
-        dispose: tokenSource.dispose.bind(tokenSource, true),
-      }
+    if (!fromUri) {
+      throw new Error(
+        'When calling Resolver.resolve with a string spec, a second "fromUri" argument is required'
+      );
+    }
+
+    return this.rootCtx.runInIsolatedContext(
+      'Resolver.resolve',
+      `${fromUri ? fromUri.toString() : ''}|${spec}`,
+      (ctx) => ctx.resolve(spec, fromUri)
     );
   }
 }
 
 export namespace Resolver {
   export interface Settings {
+    debug?: boolean;
     extensions: string[];
     packageMain: PackageMainField[];
   }

@@ -1,4 +1,4 @@
-declare const Buffer: {
+type Buffer = {
   from(
     buf: BufferSource | string,
     encoding?: 'base64'
@@ -20,8 +20,8 @@ export namespace Base64 {
         };
 
   export const encode =
-    typeof Buffer !== 'undefined'
-      ? (data: string) => Buffer.from(data).toString('base64')
+    typeof (globalThis as any)['Buffer'] !== 'undefined'
+      ? (data: string) => ((globalThis as any)['Buffer'] as Buffer).from(data).toString('base64')
       : typeof btoa === 'function'
       ? (data: string) => btoa(unescape(encodeURIComponent(data)))
       : (_data: string) => {

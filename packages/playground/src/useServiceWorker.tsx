@@ -1,9 +1,9 @@
 import React from 'react';
 
-import * as serviceWorker from './serviceWorker';
+// import * as serviceWorker from './serviceWorker';
 
 interface ServiceWorkerEvent extends Event {
-  target: Partial<ServiceWorker> & EventTarget | null;
+  target: (Partial<ServiceWorker> & EventTarget) | null;
 }
 
 interface ServiceWorkerContextValue {
@@ -15,7 +15,9 @@ interface ServiceWorkerContextValue {
 const ServiceWorkerContext = React.createContext<ServiceWorkerContextValue | undefined>(undefined);
 
 export function ServiceWorkerProvider(props: React.PropsWithChildren<{}>) {
-  const [waitingServiceWorker, setWaitingServiceWorker] = React.useState<ServiceWorker | null>(null);
+  const [waitingServiceWorker, setWaitingServiceWorker] = React.useState<ServiceWorker | null>(
+    null
+  );
   const [assetsUpdateReady, setAssetsUpdateReady] = React.useState(false);
   const [assetsCached, setAssetsCached] = React.useState(false);
 
@@ -40,28 +42,28 @@ export function ServiceWorkerProvider(props: React.PropsWithChildren<{}>) {
 
   // Once on component mounted subscribe to Update and Succes events in
   // CRA's service worker wrapper
-  React.useEffect(() => {
-    serviceWorker.register({
-      onUpdate: registration => {
-        setWaitingServiceWorker(registration.waiting);
-      },
-      onUpdateAvailable: registration => {
-        setAssetsUpdateReady(true);
-      },
-      onSuccess: registration => {
-        setAssetsCached(true);
-        setAssetsUpdateReady(false);
+  // React.useEffect(() => {
+  //   serviceWorker.register({
+  //     onUpdate: (registration) => {
+  //       setWaitingServiceWorker(registration.waiting);
+  //     },
+  //     onUpdateAvailable: () => {
+  //       setAssetsUpdateReady(true);
+  //     },
+  //     onSuccess: (registration) => {
+  //       setAssetsCached(true);
+  //       setAssetsUpdateReady(false);
 
-        if (registration.active) {
-          registration.active.addEventListener('statechange', (event: ServiceWorkerEvent) => {
-            if (!navigator.serviceWorker.controller) {
-              setAssetsCached(false);
-            }
-          });
-        }
-      },
-    });
-  }, []);
+  //       if (registration.active) {
+  //         registration.active.addEventListener('statechange', (event: ServiceWorkerEvent) => {
+  //           if (!navigator.serviceWorker.controller) {
+  //             setAssetsCached(false);
+  //           }
+  //         });
+  //       }
+  //     },
+  //   });
+  // }, []);
 
   return <ServiceWorkerContext.Provider value={value} {...props} />;
 }

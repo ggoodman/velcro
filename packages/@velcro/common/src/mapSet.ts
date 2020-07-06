@@ -18,6 +18,10 @@ export class MapSet<K, V> {
     return this;
   }
 
+  clear() {
+    this._data.clear();
+  }
+
   delete(key: K, value: V) {
     const values = this._data.get(key);
 
