@@ -1,5 +1,5 @@
 import { Graph, GraphBuilder } from '@velcro/bundler';
-import { CancellationTokenSource, Emitter, Event, Uri } from '@velcro/common';
+import { CancellationTokenSource, DisposableStore, Emitter, Event, Uri } from '@velcro/common';
 import { cssPlugin } from '@velcro/plugin-css';
 import { sucrasePlugin } from '@velcro/plugin-sucrase';
 import { Resolver } from '@velcro/resolver';
@@ -7,7 +7,6 @@ import { CdnStrategy } from '@velcro/strategy-cdn';
 import { CompoundStrategy } from '@velcro/strategy-compound';
 import { MemoryStrategy } from '@velcro/strategy-memory';
 import * as Monaco from 'monaco-editor';
-import { DisposableStore } from 'ts-primitives';
 
 const readUrl = (href: string) => fetch(href).then((res) => res.arrayBuffer());
 

@@ -1,6 +1,6 @@
+import { DisposableStore, Emitter, IDisposable } from '@velcro/common';
 import * as Monaco from 'monaco-editor';
 import { createContext, useContext, useEffect, useState } from 'react';
-import { DisposableStore, Emitter, IDisposable } from 'ts-primitives';
 
 export class EditorManager implements IDisposable {
   editor: Monaco.editor.IStandaloneCodeEditor | null = null;
