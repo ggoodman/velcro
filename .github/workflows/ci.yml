@@ -18,6 +18,6 @@ jobs:
       - name: Install
         run: npm i
       - name: Lerna bootstrap
-        run: npx lerna bootstrap
+        run: npx lerna bootstrap --no-ci
       - name: Tests
         run: npm run test
