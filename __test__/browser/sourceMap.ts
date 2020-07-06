@@ -26,12 +26,11 @@ describe('SourceMap support', () => {
     const loc1 = locator('42');
     const pos1 = consumer.originalPositionFor(loc1);
 
-    expect(pos1).toStrictEqual({
-      source: 'memory:/index.js',
-      line: 1,
-      column: 12,
-      name: null,
-    });
+    expect(typeof pos1).toEqual('object');
+    expect(pos1.column).toEqual(12);
+    expect(pos1.line).toEqual(1);
+    expect(pos1.name).toBeNull();
+    expect(pos1.source).toMatch(/^velcro:\/\/[^\/]+\/index\.js$/);
   });
 
   // Skipping while I figure out lifting high-res 'lower' source-map details into 'higher'

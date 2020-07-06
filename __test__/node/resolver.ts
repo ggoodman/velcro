@@ -48,7 +48,7 @@ describe('Velcro.Resolver', () => {
     expect(result.found).toBe(true);
     expect(result.uri!.toString()).toEqual('https://cdn.jsdelivr.net/npm/htm@3.0.4/react/index.js');
 
-    const result2 = await resolver.resolveBareModuleFrom('htm', result.uri!);
+    const result2 = await resolver.resolve('htm', result.uri!);
 
     expect(result2.found).toBe(true);
     expect(result2.uri!.toString()).toEqual('https://cdn.jsdelivr.net/npm/htm@3.0.4/dist/htm.js');
