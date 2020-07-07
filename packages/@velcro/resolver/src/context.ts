@@ -209,7 +209,7 @@ export class ResolverContext {
   getCanonicalUrl(uri: Uri): StrategyResult<ResolverStrategy.CanonicalizeResult> {
     const method = this.strategy.getCanonicalUrl;
     const receiver = this.strategy;
-    const operationName = `${this.strategy.constructor.name}.${method.name}`;
+    const operationName = 'Strategy.getCanonicalUrl';
     const href = uri.toString();
 
     return this.runInChildContext(operationName, uri, (ctx) =>
@@ -220,7 +220,7 @@ export class ResolverContext {
   getResolveRoot(uri: Uri): StrategyResult<ResolverStrategy.ResolveRootResult> {
     const method = this.strategy.getResolveRoot;
     const receiver = this.strategy;
-    const operationName = `${this.strategy.constructor.name}.${method.name}`;
+    const operationName = 'Strategy.getResolveRoot';
     const href = uri.toString();
 
     return this.runInChildContext(operationName, uri, (ctx) =>
@@ -231,7 +231,7 @@ export class ResolverContext {
   getSettings(uri: Uri): StrategyResult<ResolverStrategy.SettingsResult> {
     const method = this.strategy.getSettings;
     const receiver = this.strategy;
-    const operationName = `${this.strategy.constructor.name}.${method.name}`;
+    const operationName = 'Strategy.getSettings';
     const href = uri.toString();
 
     return this.runInChildContext(operationName, uri, (ctx) =>
@@ -255,7 +255,7 @@ export class ResolverContext {
     }
 
     const receiver = this.strategy;
-    const operationName = `${this.strategy.constructor.name}.${method.name}`;
+    const operationName = 'Strategy.getUrlForBareModule';
     const href = `${name}@${spec}${path}`;
 
     return this.runInChildContext(operationName, href, (ctx) =>
@@ -282,7 +282,7 @@ export class ResolverContext {
   listEntries(uri: Uri): StrategyResult<ResolverStrategy.ListEntriesResult> {
     const method = this.strategy.listEntries;
     const receiver = this.strategy;
-    const operationName = `${this.strategy.constructor.name}.${method.name}`;
+    const operationName = 'Strategy.listEntries';
     const href = uri.toString();
 
     return this.runInChildContext(operationName, uri, (ctx) =>
@@ -293,7 +293,7 @@ export class ResolverContext {
   readFileContent(uri: Uri): StrategyResult<ResolverStrategy.ReadFileContentResult> {
     const method = this.strategy.readFileContent;
     const receiver = this.strategy;
-    const operationName = `${this.strategy.constructor.name}.${method.name}`;
+    const operationName = 'Strategy.readFileContent';
     const href = uri.toString();
 
     this.recordVisit(uri, ResolverContext.VisitKind.File);
@@ -321,7 +321,7 @@ export class ResolverContext {
   resolve(spec: string, fromUri: Uri): StrategyResult<ResolveResult> {
     const method = resolveDependency;
     const receiver = null;
-    const operationName = method.name;
+    const operationName = 'resolve';
     const href = `${fromUri}|${spec}`;
 
     return this.runInChildContext(operationName, href, (ctx) =>
@@ -332,7 +332,7 @@ export class ResolverContext {
   resolveUri(uri: Uri): StrategyResult<ResolveResult> {
     const method = resolve;
     const receiver = null;
-    const operationName = method.name;
+    const operationName = 'resolveUri';
     const href = uri.toString();
 
     return this.runInChildContext(operationName, uri, (ctx) =>

@@ -4,21 +4,6 @@ abstract class BaseError extends Error {
   readonly name = this.constructor.name;
 }
 
-export class BuildError extends BaseError {
-  constructor(readonly errors: { err: Error; ctx: { path: string[] } }[]) {
-    super(
-      `Build failed with errors:\n${errors
-        .map(
-          (err) =>
-            `${err.err.message} at\n${err.ctx.path
-              .map((op, i) => `${' '.repeat(i + 1)}${op}`)
-              .join('\n')}`
-        )
-        .join('\n')}`
-    );
-  }
-}
-
 export class AmbiguousModuleError extends BaseError {}
 
 export class CanceledError extends BaseError {}

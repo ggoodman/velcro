@@ -59,5 +59,13 @@ export async function checkCancellation<T>(promise: Thenable<T>, token: Cancella
 }
 
 export function isThenable<T = unknown>(object: unknown): object is Thenable<T> {
-  return object && typeof (object as any).then === 'function';
+  return (
+    object &&
+    // Detection of 'normal' thenable
+    (typeof (object as any).then === 'function' ||
+      // Detection for regenerator runtime state
+      (typeof (object as any).done === 'boolean' &&
+        typeof (object as any).next === 'number' &&
+        typeof (object as any).pre === 'number'))
+  );
 }
