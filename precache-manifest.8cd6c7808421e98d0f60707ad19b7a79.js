@@ -12,7 +12,7 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/velcro/html.worker.js"
   },
   {
-    "revision": "864899f7b142f7af952ccb038154814e",
+    "revision": "35a7d88075a4aeae76a55c77adb97a04",
     "url": "/velcro/index.html"
   },
   {
@@ -292,8 +292,8 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/velcro/static/js/9.6d33c51e.chunk.js"
   },
   {
-    "revision": "3709f37b0e197b2507a2",
-    "url": "/velcro/static/js/main.7a0fe75f.chunk.js"
+    "revision": "6bbab97aea9d42ceeed4",
+    "url": "/velcro/static/js/main.553aad3b.chunk.js"
   },
   {
     "revision": "eed14ce5dc3f217a2a33",
