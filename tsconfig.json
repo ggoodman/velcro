@@ -1,4 +1,5 @@
 {
+  "extends": "@tsconfig/node10/tsconfig.json",
   "compilerOptions": {
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
@@ -9,7 +10,6 @@
     "downlevelIteration": true,
     "esModuleInterop": true,
     "incremental": true,
-    "lib": ["dom", "es2018"],
     "module": "esnext",
     "moduleResolution": "node",
     "noUnusedLocals": true,
@@ -26,8 +26,7 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
-    "stripInternal": true,
-    "target": "ES2018"
+    "stripInternal": true
   },
   // "files": ["__test__"],
   "include": ["__test__"],

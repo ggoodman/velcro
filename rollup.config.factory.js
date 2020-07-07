@@ -89,7 +89,7 @@ function rollupConfigFactory(dirname, packageJson) {
         RollupPluginNodeResolve(),
         RollupPluginReplace({ __VERSION__: packageJson.version }),
         createTypescriptPlugin(),
-        RollupPluginInjectProcessEnv({ NODE_ENV: 'production' }),
+        // RollupPluginInjectProcessEnv({ NODE_ENV: 'production' }),
       ],
     },
     {
@@ -119,7 +119,7 @@ function rollupConfigFactory(dirname, packageJson) {
               transforms: ['typescript'],
             })
           : createTypescriptPlugin(),
-        RollupPluginInjectProcessEnv({ NODE_ENV: 'production' }),
+        // RollupPluginInjectProcessEnv({ NODE_ENV: 'production' }),
         terser({
           mangle: {
             reserved: ['createRuntime', 'Module', 'Runtime'],
