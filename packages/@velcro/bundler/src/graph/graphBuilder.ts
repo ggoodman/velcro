@@ -50,6 +50,9 @@ export class Build {
     this.tokenSource = new CancellationTokenSource(options.token);
 
     this.disposer.add(this.tokenSource);
+    this.done.catch(() => {
+      // Prevent uncaught rejection
+    });
   }
 
   get onCompleted(): Event<{ graph: Graph }> {
