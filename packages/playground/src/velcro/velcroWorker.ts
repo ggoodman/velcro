@@ -1,7 +1,7 @@
 /* eslint-env worker */
 
 import { Graph, GraphBuilder } from '@velcro/bundler';
-import { CancellationTokenSource, DisposableStore, Uri } from '@velcro/common';
+import { CancellationTokenSource, DisposableStore, Event, Uri } from '@velcro/common';
 import { cssPlugin } from '@velcro/plugin-css';
 import { sucrasePlugin } from '@velcro/plugin-sucrase';
 import { Resolver } from '@velcro/resolver';
@@ -9,7 +9,7 @@ import { CdnStrategy } from '@velcro/strategy-cdn';
 import { CompoundStrategy } from '@velcro/strategy-compound';
 import { MemoryStrategy } from '@velcro/strategy-memory';
 import { DefineEvent, DefineState, FSM } from './fsm';
-import { BuildingState, BuiltState, EditorEvent, ErrorState } from './types';
+import { BuildingState, BuiltState, EditorEvents, ErrorState } from './types';
 // import * as Monaco from 'monaco-editor';
 
 const readUrl = (href: string) => fetch(href).then((res) => res.arrayBuffer());
@@ -270,20 +270,28 @@ const builder = new VelcroBuilderMachine({
 globalThis.addEventListener('message', (e) => {
   const data = e.data;
 
-  if (EditorEvent.is(data)) {
-    switch (data.event) {
-      case 'file_remove':
-        return builder.sendEvent('file_remove', { uri: Uri.parse(data.href) });
-      case 'file_update':
-        return builder.sendEvent('file_update', {
-          content: data.content,
-          uri: Uri.parse(data.href),
-        });
+  if (EditorEvents.is(data)) {
+    for (const event of data) {
+      switch (event.event) {
+        case 'file_remove':
+          builder.sendEvent('file_remove', { uri: Uri.parse(event.href) });
+          break;
+        case 'file_update':
+          builder.sendEvent('file_update', {
+            content: event.content,
+            uri: Uri.parse(event.href),
+          });
+          break;
+      }
     }
   }
 });
 
-builder.onStateChange((state) => {
+Event.debounce(
+  builder.onStateChange,
+  (_, e) => e,
+  16
+)((state) => {
   switch (state.stateName) {
     case 'building': {
       const message: BuildingState = {

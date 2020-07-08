@@ -16,6 +16,9 @@ export type FileUpdateEvent = z.infer<typeof FileUpdateEvent>;
 export const EditorEvent = z.union([FileRemoveEvent, FileUpdateEvent]);
 export type EditorEvent = z.infer<typeof EditorEvent>;
 
+export const EditorEvents = z.array(EditorEvent);
+export type EditorEvents = z.infer<typeof EditorEvents>;
+
 export const BuiltState = z.object({
   state: z.literal('built'),
   href: z.string(),

@@ -1,6 +1,6 @@
-import { DisposableStore, Emitter } from '@velcro/common';
+import { DisposableStore, Emitter, Event } from '@velcro/common';
 import type * as Monaco from 'monaco-editor';
-import { FileRemoveEvent, FileUpdateEvent, WorkerState } from './types';
+import { EditorEvent, FileRemoveEvent, FileUpdateEvent, WorkerState } from './types';
 
 export function trackMonaco(monaco: typeof Monaco) {
   const disposer = new DisposableStore();
@@ -12,7 +12,7 @@ export function trackMonaco(monaco: typeof Monaco) {
         event: 'file_remove',
         href: model.uri.toString(true),
       };
-      worker.postMessage(message);
+      postMessage(message);
       disposerReference.dispose();
     });
 
@@ -23,7 +23,7 @@ export function trackMonaco(monaco: typeof Monaco) {
           content: model.getValue(),
           href: model.uri.toString(true),
         };
-        worker.postMessage(message);
+        postMessage(message);
       })
     );
 
@@ -32,7 +32,31 @@ export function trackMonaco(monaco: typeof Monaco) {
       content: model.getValue(),
       href: model.uri.toString(true),
     };
-    worker.postMessage(message);
+    postMessage(message);
+  };
+
+  const postMessageEmitter = new Emitter<EditorEvent>();
+  const postMessageQueue = Event.debounce<EditorEvent, Map<string, EditorEvent>>(
+    postMessageEmitter.event,
+    (last, event) => {
+      if (!last) {
+        last = new Map();
+      }
+
+      last.set(event.href, event);
+
+      return last;
+    },
+    16
+  )((events) => {
+    worker.postMessage([...events.values()]);
+  });
+
+  disposer.add(postMessageEmitter);
+  disposer.add(postMessageQueue);
+
+  const postMessage = (message: EditorEvent) => {
+    postMessageEmitter.fire(message);
   };
 
   // Track existing models
