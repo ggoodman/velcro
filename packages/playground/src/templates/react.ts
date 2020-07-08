@@ -13,25 +13,24 @@ export const files: Record<string, string> = {
       null,
       2
     ) + '\n',
-  'app.jsx': `
+  'App.jsx': `
 import React, { Component } from 'react';
 import 'github-markdown-css';
 
 import { Explanation } from './explanation';
-import { name } from './name';
 import './style.css';
 
-class Hello extends Component {
+class App extends Component {
   render() {
     return <div className="markdown-body">
-      <h1>Hello {name}</h1>
-      <blockquote>There is no <del>spoon</del> server</blockquote>
+      <h1>Velcro Playground</h1>
+      <blockquote>Example of 💯 % browser module loading and bundling.</blockquote>
       <Explanation/>
     </div>;
   }
 }
 
-export default Hello
+export default App
   `.trim(),
   'explanation.jsx':
     `
@@ -39,28 +38,48 @@ import React from 'react';
 
 export const Explanation = () => <>
   <section>
-    <h2>What is this?</h2>
-    <p>
-      This is a demo of bundling and serving a browser-based sandbox fully from the browser. <strong>There are <em>no</em> servers involved</strong> except the static server hosting this demo and <a href="https://unpkg.com" target="_blank" rel="noopener">unpkg.com</a>. All module resolution, transpilation and bundling is happening in the browser.
-    </p>
-    <p>
-      Try it. Go offline, and reload...
-    </p>
-    <p>
-      <strong>I dare you.</strong>
-    </p>
+    <h2>Give it a try</h2>
+    <p>Here's what you should try:</p>
+    <ul>
+      <li>✍️ Change any of the code you see.</li>
+      <li>📦 Change any of the dependencies versions or introduce your own in the <code>package.json</code> file.</li>
+      <li>💄 Try writing some css, or maybe making a TypeScript file...</li>
+      <li>🕵🏼‍♂️ Checking out the action in the network tab of Developer Tools or seeing the generated source maps in the sources tab.</li>
+    </ul>
   </section>
   <section>
-    <h2>Features</h2>
+    <h2>How does it work</h2>
+    <p>
+      Velcro is a fully web-based dependency resolver, loader and bundler. In this playground, it has been configured to treat files
+      in the editor as being at <code>file://</code>, and npm modules as being at <code>https://cdn.jsdelivr.net</code>. Inter-module
+      dependencies are all resolved to satisfy the requested ranges and are loaded at maximum concurrency from jsDelivr.
+    </p>
+    <p>
+      As each file is resolved and read, it is run through a series of plugin hooks that are heavily inspired by Rollup.
+      Each hook has a default fallback implementation that allows us to resolve, load and transform individual files.
+      In the playground, Velcro has been configured with a css plugin and a <a href="https://github.com/alangpierce/sucrase" target="blank" rel="noopener">sucrase</a>
+      plugin (for ESM and TypeScript).
+    </p>
+    <p>
+      After processing each individual file, we parse it so that its AST can be traversed to:
+    </p>
     <ul>
-      <li>Full offline support. Once your cache is seeded, you can cut the cord.</li>
-      <li>Fully browser-based bundling.</li>
-      <li>Add (almost) any node module and no server is involved.</li>
-      <li>If you want to add another module, make sure to add it to <code>package.json</code> first.</li>
-      <li>Automatic type acquisition for full typings support in the browser, in JavaScript!</li>
-      <li>Resolve source locations in stack traces</li>
-      <li>Hot module reloading</li>
+      <li>Calculate scope metadata and identifier bindings</li>
+      <li>Identify calls to <code>require</code></li>
+      <li>Identify calls Node.js global objects so that shims can be injected</li>
+      <li>Prune branches based on <code>process.env.NODE_ENV</code></li>
     </ul>
+    <p>
+      This work allows us to build out a full dependency graph of modules. This graph has information about
+      every url consulted at each step of the process, so small parts of it can be efficiently invalidated.
+      Once the graph is complete, it can be serialized into a bundle of JavaScript code. At this point, we
+      can decide if we want to include source maps or not.
+    </p>
+    <p>
+      The bundled code is written to browser-internal storage using the <code>File</code> API and an
+      <code>iframe</code> is constructed dynamically that links to this. Every new generation of bundle
+      will cause the <code>iframe</code> to be replaced.
+    </p>
   </section>
 </>;
     `.trim() + '\n',
@@ -69,17 +88,13 @@ export const Explanation = () => <>
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
-import App from './app';
+import App from './App';
   
 ReactDOM.render(
   <App/>,
   document.getElementById('root')
 );
       `.trim() + '\n',
-  'name.js':
-    `
-export const name = 'Velcro';
-    `.trim() + '\n',
   'style.css':
     `
 .markdown-body {

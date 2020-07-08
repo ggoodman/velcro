@@ -3,7 +3,8 @@ import { Uri } from '@velcro/common';
 import * as Monaco from 'monaco-editor';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { EditorManagerContext } from '../lib/EditorManager';
-import { VelcroMonaco } from '../velcro';
+import { trackMonaco } from '../velcro/monaco';
+import { WorkerState } from '../velcro/types';
 
 export interface DeferredExecutionModuleRecord {
   code: string;
@@ -103,8 +104,9 @@ const Preview: React.FC<{ className?: string }> = (props) => {
   const editorManager = useContext(EditorManagerContext);
   const previewWrapRef = useRef<HTMLDivElement | null>(null);
   const previewIframeRef = useRef<HTMLIFrameElement | null>(null);
-  const [buildState, setBuildState] = useState<VelcroMonaco['state']>({ stateName: 'initial' });
-  const [messages, setMessages] = useState([] as Message[]);
+  const [buildState, setBuildState] = useState<WorkerState>({
+    state: 'initial',
+  });
   const [buildProgress, setBuildProgress] = useState({ completed: 0, total: 0 });
 
   useEffect(() => {
@@ -114,7 +116,6 @@ const Preview: React.FC<{ className?: string }> = (props) => {
         previewIframeRef.current.contentWindow === e.source &&
         e.data.event === 'click_error'
       ) {
-        console.log(e);
         editorManager.focusPath(Uri.parse(e.data.entry.file).fsPath, {
           columnNumber: e.data.entry.column,
           lineNumber: e.data.entry.line,
@@ -128,81 +129,23 @@ const Preview: React.FC<{ className?: string }> = (props) => {
   });
 
   useEffect(() => {
-    const velcro = new VelcroMonaco(Monaco, {
-      autoBuild: true,
-      autoBuildWaitTimeout: 500,
-    });
+    const monacoIntegration = trackMonaco(Monaco);
 
-    velcro.onStateChange((state) => {
+    monacoIntegration.onStateChange((state) => {
       setBuildState(state);
 
-      switch (state.stateName) {
+      switch (state.state) {
         case 'building': {
           setBuildProgress({
-            completed: state.data.completed,
-            total: state.data.completed + state.data.pending,
+            completed: state.completed,
+            total: state.completed + state.pending,
           });
           break;
         }
         case 'built': {
-          const graph = state.data.graph;
-          const [chunk] = graph.splitChunks();
-          const build = chunk.buildForStaticRuntime({
-            injectRuntime: true,
-          });
-          const codeWithStart = `${build.code}\n\n${[Uri.file('/index.jsx')]
-            .map(
-              (entrypoint) => `Velcro.runtime.require(${JSON.stringify(entrypoint.toString())});`
-            )
-            .join('\n')}\n`;
-          const runtimeCode = `${codeWithStart}\n//# sourceMappingURL=${build.sourceMapDataUri}`;
-          const codeBundleFile = new File([runtimeCode], Uri.file('/index.jsx').toString(), {
-            type: 'text/javascript',
-          });
-
-          const markup = new File(
-            [
-              `
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <script src="https://cdn.jsdelivr.net/npm/panic-overlay/build/panic-overlay.browser.js"></script>
-    <title>Document</title>
-    </head>
-    <body>
-    <div id="root"></div>
-    <script src="${URL.createObjectURL(codeBundleFile)}"></script>
-    <script>
-      panic.configure ({
-        stackEntryClicked (entry) {
-          if (window.parent) {
-            window.parent.postMessage({
-              event: 'click_error',
-              entry: {
-                column: entry.column,
-                file: entry.file,
-                line: entry.line,
-              }
-            });
-          }
-        }
-      })
-    </script>
-    </body>
-    </html>`,
-            ],
-            Uri.file('/index.html').toString(),
-            {
-              type: 'text/html',
-            }
-          );
-          const htmlUrl = URL.createObjectURL(markup);
           const iframe = document.createElement('iframe');
           iframe.style.display = 'none';
-          iframe.src = htmlUrl;
+          iframe.src = state.href;
 
           if (previewWrapRef.current) {
             previewWrapRef.current.appendChild(iframe);
@@ -228,19 +171,17 @@ const Preview: React.FC<{ className?: string }> = (props) => {
 
           break;
         }
-        case 'error': {
-          setMessages([{ lines: [{ isInternal: true, text: state.data.error.message }] }]);
-          break;
-        }
       }
     });
 
-    return () => velcro.dispose();
+    return () => {
+      monacoIntegration.dispose();
+    };
   }, [setBuildProgress, setBuildState]);
 
   return (
     <PreviewWrap className={props.className}>
-      {buildState.stateName === 'building' ? (
+      {buildState.state === 'building' ? (
         <PreviewProgress
           completed={buildProgress.completed}
           total={buildProgress.total}
@@ -248,9 +189,9 @@ const Preview: React.FC<{ className?: string }> = (props) => {
       ) : null}
       <PreviewIframeWrap ref={previewWrapRef}></PreviewIframeWrap>
       <PreviewMessages>
-        {buildState.stateName === 'error' ? (
+        {buildState.state === 'error' ? (
           <PreviewMessage
-            message={{ lines: [{ isInternal: true, text: buildState.data.error.message }] }}
+            message={{ lines: [{ isInternal: true, text: buildState.error.message }] }}
           ></PreviewMessage>
         ) : null}
       </PreviewMessages>
