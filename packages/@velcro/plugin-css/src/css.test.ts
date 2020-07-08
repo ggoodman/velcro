@@ -24,10 +24,10 @@ describe('cssPlugin', () => {
               function reload(){
                 var styleTag = document.createElement(\\"style\\");
                 styleTag.type = \\"text/css\\";
-                styleTag.innerHTML = '\\\\n'
-      +'      h1:before{ content: \\"\\\\\\\\f101\\"; }\\\\n'
-      +'      h1 { background-image: url(\\\\'img_tree.gif\\\\'); }\\\\n'
-      +'    ';
+                styleTag.innerHTML = ['',
+      '      h1:before{ content: \\"\\\\\\\\f101\\"; }',
+      '      h1 { background-image: url(\\\\'img_tree.gif\\\\'); }',
+      '    '].join('\\\\n');
                 document.head.appendChild(styleTag);
                 return {
                   dispose: function() {    

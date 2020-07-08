@@ -81,7 +81,8 @@ export const parse = function parseJavaScript(
     traverse(ast, visitorCtx, scopingAndRequiresVisitor);
     traverse(ast, visitorCtx, collectGlobalsVisitor);
   } catch (err) {
-    // console.log(code);
+    // console.debug(code);
+    // console.trace(err);
     throw new Error(`Error parsing ${uri}: ${err.message}`);
   }
 

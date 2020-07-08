@@ -26,7 +26,7 @@ export function cssPlugin(): Plugin {
             // This allows the resulting source-map to correct show the
             // original source whereas if the source had been collapsed to
             // a JavaScript string on a single line, all the detail is lost.
-            magicString.overwrite(i, i + 1, "\\n'\n+'");
+            magicString.overwrite(i, i + 1, "',\n'");
             break;
           case BACKSLASH:
           case SINGLE_QUOTE:
@@ -39,8 +39,8 @@ export function cssPlugin(): Plugin {
         function reload(){
           var styleTag = document.createElement("style");
           styleTag.type = "text/css";
-          styleTag.innerHTML = '`);
-      magicString.append(`';
+          styleTag.innerHTML = ['`);
+      magicString.append(`'].join('\\n');
           document.head.appendChild(styleTag);
           return {
             dispose: function() {    
