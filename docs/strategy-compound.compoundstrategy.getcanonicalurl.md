@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-getCanonicalUrl(ctx: ResolverContext, uri: Uri): ResolverStrategy.CanonicalizeResult | import("@velcro/common").Thenable<ResolverStrategy.CanonicalizeResult>;
+getCanonicalUrl(ctx: ResolverContext, uri: Uri): ResolverStrategy.CanonicalizeResult | Thenable<ResolverStrategy.CanonicalizeResult>;
 ```
 
 ## Parameters
@@ -19,5 +19,5 @@ getCanonicalUrl(ctx: ResolverContext, uri: Uri): ResolverStrategy.CanonicalizeRe
 
 <b>Returns:</b>
 
-ResolverStrategy.CanonicalizeResult \| import("@velcro/common").Thenable&lt;ResolverStrategy.CanonicalizeResult&gt;
+ResolverStrategy.CanonicalizeResult \| Thenable&lt;ResolverStrategy.CanonicalizeResult&gt;
 

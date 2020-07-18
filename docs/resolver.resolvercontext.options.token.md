@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-token: CancellationToken;
+token: CancellationToken$0;
 ```

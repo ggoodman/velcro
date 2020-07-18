@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-listEntries(ctx: ResolverContext, uri: Uri): ResolverStrategy.ListEntriesResult | import("@velcro/common").Thenable<ResolverStrategy.ListEntriesResult>;
+listEntries(ctx: ResolverContext, uri: Uri): ResolverStrategy.ListEntriesResult | Thenable<ResolverStrategy.ListEntriesResult>;
 ```
 
 ## Parameters
@@ -19,5 +19,5 @@ listEntries(ctx: ResolverContext, uri: Uri): ResolverStrategy.ListEntriesResult 
 
 <b>Returns:</b>
 
-ResolverStrategy.ListEntriesResult \| import("@velcro/common").Thenable&lt;ResolverStrategy.ListEntriesResult&gt;
+ResolverStrategy.ListEntriesResult \| Thenable&lt;ResolverStrategy.ListEntriesResult&gt;
 

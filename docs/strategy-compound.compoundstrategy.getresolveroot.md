@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-getResolveRoot(ctx: ResolverContext, uri: Uri): ResolverStrategy.ResolveRootResult | import("@velcro/common").Thenable<ResolverStrategy.ResolveRootResult>;
+getResolveRoot(ctx: ResolverContext, uri: Uri): ResolverStrategy.ResolveRootResult | Thenable<ResolverStrategy.ResolveRootResult>;
 ```
 
 ## Parameters
@@ -19,5 +19,5 @@ getResolveRoot(ctx: ResolverContext, uri: Uri): ResolverStrategy.ResolveRootResu
 
 <b>Returns:</b>
 
-ResolverStrategy.ResolveRootResult \| import("@velcro/common").Thenable&lt;ResolverStrategy.ResolveRootResult&gt;
+ResolverStrategy.ResolveRootResult \| Thenable&lt;ResolverStrategy.ResolveRootResult&gt;
 

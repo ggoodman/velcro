@@ -1,6 +1,6 @@
 {
   "name": "@velcro/runner",
-  "version": "0.45.1",
+  "version": "0.46.0",
   "description": "Opinionated tool for easily bundling and running code from anywhere",
   "keywords": [
     "velcro",
@@ -56,12 +56,12 @@
     "typescript": "^3.9.2"
   },
   "dependencies": {
-    "@velcro/bundler": "^0.45.1",
-    "@velcro/common": "^0.45.1",
-    "@velcro/resolver": "^0.45.1",
-    "@velcro/strategy-cdn": "^0.45.1",
-    "@velcro/strategy-compound": "^0.45.1",
-    "@velcro/strategy-memory": "^0.45.1"
+    "@velcro/bundler": "^0.46.0",
+    "@velcro/common": "^0.46.0",
+    "@velcro/resolver": "^0.46.0",
+    "@velcro/strategy-cdn": "^0.46.0",
+    "@velcro/strategy-compound": "^0.46.0",
+    "@velcro/strategy-memory": "^0.46.0"
   },
   "gitHead": "f63b45ad688f2fe9768349afeaf449c016bf33ef"
 }

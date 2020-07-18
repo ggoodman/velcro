@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-get token(): CancellationToken;
+get token(): CancellationToken$0;
 ```

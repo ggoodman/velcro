@@ -7,7 +7,9 @@
 <b>Signature:</b>
 
 ```typescript
-static create(resolver: Resolver, strategy: ResolverStrategy, settings: Resolver.Settings, token: CancellationToken): ResolverContext;
+create(resolver: Resolver, strategy: ResolverStrategy, settings: Resolver.Settings, token: CancellationToken$0, options?: {
+        debug?: boolean;
+    }): ResolverContext;
 ```
 
 ## Parameters
@@ -17,7 +19,8 @@ static create(resolver: Resolver, strategy: ResolverStrategy, settings: Resolver
 |  resolver | Resolver |  |
 |  strategy | ResolverStrategy |  |
 |  settings | Resolver.Settings |  |
-|  token | CancellationToken |  |
+|  token | CancellationToken$0 |  |
+|  options | { debug?: boolean; } |  |
 
 <b>Returns:</b>
 

@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-readFileContent(ctx: ResolverContext, uri: Uri): ResolverStrategy.ReadFileContentResult | import("@velcro/common").Thenable<ResolverStrategy.ReadFileContentResult>;
+readFileContent(ctx: ResolverContext, uri: Uri): ResolverStrategy.ReadFileContentResult | Thenable<ResolverStrategy.ReadFileContentResult>;
 ```
 
 ## Parameters
@@ -19,5 +19,5 @@ readFileContent(ctx: ResolverContext, uri: Uri): ResolverStrategy.ReadFileConten
 
 <b>Returns:</b>
 
-ResolverStrategy.ReadFileContentResult \| import("@velcro/common").Thenable&lt;ResolverStrategy.ReadFileContentResult&gt;
+ResolverStrategy.ReadFileContentResult \| Thenable&lt;ResolverStrategy.ReadFileContentResult&gt;
 

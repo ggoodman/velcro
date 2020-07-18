@@ -1,6 +1,6 @@
 {
   "name": "@velcro/strategy-fs",
-  "version": "0.45.1",
+  "version": "0.46.0",
   "description": "Velcro resolver strategy backed by an fs-compatible object",
   "keywords": [
     "velcro",
@@ -56,8 +56,8 @@
     "typescript": "^3.9.2"
   },
   "dependencies": {
-    "@velcro/common": "^0.45.1",
-    "@velcro/resolver": "^0.45.1"
+    "@velcro/common": "^0.46.0",
+    "@velcro/resolver": "^0.46.0"
   },
   "gitHead": "f63b45ad688f2fe9768349afeaf449c016bf33ef"
 }

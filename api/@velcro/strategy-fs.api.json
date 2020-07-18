@@ -27,7 +27,7 @@
             {
               "kind": "Reference",
               "text": "AbstractResolverStrategyWithRoot",
-              "canonicalReference": "@velcro/strategy-fs!AbstractResolverStrategyWithRoot:class"
+              "canonicalReference": "@velcro/strategy-fs!~AbstractResolverStrategyWithRoot:class"
             },
             {
               "kind": "Content",
@@ -80,7 +80,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverContext",
-                  "canonicalReference": "@velcro/strategy-fs!ResolverContext:class"
+                  "canonicalReference": "@velcro/strategy-fs!~ResolverContext:class"
                 },
                 {
                   "kind": "Content",
@@ -89,7 +89,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/strategy-fs!Uri:class"
+                  "canonicalReference": "@velcro/strategy-fs!~Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -107,7 +107,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverStrategy.CanonicalizeResult",
-                  "canonicalReference": "@velcro/strategy-fs!ResolverStrategy.CanonicalizeResult:interface"
+                  "canonicalReference": "@velcro/strategy-fs!~ResolverStrategy.CanonicalizeResult:interface"
                 },
                 {
                   "kind": "Content",
@@ -155,7 +155,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverContext",
-                  "canonicalReference": "@velcro/strategy-fs!ResolverContext:class"
+                  "canonicalReference": "@velcro/strategy-fs!~ResolverContext:class"
                 },
                 {
                   "kind": "Content",
@@ -164,7 +164,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/strategy-fs!Uri:class"
+                  "canonicalReference": "@velcro/strategy-fs!~Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -182,7 +182,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/strategy-fs!Uri:class"
+                  "canonicalReference": "@velcro/strategy-fs!~Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -234,7 +234,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/strategy-fs!Uri:class"
+                  "canonicalReference": "@velcro/strategy-fs!~Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -267,7 +267,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverContext",
-                  "canonicalReference": "@velcro/strategy-fs!ResolverContext:class"
+                  "canonicalReference": "@velcro/strategy-fs!~ResolverContext:class"
                 },
                 {
                   "kind": "Content",
@@ -276,7 +276,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/strategy-fs!Uri:class"
+                  "canonicalReference": "@velcro/strategy-fs!~Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -294,7 +294,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverStrategy.ListEntriesResult",
-                  "canonicalReference": "@velcro/strategy-fs!ResolverStrategy.ListEntriesResult:interface"
+                  "canonicalReference": "@velcro/strategy-fs!~ResolverStrategy.ListEntriesResult:interface"
                 },
                 {
                   "kind": "Content",
@@ -342,7 +342,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverContext",
-                  "canonicalReference": "@velcro/strategy-fs!ResolverContext:class"
+                  "canonicalReference": "@velcro/strategy-fs!~ResolverContext:class"
                 },
                 {
                   "kind": "Content",
@@ -351,7 +351,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/strategy-fs!Uri:class"
+                  "canonicalReference": "@velcro/strategy-fs!~Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -587,7 +587,7 @@
                     {
                       "kind": "Reference",
                       "text": "Uri",
-                      "canonicalReference": "@velcro/strategy-fs!Uri:class"
+                      "canonicalReference": "@velcro/strategy-fs!~Uri:class"
                     },
                     {
                       "kind": "Content",
@@ -613,7 +613,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.45.0\""
+              "text": "version = \"0.45.1\""
             }
           ],
           "releaseTag": "Public",

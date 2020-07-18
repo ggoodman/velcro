@@ -16,11 +16,12 @@ interface Options
 |  --- | --- | --- |
 |  [cache](./resolver.resolvercontext.options.cache.md) | Map&lt;string, Map&lt;string, unknown&gt;&gt; |  |
 |  [cacheInvalidations](./resolver.resolvercontext.options.cacheinvalidations.md) | MapSet&lt;string, InvalidationRecord&gt; |  |
+|  [debug](./resolver.resolvercontext.options.debug.md) | boolean |  |
 |  [decoder](./resolver.resolvercontext.options.decoder.md) | Decoder |  |
 |  [path](./resolver.resolvercontext.options.path.md) | string\[\] |  |
 |  [resolver](./resolver.resolvercontext.options.resolver.md) | Resolver |  |
 |  [settings](./resolver.resolvercontext.options.settings.md) | Resolver.Settings |  |
 |  [strategy](./resolver.resolvercontext.options.strategy.md) | ResolverStrategy |  |
-|  [token](./resolver.resolvercontext.options.token.md) | CancellationToken |  |
+|  [token](./resolver.resolvercontext.options.token.md) | CancellationToken$0 |  |
 |  [visits](./resolver.resolvercontext.options.visits.md) | Visits |  |
 

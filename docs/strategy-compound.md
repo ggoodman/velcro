@@ -14,6 +14,5 @@
 
 |  Variable | Description |
 |  --- | --- |
-|  [Velcro](./strategy-compound.velcro.md) |  |
 |  [version](./strategy-compound.version.md) |  |
 

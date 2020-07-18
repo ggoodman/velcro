@@ -1,6 +1,6 @@
 {
   "name": "@velcro/plugin-sucrase",
-  "version": "0.45.1",
+  "version": "0.46.0",
   "description": "A sucrase plugin for Velcro that adds support for Typescript, jsx, ES Modules and more",
   "keywords": [
     "velcro",
@@ -48,8 +48,8 @@
     "@rollup/plugin-commonjs": "^11.1.0",
     "@rollup/plugin-json": "^4.0.3",
     "@rollup/plugin-replace": "^2.3.2",
-    "@velcro/bundler": "^0.45.1",
-    "@velcro/common": "^0.45.1",
+    "@velcro/bundler": "^0.46.0",
+    "@velcro/common": "^0.46.0",
     "@wessberg/rollup-plugin-ts": "^1.2.27",
     "rollup": "^2.10.0",
     "rollup-plugin-inject-process-env": "^1.2.0",

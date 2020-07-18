@@ -9,26 +9,7 @@
 ```typescript
 readParentPackageJson(uri: Uri): Promise<({
         found: true;
-        packageJson: {
-            name: string;
-            version: string;
-            browser?: string | {
-                [key: string]: string | false;
-            } | undefined;
-            main?: string | undefined;
-            module?: string | undefined;
-            "jsnext:main"?: string | undefined;
-            dependencies?: {
-                [key: string]: string;
-            } | undefined;
-            devDependencies?: {
-                [key: string]: string;
-            } | undefined;
-            peerDependencies?: {
-                [key: string]: string;
-            } | undefined;
-            unpkg?: string | undefined;
-        };
+        packageJson: PackageJson;
         uri: Uri;
         visitedDirs: Uri[];
     } & {
@@ -41,26 +22,7 @@ readParentPackageJson(uri: Uri): Promise<({
         visited: ResolverContext.Visit[];
     })> | ({
         found: true;
-        packageJson: {
-            name: string;
-            version: string;
-            browser?: string | {
-                [key: string]: string | false;
-            } | undefined;
-            main?: string | undefined;
-            module?: string | undefined;
-            "jsnext:main"?: string | undefined;
-            dependencies?: {
-                [key: string]: string;
-            } | undefined;
-            devDependencies?: {
-                [key: string]: string;
-            } | undefined;
-            peerDependencies?: {
-                [key: string]: string;
-            } | undefined;
-            unpkg?: string | undefined;
-        };
+        packageJson: PackageJson;
         uri: Uri;
         visitedDirs: Uri[];
     } & {
@@ -82,5 +44,5 @@ readParentPackageJson(uri: Uri): Promise<({
 
 <b>Returns:</b>
 
-Promise&lt;({ found: true; packageJson: { name: string; version: string; browser?: string \| { \[key: string\]: string \| false; } \| undefined; main?: string \| undefined; module?: string \| undefined; "jsnext:main"?: string \| undefined; dependencies?: { \[key: string\]: string; } \| undefined; devDependencies?: { \[key: string\]: string; } \| undefined; peerDependencies?: { \[key: string\]: string; } \| undefined; unpkg?: string \| undefined; }; uri: Uri; visitedDirs: Uri\[\]; } &amp; { visited: ResolverContext.Visit\[\]; }) \| ({ found: false; packageJson: null; uri: null; } &amp; { visited: ResolverContext.Visit\[\]; })&gt; \| ({ found: true; packageJson: { name: string; version: string; browser?: string \| { \[key: string\]: string \| false; } \| undefined; main?: string \| undefined; module?: string \| undefined; "jsnext:main"?: string \| undefined; dependencies?: { \[key: string\]: string; } \| undefined; devDependencies?: { \[key: string\]: string; } \| undefined; peerDependencies?: { \[key: string\]: string; } \| undefined; unpkg?: string \| undefined; }; uri: Uri; visitedDirs: Uri\[\]; } &amp; { visited: ResolverContext.Visit\[\]; }) \| ({ found: false; packageJson: null; uri: null; } &amp; { visited: ResolverContext.Visit\[\]; })
+Promise&lt;({ found: true; packageJson: PackageJson; uri: Uri; visitedDirs: Uri\[\]; } &amp; { visited: ResolverContext.Visit\[\]; }) \| ({ found: false; packageJson: null; uri: null; } &amp; { visited: ResolverContext.Visit\[\]; })&gt; \| ({ found: true; packageJson: PackageJson; uri: Uri; visitedDirs: Uri\[\]; } &amp; { visited: ResolverContext.Visit\[\]; }) \| ({ found: false; packageJson: null; uri: null; } &amp; { visited: ResolverContext.Visit\[\]; })
 

@@ -8,7 +8,7 @@
 
 ```typescript
 readFileContent(_ctx: ResolverContext, uri: Uri): {
-        content: ArrayBufferLike;
+        content: ArrayBuffer | SharedArrayBuffer;
     };
 ```
 
@@ -21,5 +21,5 @@ readFileContent(_ctx: ResolverContext, uri: Uri): {
 
 <b>Returns:</b>
 
-{ content: ArrayBufferLike; }
+{ content: ArrayBuffer \| SharedArrayBuffer; }
 

@@ -27,7 +27,7 @@
             {
               "kind": "Reference",
               "text": "AbstractResolverStrategyWithRoot",
-              "canonicalReference": "@velcro/strategy-memory!AbstractResolverStrategyWithRoot:class"
+              "canonicalReference": "@velcro/strategy-memory!~AbstractResolverStrategyWithRoot:class"
             },
             {
               "kind": "Content",
@@ -71,7 +71,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/strategy-memory!Uri:class"
+                  "canonicalReference": "@velcro/strategy-memory!~Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -242,7 +242,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/strategy-memory!Uri:class"
+                  "canonicalReference": "@velcro/strategy-memory!~Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -275,7 +275,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverContext",
-                  "canonicalReference": "@velcro/strategy-memory!ResolverContext:class"
+                  "canonicalReference": "@velcro/strategy-memory!~ResolverContext:class"
                 },
                 {
                   "kind": "Content",
@@ -284,7 +284,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/strategy-memory!Uri:class"
+                  "canonicalReference": "@velcro/strategy-memory!~Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -297,7 +297,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/strategy-memory!Uri:class"
+                  "canonicalReference": "@velcro/strategy-memory!~Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -306,7 +306,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverStrategy.EntryKind",
-                  "canonicalReference": "@velcro/strategy-memory!ResolverStrategy.EntryKind:enum"
+                  "canonicalReference": "@velcro/strategy-memory!~ResolverStrategy.EntryKind:enum"
                 },
                 {
                   "kind": "Content",
@@ -354,7 +354,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverContext",
-                  "canonicalReference": "@velcro/strategy-memory!ResolverContext:class"
+                  "canonicalReference": "@velcro/strategy-memory!~ResolverContext:class"
                 },
                 {
                   "kind": "Content",
@@ -363,7 +363,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/strategy-memory!Uri:class"
+                  "canonicalReference": "@velcro/strategy-memory!~Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -375,8 +375,17 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "ArrayBufferLike",
-                  "canonicalReference": "!ArrayBufferLike:type"
+                  "text": "ArrayBuffer",
+                  "canonicalReference": "!ArrayBuffer:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": " | "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "SharedArrayBuffer",
+                  "canonicalReference": "!SharedArrayBuffer:interface"
                 },
                 {
                   "kind": "Content",
@@ -390,7 +399,7 @@
               "isStatic": false,
               "returnTypeTokenRange": {
                 "startIndex": 5,
-                "endIndex": 8
+                "endIndex": 10
               },
               "releaseTag": "Public",
               "overloadIndex": 1,
@@ -476,7 +485,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/strategy-memory!Uri:class"
+                  "canonicalReference": "@velcro/strategy-memory!~Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -515,7 +524,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.45.0\""
+              "text": "version = \"0.45.1\""
             }
           ],
           "releaseTag": "Public",

@@ -7,14 +7,14 @@
 <b>Signature:</b>
 
 ```typescript
-debug(...args: Parameters<Console["debug"]>): void;
+debug(...args: Parameters<Console["warn"]>): void;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  args | Parameters&lt;Console\["debug"\]&gt; |  |
+|  args | Parameters&lt;Console\["warn"\]&gt; |  |
 
 <b>Returns:</b>
 

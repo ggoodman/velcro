@@ -9,7 +9,6 @@
 |  Class | Description |
 |  --- | --- |
 |  [AmbiguousModuleError](./common.ambiguousmoduleerror.md) |  |
-|  [BuildError](./common.builderror.md) |  |
 |  [CanceledError](./common.cancelederror.md) |  |
 |  [Decoder](./common.decoder.md) |  |
 |  [DependencyNotFoundError](./common.dependencynotfounderror.md) |  |

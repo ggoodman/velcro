@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-getUrlForBareModule(ctx: ResolverContext, name: string, spec: string, path: string): ResolverStrategy.BareModuleResult | import("@velcro/common").Thenable<ResolverStrategy.BareModuleResult>;
+getUrlForBareModule(ctx: ResolverContext, name: string, spec: string, path: string): ResolverStrategy.BareModuleResult | Thenable<ResolverStrategy.BareModuleResult>;
 ```
 
 ## Parameters
@@ -21,5 +21,5 @@ getUrlForBareModule(ctx: ResolverContext, name: string, spec: string, path: stri
 
 <b>Returns:</b>
 
-ResolverStrategy.BareModuleResult \| import("@velcro/common").Thenable&lt;ResolverStrategy.BareModuleResult&gt;
+ResolverStrategy.BareModuleResult \| Thenable&lt;ResolverStrategy.BareModuleResult&gt;
 

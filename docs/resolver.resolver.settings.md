@@ -14,6 +14,7 @@ interface Settings
 
 |  Property | Type | Description |
 |  --- | --- | --- |
+|  [debug](./resolver.resolver.settings.debug.md) | boolean |  |
 |  [extensions](./resolver.resolver.settings.extensions.md) | string\[\] |  |
 |  [packageMain](./resolver.resolver.settings.packagemain.md) | PackageMainField\[\] |  |
 
