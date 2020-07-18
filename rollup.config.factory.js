@@ -1,6 +1,6 @@
 const RollupPluginCommonJs = require('@rollup/plugin-commonjs');
 const RollupPluginJson = require('@rollup/plugin-json');
-const RollupPluginNodeResolve = require('@rollup/plugin-node-resolve');
+const RollupPluginNodeResolve = require('@rollup/plugin-node-resolve').default;
 const RollupPluginReplace = require('@rollup/plugin-replace');
 const RollupPluginSucrase = require('@rollup/plugin-sucrase');
 const RollupPluginTs = require('@wessberg/rollup-plugin-ts');
