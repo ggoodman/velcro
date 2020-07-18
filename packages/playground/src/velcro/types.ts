@@ -1,5 +1,12 @@
 import * as z from 'zod';
 
+export const FileCreateEvent = z.object({
+  event: z.literal('file_create'),
+  content: z.string(),
+  href: z.string(),
+});
+export type FileCreateEvent = z.infer<typeof FileCreateEvent>;
+
 export const FileRemoveEvent = z.object({
   event: z.literal('file_remove'),
   href: z.string(),
@@ -13,7 +20,7 @@ export const FileUpdateEvent = z.object({
 });
 export type FileUpdateEvent = z.infer<typeof FileUpdateEvent>;
 
-export const EditorEvent = z.union([FileRemoveEvent, FileUpdateEvent]);
+export const EditorEvent = z.union([FileCreateEvent, FileRemoveEvent, FileUpdateEvent]);
 export type EditorEvent = z.infer<typeof EditorEvent>;
 
 export const EditorEvents = z.array(EditorEvent);

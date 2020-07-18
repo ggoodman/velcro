@@ -1,6 +1,12 @@
 import { DisposableStore, Emitter, Event } from '@velcro/common';
 import type * as Monaco from 'monaco-editor';
-import { EditorEvent, FileRemoveEvent, FileUpdateEvent, WorkerState } from './types';
+import {
+  EditorEvent,
+  FileCreateEvent,
+  FileRemoveEvent,
+  FileUpdateEvent,
+  WorkerState,
+} from './types';
 
 export function trackMonaco(monaco: typeof Monaco) {
   const disposer = new DisposableStore();
@@ -27,8 +33,8 @@ export function trackMonaco(monaco: typeof Monaco) {
       })
     );
 
-    const message: FileUpdateEvent = {
-      event: 'file_update',
+    const message: FileCreateEvent = {
+      event: 'file_create',
       content: model.getValue(),
       href: model.uri.toString(true),
     };

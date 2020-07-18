@@ -22,10 +22,12 @@ type BuilderState =
   | DefineState<'built', { graph: Graph; latency: number }>
   | DefineState<'error', { error: Error; latency: number }>;
 
+type FileCreateEvent = DefineEvent<'file_create', { uri: Uri; content: string }>;
 type FileRemoveEvent = DefineEvent<'file_remove', { uri: Uri }>;
 type FileUpdateEvent = DefineEvent<'file_update', { uri: Uri; content: string }>;
 type BuilderEvent =
   | DefineEvent<'build'>
+  | FileCreateEvent
   | FileRemoveEvent
   | FileUpdateEvent
   | DefineEvent<'timer_fired'>
@@ -41,6 +43,9 @@ export class VelcroBuilderMachine {
         onEvent: {
           build: ({ event, transitionTo }) =>
             transitionTo({ stateName: 'building', data: { pending: 0, completed: 0 } }, event),
+          file_create: ({ event, transitionTo }) => {
+            if (this.onFileCreate(event)) transitionTo({ stateName: 'dirty' }, event);
+          },
           file_remove: ({ event, transitionTo }) => {
             if (this.onFileRemove(event)) transitionTo({ stateName: 'dirty' }, event);
           },
@@ -58,6 +63,9 @@ export class VelcroBuilderMachine {
         onEvent: {
           build: ({ event, transitionTo }) =>
             transitionTo({ stateName: 'building', data: { completed: 0, pending: 0 } }, event),
+          file_create: ({ event, transitionTo }) => {
+            if (this.onFileCreate(event)) transitionTo({ stateName: 'dirty' }, event);
+          },
           file_remove: ({ event, transitionTo }) => {
             if (this.onFileRemove(event)) transitionTo({ stateName: 'dirty' }, event);
           },
@@ -81,6 +89,9 @@ export class VelcroBuilderMachine {
         onEvent: {
           build: ({ event, transitionTo }) =>
             transitionTo({ stateName: 'building', data: { completed: 0, pending: 0 } }, event),
+          file_create: ({ event, transitionTo }) => {
+            if (this.onFileCreate(event)) transitionTo({ stateName: 'dirty' }, event);
+          },
           file_remove: ({ event, transitionTo }) => {
             if (this.onFileRemove(event)) transitionTo({ stateName: 'dirty' }, event);
           },
@@ -147,6 +158,9 @@ export class VelcroBuilderMachine {
               },
               event
             ),
+          file_create: ({ event, transitionTo }) => {
+            if (this.onFileCreate(event)) transitionTo({ stateName: 'dirty' }, event);
+          },
           file_remove: ({ event, transitionTo }) => {
             if (this.onFileRemove(event)) transitionTo({ stateName: 'dirty' }, event);
           },
@@ -159,6 +173,9 @@ export class VelcroBuilderMachine {
         onEvent: {
           build: ({ event, transitionTo }) =>
             transitionTo({ stateName: 'building', data: { completed: 0, pending: 0 } }, event),
+          file_create: ({ event, transitionTo }) => {
+            if (this.onFileCreate(event)) transitionTo({ stateName: 'dirty' }, event);
+          },
           file_remove: ({ event, transitionTo }) => {
             if (this.onFileRemove(event)) transitionTo({ stateName: 'dirty' }, event);
           },
@@ -171,6 +188,9 @@ export class VelcroBuilderMachine {
         onEvent: {
           build: ({ event, transitionTo }) =>
             transitionTo({ stateName: 'building', data: { completed: 0, pending: 0 } }, event),
+          file_create: ({ event, transitionTo }) => {
+            if (this.onFileCreate(event)) transitionTo({ stateName: 'dirty' }, event);
+          },
           file_remove: ({ event, transitionTo }) => {
             if (this.onFileRemove(event)) transitionTo({ stateName: 'dirty' }, event);
           },
@@ -239,6 +259,18 @@ export class VelcroBuilderMachine {
     this.fsm.sendEvent('build');
   }
 
+  private onFileCreate(e: FileCreateEvent) {
+    if (!Uri.isPrefixOf(this.localStrategy.rootUri, e.data.uri)) {
+      return false;
+    }
+
+    this.localStrategy.addFile(e.data.uri.fsPath, e.data.content, { overwrite: true });
+    this.graphBuilder.invalidate(e.data.uri);
+    this.graphBuilder.invalidate(Uri.joinPath(e.data.uri, '..'));
+
+    return true;
+  }
+
   private onFileRemove(e: FileRemoveEvent) {
     if (!Uri.isPrefixOf(this.localStrategy.rootUri, e.data.uri)) {
       return false;
@@ -246,6 +278,7 @@ export class VelcroBuilderMachine {
 
     this.localStrategy.removeFile(e.data.uri.fsPath);
     this.graphBuilder.invalidate(e.data.uri);
+    this.graphBuilder.invalidate(Uri.joinPath(e.data.uri, '..'));
 
     return true;
   }
@@ -273,6 +306,12 @@ globalThis.addEventListener('message', (e) => {
   if (EditorEvents.is(data)) {
     for (const event of data) {
       switch (event.event) {
+        case 'file_create':
+          builder.sendEvent('file_create', {
+            content: event.content,
+            uri: Uri.parse(event.href),
+          });
+          break;
         case 'file_remove':
           builder.sendEvent('file_remove', { uri: Uri.parse(event.href) });
           break;
