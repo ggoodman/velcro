@@ -2,13 +2,13 @@
   "files": {
     "static/js/0.48ee97d6.chunk.js": "/velcro/static/js/0.48ee97d6.chunk.js",
     "static/js/0.48ee97d6.chunk.js.map": "/velcro/static/js/0.48ee97d6.chunk.js.map",
-    "main.js": "/velcro/static/js/main.7383d510.chunk.js",
-    "main.js.map": "/velcro/static/js/main.7383d510.chunk.js.map",
+    "main.js": "/velcro/static/js/main.152755e2.chunk.js",
+    "main.js.map": "/velcro/static/js/main.152755e2.chunk.js.map",
     "runtime-main.js": "/velcro/static/js/runtime-main.4dcf7779.js",
     "runtime-main.js.map": "/velcro/static/js/runtime-main.4dcf7779.js.map",
     "static/css/3.0a1d1a66.chunk.css": "/velcro/static/css/3.0a1d1a66.chunk.css",
-    "static/js/3.3cb2510c.chunk.js": "/velcro/static/js/3.3cb2510c.chunk.js",
-    "static/js/3.3cb2510c.chunk.js.map": "/velcro/static/js/3.3cb2510c.chunk.js.map",
+    "static/js/3.7adcd136.chunk.js": "/velcro/static/js/3.7adcd136.chunk.js",
+    "static/js/3.7adcd136.chunk.js.map": "/velcro/static/js/3.7adcd136.chunk.js.map",
     "static/js/4.5e64cbfa.chunk.js": "/velcro/static/js/4.5e64cbfa.chunk.js",
     "static/js/4.5e64cbfa.chunk.js.map": "/velcro/static/js/4.5e64cbfa.chunk.js.map",
     "static/js/5.59f62115.chunk.js": "/velcro/static/js/5.59f62115.chunk.js",
@@ -144,13 +144,13 @@
     "index.html": "/velcro/index.html",
     "json.worker.js": "/velcro/json.worker.js",
     "json.worker.js.map": "/velcro/json.worker.js.map",
-    "precache-manifest.d73c947540684536ec3342d7b7626f88.js": "/velcro/precache-manifest.d73c947540684536ec3342d7b7626f88.js",
+    "precache-manifest.e9c30d4e07a7b024a4de1c0d792e3e49.js": "/velcro/precache-manifest.e9c30d4e07a7b024a4de1c0d792e3e49.js",
     "service-worker.js": "/velcro/service-worker.js",
     "static/css/3.0a1d1a66.chunk.css.map": "/velcro/static/css/3.0a1d1a66.chunk.css.map",
-    "static/js/0.f471c50e.chunk.worker.js": "/velcro/static/js/0.f471c50e.chunk.worker.js",
-    "static/js/0.f471c50e.chunk.worker.js.LICENSE.txt": "/velcro/static/js/0.f471c50e.chunk.worker.js.LICENSE.txt",
-    "static/js/0.f471c50e.chunk.worker.js.map": "/velcro/static/js/0.f471c50e.chunk.worker.js.map",
-    "static/js/3.3cb2510c.chunk.js.LICENSE.txt": "/velcro/static/js/3.3cb2510c.chunk.js.LICENSE.txt",
+    "static/js/0.4109523c.chunk.worker.js": "/velcro/static/js/0.4109523c.chunk.worker.js",
+    "static/js/0.4109523c.chunk.worker.js.LICENSE.txt": "/velcro/static/js/0.4109523c.chunk.worker.js.LICENSE.txt",
+    "static/js/0.4109523c.chunk.worker.js.map": "/velcro/static/js/0.4109523c.chunk.worker.js.map",
+    "static/js/3.7adcd136.chunk.js.LICENSE.txt": "/velcro/static/js/3.7adcd136.chunk.js.LICENSE.txt",
     "static/js/59.9f713d24.chunk.js.LICENSE.txt": "/velcro/static/js/59.9f713d24.chunk.js.LICENSE.txt",
     "static/media/codicon.css": "/velcro/static/media/codicon.a609dc0f.ttf",
     "ts.worker.js": "/velcro/ts.worker.js",
@@ -160,7 +160,7 @@
   "entrypoints": [
     "static/js/runtime-main.4dcf7779.js",
     "static/css/3.0a1d1a66.chunk.css",
-    "static/js/3.3cb2510c.chunk.js",
-    "static/js/main.7383d510.chunk.js"
+    "static/js/3.7adcd136.chunk.js",
+    "static/js/main.152755e2.chunk.js"
   ]
 }
