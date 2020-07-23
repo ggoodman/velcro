@@ -1,6 +1,6 @@
 {
   "name": "@velcro/runner",
-  "version": "0.46.0",
+  "version": "0.46.1",
   "description": "Opinionated tool for easily bundling and running code from anywhere",
   "keywords": [
     "velcro",
@@ -56,7 +56,7 @@
     "typescript": "^3.9.2"
   },
   "dependencies": {
-    "@velcro/bundler": "^0.46.0",
+    "@velcro/bundler": "^0.46.1",
     "@velcro/common": "^0.46.0",
     "@velcro/resolver": "^0.46.0",
     "@velcro/strategy-cdn": "^0.46.0",

@@ -14,7 +14,7 @@ declare class ChunkOutput
 
 |  Constructor | Modifiers | Description |
 |  --- | --- | --- |
-|  [(constructor)(bundle, sourceModules, uri)](./bundler.chunkoutput._constructor_.md) |  | Constructs a new instance of the <code>ChunkOutput</code> class |
+|  [(constructor)(bundle, sourceMapTree, uri)](./bundler.chunkoutput._constructor_.md) |  | Constructs a new instance of the <code>ChunkOutput</code> class |
 
 ## Properties
 

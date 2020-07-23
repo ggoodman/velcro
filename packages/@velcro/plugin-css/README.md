@@ -5,4 +5,4 @@
 
 A css plugin for Velcro that adds browser support for importing stylesheets.
 
-[API Docs](https://github.com/ggoodman/velcro/tree/v0.46.0/docs/plugin-css.md)
+[API Docs](https://github.com/ggoodman/velcro/tree/v0.46.1/docs/plugin-css.md)
