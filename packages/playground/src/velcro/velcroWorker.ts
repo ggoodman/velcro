@@ -18,9 +18,9 @@ type BuilderState =
   | DefineState<'initial'>
   | DefineState<'dirty'>
   | DefineState<'waiting'>
-  | DefineState<'building', { pending: number; completed: number }>
-  | DefineState<'built', { graph: Graph; latency: number }>
-  | DefineState<'error', { error: Error; latency: number }>;
+  | DefineState<'building', { pending: number; completed: number; start: number }>
+  | DefineState<'built', { graph: Graph; start: number; end: number }>
+  | DefineState<'error', { error: Error; start: number; end: number }>;
 
 type FileCreateEvent = DefineEvent<'file_create', { uri: Uri; content: string }>;
 type FileRemoveEvent = DefineEvent<'file_remove', { uri: Uri }>;
@@ -42,7 +42,10 @@ export class VelcroBuilderMachine {
       initial: {
         onEvent: {
           build: ({ event, transitionTo }) =>
-            transitionTo({ stateName: 'building', data: { pending: 0, completed: 0 } }, event),
+            transitionTo(
+              { stateName: 'building', data: { pending: 0, completed: 0, start: Date.now() } },
+              event
+            ),
           file_create: ({ event, transitionTo }) => {
             if (this.onFileCreate(event)) transitionTo({ stateName: 'dirty' }, event);
           },
@@ -62,7 +65,10 @@ export class VelcroBuilderMachine {
         },
         onEvent: {
           build: ({ event, transitionTo }) =>
-            transitionTo({ stateName: 'building', data: { completed: 0, pending: 0 } }, event),
+            transitionTo(
+              { stateName: 'building', data: { pending: 0, completed: 0, start: Date.now() } },
+              event
+            ),
           file_create: ({ event, transitionTo }) => {
             if (this.onFileCreate(event)) transitionTo({ stateName: 'dirty' }, event);
           },
@@ -88,7 +94,10 @@ export class VelcroBuilderMachine {
         },
         onEvent: {
           build: ({ event, transitionTo }) =>
-            transitionTo({ stateName: 'building', data: { completed: 0, pending: 0 } }, event),
+            transitionTo(
+              { stateName: 'building', data: { pending: 0, completed: 0, start: Date.now() } },
+              event
+            ),
           file_create: ({ event, transitionTo }) => {
             if (this.onFileCreate(event)) transitionTo({ stateName: 'dirty' }, event);
           },
@@ -99,7 +108,10 @@ export class VelcroBuilderMachine {
             if (this.onFileUpdate(event)) transitionTo({ stateName: 'dirty' }, event);
           },
           timer_fired: ({ event, transitionTo }) =>
-            transitionTo({ stateName: 'building', data: { completed: 0, pending: 0 } }, event),
+            transitionTo(
+              { stateName: 'building', data: { pending: 0, completed: 0, start: Date.now() } },
+              event
+            ),
         },
       },
       building: {
@@ -138,7 +150,7 @@ export class VelcroBuilderMachine {
             transitionTo(
               {
                 stateName: 'built',
-                data: { graph: event.data.graph, latency: Date.now() - event.data.start },
+                data: { graph: event.data.graph, end: Date.now(), start: event.data.start },
               },
               event
             ),
@@ -146,15 +158,19 @@ export class VelcroBuilderMachine {
             transitionTo(
               {
                 stateName: 'error',
-                data: { error: event.data.error, latency: Date.now() - event.data.start },
+                data: { error: event.data.error, end: Date.now(), start: event.data.start },
               },
               event
             ),
-          build_progress: ({ event, transitionTo }) =>
+          build_progress: ({ event, state, transitionTo }) =>
             transitionTo(
               {
                 stateName: 'building',
-                data: { completed: event.data.completed, pending: event.data.pending },
+                data: {
+                  completed: event.data.completed,
+                  pending: event.data.pending,
+                  start: state.data.start,
+                },
               },
               event
             ),
@@ -172,7 +188,10 @@ export class VelcroBuilderMachine {
       built: {
         onEvent: {
           build: ({ event, transitionTo }) =>
-            transitionTo({ stateName: 'building', data: { completed: 0, pending: 0 } }, event),
+            transitionTo(
+              { stateName: 'building', data: { pending: 0, completed: 0, start: Date.now() } },
+              event
+            ),
           file_create: ({ event, transitionTo }) => {
             if (this.onFileCreate(event)) transitionTo({ stateName: 'dirty' }, event);
           },
@@ -187,7 +206,10 @@ export class VelcroBuilderMachine {
       error: {
         onEvent: {
           build: ({ event, transitionTo }) =>
-            transitionTo({ stateName: 'building', data: { completed: 0, pending: 0 } }, event),
+            transitionTo(
+              { stateName: 'building', data: { pending: 0, completed: 0, start: Date.now() } },
+              event
+            ),
           file_create: ({ event, transitionTo }) => {
             if (this.onFileCreate(event)) transitionTo({ stateName: 'dirty' }, event);
           },
@@ -346,11 +368,11 @@ Event.debounce(
       const build = chunk.buildForStaticRuntime({
         injectRuntime: true,
       });
-      const codeWithStart = `${build.code}\n\n${[Uri.file('/index.jsx')]
+      let code = `${build.code}\n\n${[Uri.file('/index.jsx')]
         .map((entrypoint) => `Velcro.runtime.require(${JSON.stringify(entrypoint.toString())});`)
         .join('\n')}\n`;
-      const runtimeCode = `${codeWithStart}\n//# sourceMappingURL=${build.sourceMapDataUri}`;
-      const codeBundleFile = new File([runtimeCode], Uri.file('/index.jsx').toString(), {
+      // code += `\n//# sourceMappingURL=${build.sourceMapDataUri}`;
+      const codeBundleFile = new File([code], Uri.file('/index.jsx').toString(), {
         type: 'text/javascript',
       });
 
@@ -397,6 +419,8 @@ Event.debounce(
       const message: BuiltState = {
         state: 'built',
         href: htmlUrl,
+        start: state.data.start,
+        end: state.data.end,
       };
 
       return globalThis.postMessage(message);

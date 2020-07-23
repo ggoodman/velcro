@@ -8,6 +8,8 @@ import {
   WorkerState,
 } from './types';
 
+const EDITOR_EVENT_THROTTLE_MS = (1000 / 16) | 0;
+
 export function trackMonaco(monaco: typeof Monaco) {
   const disposer = new DisposableStore();
   const worker = new Worker('./velcroWorker.ts', { type: 'module' });
@@ -53,7 +55,7 @@ export function trackMonaco(monaco: typeof Monaco) {
 
       return last;
     },
-    16
+    EDITOR_EVENT_THROTTLE_MS
   )((events) => {
     worker.postMessage([...events.values()]);
   });

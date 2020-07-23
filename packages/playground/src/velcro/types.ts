@@ -29,6 +29,8 @@ export type EditorEvents = z.infer<typeof EditorEvents>;
 export const BuiltState = z.object({
   state: z.literal('built'),
   href: z.string(),
+  start: z.number().int(),
+  end: z.number().int(),
 });
 export type BuiltState = z.infer<typeof BuiltState>;
 

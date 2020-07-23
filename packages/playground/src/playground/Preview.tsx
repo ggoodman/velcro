@@ -143,6 +143,12 @@ const Preview: React.FC<{ className?: string }> = (props) => {
           break;
         }
         case 'built': {
+          console.debug(
+            'Rebuild finished, build latency: %d, end-to-end latency: %d',
+            state.end - state.start,
+            Date.now() - state.start
+          );
+
           const iframe = document.createElement('iframe');
           iframe.style.display = 'none';
           iframe.src = state.href;
