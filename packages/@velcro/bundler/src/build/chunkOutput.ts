@@ -1,9 +1,8 @@
 import { Uri } from '@velcro/common';
 import { Bundle } from 'magic-string';
 import { encode } from 'sourcemap-codec';
-import { SourceModule } from '../graph/sourceModule';
 import { SourceMap } from './sourceMap';
-import { Link, Source } from './sourceMapTree';
+import { ISourceMapper } from './sourceMapTree';
 
 export class ChunkOutput {
   private cachedCode?: string;
@@ -13,7 +12,7 @@ export class ChunkOutput {
 
   constructor(
     private readonly bundle: Bundle,
-    private readonly sourceModules: Map<string, SourceModule>,
+    private readonly sourceMapTree: ISourceMapper,
     readonly uri: Uri
   ) {}
 
@@ -54,32 +53,11 @@ export class ChunkOutput {
   }
 
   private generateSourceMap() {
-    const inputMap = this.bundle.generateDecodedMap({
-      includeContent: false,
-      hires: true,
-      source: this.href,
-    });
-
-    const sourceMapTree = new Link(
-      inputMap,
-      inputMap.sources.map((sourceHref) => {
-        const sourceModule = this.sourceModules.get(sourceHref);
-
-        if (!sourceModule) {
-          return new Source(sourceHref, 'SOURCEMAP ERROR');
-        }
-
-        // All of the transformations included in the source module's magicString
-        // were baked into the bundle already. We just need to map these into any
-        // earlier sources.
-        return sourceModule.sourceMapsTree;
-      })
-    );
-    const sourceMapTreeMappings = sourceMapTree.traceMappings();
+    const sourceMapTreeMappings = this.sourceMapTree.traceMappings();
 
     if (sourceMapTreeMappings instanceof Error) {
       return new SourceMap({
-        file: inputMap.file,
+        file: this.href,
         mappings: '',
         names: [],
         sources: [],

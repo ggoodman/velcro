@@ -1,6 +1,10 @@
 import { SourceMapSegment } from 'magic-string';
 import { decode } from 'sourcemap-codec';
 
+export interface ISourceMapper {
+  traceMappings(): ReturnType<typeof traceMappings>;
+}
+
 /**
  * Copyright (c) Rollup 2020 authors: https://github.com/rollup/rollup/graphs/contributors)
  *
@@ -44,106 +48,147 @@ export class Link {
   }
 
   traceMappings() {
-    const sources: string[] = [];
-    const sourcesContent: (string | null)[] = [];
-    const names: string[] = [];
-    const mappings = [];
-
-    for (const line of this.mappings) {
-      const tracedLine: SourceMapSegment[] = [];
-
-      for (const segment of line) {
-        if (segment.length == 1) continue;
-        const source = this.sources[segment[1]];
-        if (!source) continue;
-
-        const traced = source.traceSegment(
-          segment[2],
-          segment[3],
-          segment.length === 5 ? this.names[segment[4]] : ''
-        );
-
-        if (traced) {
-          // newer sources are more likely to be used, so search backwards.
-          let sourceIndex = sources.lastIndexOf(traced.source.filename);
-          if (sourceIndex === -1) {
-            sourceIndex = sources.length;
-            sources.push(traced.source.filename);
-            sourcesContent[sourceIndex] = traced.source.content;
-          } else if (sourcesContent[sourceIndex] == null) {
-            sourcesContent[sourceIndex] = traced.source.content;
-          } else if (
-            traced.source.content != null &&
-            sourcesContent[sourceIndex] !== traced.source.content
-          ) {
-            return new Error(
-              `Multiple conflicting contents for sourcemap source ${traced.source.filename}`
-            );
-          }
-
-          const tracedSegment: SourceMapSegment = [
-            segment[0],
-            sourceIndex,
-            traced.line,
-            traced.column,
-          ];
-
-          if (traced.name) {
-            let nameIndex = names.indexOf(traced.name);
-            if (nameIndex === -1) {
-              nameIndex = names.length;
-              names.push(traced.name);
-            }
-
-            (tracedSegment as SourceMapSegment)[4] = nameIndex;
-          }
-
-          tracedLine.push(tracedSegment);
-        }
-      }
-
-      mappings.push(tracedLine);
-    }
-
-    return { sources, sourcesContent, names, mappings };
+    return traceMappings(this);
   }
 
   traceSegment(line: number, column: number, name: string): SourceMapSegmentObject | null {
-    const segments = this.mappings[line];
-    if (!segments) return null;
-
-    // binary search through segments for the given column
-    let i = 0;
-    let j = segments.length - 1;
-
-    const checks = [];
-
-    while (i <= j) {
-      const m = (i + j) >> 1;
-      const segment = segments[m];
-      checks.push(segment);
-      if (segment[0] === column) {
-        if (segment.length == 1) return null;
-        const source = this.sources[segment[1]];
-        if (!source) return null;
-
-        return source.traceSegment(
-          segment[2],
-          segment[3],
-          segment.length === 5 ? this.names[segment[4]] : name
-        );
-      }
-      if (segment[0] > column) {
-        j = m - 1;
-      } else {
-        i = m + 1;
-      }
-    }
-
-    return null;
+    return traceSegment(this, line, column, name);
   }
 }
 
+export class LazyLink {
+  private link?: Link = undefined;
+
+  constructor(private readonly loadLink: () => Link) {}
+
+  private getLink() {
+    let link = this.link;
+
+    if (!link) {
+      link = this.loadLink();
+      this.link = link;
+    }
+
+    return link;
+  }
+
+  traceMappings() {
+    return traceMappings(this.getLink());
+  }
+
+  traceSegment(line: number, column: number, name: string): SourceMapSegmentObject | null {
+    return traceSegment(this.getLink(), line, column, name);
+  }
+}
+
+function traceMappings(
+  this: void,
+  map: { mappings: SourceMapSegment[][]; names: string[]; sources: (Link | Source)[] }
+) {
+  const sources: string[] = [];
+  const sourcesContent: (string | null)[] = [];
+  const names: string[] = [];
+  const mappings = [];
+
+  for (const line of map.mappings) {
+    const tracedLine: SourceMapSegment[] = [];
+
+    for (const segment of line) {
+      if (segment.length == 1) continue;
+      const source = map.sources[segment[1]];
+      if (!source) continue;
+
+      const traced = source.traceSegment(
+        segment[2],
+        segment[3],
+        segment.length === 5 ? map.names[segment[4]] : ''
+      );
+
+      if (traced) {
+        // newer sources are more likely to be used, so search backwards.
+        let sourceIndex = sources.lastIndexOf(traced.source.filename);
+        if (sourceIndex === -1) {
+          sourceIndex = sources.length;
+          sources.push(traced.source.filename);
+          sourcesContent[sourceIndex] = traced.source.content;
+        } else if (sourcesContent[sourceIndex] == null) {
+          sourcesContent[sourceIndex] = traced.source.content;
+        } else if (
+          traced.source.content != null &&
+          sourcesContent[sourceIndex] !== traced.source.content
+        ) {
+          return new Error(
+            `Multiple conflicting contents for sourcemap source ${traced.source.filename}`
+          );
+        }
+
+        const tracedSegment: SourceMapSegment = [
+          segment[0],
+          sourceIndex,
+          traced.line,
+          traced.column,
+        ];
+
+        if (traced.name) {
+          let nameIndex = names.indexOf(traced.name);
+          if (nameIndex === -1) {
+            nameIndex = names.length;
+            names.push(traced.name);
+          }
+
+          (tracedSegment as SourceMapSegment)[4] = nameIndex;
+        }
+
+        tracedLine.push(tracedSegment);
+      }
+    }
+
+    mappings.push(tracedLine);
+  }
+
+  return { sources, sourcesContent, names, mappings };
+}
+
+function traceSegment(
+  this: void,
+  map: { mappings: SourceMapSegment[][]; names: string[]; sources: (Link | Source)[] },
+  line: number,
+  column: number,
+  name: string
+): SourceMapSegmentObject | null {
+  const segments = map.mappings[line];
+  if (!segments) return null;
+
+  // binary search through segments for the given column
+  let i = 0;
+  let j = segments.length - 1;
+
+  const checks = [];
+
+  while (i <= j) {
+    const m = (i + j) >> 1;
+    const segment = segments[m];
+    checks.push(segment);
+    if (segment[0] === column) {
+      if (segment.length == 1) return null;
+      const source = map.sources[segment[1]];
+      if (!source) return null;
+
+      return source.traceSegment(
+        segment[2],
+        segment[3],
+        segment.length === 5 ? map.names[segment[4]] : name
+      );
+    }
+    if (segment[0] > column) {
+      j = m - 1;
+    } else {
+      i = m + 1;
+    }
+  }
+
+  return null;
+}
 /**
  * This function attempts to compensate for the loss of precision when lower
  * layers of source maps have higher precision than upper layers, leading to

@@ -5,6 +5,7 @@ import { SourceModule } from '../graph/sourceModule';
 import { createRuntime } from '../runtime/runtime';
 import { VelcroImportMap, VelcroStaticRuntime } from '../runtime/types';
 import { ChunkOutput } from './chunkOutput';
+import { LazyLink, Link, Source } from './sourceMapTree';
 
 type NotUndefined<T> = T extends undefined ? never : T;
 
@@ -91,7 +92,30 @@ export class Chunk {
       bundle.append(`\nVelcro.runtime.invalidate(${JSON.stringify(options.invalidations)});\n`);
     }
 
-    return new ChunkOutput(bundle, this.sourceModules, this.rootUri);
+    const sourceMapTree = new LazyLink(() => {
+      const inputMap = bundle.generateDecodedMap({
+        includeContent: false,
+        hires: true,
+        source: this.rootUri.toString(),
+      });
+      return new Link(
+        inputMap,
+        inputMap.sources.map((sourceHref) => {
+          const sourceModule = this.sourceModules.get(sourceHref);
+
+          if (!sourceModule) {
+            return new Source(sourceHref, 'SOURCEMAP ERROR');
+          }
+
+          // All of the transformations included in the source module's magicString
+          // were baked into the bundle already. We just need to map these into any
+          // earlier sources.
+          return sourceModule.sourceMapsTree;
+        })
+      );
+    });
+
+    return new ChunkOutput(bundle, sourceMapTree, this.rootUri);
   }
 }
 
