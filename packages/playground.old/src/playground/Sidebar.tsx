@@ -1,15 +1,16 @@
 import styled from '@emotion/styled/macro';
 import * as Monaco from 'monaco-editor';
-import React, { useContext, useRef } from 'react';
+import React, { useContext, useRef, ChangeEvent } from 'react';
 import { Button } from 'reakit/Button';
 import { Tooltip, TooltipReference, useTooltipState } from 'reakit/Tooltip';
 import { useDirectory, EntryKind } from '../lib/hooks';
 import { useActiveModel, EditorManagerContext } from '../lib/EditorManager';
+import { ITemplate } from '../templates';
 
 const Entry = styled.div<{ modelFocused: boolean }>`
-  background-color: ${props => (props.modelFocused ? '#008cba' : 'inherit')};
+  background-color: ${(props) => (props.modelFocused ? '#008cba' : 'inherit')};
   text-decoration: none;
-  color: ${props => (props.modelFocused ? '#fff' : '#262626')};
+  color: ${(props) => (props.modelFocused ? '#fff' : '#262626')};
 
   height: 25px;
   padding: 0 0 0 8px;
@@ -29,7 +30,7 @@ const Entry = styled.div<{ modelFocused: boolean }>`
     display: block;
   }
 
-  ${props =>
+  ${(props) =>
     props.modelFocused
       ? {
           ':hover': {
@@ -81,7 +82,10 @@ const StyledTooltip = styled.div`
   padding: 0.2em 0.4em;
 `;
 
-const SidebarFile: React.FC<{ className?: string; model: Monaco.editor.ITextModel }> = ({ className, model }) => {
+const SidebarFile: React.FC<{ className?: string; model: Monaco.editor.ITextModel }> = ({
+  className,
+  model,
+}) => {
   const activeModel = useActiveModel();
   const editorManager = useContext(EditorManagerContext);
   const tooltip = useTooltipState({ gutter: 0 });
@@ -105,7 +109,34 @@ const SidebarFile: React.FC<{ className?: string; model: Monaco.editor.ITextMode
   );
 };
 
-const Sidebar: React.FC<{ className?: string }> = props => {
+const TemplatePicker: React.FC<{
+  onChangeTemplate: (template: ITemplate) => void;
+  templates: ITemplate[];
+}> = (props) => {
+  const onChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    const template = props.templates.find((t) => t.id === e.target.value);
+
+    if (template) {
+      props.onChangeTemplate(template);
+    }
+  };
+
+  return (
+    <select onChange={onChange}>
+      {props.templates.map((template) => (
+        <option key={template.id} value={template.id}>
+          {template.name}
+        </option>
+      ))}
+    </select>
+  );
+};
+
+const Sidebar: React.FC<{
+  className?: string;
+  onChangeTemplate: (template: ITemplate) => void;
+  templates: ITemplate[];
+}> = (props) => {
   const rootDir = useRef(Monaco.Uri.file('/'));
   const entries = useDirectory(rootDir.current);
   const editorManager = useContext(EditorManagerContext);
@@ -120,7 +151,7 @@ const Sidebar: React.FC<{ className?: string }> = props => {
 
   return (
     <div className={props.className}>
-      {entries.map(entry =>
+      {entries.map((entry) =>
         entry.type === EntryKind.Directory ? (
           <div>{entry.uri.fsPath.slice(1)}</div>
         ) : (
@@ -128,6 +159,7 @@ const Sidebar: React.FC<{ className?: string }> = props => {
         )
       )}
       <CreateEntry onClick={() => onClickCreate()}>Create...</CreateEntry>
+      <TemplatePicker templates={props.templates} onChangeTemplate={props.onChangeTemplate} />
     </div>
   );
 };

@@ -4,7 +4,6 @@ const RollupPluginNodeResolve = require('@rollup/plugin-node-resolve').default;
 const RollupPluginReplace = require('@rollup/plugin-replace');
 const RollupPluginSucrase = require('@rollup/plugin-sucrase');
 const RollupPluginTs = require('@wessberg/rollup-plugin-ts');
-const { createRequire } = require('module');
 const { resolve } = require('path');
 const RollupPluginInjectProcessEnv = require('rollup-plugin-inject-process-env');
 const { terser } = require('rollup-plugin-terser');
@@ -114,7 +113,7 @@ function rollupConfigFactory(dirname, packageJson) {
         RollupPluginReplace({
           __VERSION__: process.env.npm_package_version || packageJson.version,
         }),
-        dirname.endsWith('runner') || dirname.endsWith('nostalgie')
+        dirname.endsWith('runner') || dirname.endsWith('nostalgie') || dirname.endsWith('worker')
           ? RollupPluginSucrase({
               transforms: ['typescript'],
             })

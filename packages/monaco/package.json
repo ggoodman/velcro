@@ -1,0 +1,48 @@
+{
+  "name": "@velcro/monaco",
+  "version": "0.46.1",
+  "private": true,
+  "author": "Geoff Goodman <ggoodman@gmail.com>",
+  "homepage": "https://github.com/ggoodman/velcro",
+  "license": "MIT",
+  "main": "./dist/index.cjs.js",
+  "module": "./dist/index.esm.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:ggoodman/velcro.git"
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "build:dev": "rollup -c --watch",
+    "build:api": "api-extractor run --local -c ./api-extractor.json",
+    "build:readme": "cat README.md | sed \"s~nostalgie@.*/dist~nostalgie@$(jq -r .version package.json)/dist~g\" > README.md",
+    "preversion": "npm run build",
+    "version": "npm run build:api || : && npm run build:readme"
+  },
+  "prettier": {
+    "printWidth": 100,
+    "singleQuote": true
+  },
+  "devDependencies": {
+    "@microsoft/api-documenter": "^7.8.1",
+    "@microsoft/api-extractor": "^7.8.1",
+    "@rollup/plugin-commonjs": "^11.1.0",
+    "@rollup/plugin-json": "^4.0.3",
+    "@rollup/plugin-typescript": "^5.0.2",
+    "esbuild": "^0.6.7",
+    "postcss-url": "^8.0.0",
+    "rollup": "^2.10.0",
+    "rollup-plugin-copy": "^3.3.0",
+    "rollup-plugin-esbuild": "^2.4.2",
+    "rollup-plugin-inject-process-env": "^1.2.0",
+    "rollup-plugin-postcss": "^3.1.3",
+    "typescript": "^3.9.2"
+  },
+  "dependencies": {
+    "monaco-editor": "^0.20.0"
+  }
+}

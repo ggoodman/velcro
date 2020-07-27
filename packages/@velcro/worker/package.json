@@ -1,0 +1,73 @@
+{
+  "name": "@velcro/worker",
+  "version": "0.46.1",
+  "description": "A web-worker for bundling off the main thread",
+  "keywords": [
+    "velcro",
+    "resolve",
+    "npm",
+    "resolution",
+    "module",
+    "browser",
+    "unpkg"
+  ],
+  "author": "Geoff Goodman <ggoodman@gmail.com>",
+  "homepage": "https://github.com/ggoodman/velcro",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:ggoodman/velcro.git"
+  },
+  "scripts": {
+    "build": "rollup -c",
+    "build:dev": "rollup -c --watch",
+    "build:api": "api-extractor run --local -c ./api-extractor.json",
+    "build:readme": "cat README.md | sed \"s~tree/.*/docs~tree/v$(jq -r .version package.json)/docs~g\" > README.md",
+    "preversion": "npm run build",
+    "version": "npm run build:api || : && npm run build:readme"
+  },
+  "prettier": {
+    "printWidth": 100,
+    "singleQuote": true
+  },
+  "devDependencies": {
+    "@microsoft/api-documenter": "^7.8.1",
+    "@microsoft/api-extractor": "^7.8.1",
+    "@rollup/plugin-alias": "^3.1.0",
+    "@rollup/plugin-commonjs": "^11.1.0",
+    "@rollup/plugin-json": "^4.0.3",
+    "@rollup/plugin-replace": "^2.3.2",
+    "@types/estree": "^0.0.44",
+    "@types/jest": "^25.2.2",
+    "@wessberg/rollup-plugin-ts": "^1.2.27",
+    "rollup": "^2.10.0",
+    "rollup-plugin-inject-process-env": "^1.2.0",
+    "rollup-plugin-terser": "^5.3.0",
+    "tslib": "1",
+    "typescript": "^3.9.2"
+  },
+  "dependencies": {
+    "@rollup/plugin-typescript": "^5.0.2",
+    "@velcro/bundler": "^0.46.1",
+    "@velcro/common": "^0.46.0",
+    "@velcro/node-libs": "^0.46.0",
+    "@velcro/plugin-css": "^0.46.1",
+    "@velcro/plugin-sucrase": "^0.46.1",
+    "@velcro/resolver": "^0.46.0",
+    "@velcro/strategy-cdn": "^0.46.0",
+    "@velcro/strategy-compound": "^0.46.0",
+    "@velcro/strategy-memory": "^0.46.0",
+    "acorn": "^7.2.0",
+    "magic-string": "^0.25.7",
+    "svelte": "^3.24.0",
+    "zod": "^1.10.1"
+  },
+  "gitHead": "f63b45ad688f2fe9768349afeaf449c016bf33ef"
+}

@@ -3,13 +3,14 @@ import { Global, css } from '@emotion/core';
 import styled from '@emotion/styled/macro';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import { OfflineBolt, Update } from '@material-ui/icons';
-import React from 'react';
+import React, { useState } from 'react';
 import { Tooltip, TooltipReference, useTooltipState } from 'reakit/Tooltip';
 
 import { Playground } from './playground';
-import { files } from './templates/react';
+import { files, defaultFile } from './templates/svelte';
 import { useServiceWorker, ServiceWorkerProvider } from './useServiceWorker';
 import { Button } from 'reakit/Button';
+import { templates, ITemplate } from './templates';
 
 const PlaygroundWrapper = styled.div`
   background: white;
@@ -226,6 +227,8 @@ const globalCss = css`
 `;
 
 export const App: React.FC = () => {
+  const [currentTemplate] = useState<ITemplate>(templates[1]);
+
   return (
     <ServiceWorkerProvider>
       <CssBaseline />
@@ -252,7 +255,7 @@ export const App: React.FC = () => {
           </Links>
         </Header>
         <PlaygroundWrapper>
-          <Playground project={files} initialPath="index.jsx"></Playground>
+          <Playground templates={templates}></Playground>
         </PlaygroundWrapper>
       </AppWrapper>
     </ServiceWorkerProvider>

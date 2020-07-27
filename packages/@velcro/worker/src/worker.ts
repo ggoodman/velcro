@@ -1,5 +1,7 @@
 /* eslint-env worker */
 
+/// <reference lib="WebWorker" />
+
 import { Graph, GraphBuilder } from '@velcro/bundler';
 import { CancellationTokenSource, DisposableStore, Event, Uri } from '@velcro/common';
 import { cssPlugin } from '@velcro/plugin-css';
@@ -8,9 +10,9 @@ import { Resolver } from '@velcro/resolver';
 import { CdnStrategy } from '@velcro/strategy-cdn';
 import { CompoundStrategy } from '@velcro/strategy-compound';
 import { MemoryStrategy } from '@velcro/strategy-memory';
+import * as Svelte from 'svelte/compiler';
 import { DefineEvent, DefineState, FSM } from './fsm';
 import { BuildingState, BuiltState, EditorEvents, ErrorState } from './types';
-// import * as Monaco from 'monaco-editor';
 
 const readUrl = (href: string) => fetch(href).then((res) => res.arrayBuffer());
 
@@ -248,13 +250,41 @@ export class VelcroBuilderMachine {
 
     this.resolver = new Resolver(this.rootStrategy, {
       debug: false,
-      extensions: ['.js', '.jsx', '.json', '.ts', '.tsx', '.mjs', '.cjs'],
+      extensions: ['.js', '.jsx', '.json', '.ts', '.tsx', '.mjs', '.cjs', '.svelte'],
       packageMain: ['browser', 'main'],
     });
     this.graphBuilder = new GraphBuilder({
       resolver: this.resolver,
       nodeEnv: 'development',
-      plugins: [cssPlugin(), sucrasePlugin({ transforms: ['imports', 'jsx', 'typescript'] })],
+      plugins: [
+        cssPlugin(),
+        {
+          name: 'svelte',
+          transform(_ctx, uri, code) {
+            if (!uri.fsPath.endsWith('.svelte')) return;
+
+            const compiled = Svelte.compile(code, {
+              dev: true,
+              filename: uri.toString(),
+              format: 'cjs',
+              generate: 'dom',
+              css: true,
+              outputFilename: uri.toString(),
+            });
+
+            compiled.js.code +=
+              '\nObject.defineProperty(module.exports, "__esModule", { value: true });\n';
+
+            console.log(compiled);
+
+            return {
+              code: compiled.js.code,
+              sourceMap: compiled.js.map,
+            };
+          },
+        },
+        sucrasePlugin({ transforms: ['imports', 'jsx', 'typescript'] }),
+      ],
     });
 
     this.disposer.add(this.resolver);
@@ -368,11 +398,11 @@ Event.debounce(
       const build = chunk.buildForStaticRuntime({
         injectRuntime: true,
       });
-      let code = `${build.code}\n\n${[Uri.file('/index.jsx')]
+      let code = `${build.code}\n\n${[Uri.file('/index.js')]
         .map((entrypoint) => `Velcro.runtime.require(${JSON.stringify(entrypoint.toString())});`)
         .join('\n')}\n`;
       // code += `\n//# sourceMappingURL=${build.sourceMapDataUri}`;
-      const codeBundleFile = new File([code], Uri.file('/index.jsx').toString(), {
+      const codeBundleFile = new File([code], Uri.file('/index.js').toString(), {
         type: 'text/javascript',
       });
 

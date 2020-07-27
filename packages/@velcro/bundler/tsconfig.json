@@ -8,5 +8,5 @@
   },
   "exclude": ["**/node_modules/**/*"],
   "include": ["src"],
-  "references": [{ "path": "../common" }, { "path": "../resolver" }, { "path": "../node-libs" }]
+  "references": [{ "path": "../common" }, { "path": "../resolver" }]
 }

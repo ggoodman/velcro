@@ -1,3 +1,9 @@
+export const id = 'react';
+
+export const name = 'React Template';
+
+export const defaultFile = 'App.jsx';
+
 export const files: Record<string, string> = {
   'package.json':
     JSON.stringify(
@@ -9,11 +15,12 @@ export const files: Record<string, string> = {
           react: '^16.9.0',
           'react-dom': '^16.9.0',
         },
+        main: './index.jsx',
       },
       null,
       2
     ) + '\n',
-  'App.jsx': `
+  [defaultFile]: `
 import React, { Component } from 'react';
 import 'github-markdown-css';
 

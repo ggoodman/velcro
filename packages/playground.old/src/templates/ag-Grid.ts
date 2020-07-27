@@ -1,4 +1,10 @@
-export const files = {
+export const id = 'agGrid';
+
+export const name = 'AgGrid Template';
+
+export const defaultFile = 'index.jsx';
+
+export const files: Record<string, string> = {
   'package.json':
     JSON.stringify(
       {
@@ -10,11 +16,12 @@ export const files = {
           react: '^16.9.0',
           'react-dom': '^16.9.0',
         },
+        main: './index.jsx',
       },
       null,
       2
     ) + '\n',
-  'index.jsx':
+  [defaultFile]:
     `
 import React, { Component } from 'react';
 import { render } from 'react-dom';

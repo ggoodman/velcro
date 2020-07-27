@@ -1,0 +1,21 @@
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "lib": ["es2018", "dom"],
+    "outDir": "./dist"
+    // "rootDir": "."
+  },
+  "exclude": ["**/node_modules/**/*"],
+  "include": ["src"],
+  "references": [
+    { "path": "../bundler" },
+    { "path": "../common" },
+    { "path": "../resolver" },
+    { "path": "../plugin-css" },
+    { "path": "../plugin-sucrase" },
+    { "path": "../strategy-cdn" },
+    { "path": "../strategy-compound" },
+    { "path": "../strategy-memory" }
+  ]
+}

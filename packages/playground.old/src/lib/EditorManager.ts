@@ -1,12 +1,13 @@
 import { DisposableStore, Emitter, IDisposable } from '@velcro/common';
 import * as Monaco from 'monaco-editor';
 import { createContext, useContext, useEffect, useState } from 'react';
+import * as SvelteLanguage from './languages/svelte';
 
 export class EditorManager implements IDisposable {
   editor: Monaco.editor.IStandaloneCodeEditor | null = null;
 
   private readonly disposableStore = new DisposableStore();
-  private readonly initialPath: string | undefined;
+  private initialPath: string | undefined;
   private readonly viewState = new WeakMap<
     Monaco.editor.ITextModel,
     Monaco.editor.ICodeEditorViewState
@@ -15,9 +16,25 @@ export class EditorManager implements IDisposable {
   private readonly onWillFocusModelEmitter = new Emitter<Monaco.editor.ITextModel>();
   private readonly onDidChangeEmitter = new Emitter<{ model: Monaco.editor.ITextModel }>();
 
-  constructor(options: { files?: Record<string, string>; initialPath?: string } = {}) {
+  constructor(options: { files: Record<string, string>; initialPath: string }) {
     this.disposableStore.add(this.onWillFocusModelEmitter);
     this.disposableStore.add(this.onDidChangeEmitter);
+
+    Monaco.languages.register({
+      id: 'svelte',
+      aliases: ['Svelte', 'svelte'],
+      mimetypes: ['text/x-svelte'],
+      extensions: ['.svelte'],
+    });
+
+    Monaco.languages.setMonarchTokensProvider(
+      'svelte',
+      SvelteLanguage.language as Monaco.languages.IMonarchLanguage
+    );
+    Monaco.languages.setLanguageConfiguration(
+      'svelte',
+      SvelteLanguage.conf as Monaco.languages.LanguageConfiguration
+    );
 
     Monaco.languages.typescript.typescriptDefaults.setEagerModelSync(true);
     Monaco.languages.typescript.typescriptDefaults.setMaximumWorkerIdleTime(-1);
@@ -49,15 +66,7 @@ export class EditorManager implements IDisposable {
       noSyntaxValidation: false,
     });
 
-    if (options.files) {
-      for (const pathname in options.files) {
-        const content = options.files[pathname];
-
-        this.createModel(pathname, content);
-      }
-    }
-
-    this.initialPath = options.initialPath;
+    this.loadProject(options.files, options.initialPath);
   }
 
   get dispose() {
@@ -70,6 +79,20 @@ export class EditorManager implements IDisposable {
 
   get onWillFocusModel() {
     return this.onWillFocusModelEmitter.event;
+  }
+
+  loadProject(files: Record<string, string>, initialPath: string) {
+    for (const model of Monaco.editor.getModels()) {
+      model.dispose();
+    }
+
+    for (const pathname in files) {
+      const content = files[pathname];
+
+      this.createModel(pathname, content);
+    }
+
+    this.initialPath = initialPath;
   }
 
   createModel(pathname: string, content = '') {
@@ -211,7 +234,9 @@ export class EditorManager implements IDisposable {
   }
 
   inferLanguage(pathname: string) {
-    return pathname.match(/\.(?:tsx?|jsx?)$/) ? 'typescript' : undefined;
+    if (pathname.match(/\.(?:tsx?|jsx?)$/)) return 'typescript';
+    if (pathname.match(/\.svelte$/)) return 'svelte';
+    return undefined;
   }
 }
 

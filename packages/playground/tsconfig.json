@@ -1,25 +1,24 @@
 {
+  "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
-    "composite": false,
-    "incremental": false,
-    "target": "es5",
-    "lib": ["dom", "dom.iterable", "esnext", "scripthost", "webworker"],
-    "allowJs": true,
-    "downlevelIteration": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
+    "composite": true,
     "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "module": "esnext",
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "react",
-    "noEmit": true
+    "baseUrl": ".",
+    "paths": {
+      "@velcro/*": ["./@velcro/*/src"]
+    }
   },
-  "exclude": ["**/node_modules/**/*"],
-  "include": ["src"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules/*", "__sapper__/*", "public/*"],
+  "references": [
+    { "path": "../@velcro/bundler" },
+    { "path": "../@velcro/common" },
+    { "path": "../@velcro/plugin-css" },
+    { "path": "../@velcro/plugin-sucrase" },
+    { "path": "../@velcro/resolver" },
+    { "path": "../@velcro/strategy-cdn" },
+    { "path": "../@velcro/strategy-compound" },
+    { "path": "../@velcro/strategy-memory" },
+    { "path": "../@velcro/worker" }
+  ]
 }

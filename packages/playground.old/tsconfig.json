@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "composite": false,
+    "incremental": false,
+    "target": "es5",
+    "lib": ["dom", "dom.iterable", "esnext", "scripthost", "webworker"],
+    "allowJs": true,
+    "downlevelIteration": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "react",
+    "noEmit": true
+  },
+  "exclude": ["**/node_modules/**/*"],
+  "include": ["src"]
+}
