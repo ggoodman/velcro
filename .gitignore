@@ -5,3 +5,5 @@ dist
 lerna-debug.log
 .docz
 stats.html
+tsconfig.tsbuildinfo
+build/

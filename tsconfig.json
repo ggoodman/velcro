@@ -14,7 +14,6 @@
     "moduleResolution": "node",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "outDir": "__out__",
     "paths": {
       "@velcro/*": ["./packages/@velcro/*/src"],
       "nostalgie": ["./packages/nostalgie/src"]

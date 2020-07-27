@@ -3,8 +3,8 @@
   "compilerOptions": {
     "composite": true,
     "lib": ["es2018", "dom"],
-    "outDir": "./dist"
-    // "rootDir": "."
+    "outDir": "./build",
+    "rootDir": "src"
   },
   "include": ["src"]
 }
