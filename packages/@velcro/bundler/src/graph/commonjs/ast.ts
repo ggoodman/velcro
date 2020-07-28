@@ -20,6 +20,7 @@ import {
   Property,
   RestElement,
   SimpleLiteral,
+  TemplateLiteral,
   ThisExpression,
   TryStatement,
   VariableDeclaration,
@@ -103,6 +104,10 @@ export function isRestElement(node: Node): node is RestElement {
 
 export function isProgram(node: Node): node is Program {
   return node.type === 'Program';
+}
+
+export function isTemplateLiteral(node: Node): node is TemplateLiteral {
+  return node.type === 'TemplateLiteral';
 }
 
 export function isThisExpression(node: Node): node is ThisExpression {

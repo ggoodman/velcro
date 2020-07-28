@@ -24,6 +24,7 @@ import {
   isProperty,
   isRestElement,
   isStringLiteral,
+  isTemplateLiteral,
   isThisExpression,
   isTryStatement,
   isVariableDeclaration,
@@ -484,6 +485,19 @@ function visitRequires(
       if (isStringLiteral(firstArg)) {
         ctx.requires.push({
           spec: { start: firstArg.start, end: firstArg.end, value: firstArg.value },
+          callee: { start: callee.start, end: callee.end },
+        });
+      } else if (
+        isTemplateLiteral(firstArg) &&
+        firstArg.expressions.length === 0 &&
+        firstArg.quasis.length === 1
+      ) {
+        ctx.requires.push({
+          spec: {
+            start: firstArg.quasis[0].start,
+            end: firstArg.quasis[0].end,
+            value: firstArg.quasis[0].value.raw,
+          },
           callee: { start: callee.start, end: callee.end },
         });
       } else {
