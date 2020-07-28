@@ -84,12 +84,42 @@ export class EditorManager implements IDisposable {
               cdn: 'jsdelivr',
               dependencies: {
                 prettier: '^2.0.5',
+                'prettier-plugin-svelte': '^1.1.0',
               },
               nodeEnv: 'production',
               packageMain: ['browser', 'main'],
               sourceMap: false,
             }
           );
+
+          // The Svelte plugin depends on 'prettier' but we're in a browser and so we need
+          // to inject the 'standalone' version of prettier. This means to need to defer
+          // loading the svelte plugin until we've gotten a reference to prettier from
+          // the previous logic.
+          prettierPromise = prettierPromise.then(async ({ prettier, plugins }) => {
+            const prettierPluginSvelte = await execute<import('prettier').Plugin>(
+              'module.exports = require("prettier-plugin-svelte")',
+              {
+                readUrl,
+                cdn: 'jsdelivr',
+                dependencies: {
+                  'prettier-plugin-svelte': '^1.1.0',
+                  svelte: '^3.2.0',
+                },
+                injectModules: {
+                  prettier,
+                },
+                nodeEnv: 'production',
+                packageMain: ['browser', 'main'],
+                sourceMap: false,
+              }
+            );
+
+            return {
+              prettier,
+              plugins: [...plugins, prettierPluginSvelte],
+            };
+          });
 
           prettierPromise.catch((e) => {
             console.error(e);
@@ -135,6 +165,8 @@ export class EditorManager implements IDisposable {
       'javascript',
       codeFormattingEditProvider
     );
+
+    Monaco.languages.registerDocumentFormattingEditProvider('svelte', codeFormattingEditProvider);
 
     Monaco.languages.registerDocumentFormattingEditProvider(
       'typescript',
