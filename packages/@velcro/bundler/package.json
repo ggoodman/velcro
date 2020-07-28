@@ -1,6 +1,6 @@
 {
   "name": "@velcro/bundler",
-  "version": "0.46.1",
+  "version": "0.46.2",
   "description": "Build a module graph of modules and serialize these to different formats",
   "keywords": [
     "velcro",
