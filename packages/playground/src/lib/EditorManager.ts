@@ -1,7 +1,10 @@
 import { DisposableStore, Emitter, Event, IDisposable } from '@velcro/common';
+import { execute } from '@velcro/runner';
 import * as Monaco from 'monaco-editor';
 import { createContext, useContext, useEffect, useState } from 'react';
 import * as SvelteLanguage from './svelte.language';
+
+const readUrl = (href: string) => fetch(href).then((res) => res.arrayBuffer());
 
 export class EditorManager implements IDisposable {
   editor: Monaco.editor.IStandaloneCodeEditor | null = null;
@@ -62,6 +65,80 @@ export class EditorManager implements IDisposable {
     Monaco.languages.setMonarchTokensProvider(
       'svelte',
       SvelteLanguage.language as Monaco.languages.IMonarchLanguage
+    );
+
+    const createPrettierFormattingProvider = (): Monaco.languages.DocumentFormattingEditProvider => {
+      let prettierPromise:
+        | Promise<{
+            prettier: typeof import('prettier/standalone');
+            plugins: import('prettier').Plugin[];
+          }>
+        | undefined = undefined;
+
+      const loadPrettier = async () => {
+        if (!prettierPromise) {
+          prettierPromise = execute(
+            'module.exports = { prettier: require("prettier/standalone"), plugins: [require("prettier/parser-babel"), require("prettier/parser-html"), require("prettier/parser-postcss")] };',
+            {
+              readUrl,
+              cdn: 'jsdelivr',
+              dependencies: {
+                prettier: '^2.0.5',
+              },
+              nodeEnv: 'production',
+              packageMain: ['browser', 'main'],
+              sourceMap: false,
+            }
+          );
+
+          prettierPromise.catch((e) => {
+            console.error(e);
+            debugger;
+          });
+        }
+
+        return prettierPromise;
+      };
+
+      return {
+        async provideDocumentFormattingEdits(model, options, token) {
+          const { prettier, plugins } = await loadPrettier();
+
+          if (token.isCancellationRequested) {
+            return [];
+          }
+
+          const formatted = prettier.format(model.getValue(), {
+            filepath: model.uri.fsPath,
+            singleQuote: true,
+            tabWidth: 2,
+            plugins,
+          });
+
+          return [
+            {
+              range: model.getFullModelRange(),
+              text: formatted,
+            },
+          ];
+        },
+      };
+    };
+
+    const codeFormattingEditProvider = createPrettierFormattingProvider();
+
+    Monaco.languages.registerDocumentFormattingEditProvider('css', codeFormattingEditProvider);
+
+    Monaco.languages.registerDocumentFormattingEditProvider('html', codeFormattingEditProvider);
+
+    Monaco.languages.registerDocumentFormattingEditProvider(
+      'javascript',
+      codeFormattingEditProvider
+    );
+
+    Monaco.languages.registerDocumentFormattingEditProvider(
+      'typescript',
+      codeFormattingEditProvider
     );
 
     if (options.files) {
