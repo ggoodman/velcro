@@ -1,7 +1,7 @@
 {
   "metadata": {
     "toolPackage": "@microsoft/api-extractor",
-    "toolVersion": "7.9.1",
+    "toolVersion": "7.9.2",
     "schemaVersion": 1003,
     "oldestForwardsCompatibleVersion": 1001
   },
@@ -53,7 +53,7 @@
             {
               "kind": "Reference",
               "text": "Uri",
-              "canonicalReference": "@velcro/runner!Uri:class"
+              "canonicalReference": "@velcro/runner!~Uri:class"
             },
             {
               "kind": "Content",
@@ -62,7 +62,7 @@
             {
               "kind": "Reference",
               "text": "ChunkOutput",
-              "canonicalReference": "@velcro/runner!ChunkOutput:class"
+              "canonicalReference": "@velcro/runner!~ChunkOutput:class"
             },
             {
               "kind": "Content",
@@ -172,7 +172,7 @@
                 {
                   "kind": "Reference",
                   "text": "Resolver.Settings",
-                  "canonicalReference": "@velcro/runner!Resolver.Settings:interface"
+                  "canonicalReference": "@velcro/runner!~Resolver.Settings:interface"
                 },
                 {
                   "kind": "Content",
@@ -202,7 +202,7 @@
                 {
                   "kind": "Reference",
                   "text": "GraphBuilder.Options",
-                  "canonicalReference": "@velcro/runner!GraphBuilder.Options:interface"
+                  "canonicalReference": "@velcro/runner!~GraphBuilder.Options:interface"
                 },
                 {
                   "kind": "Content",
@@ -257,7 +257,7 @@
                 {
                   "kind": "Reference",
                   "text": "Resolver.Settings",
-                  "canonicalReference": "@velcro/runner!Resolver.Settings:interface"
+                  "canonicalReference": "@velcro/runner!~Resolver.Settings:interface"
                 },
                 {
                   "kind": "Content",
@@ -287,7 +287,7 @@
                 {
                   "kind": "Reference",
                   "text": "Plugin",
-                  "canonicalReference": "@velcro/runner!Plugin:interface"
+                  "canonicalReference": "@velcro/runner!~Plugin:interface"
                 },
                 {
                   "kind": "Content",
@@ -317,7 +317,7 @@
                 {
                   "kind": "Reference",
                   "text": "CdnStrategy.UrlContentFetcher",
-                  "canonicalReference": "@velcro/runner!CdnStrategy.UrlContentFetcher:type"
+                  "canonicalReference": "@velcro/runner!~CdnStrategy.UrlContentFetcher:type"
                 },
                 {
                   "kind": "Content",
@@ -506,7 +506,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.46.0\""
+              "text": "version = \"0.46.1\""
             }
           ],
           "releaseTag": "Public",

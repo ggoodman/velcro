@@ -1,7 +1,7 @@
 {
   "metadata": {
     "toolPackage": "@microsoft/api-extractor",
-    "toolVersion": "7.9.1",
+    "toolVersion": "7.9.2",
     "schemaVersion": 1003,
     "oldestForwardsCompatibleVersion": 1001
   },
@@ -40,7 +40,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/bundler!Uri:class"
+                  "canonicalReference": "@velcro/bundler!~Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -53,7 +53,7 @@
                 {
                   "kind": "Reference",
                   "text": "CancellationToken",
-                  "canonicalReference": "ts-primitives!~CancellationToken:interface"
+                  "canonicalReference": "!unknown"
                 },
                 {
                   "kind": "Content",
@@ -356,7 +356,7 @@
                 {
                   "kind": "Reference",
                   "text": "Event",
-                  "canonicalReference": "ts-primitives!~Event:interface"
+                  "canonicalReference": "!unknown"
                 },
                 {
                   "kind": "Content",
@@ -396,7 +396,7 @@
                 {
                   "kind": "Reference",
                   "text": "Event",
-                  "canonicalReference": "ts-primitives!~Event:interface"
+                  "canonicalReference": "!unknown"
                 },
                 {
                   "kind": "Content",
@@ -436,7 +436,7 @@
                 {
                   "kind": "Reference",
                   "text": "Event",
-                  "canonicalReference": "ts-primitives!~Event:interface"
+                  "canonicalReference": "!unknown"
                 },
                 {
                   "kind": "Content",
@@ -467,7 +467,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/bundler!Uri:class"
+                  "canonicalReference": "@velcro/bundler!~Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -593,7 +593,7 @@
                 {
                   "kind": "Reference",
                   "text": "CancellationToken",
-                  "canonicalReference": "ts-primitives!~CancellationToken:interface"
+                  "canonicalReference": "!unknown"
                 },
                 {
                   "kind": "Content",
@@ -781,7 +781,7 @@
                     {
                       "kind": "Reference",
                       "text": "Uri",
-                      "canonicalReference": "@velcro/bundler!Uri:class"
+                      "canonicalReference": "@velcro/bundler!~Uri:class"
                     },
                     {
                       "kind": "Content",
@@ -948,7 +948,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/bundler!Uri:class"
+                  "canonicalReference": "@velcro/bundler!~Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -1124,7 +1124,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/bundler!Uri:class"
+                  "canonicalReference": "@velcro/bundler!~Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -1308,7 +1308,7 @@
                     {
                       "kind": "Reference",
                       "text": "Uri",
-                      "canonicalReference": "@velcro/bundler!Uri:class"
+                      "canonicalReference": "@velcro/bundler!~Uri:class"
                     },
                     {
                       "kind": "Content",
@@ -1426,7 +1426,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/bundler!Uri:class"
+                  "canonicalReference": "@velcro/bundler!~Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -1443,7 +1443,7 @@
                 {
                   "kind": "Reference",
                   "text": "CancellationToken",
-                  "canonicalReference": "ts-primitives!~CancellationToken:interface"
+                  "canonicalReference": "!unknown"
                 },
                 {
                   "kind": "Content",
@@ -1500,7 +1500,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/bundler!Uri:class"
+                  "canonicalReference": "@velcro/bundler!~Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -1659,7 +1659,7 @@
                     {
                       "kind": "Reference",
                       "text": "Resolver",
-                      "canonicalReference": "@velcro/bundler!Resolver:class"
+                      "canonicalReference": "@velcro/bundler!~Resolver:class"
                     },
                     {
                       "kind": "Content",
@@ -1689,8 +1689,8 @@
             },
             {
               "kind": "Reference",
-              "text": "BaseError",
-              "canonicalReference": "@velcro/bundler!~BaseError:class"
+              "text": "BaseError$0",
+              "canonicalReference": "@velcro/bundler!~BaseError$0:class"
             },
             {
               "kind": "Content",
@@ -1814,8 +1814,8 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "MaybeThenable",
-                  "canonicalReference": "@velcro/bundler!~MaybeThenable:type"
+                  "text": "MaybeThenable$0",
+                  "canonicalReference": "@velcro/bundler!~MaybeThenable$0:type"
                 },
                 {
                   "kind": "Content",
@@ -1922,8 +1922,8 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "MaybeThenable",
-                  "canonicalReference": "@velcro/bundler!~MaybeThenable:type"
+                  "text": "MaybeThenable$0",
+                  "canonicalReference": "@velcro/bundler!~MaybeThenable$0:type"
                 },
                 {
                   "kind": "Content",
@@ -1995,7 +1995,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/bundler!Uri:class"
+                  "canonicalReference": "@velcro/bundler!~Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -2003,8 +2003,8 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "MaybeThenable",
-                  "canonicalReference": "@velcro/bundler!~MaybeThenable:type"
+                  "text": "MaybeThenable$0",
+                  "canonicalReference": "@velcro/bundler!~MaybeThenable$0:type"
                 },
                 {
                   "kind": "Content",
@@ -2069,7 +2069,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/bundler!Uri:class"
+                  "canonicalReference": "@velcro/bundler!~Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -2085,8 +2085,8 @@
                 },
                 {
                   "kind": "Reference",
-                  "text": "MaybeThenable",
-                  "canonicalReference": "@velcro/bundler!~MaybeThenable:type"
+                  "text": "MaybeThenable$0",
+                  "canonicalReference": "@velcro/bundler!~MaybeThenable$0:type"
                 },
                 {
                   "kind": "Content",
@@ -2190,7 +2190,7 @@
                 {
                   "kind": "Reference",
                   "text": "Resolver",
-                  "canonicalReference": "@velcro/bundler!Resolver:class"
+                  "canonicalReference": "@velcro/bundler!~Resolver:class"
                 },
                 {
                   "kind": "Content",
@@ -2216,7 +2216,7 @@
                 {
                   "kind": "Reference",
                   "text": "CancellationToken",
-                  "canonicalReference": "ts-primitives!~CancellationToken:interface"
+                  "canonicalReference": "!unknown"
                 },
                 {
                   "kind": "Content",
@@ -2249,7 +2249,7 @@
             {
               "kind": "Reference",
               "text": "ResolverContext.Visit",
-              "canonicalReference": "@velcro/bundler!ResolverContext.Visit:type"
+              "canonicalReference": "@velcro/bundler!~ResolverContext.Visit:type"
             },
             {
               "kind": "Content",
@@ -2345,7 +2345,7 @@
                 {
                   "kind": "Reference",
                   "text": "Resolver",
-                  "canonicalReference": "@velcro/bundler!Resolver:class"
+                  "canonicalReference": "@velcro/bundler!~Resolver:class"
                 },
                 {
                   "kind": "Content",
@@ -2371,7 +2371,7 @@
                 {
                   "kind": "Reference",
                   "text": "CancellationToken",
-                  "canonicalReference": "ts-primitives!~CancellationToken:interface"
+                  "canonicalReference": "!unknown"
                 },
                 {
                   "kind": "Content",
@@ -2413,7 +2413,7 @@
             {
               "kind": "Reference",
               "text": "ResolverContext.Visit",
-              "canonicalReference": "@velcro/bundler!ResolverContext.Visit:type"
+              "canonicalReference": "@velcro/bundler!~ResolverContext.Visit:type"
             },
             {
               "kind": "Content",
@@ -2456,7 +2456,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/bundler!Uri:class"
+                  "canonicalReference": "@velcro/bundler!~Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -2465,7 +2465,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/bundler!Uri:class"
+                  "canonicalReference": "@velcro/bundler!~Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -2523,7 +2523,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverContext.Visit",
-                  "canonicalReference": "@velcro/bundler!ResolverContext.Visit:type"
+                  "canonicalReference": "@velcro/bundler!~ResolverContext.Visit:type"
                 },
                 {
                   "kind": "Content",
@@ -2685,7 +2685,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/bundler!Uri:class"
+                  "canonicalReference": "@velcro/bundler!~Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -2775,7 +2775,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/bundler!Uri:class"
+                  "canonicalReference": "@velcro/bundler!~Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -2802,7 +2802,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverContext.Visit",
-                  "canonicalReference": "@velcro/bundler!ResolverContext.Visit:type"
+                  "canonicalReference": "@velcro/bundler!~ResolverContext.Visit:type"
                 },
                 {
                   "kind": "Content",
@@ -2910,7 +2910,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/bundler!Uri:class"
+                  "canonicalReference": "@velcro/bundler!~Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -3603,7 +3603,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.46.0\""
+              "text": "version = \"0.46.1\""
             }
           ],
           "releaseTag": "Public",

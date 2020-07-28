@@ -1,7 +1,7 @@
 {
   "metadata": {
     "toolPackage": "@microsoft/api-extractor",
-    "toolVersion": "7.9.1",
+    "toolVersion": "7.9.2",
     "schemaVersion": 1003,
     "oldestForwardsCompatibleVersion": 1001
   },
@@ -22,7 +22,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "declare function all<T extends "
+              "text": "export declare function all<T extends "
             },
             {
               "kind": "Content",
@@ -56,25 +56,25 @@
             },
             {
               "kind": "Content",
-              "text": "<{\n    [P in keyof T]: "
+              "text": "<{ [P in keyof T]: "
             },
             {
               "kind": "Reference",
               "text": "Awaited",
-              "canonicalReference": "@velcro/common!~Awaited:type"
+              "canonicalReference": "@velcro/common!Awaited:type"
             },
             {
               "kind": "Content",
-              "text": "<T[P]>;\n}> | {\n    [P_1 in keyof T]: "
+              "text": "<T[P]>; }> | { [P_1 in keyof T]: "
             },
             {
               "kind": "Reference",
               "text": "Awaited",
-              "canonicalReference": "@velcro/common!~Awaited:type"
+              "canonicalReference": "@velcro/common!Awaited:type"
             },
             {
               "kind": "Content",
-              "text": "<T[P_1]>;\n}"
+              "text": "<T[P_1]>; }"
             },
             {
               "kind": "Content",
@@ -125,7 +125,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "declare class AmbiguousModuleError extends "
+              "text": "export declare class AmbiguousModuleError extends "
             },
             {
               "kind": "Reference",
@@ -153,7 +153,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "type Awaited<T> = "
+              "text": "export declare type Awaited<T> = "
             },
             {
               "kind": "Content",
@@ -162,7 +162,7 @@
             {
               "kind": "Reference",
               "text": "Thenable",
-              "canonicalReference": "@velcro/common!~Thenable:interface"
+              "canonicalReference": "@velcro/common!Thenable:interface"
             },
             {
               "kind": "Content",
@@ -200,7 +200,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "declare namespace Base64 "
+              "text": "export declare namespace Base64 "
             }
           ],
           "releaseTag": "Public",
@@ -278,7 +278,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "declare class CanceledError extends "
+              "text": "export declare class CanceledError extends "
             },
             {
               "kind": "Reference",
@@ -306,12 +306,12 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "declare function checkCancellation<T>(promise: "
+              "text": "export declare function checkCancellation<T>(promise: "
             },
             {
               "kind": "Reference",
               "text": "Thenable",
-              "canonicalReference": "@velcro/common!~Thenable:interface"
+              "canonicalReference": "@velcro/common!Thenable:interface"
             },
             {
               "kind": "Content",
@@ -388,7 +388,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "declare class Decoder "
+              "text": "export declare class Decoder "
             }
           ],
           "releaseTag": "Public",
@@ -484,12 +484,12 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "declare class DependencyNotFoundError extends "
+              "text": "export declare class DependencyNotFoundError extends "
             },
             {
               "kind": "Reference",
               "text": "EntryNotFoundError",
-              "canonicalReference": "@velcro/common!~EntryNotFoundError:class"
+              "canonicalReference": "@velcro/common!EntryNotFoundError:class"
             },
             {
               "kind": "Content",
@@ -579,7 +579,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "declare class EntryExcludedError extends "
+              "text": "export declare class EntryExcludedError extends "
             },
             {
               "kind": "Reference",
@@ -638,7 +638,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "declare class EntryNotFoundError extends "
+              "text": "export declare class EntryNotFoundError extends "
             },
             {
               "kind": "Reference",
@@ -727,7 +727,7 @@
             {
               "kind": "Reference",
               "text": "ParsedPath",
-              "canonicalReference": "@velcro/common!~ParsedPath:interface"
+              "canonicalReference": "@velcro/common!ParsedPath:interface"
             },
             {
               "kind": "Content",
@@ -748,7 +748,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "interface IPath "
+              "text": "export interface IPath "
             }
           ],
           "releaseTag": "Public",
@@ -935,7 +935,7 @@
                 {
                   "kind": "Reference",
                   "text": "ParsedPath",
-                  "canonicalReference": "@velcro/common!~ParsedPath:interface"
+                  "canonicalReference": "@velcro/common!ParsedPath:interface"
                 },
                 {
                   "kind": "Content",
@@ -1116,7 +1116,7 @@
                 {
                   "kind": "Reference",
                   "text": "ParsedPath",
-                  "canonicalReference": "@velcro/common!~ParsedPath:interface"
+                  "canonicalReference": "@velcro/common!ParsedPath:interface"
                 },
                 {
                   "kind": "Content",
@@ -1152,7 +1152,7 @@
                 {
                   "kind": "Reference",
                   "text": "IPath",
-                  "canonicalReference": "@velcro/common!~IPath:interface"
+                  "canonicalReference": "@velcro/common!IPath:interface"
                 },
                 {
                   "kind": "Content",
@@ -1282,7 +1282,7 @@
                 },
                 {
                   "kind": "Content",
-                  "text": "\"\\\\\" | \"/\""
+                  "text": "'\\\\' | '/'"
                 },
                 {
                   "kind": "Content",
@@ -1351,7 +1351,7 @@
                 {
                   "kind": "Reference",
                   "text": "IPath",
-                  "canonicalReference": "@velcro/common!~IPath:interface"
+                  "canonicalReference": "@velcro/common!IPath:interface"
                 },
                 {
                   "kind": "Content",
@@ -1400,7 +1400,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "declare function isCanceledError(err: "
+              "text": "export declare function isCanceledError(err: "
             },
             {
               "kind": "Content",
@@ -1422,7 +1422,7 @@
             {
               "kind": "Reference",
               "text": "CanceledError",
-              "canonicalReference": "@velcro/common!~CanceledError:class"
+              "canonicalReference": "@velcro/common!CanceledError:class"
             },
             {
               "kind": "Content",
@@ -1453,7 +1453,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "declare function isThenable<T = "
+              "text": "export declare function isThenable<T = "
             },
             {
               "kind": "Content",
@@ -1483,7 +1483,7 @@
             {
               "kind": "Reference",
               "text": "Thenable",
-              "canonicalReference": "@velcro/common!~Thenable:interface"
+              "canonicalReference": "@velcro/common!Thenable:interface"
             },
             {
               "kind": "Content",
@@ -1531,7 +1531,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "declare function isValidPackageJson(json: "
+              "text": "export declare function isValidPackageJson(json: "
             },
             {
               "kind": "Content",
@@ -1553,7 +1553,7 @@
             {
               "kind": "Reference",
               "text": "PackageJson",
-              "canonicalReference": "@velcro/common!~PackageJson:interface"
+              "canonicalReference": "@velcro/common!PackageJson:interface"
             },
             {
               "kind": "Content",
@@ -1584,7 +1584,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "declare function isValidPartialPackageJson(json: "
+              "text": "export declare function isValidPartialPackageJson(json: "
             },
             {
               "kind": "Content",
@@ -1606,7 +1606,7 @@
             {
               "kind": "Reference",
               "text": "PartialPackageJson",
-              "canonicalReference": "@velcro/common!~PartialPackageJson:interface"
+              "canonicalReference": "@velcro/common!PartialPackageJson:interface"
             },
             {
               "kind": "Content",
@@ -1658,7 +1658,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "declare class MapSet<K, V> "
+              "text": "export declare class MapSet<K, V> "
             }
           ],
           "releaseTag": "Public",
@@ -2153,7 +2153,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "declare class NotResolvableError extends "
+              "text": "export declare class NotResolvableError extends "
             },
             {
               "kind": "Reference",
@@ -2181,12 +2181,12 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "interface PackageJson extends "
+              "text": "export interface PackageJson extends "
             },
             {
               "kind": "Reference",
               "text": "PartialPackageJson",
-              "canonicalReference": "@velcro/common!~PartialPackageJson:interface"
+              "canonicalReference": "@velcro/common!PartialPackageJson:interface"
             },
             {
               "kind": "Content",
@@ -2261,11 +2261,11 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "type PackageMainField = "
+              "text": "export declare type PackageMainField = "
             },
             {
               "kind": "Content",
-              "text": "\"browser\" | \"module\" | \"jsnext:main\" | \"main\" | \"unpkg\""
+              "text": "'browser' | 'module' | 'jsnext:main' | 'main' | 'unpkg'"
             },
             {
               "kind": "Content",
@@ -2295,7 +2295,7 @@
             {
               "kind": "Reference",
               "text": "ParsedPath",
-              "canonicalReference": "@velcro/common!~ParsedPath:interface"
+              "canonicalReference": "@velcro/common!ParsedPath:interface"
             }
           ],
           "releaseTag": "Public",
@@ -2312,12 +2312,12 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "declare function parseBufferAsPackageJson(decoder: "
+              "text": "export declare function parseBufferAsPackageJson(decoder: "
             },
             {
               "kind": "Reference",
               "text": "Decoder",
-              "canonicalReference": "@velcro/common!~Decoder:class"
+              "canonicalReference": "@velcro/common!Decoder:class"
             },
             {
               "kind": "Content",
@@ -2343,7 +2343,7 @@
             {
               "kind": "Reference",
               "text": "PackageJson",
-              "canonicalReference": "@velcro/common!~PackageJson:interface"
+              "canonicalReference": "@velcro/common!PackageJson:interface"
             },
             {
               "kind": "Content",
@@ -2388,12 +2388,12 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "declare function parseBufferAsPartialPackageJson(decoder: "
+              "text": "export declare function parseBufferAsPartialPackageJson(decoder: "
             },
             {
               "kind": "Reference",
               "text": "Decoder",
-              "canonicalReference": "@velcro/common!~Decoder:class"
+              "canonicalReference": "@velcro/common!Decoder:class"
             },
             {
               "kind": "Content",
@@ -2419,7 +2419,7 @@
             {
               "kind": "Reference",
               "text": "PartialPackageJson",
-              "canonicalReference": "@velcro/common!~PartialPackageJson:interface"
+              "canonicalReference": "@velcro/common!PartialPackageJson:interface"
             },
             {
               "kind": "Content",
@@ -2464,7 +2464,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "interface ParsedPath "
+              "text": "export interface ParsedPath "
             }
           ],
           "releaseTag": "Public",
@@ -2605,7 +2605,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "declare class ParseError extends "
+              "text": "export declare class ParseError extends "
             },
             {
               "kind": "Reference",
@@ -2632,7 +2632,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/common!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -2678,7 +2678,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/common!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -2707,7 +2707,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "interface PartialPackageJson "
+              "text": "export interface PartialPackageJson "
             }
           ],
           "releaseTag": "Public",
@@ -2720,7 +2720,7 @@
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "\"jsnext:main\"?: "
+                  "text": "'jsnext:main'?: "
                 },
                 {
                   "kind": "Content",
@@ -2978,7 +2978,7 @@
             {
               "kind": "Reference",
               "text": "IPath",
-              "canonicalReference": "@velcro/common!~IPath:interface"
+              "canonicalReference": "@velcro/common!IPath:interface"
             }
           ],
           "releaseTag": "Public",
@@ -3058,7 +3058,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "interface Thenable<T> "
+              "text": "export interface Thenable<T> "
             }
           ],
           "releaseTag": "Public",
@@ -3093,7 +3093,7 @@
                 {
                   "kind": "Reference",
                   "text": "Thenable",
-                  "canonicalReference": "@velcro/common!~Thenable:interface"
+                  "canonicalReference": "@velcro/common!Thenable:interface"
                 },
                 {
                   "kind": "Content",
@@ -3110,7 +3110,7 @@
                 {
                   "kind": "Reference",
                   "text": "Thenable",
-                  "canonicalReference": "@velcro/common!~Thenable:interface"
+                  "canonicalReference": "@velcro/common!Thenable:interface"
                 },
                 {
                   "kind": "Content",
@@ -3123,7 +3123,7 @@
                 {
                   "kind": "Reference",
                   "text": "Thenable",
-                  "canonicalReference": "@velcro/common!~Thenable:interface"
+                  "canonicalReference": "@velcro/common!Thenable:interface"
                 },
                 {
                   "kind": "Content",
@@ -3187,7 +3187,7 @@
                 {
                   "kind": "Reference",
                   "text": "Thenable",
-                  "canonicalReference": "@velcro/common!~Thenable:interface"
+                  "canonicalReference": "@velcro/common!Thenable:interface"
                 },
                 {
                   "kind": "Content",
@@ -3208,7 +3208,7 @@
                 {
                   "kind": "Reference",
                   "text": "Thenable",
-                  "canonicalReference": "@velcro/common!~Thenable:interface"
+                  "canonicalReference": "@velcro/common!Thenable:interface"
                 },
                 {
                   "kind": "Content",
@@ -3287,12 +3287,12 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "declare class Uri implements "
+              "text": "export declare class Uri implements "
             },
             {
               "kind": "Reference",
               "text": "UriComponents",
-              "canonicalReference": "@velcro/common!~UriComponents:interface"
+              "canonicalReference": "@velcro/common!UriComponents:interface"
             },
             {
               "kind": "Content",
@@ -3340,7 +3340,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/common!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -3357,7 +3357,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/common!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -3401,7 +3401,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/common!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -3410,7 +3410,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/common!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -3453,7 +3453,7 @@
             {
               "kind": "Method",
               "canonicalReference": "@velcro/common!Uri.file:member(1)",
-              "docComment": "/**\n * Creates a new URI from a file system path, e.g. `c:\\my\\files`, `/usr/home`, or `\\\\server\\share\\some\\path`.\n *\n * The *difference* between `URI#parse` and `URI#file` is that the latter treats the argument as path, not as stringified-uri. E.g. `URI.file(path)` is **not the same as** `URI.parse('file://' + path)` because the path might contain characters that are interpreted (# and ?). See the following sample:\n * ```ts\n *      const good = URI.file('/coding/c#/project1');\n *      good.scheme === 'file';\n *      good.path === '/coding/c#/project1';\n *      good.fragment === '';\n *      const bad = URI.parse('file://' + '/coding/c#/project1');\n *      bad.scheme === 'file';\n *      bad.path === '/coding/c'; // path is now broken\n *      bad.fragment === '/project1';\n * ```\n *\n * @param path - A file system path (see `URI#fsPath`)\n */\n",
+              "docComment": "/**\n * Creates a new URI from a file system path, e.g. `c:\\my\\files`, `/usr/home`, or `\\\\server\\share\\some\\path`.\n *\n * The *difference* between `URI#parse` and `URI#file` is that the latter treats the argument as path, not as stringified-uri. E.g. `URI.file(path)` is **not the same as** `URI.parse('file://' + path)` because the path might contain characters that are interpreted (# and ?). See the following sample:\n * ```ts\n *       const good = URI.file('/coding/c#/project1');\n *       good.scheme === 'file';\n *       good.path === '/coding/c#/project1';\n *       good.fragment === '';\n *       const bad = URI.parse('file://' + '/coding/c#/project1');\n *       bad.scheme === 'file';\n *       bad.path === '/coding/c'; // path is now broken\n *       bad.fragment === '/project1';\n * ```\n *\n * @param path - A file system path (see `URI#fsPath`)\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -3470,7 +3470,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/common!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -3498,7 +3498,7 @@
             {
               "kind": "Property",
               "canonicalReference": "@velcro/common!Uri#fragment:member",
-              "docComment": "",
+              "docComment": "/**\n * fragment is the 'fragment' part of 'http://www.msft.com/some/path?query#fragment'.\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -3541,7 +3541,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/common!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -3569,7 +3569,7 @@
             {
               "kind": "Property",
               "canonicalReference": "@velcro/common!Uri#fsPath:member",
-              "docComment": "/**\n * Returns a string representing the corresponding file system path of this URI. platform specific path separator.\n *\n * * Will *not* validate the path for invalid characters and semantics. * Will *not* look at the scheme of this URI. * The result shall *not* be used for display purposes but for accessing a file on disk.\n *\n * The *difference* to `URI#path` is the use of the platform specific separator and the handling\n * ```ts\n *      const u = URI.parse('file://server/c$/folder/file.txt')\n *      u.authority === 'server'\n *      u.path === '/shares/c$/file.txt'\n *      u.fsPath === '\\\\server\\c$\\folder\\file.txt'\n * ```\n *\n * Using `URI#path` to read a file (using fs-apis) would not be enough because parts of the path, namely the server name, would be missing. Therefore `URI#fsPath` exists - it's sugar to ease working with URIs that represent files on disk (`file` scheme).\n */\n",
+              "docComment": "/**\n * Returns a string representing the corresponding file system path of this URI. platform specific path separator.\n *\n * * Will *not* validate the path for invalid characters and semantics. * Will *not* look at the scheme of this URI. * The result shall *not* be used for display purposes but for accessing a file on disk.\n *\n * The *difference* to `URI#path` is the use of the platform specific separator and the handling\n * ```ts\n *           const u = URI.parse('file://server/c$/folder/file.txt')\n *           u.authority === 'server'\n *           u.path === '/shares/c$/file.txt'\n *           u.fsPath === '\\\\server\\c$\\folder\\file.txt'\n * ```\n *\n * Using `URI#path` to read a file (using fs-apis) would not be enough because parts of the path, namely the server name, would be missing. Therefore `URI#fsPath` exists - it's sugar to ease working with URIs that represent files on disk (`file` scheme).\n */\n",
               "excerptTokens": [
                 {
                   "kind": "Content",
@@ -3604,7 +3604,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/common!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -3613,7 +3613,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/common!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -3665,7 +3665,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/common!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -3674,7 +3674,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/common!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -3743,7 +3743,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/common!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -3780,7 +3780,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/common!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -3797,7 +3797,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/common!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -3857,7 +3857,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/common!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -3953,7 +3953,7 @@
                 {
                   "kind": "Reference",
                   "text": "UriComponents",
-                  "canonicalReference": "@velcro/common!~UriComponents:interface"
+                  "canonicalReference": "@velcro/common!UriComponents:interface"
                 },
                 {
                   "kind": "Content",
@@ -3962,7 +3962,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/common!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -3971,7 +3971,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/common!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -4008,7 +4008,7 @@
                 {
                   "kind": "Reference",
                   "text": "UriComponents",
-                  "canonicalReference": "@velcro/common!~UriComponents:interface"
+                  "canonicalReference": "@velcro/common!UriComponents:interface"
                 },
                 {
                   "kind": "Content",
@@ -4017,7 +4017,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/common!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -4030,7 +4030,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/common!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -4071,7 +4071,7 @@
                 {
                   "kind": "Reference",
                   "text": "UriComponents",
-                  "canonicalReference": "@velcro/common!~UriComponents:interface"
+                  "canonicalReference": "@velcro/common!UriComponents:interface"
                 },
                 {
                   "kind": "Content",
@@ -4080,7 +4080,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/common!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -4093,7 +4093,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/common!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -4134,7 +4134,7 @@
                 {
                   "kind": "Reference",
                   "text": "UriComponents",
-                  "canonicalReference": "@velcro/common!~UriComponents:interface"
+                  "canonicalReference": "@velcro/common!UriComponents:interface"
                 },
                 {
                   "kind": "Content",
@@ -4143,7 +4143,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/common!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -4156,7 +4156,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/common!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -4223,7 +4223,7 @@
                 {
                   "kind": "Reference",
                   "text": "UriComponents",
-                  "canonicalReference": "@velcro/common!~UriComponents:interface"
+                  "canonicalReference": "@velcro/common!UriComponents:interface"
                 },
                 {
                   "kind": "Content",
@@ -4304,7 +4304,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/common!~Uri:class"
+                  "canonicalReference": "@velcro/common!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -4344,7 +4344,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "interface UriComponents "
+              "text": "export interface UriComponents "
             }
           ],
           "releaseTag": "Public",
@@ -4481,16 +4481,16 @@
         {
           "kind": "Function",
           "canonicalReference": "@velcro/common!uriToFsPath:function(1)",
-          "docComment": "",
+          "docComment": "/**\n * Compute `fsPath` for the given uri\n */\n",
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "declare function uriToFsPath(uri: "
+              "text": "export declare function uriToFsPath(uri: "
             },
             {
               "kind": "Reference",
               "text": "Uri",
-              "canonicalReference": "@velcro/common!~Uri:class"
+              "canonicalReference": "@velcro/common!Uri:class"
             },
             {
               "kind": "Content",
@@ -4544,7 +4544,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.45.1\""
+              "text": "version = \"__VERSION__\""
             }
           ],
           "releaseTag": "Public",
