@@ -73,10 +73,9 @@ function visit<TContext>(
     const value = (node as any)[key] as NodeWithParent | NodeWithParent[];
 
     if (Array.isArray(value)) {
-      children.push(...value);
-      // for (let j = 0; j < value.length; j++) {
-      //   visit(value[j], node, ctx, enter, leave);
-      // }
+      for (let j = 0; j < value.length; j++) {
+        if (value[j]) children.push(value[j]);
+      }
     } else if (value && value.type) {
       children.push(value);
     }
