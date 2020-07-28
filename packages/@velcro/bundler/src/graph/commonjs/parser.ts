@@ -18,6 +18,7 @@ import {
   isIdentifier,
   isIfStatement,
   isMemberExpression,
+  isMethodDefinition,
   isObjectPattern,
   isProgram,
   isProperty,
@@ -539,7 +540,12 @@ function declarePattern(node: Pattern, locals: { [name: string]: boolean }) {
 }
 
 function isBindingIdentifier(node: NodeWithParent) {
-  return isIdentifier(node) && !isPropertyOfMemberExpression(node) && !isKeyOfProperty(node);
+  return (
+    isIdentifier(node) &&
+    !isPropertyOfMemberExpression(node) &&
+    !isKeyOfProperty(node) &&
+    !isKeyOfMethodDefinition(node)
+  );
 }
 
 function isKeyOfProperty(node: NodeWithParent) {
@@ -548,6 +554,10 @@ function isKeyOfProperty(node: NodeWithParent) {
 
 function isPropertyOfMemberExpression(node: NodeWithParent) {
   return node.parent && isMemberExpression(node.parent) && node.parent.object !== node;
+}
+
+function isKeyOfMethodDefinition(node: NodeWithParent) {
+  return node.parent && isMethodDefinition(node.parent);
 }
 
 function isScope(node: NodeWithParent) {

@@ -1,6 +1,7 @@
-import { DisposableStore, Emitter, IDisposable } from '@velcro/common';
+import { DisposableStore, Emitter, Event, IDisposable } from '@velcro/common';
 import * as Monaco from 'monaco-editor';
 import { createContext, useContext, useEffect, useState } from 'react';
+import * as SvelteLanguage from './svelte.language';
 
 export class EditorManager implements IDisposable {
   editor: Monaco.editor.IStandaloneCodeEditor | null = null;
@@ -49,6 +50,20 @@ export class EditorManager implements IDisposable {
       noSyntaxValidation: false,
     });
 
+    Monaco.languages.register({
+      id: 'svelte',
+      extensions: ['.svelte'],
+      mimetypes: ['text/x-svelte'],
+    });
+    Monaco.languages.setLanguageConfiguration(
+      'svelte',
+      SvelteLanguage.conf as Monaco.languages.LanguageConfiguration
+    );
+    Monaco.languages.setMonarchTokensProvider(
+      'svelte',
+      SvelteLanguage.language as Monaco.languages.IMonarchLanguage
+    );
+
     if (options.files) {
       for (const pathname in options.files) {
         const content = options.files[pathname];
@@ -64,11 +79,11 @@ export class EditorManager implements IDisposable {
     return this.disposableStore.dispose;
   }
 
-  get onDidChange() {
+  get onDidChange(): Event<{ model: Monaco.editor.ITextModel }> {
     return this.onDidChangeEmitter.event;
   }
 
-  get onWillFocusModel() {
+  get onWillFocusModel(): Event<Monaco.editor.ITextModel> {
     return this.onWillFocusModelEmitter.event;
   }
 

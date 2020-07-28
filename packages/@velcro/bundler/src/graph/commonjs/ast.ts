@@ -85,6 +85,10 @@ export function isMemberExpression(node: Node): node is MemberExpression {
   return node.type === 'MemberExpression';
 }
 
+export function isMethodDefinition(node: Node): node is MemberExpression {
+  return node.type === 'MethodDefinition';
+}
+
 export function isObjectPattern(node: Node): node is ObjectPattern {
   return node.type === 'ObjectPattern';
 }
