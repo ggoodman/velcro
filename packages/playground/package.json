@@ -13,6 +13,7 @@
     "@velcro/plugin-css": "^0.46.1",
     "@velcro/plugin-sucrase": "^0.46.1",
     "@velcro/resolver": "^0.46.0",
+    "@velcro/runner": "^0.46.1",
     "@velcro/strategy-cdn": "^0.46.0",
     "@velcro/strategy-compound": "^0.46.0",
     "@velcro/strategy-memory": "^0.46.0",
@@ -27,6 +28,7 @@
     "react-error-overlay": "^6.0.7",
     "reakit": "^1.1.1",
     "stackframe": "^1.2.0",
+    "svelte": "^3.24.0",
     "zod": "^1.7.2"
   },
   "scripts": {

@@ -1,7 +1,5 @@
 {
   "compilerOptions": {
-    "composite": false,
-    "incremental": false,
     "target": "es5",
     "lib": ["dom", "dom.iterable", "esnext", "scripthost", "webworker"],
     "allowJs": true,
@@ -21,5 +19,34 @@
     "noEmit": true
   },
   "exclude": ["**/node_modules/**/*"],
-  "include": ["src"]
+  "include": ["src"],
+  "references": [
+    {
+      "path": "../@velcro/bundler"
+    },
+    {
+      "path": "../@velcro/common"
+    },
+    {
+      "path": "../@velcro/plugin-css"
+    },
+    {
+      "path": "../@velcro/plugin-sucrase"
+    },
+    {
+      "path": "../@velcro/resolver"
+    },
+    {
+      "path": "../@velcro/strategy-cdn"
+    },
+    {
+      "path": "../@velcro/strategy-compound"
+    },
+    {
+      "path": "../@velcro/strategy-fs"
+    },
+    {
+      "path": "../@velcro/strategy-memory"
+    }
+  ]
 }

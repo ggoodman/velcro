@@ -114,4 +114,23 @@ describe('JavaScript CommonJS parser', () => {
       'var isWindows = \'navigator\' in require("@@global") && /Win/i.test(navigator.platform);'
     );
   });
+
+  test('will not replace injectedGlobals with calls to require for certain identifiers', () => {
+    const testOne = (code: string, expectedCode: string, nodeEnv = 'development') => {
+      const parseResult = parse(Uri.file('/index.js'), code, {
+        globalModules: {
+          global: { spec: '@@global' },
+        },
+        nodeEnv,
+      });
+
+      expect(parseResult.code.toString()).toEqual(expectedCode);
+    };
+
+    // A member function should NOT trigger replacement
+    testOne('class Test { global(name) {} }', 'class Test { global(name) {} }');
+
+    // A member function should NOT trigger replacement
+    testOne('const test = { global(){} }', 'const test = { global(){} }');
+  });
 });
