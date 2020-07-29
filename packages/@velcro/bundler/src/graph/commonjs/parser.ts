@@ -128,7 +128,7 @@ export const parse = function parseJavaScript(
         visitorCtx.magicString.overwrite(
           location.start,
           location.end,
-          `require(${JSON.stringify(`${shim.spec}`)})`
+          `require(${JSON.stringify(`${shim.spec}`)})${shim.export ? `.${shim.export}` : ''}`
         );
       }
     }
