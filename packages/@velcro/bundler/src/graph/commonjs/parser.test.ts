@@ -115,7 +115,7 @@ describe('JavaScript CommonJS parser', () => {
     );
   });
 
-  test('will not replace injectedGlobals with calls to require for certain identifiers', () => {
+  test.only('will not replace injectedGlobals with calls to require for certain identifiers', () => {
     const testOne = (code: string, expectedCode: string, nodeEnv = 'development') => {
       const parseResult = parse(Uri.file('/index.js'), code, {
         globalModules: {
@@ -132,5 +132,8 @@ describe('JavaScript CommonJS parser', () => {
 
     // A member function should NOT trigger replacement
     testOne('const test = { global(){} }', 'const test = { global(){} }');
+
+    // A unary instanceof should NOT trigger replacement
+    testOne('if (typeof global === "undefined") {}', 'if (typeof global === "undefined") {}');
   });
 });

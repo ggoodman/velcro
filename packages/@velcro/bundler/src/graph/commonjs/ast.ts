@@ -23,6 +23,7 @@ import {
   TemplateLiteral,
   ThisExpression,
   TryStatement,
+  UnaryExpression,
   VariableDeclaration,
 } from 'estree';
 
@@ -116,6 +117,10 @@ export function isThisExpression(node: Node): node is ThisExpression {
 
 export function isTryStatement(node: Node): node is TryStatement {
   return node.type === 'TryStatement';
+}
+
+export function isUnaryExpression(node: Node): node is UnaryExpression {
+  return node.type === 'UnaryExpression';
 }
 
 export function isVariableDeclaration(node: Node): node is VariableDeclaration {

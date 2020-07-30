@@ -27,6 +27,7 @@ import {
   isTemplateLiteral,
   isThisExpression,
   isTryStatement,
+  isUnaryExpression,
   isVariableDeclaration,
   NodeWithParent,
   parse as parseAst,
@@ -210,7 +211,7 @@ export const collectGlobalsVisitor: Visitor<DependencyVisitorContext> = {
       return this.skip();
     }
 
-    if (isBindingIdentifier(node) && isIdentifier(node)) {
+    if (isBindingIdentifier(node) && isIdentifier(node) && !isArgumentOfTypeOf(node)) {
       var name = node.name;
       if (name === 'undefined') return;
       if (ctx.replacedSymbols.has(node)) {
@@ -551,6 +552,12 @@ function declarePattern(node: Pattern, locals: { [name: string]: boolean }) {
   } else {
     throw new Error(`Invariant violation: Unexpected pattern type: ${node.type}`);
   }
+}
+
+function isArgumentOfTypeOf(node: NodeWithParent) {
+  const parent = node.parent as Node;
+
+  return isUnaryExpression(parent) && parent.operator === 'typeof';
 }
 
 function isBindingIdentifier(node: NodeWithParent) {
