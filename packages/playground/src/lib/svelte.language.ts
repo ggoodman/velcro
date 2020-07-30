@@ -24,7 +24,7 @@ const EMPTY_ELEMENTS = [
   'wbr',
 ];
 export const conf = {
-  wordPattern: /(-?\d*\.\d\w*)|([^\`\~\!\@\$\^\&\*\(\)\=\+\[\{\]\}\\\|\;\:\'\"\,\.\<\>\/\s]+)/g,
+  wordPattern: /(-?\d*\.\d\w*)|([^`~!@$^&*()=+[{\]}|;:'",.<>/\s]+)/g,
   comments: {
     blockComment: ['{!--', '--}'],
   },
@@ -74,11 +74,11 @@ export const language = {
     root: [
       [/<!DOCTYPE/, 'metatag', '@doctype'],
       [/<!--/, 'comment', '@comment'],
-      [/(<)((?:[\w\-]+:)?[\w\-]+)(\s*)(\/>)/, ['delimiter', 'tag', '', 'delimiter']],
+      [/(<)((?:[\w-]+:)?[\w-]+)(\s*)(\/>)/, ['delimiter', 'tag', '', 'delimiter']],
       [/(<)(script)/, ['delimiter', { token: 'tag', next: '@script' }]],
       [/(<)(style)/, ['delimiter', { token: 'tag', next: '@style' }]],
-      [/(<)((?:[\w\-]+:)?[\w\-]+)/, ['delimiter', { token: 'tag', next: '@otherTag' }]],
-      [/(<\/)((?:[\w\-]+:)?[\w\-]+)/, ['delimiter', { token: 'tag', next: '@otherTag' }]],
+      [/(<)((?:[\w-]+:)?[\w-]+)/, ['delimiter', { token: 'tag', next: '@otherTag' }]],
+      [/(<\/)((?:[\w-]+:)?[\w-]+)/, ['delimiter', { token: 'tag', next: '@otherTag' }]],
       [/</, 'delimiter'],
       [/[^<]+/], // text
     ],
@@ -95,7 +95,7 @@ export const language = {
       [/\/?>/, 'delimiter', '@pop'],
       [/"([^"]*)"/, 'attribute.value'],
       [/'([^']*)'/, 'attribute.value'],
-      [/[\w\-]+/, 'attribute.name'],
+      [/[\w-]+/, 'attribute.name'],
       [/=/, 'delimiter'],
       [/[ \t\r\n]+/], // whitespace
     ],
@@ -103,7 +103,7 @@ export const language = {
       [/type/, 'attribute.name', '@scriptAfterType'],
       [/"([^"]*)"/, 'attribute.value'],
       [/'([^']*)'/, 'attribute.value'],
-      [/[\w\-]+/, 'attribute.name'],
+      [/[\w-]+/, 'attribute.name'],
       [/=/, 'delimiter'],
       [/>/, { token: 'delimiter', next: '@scriptEmbedded', nextEmbedded: 'text/javascript' }],
       [/[ \t\r\n]+/], // whitespace
@@ -126,7 +126,7 @@ export const language = {
       [/>/, { token: 'delimiter', next: '@scriptEmbedded.$S2', nextEmbedded: '$S2' }],
       [/"([^"]*)"/, 'attribute.value'],
       [/'([^']*)'/, 'attribute.value'],
-      [/[\w\-]+/, 'attribute.name'],
+      [/[\w-]+/, 'attribute.name'],
       [/=/, 'delimiter'],
       [/[ \t\r\n]+/], // whitespace
       [/<\/script\s*>/, { token: '@rematch', next: '@pop' }],
@@ -139,7 +139,7 @@ export const language = {
       [/type/, 'attribute.name', '@styleAfterType'],
       [/"([^"]*)"/, 'attribute.value'],
       [/'([^']*)'/, 'attribute.value'],
-      [/[\w\-]+/, 'attribute.name'],
+      [/[\w-]+/, 'attribute.name'],
       [/=/, 'delimiter'],
       [/>/, { token: 'delimiter', next: '@styleEmbedded', nextEmbedded: 'text/css' }],
       [/[ \t\r\n]+/], // whitespace
@@ -162,7 +162,7 @@ export const language = {
       [/>/, { token: 'delimiter', next: '@styleEmbedded.$S2', nextEmbedded: '$S2' }],
       [/"([^"]*)"/, 'attribute.value'],
       [/'([^']*)'/, 'attribute.value'],
-      [/[\w\-]+/, 'attribute.name'],
+      [/[\w-]+/, 'attribute.name'],
       [/=/, 'delimiter'],
       [/[ \t\r\n]+/], // whitespace
       [/<\/style\s*>/, { token: '@rematch', next: '@pop' }],
