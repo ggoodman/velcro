@@ -35,6 +35,8 @@ new App({
     `.trim() + '\n',
   'Button.svelte':
     `
-<button on:click|once={() => alert('well, almost nothing')}><slot /></button>
+<button on:click|once={() => alert('well, almost nothing')}>
+  <slot />
+</button>
     `.trim() + '\n',
 };
