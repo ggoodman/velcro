@@ -1,4 +1,4 @@
-import { Uri } from '@velcro/common/src';
+import { Uri } from '@velcro/common';
 import type { BinaryOperator, Function, Identifier, MemberExpression, Node, Pattern } from 'estree';
 import MagicString from 'magic-string';
 import { ParserFunction } from '../parsing';
