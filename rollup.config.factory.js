@@ -1,14 +1,13 @@
-const RollupPluginCommonJs = require('@rollup/plugin-commonjs');
-const RollupPluginJson = require('@rollup/plugin-json');
-const RollupPluginNodeResolve = require('@rollup/plugin-node-resolve').default;
-const RollupPluginReplace = require('@rollup/plugin-replace');
-const RollupPluginSucrase = require('@rollup/plugin-sucrase');
-const RollupPluginTs = require('@wessberg/rollup-plugin-ts');
-const { createRequire } = require('module');
-const { resolve } = require('path');
-const RollupPluginInjectProcessEnv = require('rollup-plugin-inject-process-env');
-const { terser } = require('rollup-plugin-terser');
-const Typescript = require('typescript');
+import RollupPluginCommonJs from '@rollup/plugin-commonjs';
+import RollupPluginJson from '@rollup/plugin-json';
+import RollupPluginNodeResolve from '@rollup/plugin-node-resolve';
+import RollupPluginReplace from '@rollup/plugin-replace';
+import RollupPluginTs from '@wessberg/rollup-plugin-ts';
+import { resolve } from 'path';
+import RollupPluginEsbuild from 'rollup-plugin-esbuild';
+import RollupPluginInjectProcessEnv from 'rollup-plugin-inject-process-env';
+import { terser } from 'rollup-plugin-terser';
+import Typescript from 'typescript';
 
 function toUmdName(name) {
   let umdName = 'Velcro.';
@@ -27,7 +26,7 @@ function toUmdName(name) {
  * @param {any} packageJson
  * @return {import('rollup').RollupOptions[]}
  */
-function rollupConfigFactory(dirname, packageJson) {
+export function rollupConfigFactory(dirname, packageJson) {
   const createTypescriptPlugin = (emitDeclarations = false) =>
     RollupPluginTs({
       cwd: dirname,
@@ -53,7 +52,10 @@ function rollupConfigFactory(dirname, packageJson) {
         sourcemap: true,
       },
       external(id) {
-        return packageJson.dependencies && Object.hasOwnProperty.call(packageJson.dependencies, id);
+        return Object.hasOwnProperty.call(
+          { ...packageJson.dependencies, ...packageJson.devDependencies },
+          id
+        );
       },
       onwarn: (msg, warn) => {
         if (!/Circular/.test(msg)) {
@@ -77,7 +79,10 @@ function rollupConfigFactory(dirname, packageJson) {
       },
 
       external(id) {
-        return packageJson.dependencies && Object.hasOwnProperty.call(packageJson.dependencies, id);
+        return Object.hasOwnProperty.call(
+          { ...packageJson.dependencies, ...packageJson.devDependencies },
+          id
+        );
       },
       onwarn: (msg, warn) => {
         if (!/Circular/.test(msg)) {
@@ -89,7 +94,7 @@ function rollupConfigFactory(dirname, packageJson) {
         RollupPluginNodeResolve(),
         RollupPluginReplace({ __VERSION__: packageJson.version }),
         createTypescriptPlugin(),
-        // RollupPluginInjectProcessEnv({ NODE_ENV: 'production' }),
+        RollupPluginInjectProcessEnv({ NODE_ENV: 'production' }),
       ],
     },
     {
@@ -114,12 +119,13 @@ function rollupConfigFactory(dirname, packageJson) {
         RollupPluginReplace({
           __VERSION__: process.env.npm_package_version || packageJson.version,
         }),
-        dirname.endsWith('runner') || dirname.endsWith('nostalgie')
-          ? RollupPluginSucrase({
-              transforms: ['typescript'],
-            })
-          : createTypescriptPlugin(),
-        // RollupPluginInjectProcessEnv({ NODE_ENV: 'production' }),
+        RollupPluginEsbuild({
+          define: {
+            'process.env.NODE_ENV': 'production',
+          },
+          target: 'es2015',
+        }),
+
         terser({
           mangle: {
             reserved: ['createRuntime', 'Module', 'Runtime'],
@@ -129,5 +135,3 @@ function rollupConfigFactory(dirname, packageJson) {
     },
   ];
 }
-
-exports.rollupConfigFactory = rollupConfigFactory;

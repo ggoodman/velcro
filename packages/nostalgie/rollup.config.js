@@ -1,4 +1,4 @@
-const PackageJson = require('./package.json');
-const { rollupConfigFactory } = require('../../rollup.config.factory');
+import { rollupConfigFactory } from '../../rollup.config.factory';
+import * as PackageJson from './package.json';
 
-module.exports = rollupConfigFactory(__dirname, PackageJson);
+export default rollupConfigFactory(__dirname, PackageJson);
