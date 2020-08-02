@@ -1,13 +1,15 @@
 /* eslint-env worker */
 
-import { Graph, GraphBuilder } from '@velcro/bundler';
+import { Graph, GraphBuilder, Plugin } from '@velcro/bundler';
 import { CancellationTokenSource, DisposableStore, Event, Uri } from '@velcro/common';
 import { cssPlugin } from '@velcro/plugin-css';
 import { sucrasePlugin } from '@velcro/plugin-sucrase';
 import { Resolver } from '@velcro/resolver';
+import { execute } from '@velcro/runner';
 import { CdnStrategy } from '@velcro/strategy-cdn';
 import { CompoundStrategy } from '@velcro/strategy-compound';
 import { MemoryStrategy } from '@velcro/strategy-memory';
+import { version as svelteVersion } from 'svelte/package.json';
 import { DefineEvent, DefineState, FSM } from './fsm';
 import { BuildingState, BuiltState, EditorEvents, ErrorState } from './types';
 
@@ -247,51 +249,51 @@ export class VelcroBuilderMachine {
       this.buildConfig.autoBuildWaitTimeout = options.autoBuildWaitTimeout;
     }
 
-    // const createSveltePlugin = (): Plugin => {
-    //   let svelteCompilerPromise: Promise<typeof import('svelte/compiler')> | undefined = undefined;
+    const createSveltePlugin = (): Plugin => {
+      let svelteCompilerPromise: Promise<typeof import('svelte/compiler')> | undefined = undefined;
 
-    //   const loadCompiler = () => {
-    //     if (!svelteCompilerPromise) {
-    //       svelteCompilerPromise = execute('module.exports = require("svelte/compiler")', {
-    //         readUrl,
-    //         cdn: 'jsdelivr',
-    //         dependencies: {
-    //           svelte: svelteVersion,
-    //         },
-    //         nodeEnv: 'production',
-    //         // plugins: [sucrasePlugin()],
-    //       });
+      const loadCompiler = () => {
+        if (!svelteCompilerPromise) {
+          svelteCompilerPromise = execute('module.exports = require("svelte/compiler")', {
+            readUrl,
+            cdn: 'jsdelivr',
+            dependencies: {
+              svelte: svelteVersion,
+            },
+            nodeEnv: 'production',
+            // plugins: [sucrasePlugin()],
+          });
 
-    //       svelteCompilerPromise.catch((err) => {
-    //         console.trace(err);
-    //       });
-    //     }
+          svelteCompilerPromise.catch((err) => {
+            console.trace(err);
+          });
+        }
 
-    //     return svelteCompilerPromise;
-    //   };
+        return svelteCompilerPromise;
+      };
 
-    //   return {
-    //     name: 'svelte',
-    //     async transform(ctx, uri, code) {
-    //       if (uri.fsPath.endsWith('.svelte')) {
-    //         const compiler = await loadCompiler();
-    //         const compilationResult = compiler.compile(code, {
-    //           css: false,
-    //           // filename: uri.toString(),
-    //           // name: uri.toString(),
-    //           outputFilename: uri.toString(),
-    //           format: 'cjs',
-    //         });
+      return {
+        name: 'svelte',
+        async transform(ctx, uri, code) {
+          if (uri.fsPath.endsWith('.svelte')) {
+            const compiler = await loadCompiler();
+            const compilationResult = compiler.compile(code, {
+              css: false,
+              // filename: uri.toString(),
+              // name: uri.toString(),
+              outputFilename: uri.toString(),
+              format: 'cjs',
+            });
 
-    //         return {
-    //           code: `${compilationResult.js.code}; Object.defineProperty(module.exports, '__esModule', { value: true });`,
-    //           sourceMap: compilationResult.js.map,
-    //         };
-    //       }
-    //       return undefined;
-    //     },
-    //   };
-    // };
+            return {
+              code: `${compilationResult.js.code}; Object.defineProperty(module.exports, '__esModule', { value: true });`,
+              sourceMap: compilationResult.js.map,
+            };
+          }
+          return undefined;
+        },
+      };
+    };
 
     this.resolver = new Resolver(this.rootStrategy, {
       debug: false,
@@ -303,7 +305,7 @@ export class VelcroBuilderMachine {
       nodeEnv: 'development',
       plugins: [
         cssPlugin(),
-        // createSveltePlugin(),
+        createSveltePlugin(),
         sucrasePlugin({ transforms: ['imports', 'jsx', 'typescript'] }),
       ],
     });
