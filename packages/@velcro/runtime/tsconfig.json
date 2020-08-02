@@ -3,15 +3,18 @@
   "compilerOptions": {
     "composite": true,
     "lib": ["es2018", "dom"],
-    "outDir": "./dist"
+    "outDir": "./dist",
+    "target": "es5"
     // "rootDir": "."
   },
   "exclude": ["**/node_modules/**/*"],
   "include": ["src"],
   "references": [
+    { "path": "../bundler" },
     { "path": "../common" },
     { "path": "../resolver" },
-    { "path": "../runtime" },
-    { "path": "../node-libs" }
+    { "path": "../strategy-cdn" },
+    { "path": "../strategy-compound" },
+    { "path": "../strategy-memory" }
   ]
 }

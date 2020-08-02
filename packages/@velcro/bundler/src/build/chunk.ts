@@ -1,8 +1,8 @@
 import { MapSet, Uri } from '@velcro/common';
+import { runtime } from '@velcro/runtime';
 import { Bundle } from 'magic-string';
 import { DependencyEdge } from '../graph/dependencyEdge';
 import { SourceModule } from '../graph/sourceModule';
-import { createRuntime } from '../runtime/runtime';
 import { VelcroImportMap, VelcroStaticRuntime } from '../runtime/types';
 import { ChunkOutput } from './chunkOutput';
 import { LazyLink, Link, Source } from './sourceMapTree';
@@ -79,7 +79,7 @@ export class Chunk {
     bundle.append(`\n})(Velcro.registry);\n`);
 
     if (options && options.injectRuntime) {
-      bundle.append(`\nVelcro.runtime = ${createRuntime.toString()}(Velcro.registry);\n`);
+      bundle.append(`\n${runtime}(Velcro);\n`);
     }
 
     if (options && options.invalidations) {

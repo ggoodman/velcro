@@ -1,4 +1,8 @@
-import { rollupConfigFactory } from '../../../rollup.config.factory';
-import * as PackageJson from './package.json';
+const { rollupConfigFactory } = require('../../../rollup.config.factory');
+const PackageJson = require('./package.json');
 
-export default rollupConfigFactory(__dirname, PackageJson);
+module.exports = rollupConfigFactory(__dirname, PackageJson, {
+  cjs: true,
+  esm: true,
+  umd: true,
+});

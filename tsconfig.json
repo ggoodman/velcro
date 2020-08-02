@@ -38,6 +38,7 @@
     { "path": "./packages/@velcro/plugin-sucrase" },
     { "path": "./packages/@velcro/resolver" },
     { "path": "./packages/@velcro/runner" },
+    { "path": "./packages/@velcro/runtime" },
     { "path": "./packages/@velcro/strategy-cdn" },
     { "path": "./packages/@velcro/strategy-compound" },
     { "path": "./packages/@velcro/strategy-fs" },
