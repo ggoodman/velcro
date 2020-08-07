@@ -1,7 +1,7 @@
-import { Uri } from '@velcro/common';
-import MagicString from 'magic-string';
-import { DEFAULT_SHIM_GLOBALS } from './shims';
-import { SourceModuleDependency } from './sourceModuleDependency';
+import type { Uri } from '@velcro/common';
+import type MagicString from 'magic-string';
+import type { DEFAULT_SHIM_GLOBALS } from './shims';
+import type { SourceModuleDependency } from './sourceModuleDependency';
 
 export interface ParseOptions {
   globalModules: typeof DEFAULT_SHIM_GLOBALS;

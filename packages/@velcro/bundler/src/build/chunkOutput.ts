@@ -1,8 +1,8 @@
-import { Uri } from '@velcro/common';
-import { Bundle } from 'magic-string';
+import type { Uri } from '@velcro/common';
+import type { Bundle } from 'magic-string';
 import { encode } from 'sourcemap-codec';
 import { SourceMap } from './sourceMap';
-import { ISourceMapper } from './sourceMapTree';
+import type { ISourceMapper } from './sourceMapTree';
 
 export class ChunkOutput {
   private cachedCode?: string;

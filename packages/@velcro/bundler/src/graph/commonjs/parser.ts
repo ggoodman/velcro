@@ -1,8 +1,8 @@
-import { Uri } from '@velcro/common';
+import type { Uri } from '@velcro/common';
 import type { BinaryOperator, Function, Identifier, MemberExpression, Node, Pattern } from 'estree';
 import MagicString from 'magic-string';
-import { ParserFunction } from '../parsing';
-import { DEFAULT_SHIM_GLOBALS } from '../shims';
+import type { ParserFunction } from '../parsing';
+import type { DEFAULT_SHIM_GLOBALS } from '../shims';
 import { SourceModuleDependency } from '../sourceModuleDependency';
 import {
   isArrayPattern,
@@ -32,7 +32,8 @@ import {
   NodeWithParent,
   parse as parseAst,
 } from './ast';
-import { traverse, Visitor } from './traverse';
+import { traverse } from './traverse';
+import type { Visitor } from './traverse';
 
 declare module 'estree' {
   export interface BaseNodeWithoutComments {

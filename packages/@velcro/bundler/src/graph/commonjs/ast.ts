@@ -1,5 +1,5 @@
 import * as Acorn from 'acorn';
-import {
+import type {
   ArrayPattern,
   ArrowFunctionExpression,
   AssignmentPattern,

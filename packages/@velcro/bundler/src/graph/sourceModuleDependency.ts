@@ -1,4 +1,4 @@
-import { Uri } from '@velcro/common';
+import type { Uri } from '@velcro/common';
 
 export enum SourceModuleDependencyKind {
   Entrypoint = 'Entrypoint',
@@ -16,7 +16,7 @@ type SourceLocation = { start: number; end: number };
 export class SourceModuleDependency {
   locator?: { name: string; spec: string; path: string; version?: string };
 
-  private constructor(
+  constructor(
     readonly kind: SourceModuleDependencyKind,
     readonly spec: string,
     readonly locations: ReadonlyArray<SourceLocation>,

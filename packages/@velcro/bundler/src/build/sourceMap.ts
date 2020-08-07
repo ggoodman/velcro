@@ -1,5 +1,5 @@
 import { Base64 } from '@velcro/common';
-import { DecodedSourceMap } from 'magic-string';
+import type { DecodedSourceMap } from 'magic-string';
 import { decode } from 'sourcemap-codec';
 
 export class SourceMap {

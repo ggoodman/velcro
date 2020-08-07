@@ -1,5 +1,5 @@
-import { Node } from 'estree';
-import { NodeWithParent } from './ast';
+import type { Node } from 'estree';
+import type { NodeWithParent } from './ast';
 
 type VisitorContext = {
   skip(): void;

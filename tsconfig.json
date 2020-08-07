@@ -9,6 +9,7 @@
     "declarationMap": true,
     "downlevelIteration": true,
     "esModuleInterop": true,
+    "importsNotUsedAsValues": "error",
     "incremental": true,
     "module": "esnext",
     "moduleResolution": "node",
@@ -26,7 +27,8 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
-    "stripInternal": true
+    "stripInternal": true,
+    "target": "ES2019"
   },
   // "files": ["__test__"],
   "include": ["__test__"],
@@ -43,6 +45,7 @@
     { "path": "./packages/@velcro/strategy-compound" },
     { "path": "./packages/@velcro/strategy-fs" },
     { "path": "./packages/@velcro/strategy-memory" },
-    { "path": "./packages/nostalgie" }
+    { "path": "./packages/nostalgie" },
+    { "path": "./packages/repl" }
   ]
 }

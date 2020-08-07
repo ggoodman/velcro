@@ -1,4 +1,4 @@
-import { VelcroRuntime } from './runtimeInterface';
+import type { VelcroRuntime } from './runtimeInterface';
 
 export type VelcroImportMap = {
   imports?: { [key: string]: string };

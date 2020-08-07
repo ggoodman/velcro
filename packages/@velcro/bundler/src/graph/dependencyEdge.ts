@@ -1,6 +1,6 @@
-import { Uri } from '@velcro/common';
-import { ResolverContext } from '@velcro/resolver';
-import { SourceModuleDependency } from '../graph/sourceModuleDependency';
+import type { Uri } from '@velcro/common';
+import type { ResolverContext } from '@velcro/resolver';
+import type { SourceModuleDependency } from '../graph/sourceModuleDependency';
 
 export interface DependencyEdge {
   dependency: SourceModuleDependency;

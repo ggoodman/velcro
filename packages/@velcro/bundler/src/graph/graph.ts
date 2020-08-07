@@ -1,7 +1,7 @@
 import { MapSet, Uri } from '@velcro/common';
 import { Chunk } from '../build/chunk';
-import { DependencyEdge } from './dependencyEdge';
-import { SourceModule } from './sourceModule';
+import type { DependencyEdge } from './dependencyEdge';
+import type { SourceModule } from './sourceModule';
 
 export class Graph {
   private readonly edgesFrom = new MapSet<string, DependencyEdge>();

@@ -1,7 +1,8 @@
-import { CancellationToken, Thenable, Uri } from '@velcro/common';
-import { Resolver, ResolverContext } from '@velcro/resolver';
-import MagicString, { SourceMapSegment } from 'magic-string';
-import { SourceModule, SourceModuleDependency } from '../graph';
+import type { CancellationToken, Thenable, Uri } from '@velcro/common';
+import type { Resolver, ResolverContext } from '@velcro/resolver';
+import type MagicString from 'magic-string';
+import type { SourceMapSegment } from 'magic-string';
+import type { SourceModule, SourceModuleDependency } from '../graph';
 
 type MaybeThenable<T> = T | Thenable<T>;
 

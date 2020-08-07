@@ -1,4 +1,4 @@
-import { VelcroRequire } from './types';
+import type { VelcroRequire } from './types';
 
 export interface VelcroRuntime {
   readonly dependents: Record<string, VelcroModuleInstance[] | undefined>;

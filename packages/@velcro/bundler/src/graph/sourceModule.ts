@@ -1,8 +1,8 @@
-import { Uri } from '@velcro/common';
-import { ResolverContext } from '@velcro/resolver';
-import MagicString from 'magic-string';
-import { Link, Source } from '../build/sourceMapTree';
-import { SourceModuleDependency } from './sourceModuleDependency';
+import type { Uri } from '@velcro/common';
+import type { ResolverContext } from '@velcro/resolver';
+import type MagicString from 'magic-string';
+import type { Link, Source } from '../build/sourceMapTree';
+import type { SourceModuleDependency } from './sourceModuleDependency';
 
 export class SourceModule {
   constructor(

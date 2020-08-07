@@ -1,9 +1,9 @@
 import { MapSet, Uri } from '@velcro/common';
 import { runtime } from '@velcro/runtime';
 import { Bundle } from 'magic-string';
-import { DependencyEdge } from '../graph/dependencyEdge';
-import { SourceModule } from '../graph/sourceModule';
-import { VelcroImportMap, VelcroStaticRuntime } from '../runtime/types';
+import type { DependencyEdge } from '../graph/dependencyEdge';
+import type { SourceModule } from '../graph/sourceModule';
+import type { VelcroImportMap, VelcroStaticRuntime } from '../runtime/types';
 import { ChunkOutput } from './chunkOutput';
 import { LazyLink, Link, Source } from './sourceMapTree';
 

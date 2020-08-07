@@ -1,4 +1,4 @@
-import { SourceMapSegment } from 'magic-string';
+import type { SourceMapSegment } from 'magic-string';
 import { decode } from 'sourcemap-codec';
 
 export interface ISourceMapper {

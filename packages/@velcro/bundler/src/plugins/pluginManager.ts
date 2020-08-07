@@ -6,16 +6,17 @@ import {
   isThenable,
   Uri,
 } from '@velcro/common';
-import { ResolverContext } from '@velcro/resolver';
-import MagicString, { DecodedSourceMap, SourceMap } from 'magic-string';
+import type { ResolverContext } from '@velcro/resolver';
+import MagicString from 'magic-string';
+import type { DecodedSourceMap, SourceMap } from 'magic-string';
 import {
   decodeDataUriAsSourceMap,
   getSourceMappingUrl,
   updateSourceMappingUrl,
 } from '../build/sourceMap';
 import { Link, Source } from '../build/sourceMapTree';
-import { SourceModule, SourceModuleDependency } from '../graph';
-import {
+import type { SourceModule, SourceModuleDependency } from '../graph';
+import type {
   Plugin,
   PluginLoadContext,
   PluginResolveDependencyContext,

@@ -278,7 +278,7 @@ export class CdnStrategy extends AbstractResolverStrategyWithRoot
   >();
   private readonly readUrlFn: CdnStrategy.UrlContentFetcher;
 
-  private constructor(readUrlFn: CdnStrategy.UrlContentFetcher, cdn: AbstractCdn) {
+  constructor(readUrlFn: CdnStrategy.UrlContentFetcher, cdn: AbstractCdn) {
     super(cdn.urlForPackageFile('', ''));
 
     this.cdn = cdn;

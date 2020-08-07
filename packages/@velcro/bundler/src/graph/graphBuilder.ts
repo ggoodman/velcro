@@ -8,10 +8,10 @@ import {
   MapSet,
   Uri,
 } from '@velcro/common';
-import { Resolver, ResolverContext } from '@velcro/resolver';
+import type { Resolver, ResolverContext } from '@velcro/resolver';
 import { Plugin, PluginManager } from '../plugins';
 import { parse } from './commonjs';
-import { DependencyEdge } from './dependencyEdge';
+import type { DependencyEdge } from './dependencyEdge';
 import { Graph } from './graph';
 import { DEFAULT_SHIM_GLOBALS } from './shims';
 import { SourceModule } from './sourceModule';
