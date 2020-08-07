@@ -1,5 +1,5 @@
-import { Runtime } from './runtime';
-import { VelcroImportMap, VelcroRequire } from './types';
+import type { Runtime } from './runtime';
+import type { VelcroImportMap, VelcroRequire } from './types';
 
 export class Module {
   public readonly require: VelcroRequire;

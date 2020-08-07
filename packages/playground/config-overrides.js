@@ -1,7 +1,7 @@
 //@ts-check
 'use strict';
 
-const { addWebpackPlugin, override, useBabelRc } = require('customize-cra');
+const { addWebpackPlugin, override, addBabelPlugin } = require('customize-cra');
 const MonacoEditorWebpackPlugin = require('monaco-editor-webpack-plugin');
 const WorkerPlugin = require('worker-plugin');
 
@@ -17,6 +17,11 @@ const supportMjs = () => (webpackConfig) => {
 module.exports = override(
   addWebpackPlugin(new MonacoEditorWebpackPlugin()),
   addWebpackPlugin(new WorkerPlugin()),
-  useBabelRc(),
+  addBabelPlugin([
+    'emotion',
+    {
+      instances: ['emotion', './src/lib/styled.ts'],
+    },
+  ]),
   supportMjs()
 );

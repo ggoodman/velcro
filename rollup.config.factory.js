@@ -4,7 +4,6 @@ const RollupPluginNodeResolve = require('@rollup/plugin-node-resolve').default;
 const RollupPluginReplace = require('@rollup/plugin-replace');
 const RollupPluginTs = require('@wessberg/rollup-plugin-ts');
 const { resolve } = require('path');
-const RollupPluginInjectProcessEnv = require('rollup-plugin-inject-process-env');
 const { terser } = require('rollup-plugin-terser');
 const Typescript = require('typescript');
 
@@ -87,7 +86,6 @@ exports.rollupConfigFactory = function rollupConfigFactory(dirname, packageJson)
         }),
         RollupPluginReplace({ __VERSION__: packageJson.version }),
         createTypescriptPlugin(true),
-        RollupPluginInjectProcessEnv({ NODE_ENV: 'production' }),
       ],
     });
   }
@@ -116,13 +114,8 @@ exports.rollupConfigFactory = function rollupConfigFactory(dirname, packageJson)
           __VERSION__: process.env.npm_package_version || packageJson.version,
         }),
         createTypescriptPlugin(false),
-        // RollupPluginInjectProcessEnv({ NODE_ENV: 'production' }),
 
-        terser({
-          // mangle: {
-          //   reserved: ['createRuntime', 'Module', 'Runtime'],
-          // },
-        }),
+        terser(),
       ],
     });
   }

@@ -1,5 +1,5 @@
 import { Module } from './module';
-import {
+import type {
   ModuleDefinitions,
   VelcroEnvironment,
   VelcroImportMap,

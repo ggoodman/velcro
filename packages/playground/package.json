@@ -17,7 +17,6 @@
     "@velcro/strategy-cdn": "^0.46.0",
     "@velcro/strategy-compound": "^0.46.0",
     "@velcro/strategy-memory": "^0.46.0",
-    "comlink": "^4.3.0",
     "emotion-theming": "^10.0.27",
     "error-stack-parser": "^2.0.6",
     "idb": "^4.0.5",
@@ -66,7 +65,7 @@
     "sourcemap-codec": "^1.4.8",
     "typescript": "^3.9.6",
     "worker-loader": "^2.0.0",
-    "worker-plugin": "^3.2.0"
+    "worker-plugin": "^4.0.3"
   },
   "homepage": "https://ggoodman.github.io/velcro"
 }

@@ -1,5 +1,5 @@
-import { Module } from './module';
-import { Runtime } from './runtime';
+import type { Module } from './module';
+import type { Runtime } from './runtime';
 
 export type VelcroEnvironment = {
   registry: {
