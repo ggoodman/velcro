@@ -1,6 +1,7 @@
 {
   "name": "@velcro/runtime",
   "version": "0.46.3",
+  "private": true,
   "description": "Opinionated tool for easily bundling and running code from anywhere",
   "keywords": [
     "velcro",
