@@ -1,6 +1,6 @@
 {
   "name": "nostalgie",
-  "version": "0.47.0",
+  "version": "0.47.1",
   "description": "A reminder of what the web once was - your hopes and dreams and a single html file",
   "keywords": [
     "velcro",
@@ -56,10 +56,10 @@
     "typescript": "^3.9.2"
   },
   "dependencies": {
-    "@velcro/bundler": "^0.47.0",
+    "@velcro/bundler": "^0.47.1",
     "@velcro/node-libs": "^0.47.0",
-    "@velcro/plugin-css": "^0.47.0",
-    "@velcro/plugin-sucrase": "^0.47.0",
+    "@velcro/plugin-css": "^0.47.1",
+    "@velcro/plugin-sucrase": "^0.47.1",
     "@velcro/resolver": "^0.47.0",
     "@velcro/strategy-cdn": "^0.47.0",
     "@velcro/strategy-compound": "^0.47.0",
