@@ -42,7 +42,7 @@
 |  [isValidPartialPackageJson(json)](./common.isvalidpartialpackagejson.md) |  |
 |  [parseBufferAsPackageJson(decoder, content, spec)](./common.parsebufferaspackagejson.md) |  |
 |  [parseBufferAsPartialPackageJson(decoder, content, spec)](./common.parsebufferaspartialpackagejson.md) |  |
-|  [uriToFsPath(uri, keepDriveLetterCasing)](./common.uritofspath.md) |  |
+|  [uriToFsPath(uri, keepDriveLetterCasing)](./common.uritofspath.md) | Compute <code>fsPath</code> for the given uri |
 
 ## Interfaces
 

@@ -1,7 +1,7 @@
 {
   "metadata": {
     "toolPackage": "@microsoft/api-extractor",
-    "toolVersion": "7.9.1",
+    "toolVersion": "7.9.3",
     "schemaVersion": 1003,
     "oldestForwardsCompatibleVersion": 1001
   },
@@ -27,7 +27,7 @@
             {
               "kind": "Reference",
               "text": "AbstractResolverStrategyWithRoot",
-              "canonicalReference": "@velcro/strategy-memory!~AbstractResolverStrategyWithRoot:class"
+              "canonicalReference": "@velcro/strategy-memory!AbstractResolverStrategyWithRoot:class"
             },
             {
               "kind": "Content",
@@ -71,7 +71,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/strategy-memory!~Uri:class"
+                  "canonicalReference": "@velcro/strategy-memory!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -242,7 +242,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/strategy-memory!~Uri:class"
+                  "canonicalReference": "@velcro/strategy-memory!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -275,7 +275,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverContext",
-                  "canonicalReference": "@velcro/strategy-memory!~ResolverContext:class"
+                  "canonicalReference": "@velcro/strategy-memory!ResolverContext:class"
                 },
                 {
                   "kind": "Content",
@@ -284,7 +284,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/strategy-memory!~Uri:class"
+                  "canonicalReference": "@velcro/strategy-memory!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -297,7 +297,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/strategy-memory!~Uri:class"
+                  "canonicalReference": "@velcro/strategy-memory!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -306,7 +306,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverStrategy.EntryKind",
-                  "canonicalReference": "@velcro/strategy-memory!~ResolverStrategy.EntryKind:enum"
+                  "canonicalReference": "@velcro/strategy-memory!ResolverStrategy.EntryKind:enum"
                 },
                 {
                   "kind": "Content",
@@ -354,7 +354,7 @@
                 {
                   "kind": "Reference",
                   "text": "ResolverContext",
-                  "canonicalReference": "@velcro/strategy-memory!~ResolverContext:class"
+                  "canonicalReference": "@velcro/strategy-memory!ResolverContext:class"
                 },
                 {
                   "kind": "Content",
@@ -363,7 +363,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/strategy-memory!~Uri:class"
+                  "canonicalReference": "@velcro/strategy-memory!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -485,7 +485,7 @@
                 {
                   "kind": "Reference",
                   "text": "Uri",
-                  "canonicalReference": "@velcro/strategy-memory!~Uri:class"
+                  "canonicalReference": "@velcro/strategy-memory!Uri:class"
                 },
                 {
                   "kind": "Content",
@@ -524,7 +524,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.45.1\""
+              "text": "version = \"0.46.0\""
             }
           ],
           "releaseTag": "Public",

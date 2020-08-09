@@ -4,6 +4,8 @@
 
 ## Uri.fragment property
 
+fragment is the 'fragment' part of 'http://www.msft.com/some/path?query\#fragment'.
+
 <b>Signature:</b>
 
 ```typescript

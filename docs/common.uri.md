@@ -29,7 +29,7 @@ declare class Uri implements UriComponents
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [authority](./common.uri.authority.md) |  | string | authority is the 'www.msft.com' part of 'http://www.msft.com/some/path?query\#fragment'. The part between the first double slashes and the next slash. |
-|  [fragment](./common.uri.fragment.md) |  | string |  |
+|  [fragment](./common.uri.fragment.md) |  | string | fragment is the 'fragment' part of 'http://www.msft.com/some/path?query\#fragment'. |
 |  [fsPath](./common.uri.fspath.md) |  | string | Returns a string representing the corresponding file system path of this URI. platform specific path separator.<!-- -->\* Will \*not\* validate the path for invalid characters and semantics. \* Will \*not\* look at the scheme of this URI. \* The result shall \*not\* be used for display purposes but for accessing a file on disk.<!-- -->The \*difference\* to <code>URI#path</code> is the use of the platform specific separator and the handling
 ```ts
      const u = URI.parse('file://server/c$/folder/file.txt')

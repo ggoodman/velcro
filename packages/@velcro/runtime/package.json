@@ -1,6 +1,6 @@
 {
   "name": "@velcro/runtime",
-  "version": "0.46.3",
+  "version": "0.47.0",
   "private": true,
   "description": "Opinionated tool for easily bundling and running code from anywhere",
   "keywords": [
@@ -53,7 +53,6 @@
     "tslib": "1",
     "typescript": "^3.9.2"
   },
-  "dependencies": {},
   "gitHead": "f63b45ad688f2fe9768349afeaf449c016bf33ef",
   "browserslist": [
     "defaults",

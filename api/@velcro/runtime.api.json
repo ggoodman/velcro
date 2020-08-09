@@ -1,0 +1,388 @@
+{
+  "metadata": {
+    "toolPackage": "@microsoft/api-extractor",
+    "toolVersion": "7.9.3",
+    "schemaVersion": 1003,
+    "oldestForwardsCompatibleVersion": 1001
+  },
+  "kind": "Package",
+  "canonicalReference": "@velcro/runtime!",
+  "docComment": "",
+  "name": "@velcro/runtime",
+  "members": [
+    {
+      "kind": "EntryPoint",
+      "canonicalReference": "@velcro/runtime!",
+      "name": "",
+      "members": [
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@velcro/runtime!ModuleDefinitions:type",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "type ModuleDefinitions = "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    [key: string]: ["
+            },
+            {
+              "kind": "Reference",
+              "text": "VelcroModuleFactory",
+              "canonicalReference": "@velcro/runtime!~VelcroModuleFactory:type"
+            },
+            {
+              "kind": "Content",
+              "text": ", "
+            },
+            {
+              "kind": "Reference",
+              "text": "VelcroImportMap",
+              "canonicalReference": "@velcro/runtime!~VelcroImportMap:type"
+            },
+            {
+              "kind": "Content",
+              "text": ", "
+            },
+            {
+              "kind": "Reference",
+              "text": "VelcroModuleGeneration",
+              "canonicalReference": "@velcro/runtime!~VelcroModuleGeneration:type"
+            },
+            {
+              "kind": "Content",
+              "text": "] | undefined;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "ModuleDefinitions",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 8
+          }
+        },
+        {
+          "kind": "Variable",
+          "canonicalReference": "@velcro/runtime!runtime:var",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "runtime = \"(function(Velcro){var e=function(e,t,r){this.runtime=e,this.id=t,this.importMap=r,this.module={exports:{}},this.require=this.runtime.createRequire(this)},t=function(){function t(t){this.moduleDependents={},this.moduleInstances={},this.defs=t.defs,this.root=new e(this,\\\"velcro:/root\\\",{}),Object.defineProperty(this,\\\"require\\\",{enumerable:!0,value:this.root.require.bind(this.root)})}return t.prototype.createRequire=function(t){var r=this;function n(e){return r.resolveSpecAgainstImportMap(e,t)}return Object.assign((function(o){var i=n(o),s=r.moduleInstances[i];if(!s){var u=r.defs[i];if(!u)throw new Error(\\\"Unable to locate module '\\\"+i+\\\"' from '\\\"+t.id);var a=u[0],l=u[1];s=new e(r,i,l),r.moduleInstances[i]=s;var p=i.split(\\\"/\\\"),c=p.pop()||o,d=p.join(\\\"/\\\");a.call(s.module.exports,s.module,s.module.exports,s.require.bind(s),d,c)}return(r.moduleDependents[i]=r.moduleDependents[i]||[]).push(t),s.module.exports}),{resolve:n})},t.prototype.inject=function(t,r){var n=new e(this,t,Object.create(null));return n.module.exports=r,this.moduleInstances[t]=n,n},t.prototype.invalidate=function(e){for(var t=e.slice(),r=!1;t.length;){var n=t.shift();r=delete this.moduleInstances[n]||r;var o=this.moduleDependents[n];if(Array.isArray(o))for(var i=0;i<o.length;i++)t.push(o[i].id)}return r},t.prototype.resolveSpecAgainstImportMap=function(e,t){var r=t.importMap;if(!r.scopes)return e;var n=r.scopes[t.id];if(!n)return e;var o=n[e];return o||e},t.create=function(r){return r.runtime||(r.runtime=new t(r.registry)),r.Module=e,r.Runtime=t,r.runtime},t}();Velcro.runtime=t.create(Velcro);})\""
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "runtime",
+          "variableTypeTokenRange": {
+            "startIndex": 0,
+            "endIndex": 0
+          }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@velcro/runtime!VelcroEnvironment:type",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "type VelcroEnvironment = "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    registry: {\n        defs: "
+            },
+            {
+              "kind": "Reference",
+              "text": "ModuleDefinitions",
+              "canonicalReference": "@velcro/runtime!~ModuleDefinitions:type"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    };\n    Runtime: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "Runtime",
+              "canonicalReference": "@velcro/runtime!~Runtime:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    Module: typeof "
+            },
+            {
+              "kind": "Reference",
+              "text": "Module",
+              "canonicalReference": "@velcro/runtime!~Module:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n    runtime: "
+            },
+            {
+              "kind": "Reference",
+              "text": "Runtime",
+              "canonicalReference": "@velcro/runtime!~Runtime:class"
+            },
+            {
+              "kind": "Content",
+              "text": ";\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "VelcroEnvironment",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 10
+          }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@velcro/runtime!VelcroImportMap:type",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "type VelcroImportMap = "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    imports?: {\n        [key: string]: string;\n    };\n    scopes?: {\n        [fromId: string]: {\n            [key: string]: string | undefined;\n        } | undefined;\n    };\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "VelcroImportMap",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@velcro/runtime!VelcroModule:type",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "type VelcroModule = "
+            },
+            {
+              "kind": "Content",
+              "text": "{\n    exports: "
+            },
+            {
+              "kind": "Reference",
+              "text": "Record",
+              "canonicalReference": "!Record:type"
+            },
+            {
+              "kind": "Content",
+              "text": "<string | number | symbol, unknown>;\n}"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "VelcroModule",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 4
+          }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@velcro/runtime!VelcroModuleFactory:type",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "type VelcroModuleFactory = "
+            },
+            {
+              "kind": "Content",
+              "text": "(module: "
+            },
+            {
+              "kind": "Reference",
+              "text": "VelcroModule",
+              "canonicalReference": "@velcro/runtime!~VelcroModule:type"
+            },
+            {
+              "kind": "Content",
+              "text": ", exports: "
+            },
+            {
+              "kind": "Reference",
+              "text": "VelcroModule",
+              "canonicalReference": "@velcro/runtime!~VelcroModule:type"
+            },
+            {
+              "kind": "Content",
+              "text": "[\"exports\"], require: "
+            },
+            {
+              "kind": "Reference",
+              "text": "VelcroRequire",
+              "canonicalReference": "@velcro/runtime!~VelcroRequire:interface"
+            },
+            {
+              "kind": "Content",
+              "text": ", __dirname: string, __filename: string) => void"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "VelcroModuleFactory",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 8
+          }
+        },
+        {
+          "kind": "TypeAlias",
+          "canonicalReference": "@velcro/runtime!VelcroModuleGeneration:type",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "type VelcroModuleGeneration = "
+            },
+            {
+              "kind": "Content",
+              "text": "number"
+            },
+            {
+              "kind": "Content",
+              "text": ";"
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "VelcroModuleGeneration",
+          "typeTokenRange": {
+            "startIndex": 1,
+            "endIndex": 2
+          }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@velcro/runtime!VelcroRequire:interface",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "interface VelcroRequire "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "VelcroRequire",
+          "members": [
+            {
+              "kind": "CallSignature",
+              "canonicalReference": "@velcro/runtime!VelcroRequire:call(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "(spec: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "unknown"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "spec",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "MethodSignature",
+              "canonicalReference": "@velcro/runtime!VelcroRequire#resolve:member(1)",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "resolve(spec: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": "): "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "returnTypeTokenRange": {
+                "startIndex": 3,
+                "endIndex": 4
+              },
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "spec",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                }
+              ],
+              "name": "resolve"
+            }
+          ],
+          "extendsTokenRanges": []
+        }
+      ]
+    }
+  ]
+}

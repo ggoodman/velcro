@@ -4,6 +4,8 @@
 
 ## uriToFsPath() function
 
+Compute `fsPath` for the given uri
+
 <b>Signature:</b>
 
 ```typescript

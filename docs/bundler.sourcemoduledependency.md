@@ -10,6 +10,12 @@
 declare class SourceModuleDependency 
 ```
 
+## Constructors
+
+|  Constructor | Modifiers | Description |
+|  --- | --- | --- |
+|  [(constructor)(kind, spec, locations, options)](./bundler.sourcemoduledependency._constructor_.md) |  | Constructs a new instance of the <code>SourceModuleDependency</code> class |
+
 ## Properties
 
 |  Property | Modifiers | Type | Description |

@@ -1,6 +1,6 @@
 {
   "name": "nostalgie",
-  "version": "0.46.3",
+  "version": "0.47.0",
   "description": "A reminder of what the web once was - your hopes and dreams and a single html file",
   "keywords": [
     "velcro",
@@ -47,7 +47,7 @@
     "@rollup/plugin-commonjs": "^11.1.0",
     "@rollup/plugin-json": "^4.0.3",
     "@rollup/plugin-replace": "^2.3.2",
-    "@velcro/common": "^0.46.0",
+    "@velcro/common": "^0.47.0",
     "@wessberg/rollup-plugin-ts": "^1.2.27",
     "magic-string": "^0.25.7",
     "rollup": "^2.10.0",
@@ -56,14 +56,14 @@
     "typescript": "^3.9.2"
   },
   "dependencies": {
-    "@velcro/bundler": "^0.46.3",
-    "@velcro/node-libs": "^0.46.0",
-    "@velcro/plugin-css": "^0.46.3",
-    "@velcro/plugin-sucrase": "^0.46.3",
-    "@velcro/resolver": "^0.46.0",
-    "@velcro/strategy-cdn": "^0.46.0",
-    "@velcro/strategy-compound": "^0.46.0",
-    "@velcro/strategy-memory": "^0.46.0"
+    "@velcro/bundler": "^0.47.0",
+    "@velcro/node-libs": "^0.47.0",
+    "@velcro/plugin-css": "^0.47.0",
+    "@velcro/plugin-sucrase": "^0.47.0",
+    "@velcro/resolver": "^0.47.0",
+    "@velcro/strategy-cdn": "^0.47.0",
+    "@velcro/strategy-compound": "^0.47.0",
+    "@velcro/strategy-memory": "^0.47.0"
   },
   "gitHead": "f63b45ad688f2fe9768349afeaf449c016bf33ef"
 }

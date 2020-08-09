@@ -14,6 +14,7 @@
 |  [@velcro/plugin-sucrase](./plugin-sucrase.md) |  |
 |  [@velcro/resolver](./resolver.md) |  |
 |  [@velcro/runner](./runner.md) |  |
+|  [@velcro/runtime](./runtime.md) |  |
 |  [@velcro/strategy-cdn](./strategy-cdn.md) |  |
 |  [@velcro/strategy-compound](./strategy-compound.md) |  |
 |  [@velcro/strategy-fs](./strategy-fs.md) |  |

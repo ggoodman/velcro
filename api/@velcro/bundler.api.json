@@ -1,7 +1,7 @@
 {
   "metadata": {
     "toolPackage": "@microsoft/api-extractor",
-    "toolVersion": "7.9.2",
+    "toolVersion": "7.9.3",
     "schemaVersion": 1003,
     "oldestForwardsCompatibleVersion": 1001
   },
@@ -2838,6 +2838,97 @@
           "name": "SourceModuleDependency",
           "members": [
             {
+              "kind": "Constructor",
+              "canonicalReference": "@velcro/bundler!SourceModuleDependency:constructor(1)",
+              "docComment": "/**\n * Constructs a new instance of the `SourceModuleDependency` class\n */\n",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "constructor(kind: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "SourceModuleDependencyKind",
+                  "canonicalReference": "@velcro/bundler!~SourceModuleDependencyKind:enum"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", spec: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", locations: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ReadonlyArray",
+                  "canonicalReference": "!ReadonlyArray:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "SourceLocation",
+                  "canonicalReference": "@velcro/bundler!~SourceLocation:type"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">"
+                },
+                {
+                  "kind": "Content",
+                  "text": ", options?: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "SourceModuleOptions",
+                  "canonicalReference": "@velcro/bundler!~SourceModuleOptions:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ");"
+                }
+              ],
+              "releaseTag": "Public",
+              "overloadIndex": 1,
+              "parameters": [
+                {
+                  "parameterName": "kind",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 1,
+                    "endIndex": 2
+                  }
+                },
+                {
+                  "parameterName": "spec",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 3,
+                    "endIndex": 4
+                  }
+                },
+                {
+                  "parameterName": "locations",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 5,
+                    "endIndex": 9
+                  }
+                },
+                {
+                  "parameterName": "options",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 10,
+                    "endIndex": 11
+                  }
+                }
+              ]
+            },
+            {
               "kind": "Method",
               "canonicalReference": "@velcro/bundler!SourceModuleDependency.areIdentical:member(1)",
               "docComment": "",
@@ -3603,7 +3694,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.46.2\""
+              "text": "version = \"0.46.3\""
             }
           ],
           "releaseTag": "Public",

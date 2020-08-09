@@ -1,7 +1,7 @@
 {
   "metadata": {
     "toolPackage": "@microsoft/api-extractor",
-    "toolVersion": "7.9.2",
+    "toolVersion": "7.9.3",
     "schemaVersion": 1003,
     "oldestForwardsCompatibleVersion": 1001
   },
@@ -506,7 +506,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.46.2\""
+              "text": "version = \"0.46.3\""
             }
           ],
           "releaseTag": "Public",

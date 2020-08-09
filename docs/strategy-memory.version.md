@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-version = "0.45.1"
+version = "0.46.0"
 ```
