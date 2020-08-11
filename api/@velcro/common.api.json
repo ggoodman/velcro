@@ -4544,7 +4544,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "version = \"0.46.0\""
+              "text": "version = \"__VERSION__\""
             }
           ],
           "releaseTag": "Public",
