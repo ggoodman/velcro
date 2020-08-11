@@ -5,13 +5,14 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "rm -rf ./packages/@velcro/*/dist && lerna run build --ignore @velcro/playground",
+    "build": "lerna run build --ignore @velcro/playground",
     "build:api": "lerna run build:api",
     "build:dev": "lerna run --parallel build:dev",
     "build:docs": "npx api-documenter markdown -i ./api/** -o docs",
+    "clean": "rm -rf ./packages/@velcro/*/dist",
     "predeploy": "cd packages/playground && SKIP_PREFLIGHT_CHECK=true npm run build",
     "deploy": "gh-pages -d packages/playground/build",
-    "preversion": "npm test",
+    "preversion": "npm run clean && npm test",
     "version": "npm run build:docs && git add .",
     "start": "cd packages/playground && SKIP_PREFLIGHT_CHECK=true npm run start",
     "test": "jest --verbose"
