@@ -585,12 +585,22 @@ async function resolveBareModule(ctx: ResolverContext, uri: Uri, parsedSpec: Bar
       : resolveRootReturn;
 
     let nextUri = uri;
-    let maxIterations = 10;
+    const maxIterations = 10;
+    const consultedUris: Uri[] = [];
 
     while (Uri.isPrefixOf(resolveRootResult.uri, nextUri)) {
-      if (--maxIterations <= 0) {
-        throw new Error('Max iterations reached');
+      if (consultedUris.length >= maxIterations) {
+        throw new Error(
+          `Consulted a maximum of ${maxIterations} locations while trying to resolve '${bareModuleToSpec(
+            parsedSpec
+          )}' from '${uri.toString()}', via ${ctx.path.join(' -> ')}: ${consultedUris
+            .map((uri) => uri.toString())
+            .join(', ')}`
+        );
       }
+
+      const currentUri = nextUri;
+      consultedUris.push(currentUri);
 
       const parentPackageJsonReturn = ctx.readParentPackageJson(uri);
       const parentPackageJsonResult = isThenable(parentPackageJsonReturn)
@@ -626,7 +636,7 @@ async function resolveBareModule(ctx: ResolverContext, uri: Uri, parsedSpec: Bar
 
       nextUri = Uri.joinPath(parentPackageJsonResult.uri, '..');
 
-      if (Uri.equals(nextUri, resolveRootResult.uri)) {
+      if (Uri.equals(nextUri, currentUri) || Uri.equals(nextUri, resolveRootResult.uri)) {
         break;
       }
     }
@@ -642,6 +652,7 @@ async function resolveBareModule(ctx: ResolverContext, uri: Uri, parsedSpec: Bar
     }
   }
 
+  // If no locator spec was found, it means we were unable
   if (!locatorSpec) {
     throw new DependencyNotFoundError(parsedSpec.nameSpec, uri);
   }
@@ -1032,4 +1043,8 @@ async function readParentPackageJsonInternal(
   return ctx.runInChildContext('readPackageJsonOrRecurse', containingDirUrl, (ctx) =>
     readPackageJsonOrRecurse(ctx, containingDirUrl)
   );
+}
+
+function bareModuleToSpec(bareModule: BareModuleSpec) {
+  return `${bareModule.nameSpec}${bareModule.path}`;
 }
