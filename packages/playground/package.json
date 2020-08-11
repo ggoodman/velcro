@@ -19,7 +19,9 @@
     "@velcro/strategy-memory": "^0.47.0",
     "emotion-theming": "^10.0.27",
     "error-stack-parser": "^2.0.6",
+    "fp-ts": "^2.8.1",
     "idb": "^4.0.5",
+    "io-ts": "^2.2.9",
     "modern-css-reset": "^1.1.0",
     "monaco-editor": "^0.20.0",
     "react": "^16.13.1",
@@ -27,8 +29,7 @@
     "react-error-overlay": "^6.0.7",
     "reakit": "^1.1.1",
     "stackframe": "^1.2.0",
-    "svelte": "^3.24.0",
-    "zod": "^1.7.2"
+    "svelte": "^3.24.0"
   },
   "scripts": {
     "start": "react-app-rewired start",

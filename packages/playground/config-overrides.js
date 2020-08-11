@@ -23,5 +23,6 @@ module.exports = override(
       instances: ['emotion', './src/lib/styled.ts'],
     },
   ]),
+  addBabelPlugin(['@babel/plugin-transform-typescript', { allowNamespaces: true }]),
   supportMjs()
 );

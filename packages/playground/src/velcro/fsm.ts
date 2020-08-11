@@ -1,5 +1,7 @@
 import { DisposableStore, Emitter, Event, IDisposable } from '@velcro/common';
 
+type AnyFunc = (...args: any[]) => any;
+
 export type DefineEvent<TEventName extends string, TData = never> = {
   eventName: TEventName;
   data: TData;
@@ -24,25 +26,101 @@ export type DefineState<TStateName extends string, TData = never> = TStateName e
   : never;
 type AnyState = DefineState<string> | DefineState<string, unknown>;
 
-type Chart<TState extends AnyState, TEvent extends AnyEvent> = {
-  [TStateName in TState['stateName']]: {
-    onEnter?(ctx: {
-      event: TEvent;
-      registerDisposable(disposable: IDisposable): void;
-      sendEvent: SendEventFunction<TEvent>;
-      state: Extract<TState, { stateName: TStateName }>;
-      transitionTo: TransitionToFunction<TState, TEvent>;
-    }): void;
-    onEvent?: {
-      [TEventName in TEvent['eventName']]?: (ctx: {
-        event: Extract<TEvent, { eventName: TEventName }>;
-        registerDisposable(disposable: IDisposable): void;
-        sendEvent: SendEventFunction<TEvent>;
-        state: Extract<TState, { stateName: TStateName }>;
-        transitionTo: TransitionToFunction<TState, TEvent>;
-      }) => void;
+export type OnEnterHandlerContext<
+  TState extends AnyState,
+  TEvent extends AnyEvent,
+  TStateName extends TState['stateName'] = TState['stateName']
+> = {
+  event: TEvent;
+  registerDisposable(disposable: IDisposable): void;
+  sendEvent: SendEventFunction<TEvent>;
+  state: Extract<TState, { stateName: TStateName }>;
+  transitionTo: TransitionToFunction<TState, TEvent>;
+};
+
+export type OnEnterHandlerFunction<
+  TState extends AnyState,
+  TEvent extends AnyEvent,
+  TStateName extends TState['stateName'] = TState['stateName']
+> = (ctx: OnEnterHandlerContext<TState, TEvent, TStateName>) => void;
+
+/**
+ * Conditional, mapped type that takes valid states (`TStates`), valid events (`TEvents`)
+ * and actions and results in only the *names* of those actions that can be used as enter
+ * handlers for the state `TStateName`.
+ */
+type OnEnterHandlerAction<
+  TState extends AnyState,
+  TEvent extends AnyEvent,
+  TStateName extends TState['stateName'],
+  TActions extends { [name: string]: AnyFunc }
+> = {
+  [TActionName in keyof TActions]: TActions[TActionName] extends OnEnterHandlerFunction<
+    TState,
+    TEvent,
+    TStateName
+  >
+    ? TActionName
+    : never;
+}[keyof TActions];
+
+export type OnEventHandlerContext<
+  TState extends AnyState,
+  TEvent extends AnyEvent,
+  TEventName extends TEvent['eventName'] = TEvent['eventName'],
+  TStateName extends TState['stateName'] = TState['stateName']
+> = {
+  event: Extract<TEvent, { eventName: TEventName }>;
+  registerDisposable(disposable: IDisposable): void;
+  sendEvent: SendEventFunction<TEvent>;
+  state: Extract<TState, { stateName: TStateName }>;
+  transitionTo: TransitionToFunction<TState, TEvent>;
+};
+
+export type OnEventHandlerFunction<
+  TState extends AnyState,
+  TEvent extends AnyEvent,
+  TEventName extends TEvent['eventName'] = TEvent['eventName'],
+  TStateName extends TState['stateName'] = TState['stateName']
+> = (ctx: OnEventHandlerContext<TState, TEvent, TEventName, TStateName>) => void;
+
+export type OnExitHandlerContext<
+  TState extends AnyState,
+  TEvent extends AnyEvent,
+  TStateName extends TState['stateName'] = TState['stateName']
+> = { event: TEvent; state: Extract<TState, { stateName: TStateName }> };
+
+export type OnExitHandlerFunction<
+  TState extends AnyState,
+  TEvent extends AnyEvent,
+  TStateName extends TState['stateName'] = TState['stateName']
+> = (ctx: OnExitHandlerContext<TState, TEvent, TStateName>) => void;
+
+type ChartDefinition<
+  TState extends AnyState,
+  TEvent extends AnyEvent,
+  TActions extends { [name: string]: AnyFunc } = Record<never, AnyFunc>
+> = {
+  onEnter?: OnEnterHandlerFunction<TState, TEvent>;
+  onEvent?: {
+    [TEventName in TEvent['eventName']]?: OnEventHandlerFunction<TState, TEvent, TEventName>;
+  };
+  onExit?: OnExitHandlerFunction<TState, TEvent>;
+  states: {
+    [TStateName in TState['stateName']]: {
+      onEnter?:
+        | OnEnterHandlerFunction<TState, TEvent, TStateName>
+        | OnEnterHandlerAction<TState, TEvent, TStateName, TActions>;
+      onEvent?: {
+        [TEventName in TEvent['eventName']]?: OnEventHandlerFunction<
+          TState,
+          TEvent,
+          TEventName,
+          TStateName
+        >;
+      };
+      onExit?: OnExitHandlerFunction<TState, TEvent, TStateName>;
     };
-    onExit?(ctx: { event: TEvent; state: Extract<TState, { stateName: TStateName }> }): void;
   };
 };
 
@@ -61,19 +139,35 @@ interface TransitionToFunction<TState extends AnyState, TEvent extends AnyEvent>
   ): void;
 }
 
-export class FSM<TState extends AnyState, TEvent extends AnyEvent> {
+export class FSM<
+  TState extends AnyState,
+  TEvent extends AnyEvent,
+  TActions extends { [name: string]: AnyFunc } = Record<never, AnyFunc>
+> {
+  private readonly onEventEmitter = new Emitter<Readonly<TEvent>>();
   private readonly onStateChangeEmitter = new Emitter<Readonly<TState>>();
 
-  private readonly states: Chart<TState, TEvent>;
+  private readonly actions: TActions;
+  private readonly states: ChartDefinition<TState, TEvent, TActions>;
   private handlingEvents = false;
+  private isDisposed = false;
   private mutableState: TState;
   private pendingExternalEvents: TEvent[] = [];
   private pendingInternalEvents: TEvent[] = [];
   private readonly stateDisposer = new DisposableStore();
 
-  constructor(states: Chart<TState, TEvent>, initialState: TState) {
+  constructor(
+    states: ChartDefinition<TState, TEvent, TActions>,
+    initialState: TState,
+    actions?: TActions
+  ) {
     this.states = states;
     this.mutableState = initialState;
+    this.actions = actions || ({} as TActions);
+  }
+
+  get onEvent(): Event<Readonly<TEvent>> {
+    return this.onEventEmitter.event;
   }
 
   get onStateChange(): Event<Readonly<TState>> {
@@ -82,6 +176,11 @@ export class FSM<TState extends AnyState, TEvent extends AnyEvent> {
 
   get state(): Readonly<TState> {
     return this.mutableState;
+  }
+
+  dispose() {
+    this.stateDisposer.dispose();
+    this.isDisposed = true;
   }
 
   sendEvent<TSentEvent extends EventWithoutData<TEvent>>(event: TSentEvent['eventName']): void;
@@ -93,6 +192,8 @@ export class FSM<TState extends AnyState, TEvent extends AnyEvent> {
     eventName: TSentEvent['eventName'],
     data?: TSentEvent['data']
   ): void {
+    if (this.isDisposed) return;
+
     // console.group();
     // console.log('sendEvent(%s, %s)', this.state.stateName, eventName, data);
     this.pendingExternalEvents.push({ eventName, data } as TEvent);
@@ -111,28 +212,38 @@ export class FSM<TState extends AnyState, TEvent extends AnyEvent> {
 
     this.handlingEvents = true;
 
-    while (this.pendingExternalEvents.length || this.pendingInternalEvents.length) {
-      while (this.pendingInternalEvents.length) {
+    while (
+      !this.isDisposed &&
+      (this.pendingExternalEvents.length || this.pendingInternalEvents.length)
+    ) {
+      while (!this.isDisposed && this.pendingInternalEvents.length) {
         const event = this.pendingInternalEvents.shift() as TEvent;
-        const currentStateDef = this.states[this.mutableState.stateName as TState['stateName']];
 
-        if (currentStateDef.onEvent) {
-          const handler = currentStateDef.onEvent[event.eventName as TEvent['eventName']];
+        this.onEventEmitter.fire(event);
+
+        const currentStateDef = this.states.states[
+          this.mutableState.stateName as TState['stateName']
+        ];
+
+        // While the current state might not have a handler, there may be a global
+        // handler.
+        const handler =
+          currentStateDef.onEvent?.[event.eventName as TEvent['eventName']] ||
+          this.states.onEvent?.[event.eventName as TEvent['eventName']];
+
+        if (handler) {
           const state = this.state;
-
-          if (handler) {
-            handler({
-              event: event as any,
-              registerDisposable: this.stateDisposer.add.bind(this.stateDisposer),
-              sendEvent: this.sendEventInternal.bind(this),
-              state: state as any,
-              transitionTo: this.transitionTo.bind(this),
-            });
-          }
+          handler({
+            event: event as any,
+            registerDisposable: this.stateDisposer.add.bind(this.stateDisposer),
+            sendEvent: this.sendEventInternal.bind(this),
+            state: state as any,
+            transitionTo: this.transitionTo.bind(this),
+          });
         }
       }
 
-      while (this.pendingExternalEvents.length) {
+      while (!this.isDisposed && this.pendingExternalEvents.length) {
         // Move external events into the internal event queue for the next tick
         // of the outer loop.
         this.pendingInternalEvents.push(this.pendingExternalEvents.pop()!);
@@ -153,6 +264,8 @@ export class FSM<TState extends AnyState, TEvent extends AnyEvent> {
     eventName: TSentEvent['eventName'],
     data?: TSentEvent['data']
   ): void {
+    if (this.isDisposed) return;
+
     this.pendingInternalEvents.push({ eventName, data } as TEvent);
 
     if (!this.handlingEvents) {
@@ -164,8 +277,8 @@ export class FSM<TState extends AnyState, TEvent extends AnyEvent> {
     state: TTargetState,
     event: TTriggeringEvent
   ) {
-    const fromStateConfig = this.states[this.mutableState.stateName as TState['stateName']];
-    const nextStateConfig = this.states[state.stateName as TState['stateName']];
+    const fromStateConfig = this.states.states[this.mutableState.stateName as TState['stateName']];
+    const nextStateConfig = this.states.states[state.stateName as TState['stateName']];
     const fromState = { ...this.mutableState };
 
     this.mutableState = { ...state };
@@ -181,8 +294,25 @@ export class FSM<TState extends AnyState, TEvent extends AnyEvent> {
         });
       }
 
-      if (nextStateConfig.onEnter) {
-        nextStateConfig.onEnter({
+      const onEnterDef = nextStateConfig.onEnter;
+
+      if (onEnterDef) {
+        let onEnterHandler:
+          | OnEnterHandlerFunction<TState, TEvent, TState['stateName']>
+          | undefined = undefined;
+
+        if (typeof onEnterDef === 'string') {
+          onEnterHandler = this.actions[onEnterDef];
+        } else if (typeof onEnterDef === 'function') {
+          onEnterHandler = onEnterDef;
+        }
+
+        if (!onEnterHandler) {
+          // TODO: Should we warn / error?
+          return;
+        }
+
+        onEnterHandler({
           event,
           registerDisposable: this.stateDisposer.add.bind(this.stateDisposer),
           sendEvent: this.sendEventInternal.bind(this),

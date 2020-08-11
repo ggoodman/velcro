@@ -1,94 +1,22 @@
-import { DisposableStore, Emitter, Event } from '@velcro/common';
-import type * as Monaco from 'monaco-editor';
-import {
-  EditorEvent,
-  FileCreateEvent,
-  FileRemoveEvent,
-  FileUpdateEvent,
-  WorkerState,
-} from './types';
+import { DisposableStore } from '@velcro/common';
+import * as Monaco from 'monaco-editor';
+import { VelcroBuilderClient, VelcroBuilderClientOptions } from './client';
+import { wireMonaco } from './wireMonaco';
 
-const EDITOR_EVENT_THROTTLE_MS = (1000 / 16) | 0;
-
-export function trackMonaco(monaco: typeof Monaco) {
+export function trackMonaco(monaco: typeof Monaco, options: VelcroBuilderClientOptions = {}) {
   const disposer = new DisposableStore();
-  const worker = new Worker('./velcroWorker.ts', { type: 'module' });
+  const client = new VelcroBuilderClient(options);
+  const wiredMonaco = wireMonaco(monaco, client);
 
-  const trackModel = (model: Monaco.editor.ITextModel) => {
-    model.onWillDispose(() => {
-      const message: FileRemoveEvent = {
-        event: 'file_remove',
-        href: model.uri.toString(true),
-      };
-      postMessage(message);
-      disposerReference.dispose();
-    });
-
-    const disposerReference = disposer.add(
-      model.onDidChangeContent(() => {
-        const message: FileUpdateEvent = {
-          event: 'file_update',
-          content: model.getValue(),
-          href: model.uri.toString(true),
-        };
-        postMessage(message);
-      })
-    );
-
-    const message: FileCreateEvent = {
-      event: 'file_create',
-      content: model.getValue(),
-      href: model.uri.toString(true),
-    };
-    postMessage(message);
-  };
-
-  const postMessageEmitter = new Emitter<EditorEvent>();
-  const postMessageQueue = Event.debounce<EditorEvent, Map<string, EditorEvent>>(
-    postMessageEmitter.event,
-    (last, event) => {
-      if (!last) {
-        last = new Map();
-      }
-
-      last.set(event.href, event);
-
-      return last;
-    },
-    EDITOR_EVENT_THROTTLE_MS
-  )((events) => {
-    worker.postMessage([...events.values()]);
-  });
-
-  disposer.add(postMessageEmitter);
-  disposer.add(postMessageQueue);
-
-  const postMessage = (message: EditorEvent) => {
-    postMessageEmitter.fire(message);
-  };
-
-  // Track existing models
-  monaco.editor.getModels().forEach(trackModel);
-
-  // And future models
-  disposer.add(monaco.editor.onDidCreateModel(trackModel));
-  disposer.add({
-    dispose: () => worker.terminate(),
-  });
-
-  const emitter = new Emitter<WorkerState>();
-  disposer.add(emitter);
-
-  worker.addEventListener('message', (e) => {
-    if (WorkerState.is(e.data)) {
-      emitter.fire(e.data);
-    }
-  });
+  disposer.add(client);
+  disposer.add(wiredMonaco);
 
   return {
-    dispose: () => disposer.dispose(),
+    dispose() {
+      return disposer.dispose();
+    },
     get onStateChange() {
-      return emitter.event;
+      return client.onStateChange;
     },
   };
 }
