@@ -39,7 +39,7 @@ exports.rollupConfigFactory = function rollupConfigFactory(dirname, packageJson)
       transpileOnly: !emitDeclarations,
       transpiler: 'babel',
       typescript: Typescript,
-      exclude: ['node_modules/**', '**/*.mjs'],
+      // exclude: ['node_modules/**', '**/*.mjs'],
     });
 
   /** @type {import('rollup').RollupOptions[]} */
@@ -81,11 +81,11 @@ exports.rollupConfigFactory = function rollupConfigFactory(dirname, packageJson)
       },
       plugins: [
         RollupPluginJson(),
+        createTypescriptPlugin(true),
         RollupPluginNodeResolve({
           mainFields: ['module', 'main', 'unpkg'],
         }),
         RollupPluginReplace({ __VERSION__: packageJson.version }),
-        createTypescriptPlugin(true),
       ],
     });
   }
@@ -106,6 +106,7 @@ exports.rollupConfigFactory = function rollupConfigFactory(dirname, packageJson)
       },
       plugins: [
         RollupPluginJson(),
+        createTypescriptPlugin(false),
         RollupPluginNodeResolve({
           mainFields: ['module', 'main', 'unpkg'],
         }),
@@ -113,8 +114,6 @@ exports.rollupConfigFactory = function rollupConfigFactory(dirname, packageJson)
         RollupPluginReplace({
           __VERSION__: process.env.npm_package_version || packageJson.version,
         }),
-        createTypescriptPlugin(false),
-
         terser(),
       ],
     });
