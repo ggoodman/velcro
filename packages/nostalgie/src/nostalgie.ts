@@ -123,26 +123,7 @@ export function refresh(scripts: Iterable<HTMLScriptElement>) {
       { overwrite: true }
     );
 
-    if (script.src) {
-      // We need to load the code over http so we'll add the operation to the
-      // queue.
-      queue = queue.then(() =>
-        fetch(script.src)
-          .then((res) => res.text())
-          .then((code) => {
-            memoryStrategy.addFile(`${basePath}/index.js`, code, { overwrite: true });
-          })
-          .catch((err) => {
-            const event = new CustomEvent('error', { detail: { error: err } });
-            script.dispatchEvent(event);
-            console.error('Error reading the code at %s:', script.src, err);
-            return '';
-          })
-      );
-    } else {
-      memoryStrategy.addFile(`${basePath}/index.js`, script.text, { overwrite: true });
-    }
-
+    memoryStrategy.addFile(`${basePath}/index.js`, script.text, { overwrite: true });
     entrypointPaths.push(`${basePath}/index.js`);
 
     observer.observe(script, {

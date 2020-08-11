@@ -1,9 +1,9 @@
+import { getCurrentScript } from 'tiny-current-script';
 import { refresh } from './nostalgie';
 
-if (typeof window !== 'object' || !('document' in window)) {
-  throw new Error('Nostalgie must be run in the main thread of a browser');
+const scriptTag = getCurrentScript();
+if (!scriptTag) {
+  console.warn('Nostalgie was unable to determine the current script tag and will not run.');
+} else {
+  refresh([scriptTag]);
 }
-
-window.addEventListener('load', () =>
-  refresh(document.querySelectorAll('script[type=velcro]') as NodeListOf<HTMLScriptElement>)
-);
