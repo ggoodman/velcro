@@ -99,8 +99,8 @@ export function refresh(scripts: Iterable<HTMLScriptElement>) {
 
     // Convert dependencies encoded in data properties into a dependencies object
     if (rawDependencies) {
-      for (const pair of rawDependencies.split(/\s*,\s*/m)) {
-        const [name, range] = pair.split(/\s*:\s*/m);
+      for (const pair of rawDependencies.split(/\s*[,;]\s*/m)) {
+        const [name, range] = pair.split(/\s*[@:]\s*/m);
 
         dependencies[name] = range;
       }
