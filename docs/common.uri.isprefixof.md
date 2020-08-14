@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-static isPrefixOf(prefix: Uri, uri: Uri): boolean;
+static isPrefixOf(prefix: Uri, uri: Uri, strictChild?: boolean): boolean;
 ```
 
 ## Parameters
@@ -16,6 +16,7 @@ static isPrefixOf(prefix: Uri, uri: Uri): boolean;
 |  --- | --- | --- |
 |  prefix | Uri |  |
 |  uri | Uri |  |
+|  strictChild | boolean |  |
 
 <b>Returns:</b>
 

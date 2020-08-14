@@ -64,7 +64,7 @@ Using <code>URI#path</code> to read a file (using fs-apis) would not be enough b
  |
 |  [from(components)](./common.uri.from.md) | <code>static</code> |  |
 |  [getFirstPathSegmentAfterPrefix(child, parent)](./common.uri.getfirstpathsegmentafterprefix.md) | <code>static</code> |  |
-|  [isPrefixOf(prefix, uri)](./common.uri.isprefixof.md) | <code>static</code> |  |
+|  [isPrefixOf(prefix, uri, strictChild)](./common.uri.isprefixof.md) | <code>static</code> |  |
 |  [isUri(thing)](./common.uri.isuri.md) | <code>static</code> |  |
 |  [joinPath(uri, pathFragment)](./common.uri.joinpath.md) | <code>static</code> | Join a URI path with path fragments and normalizes the resulting path. |
 |  [parse(value, \_strict)](./common.uri.parse.md) | <code>static</code> | Creates a new URI from a string, e.g. <code>http://www.msft.com/some/path</code>, <code>file:///usr/home</code>, or <code>scheme:with/path</code>. |

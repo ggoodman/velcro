@@ -5,4 +5,4 @@
 
 Velcro resolver strategy backed by an fs-compatible object
 
-[API Docs](https://github.com/ggoodman/velcro/tree/v0.48.0/docs/strategy-fs.md)
+[API Docs](https://github.com/ggoodman/velcro/tree/v0.49.0/docs/strategy-fs.md)

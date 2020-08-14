@@ -3678,6 +3678,14 @@
                 },
                 {
                   "kind": "Content",
+                  "text": ", strictChild?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "boolean"
+                },
+                {
+                  "kind": "Content",
                   "text": "): "
                 },
                 {
@@ -3691,8 +3699,8 @@
               ],
               "isStatic": true,
               "returnTypeTokenRange": {
-                "startIndex": 5,
-                "endIndex": 6
+                "startIndex": 7,
+                "endIndex": 8
               },
               "releaseTag": "Public",
               "overloadIndex": 1,
@@ -3709,6 +3717,13 @@
                   "parameterTypeTokenRange": {
                     "startIndex": 3,
                     "endIndex": 4
+                  }
+                },
+                {
+                  "parameterName": "strictChild",
+                  "parameterTypeTokenRange": {
+                    "startIndex": 5,
+                    "endIndex": 6
                   }
                 }
               ],
