@@ -14,7 +14,6 @@ import {
   isThenable,
   MapSet,
   PackageJson,
-  parseBufferAsPackageJson,
   parseBufferAsPartialPackageJson,
   PartialPackageJson,
   Thenable,
@@ -66,10 +65,23 @@ type ResolveResult =
       rootUri: Uri;
     };
 
-type ReadParentPackageJsonResultInternal =
+type ReadParentPackageJsonResult =
   | {
       found: true;
       packageJson: PackageJson;
+      uri: Uri;
+      visitedDirs: Uri[];
+    }
+  | {
+      found: false;
+      packageJson: null;
+      uri: null;
+    };
+
+type ReadParentPackageJsonResultInternal =
+  | {
+      found: true;
+      packageJson: PartialPackageJson;
       uri: Uri;
       visitedDirs: Uri[];
     }
@@ -538,18 +550,55 @@ async function resolve(ctx: ResolverContext, uri: Uri): Promise<ResolveResult> {
         );
   const readParentPackageJsonReturn = ctx.readParentPackageJson(uri);
   const resolveAndPackageJson = all([resolveReturn, readParentPackageJsonReturn], ctx.token);
+
   const [resolveResult, readParentPackageJsonResult] = isThenable(resolveAndPackageJson)
     ? await resolveAndPackageJson
     : resolveAndPackageJson;
 
+  let parentPackageJson: { packageJson: PackageJson; uri: Uri } | undefined = undefined;
+
+  if (
+    readParentPackageJsonResult.found &&
+    typeof readParentPackageJsonResult.packageJson.name === 'string' &&
+    typeof readParentPackageJsonResult.packageJson.version === 'string'
+  ) {
+    parentPackageJson = {
+      packageJson: readParentPackageJsonResult.packageJson as PackageJson,
+      uri: readParentPackageJsonResult.uri,
+    };
+  } else if (readParentPackageJsonResult.found) {
+    // If a parent packageJson WAS found but was missing name or version, let's continue traversing up
+    let nextUri = Uri.joinPath(readParentPackageJsonResult.uri, '..');
+
+    while (Uri.isPrefixOf(rootUri, nextUri, true)) {
+      const readParentPackageJsonReturn = ctx.readParentPackageJson(nextUri);
+      const readParentPackageJsonResult = isThenable(readParentPackageJsonReturn)
+        ? await checkCancellation(readParentPackageJsonReturn, ctx.token)
+        : readParentPackageJsonReturn;
+
+      if (!readParentPackageJsonResult.found) {
+        break;
+      }
+
+      if (
+        readParentPackageJsonResult.packageJson.name &&
+        readParentPackageJsonResult.packageJson.version
+      ) {
+        parentPackageJson = {
+          packageJson: readParentPackageJsonResult.packageJson as PackageJson,
+          uri: readParentPackageJsonResult.uri,
+        };
+
+        break;
+      }
+
+      nextUri = Uri.joinPath(readParentPackageJsonResult.uri, '..');
+    }
+  }
+
   return {
     ...resolveResult,
-    parentPackageJson: readParentPackageJsonResult.found
-      ? {
-          packageJson: readParentPackageJsonResult.packageJson,
-          uri: readParentPackageJsonResult.uri,
-        }
-      : undefined,
+    parentPackageJson,
   };
 }
 
@@ -588,7 +637,7 @@ async function resolveBareModule(ctx: ResolverContext, uri: Uri, parsedSpec: Bar
     const maxIterations = 10;
     const consultedUris: Uri[] = [];
 
-    while (Uri.isPrefixOf(resolveRootResult.uri, nextUri)) {
+    while (Uri.isPrefixOf(resolveRootResult.uri, nextUri, true)) {
       if (consultedUris.length >= maxIterations) {
         throw new Error(
           `Consulted a maximum of ${maxIterations} locations while trying to resolve '${bareModuleToSpec(
@@ -786,7 +835,7 @@ async function resolveAsFile(
       settings.packageMain.includes('browser') && !ignoreBrowserOverrides
         ? await checkCancellation(
             ctx.runInChildContext('readParentPackageJsonInternal', uri, (ctx) =>
-              readParentPackageJsonInternal(ctx, uri, rootUri, { uriIsCanonicalized: true })
+              readParentPartialPackageJsonInternal(ctx, uri, rootUri, { uriIsCanonicalized: true })
             ),
             ctx.token
           )
@@ -917,7 +966,10 @@ async function resolveAsFile(
   throw new EntryNotFoundError(uri);
 }
 
-async function readParentPackageJson(ctx: ResolverContext, uri: Uri) {
+async function readParentPackageJson(
+  ctx: ResolverContext,
+  uri: Uri
+): Promise<ReadParentPackageJsonResult> {
   const canonicalizationReturn = ctx.getCanonicalUrl(uri);
   const resolveRootReturn = ctx.getResolveRoot(uri);
   const bothResolved = all([canonicalizationReturn, resolveRootReturn], ctx.token);
@@ -941,10 +993,47 @@ async function readParentPackageJson(ctx: ResolverContext, uri: Uri) {
     (readResult as any)[CACHE] = visitedDirs.map((uri) => [uri.toString(), { ...readResult, uri }]);
   }
 
-  return readResult as ReadParentPackageJsonResultInternal;
+  return readResult;
 }
 
 async function readParentPackageJsonInternal(
+  ctx: ResolverContext,
+  uri: Uri,
+  rootUri: Uri,
+  options: { uriIsCanonicalized: boolean }
+): Promise<ReadParentPackageJsonResult> {
+  let nextUri = uri;
+
+  while (Uri.isPrefixOf(rootUri, nextUri, true)) {
+    const parentPackageJsonReturn = readParentPartialPackageJsonInternal(
+      ctx,
+      nextUri,
+      rootUri,
+      options
+    );
+    const parentPackageJsonResult = isThenable(parentPackageJsonReturn)
+      ? await checkCancellation(parentPackageJsonReturn, ctx.token)
+      : parentPackageJsonReturn;
+
+    if (!parentPackageJsonResult.found) {
+      return parentPackageJsonResult;
+    }
+
+    if (parentPackageJsonResult.packageJson.name && parentPackageJsonResult.packageJson.version) {
+      return parentPackageJsonResult as ReadParentPackageJsonResult;
+    }
+
+    nextUri = Uri.joinPath(parentPackageJsonResult.uri, '..');
+  }
+
+  return {
+    found: false,
+    packageJson: null,
+    uri: null,
+  };
+}
+
+async function readParentPartialPackageJsonInternal(
   ctx: ResolverContext,
   uri: Uri,
   rootUri: Uri,
@@ -998,7 +1087,7 @@ async function readParentPackageJsonInternal(
           ? await checkCancellation(parentPackageJsonContentReturn, ctx.token)
           : parentPackageJsonContentReturn;
 
-        const packageJson = parseBufferAsPackageJson(
+        const packageJson = parseBufferAsPartialPackageJson(
           ctx.decoder,
           parentPackageJsonContentResult.content,
           packageJsonUri.toString()
