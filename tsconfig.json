@@ -45,7 +45,6 @@
     { "path": "./packages/@velcro/strategy-compound" },
     { "path": "./packages/@velcro/strategy-fs" },
     { "path": "./packages/@velcro/strategy-memory" },
-    { "path": "./packages/nostalgie" },
-    { "path": "./packages/repl" }
+    { "path": "./packages/nostalgie" }
   ]
 }
