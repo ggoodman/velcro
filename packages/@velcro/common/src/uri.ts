@@ -139,13 +139,14 @@ export class Uri implements UriComponents {
     return childHref.slice(parentHref.length + 1 + parentOffset);
   }
 
-  static isPrefixOf(prefix: Uri, uri: Uri) {
+  static isPrefixOf(prefix: Uri, uri: Uri, strictChild?: boolean) {
     return (
       prefix.authority === uri.authority &&
       prefix.fragment === uri.fragment &&
       prefix.query === uri.query &&
       prefix.scheme === uri.scheme &&
-      uri.path.startsWith(prefix.path)
+      uri.path.startsWith(prefix.path) &&
+      (strictChild ? uri.path.length > prefix.path.length : true)
     );
   }
 
