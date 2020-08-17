@@ -1,3 +1,5 @@
+const { Timing } = require('@pollyjs/core');
+
 // For a detailed explanation regarding each configuration property, visit:
 // https://jestjs.io/docs/en/configuration.html
 
@@ -98,9 +100,14 @@ module.exports = {
         '^@velcro/(.*)$': '<rootDir>/packages/@velcro/$1/src',
       },
       preset: 'ts-jest/presets/js-with-ts',
+      setupFilesAfterEnv: ['@spotify/polly-jest-presets'],
       testEnvironment: 'node',
       testMatch: ['<rootDir>/__test__/**/*.ts'],
       globals: {
+        pollyConfig: {
+          recordIfMissing: true,
+          timing: Timing.relative(0),
+        },
         'ts-jest': {
           tsconfig: `tsconfig.json`,
         },
@@ -125,9 +132,14 @@ module.exports = {
         '^@velcro/(.*)$': '<rootDir>/packages/@velcro/$1/src',
       },
       preset: 'ts-jest/presets/js-with-ts',
+      setupFilesAfterEnv: ['@spotify/polly-jest-presets'],
       testEnvironment: 'node',
       testMatch: [`<rootDir>/packages/${name}/**/*.test.ts`],
       globals: {
+        pollyConfig: {
+          recordIfMissing: true,
+          timing: Timing.relative(0),
+        },
         'ts-jest': {
           tsconfig: `packages/${name}/tsconfig.json`,
         },
