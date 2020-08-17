@@ -1,8 +1,7 @@
 import type { Decoder } from './decoder';
 
 export type PackageMainField = 'browser' | 'module' | 'jsnext:main' | 'main' | 'unpkg';
-
-export interface PartialPackageJson {
+export interface PackageJson {
   name?: string;
   version?: string;
   browser?: string | { [key: string]: false | string };
@@ -14,12 +13,12 @@ export interface PartialPackageJson {
   peerDependencies?: { [key: string]: string };
   unpkg?: string;
 }
-export interface PackageJson extends PartialPackageJson {
+export interface RootPackageJson extends PackageJson {
   name: string;
   version: string;
 }
 
-export function isValidPartialPackageJson(json: unknown): json is PartialPackageJson {
+export function isValidPackageJson(json: unknown): json is PackageJson {
   return (
     typeof json === 'object' &&
     json !== null &&
@@ -36,23 +35,13 @@ export function isValidPartialPackageJson(json: unknown): json is PartialPackage
   );
 }
 
-export function isValidPackageJson(json: unknown): json is PackageJson {
+export function isValidRootPackageJson(json: unknown): json is RootPackageJson {
   return (
-    typeof json === 'object' &&
-    json !== null &&
-    !hasInvalidRequiredStringField(json as any, 'name') &&
-    !hasInvalidRequiredStringField(json as any, 'version') &&
-    !hasInvalidBrowserField(json as any) &&
-    !hasInvalidOptionalStringField(json as any, 'main') &&
-    !hasInvalidOptionalStringField(json as any, 'module') &&
-    !hasInvalidOptionalStringField(json as any, 'jsnext:main') &&
-    !hasInvalidOptionalStringField(json as any, 'unpkg') &&
-    !hasInvalidDependenciesField(json as any, 'dependencies') &&
-    !hasInvalidDependenciesField(json as any, 'devDependencies') &&
-    !hasInvalidDependenciesField(json as any, 'peerDependencies')
+    isValidPackageJson(json) &&
+    !hasInvalidRequiredStringField(json, 'name') &&
+    !hasInvalidRequiredStringField(json, 'version')
   );
 }
-
 function hasInvalidBrowserField(json: any) {
   let error = '';
 
@@ -94,20 +83,6 @@ function hasInvalidDependenciesField(json: any, field: string) {
   );
 }
 
-export function parseBufferAsPartialPackageJson(
-  decoder: Decoder,
-  content: ArrayBuffer,
-  spec: string
-): PartialPackageJson {
-  try {
-    const text = decoder.decode(content);
-
-    return parseTextAsPartialPackageJson(text, spec);
-  } catch (err) {
-    throw new Error(`Error decoding manifest buffer for package ${spec}: ${err.message}`);
-  }
-}
-
 export function parseBufferAsPackageJson(
   decoder: Decoder,
   content: ArrayBuffer,
@@ -122,7 +97,20 @@ export function parseBufferAsPackageJson(
   }
 }
 
-function parseTextAsPartialPackageJson(text: string, spec: string): PartialPackageJson {
+export function parseBufferAsRootPackageJson(
+  decoder: Decoder,
+  content: ArrayBuffer,
+  spec: string
+): RootPackageJson {
+  try {
+    const text = decoder.decode(content);
+
+    return parseTextAsRootPackageJson(text, spec);
+  } catch (err) {
+    throw new Error(`Error decoding manifest buffer for package ${spec}: ${err.message}`);
+  }
+}
+function parseTextAsPackageJson(text: string, spec: string): PackageJson {
   let json: unknown;
 
   try {
@@ -131,17 +119,17 @@ function parseTextAsPartialPackageJson(text: string, spec: string): PartialPacka
     throw new Error(`Error parsing manifest as json for package ${spec}: ${err.message}`);
   }
 
-  if (!isValidPartialPackageJson(json)) {
+  if (!isValidPackageJson(json)) {
     throw new Error(`Invalid manifest for the package ${spec}`);
   }
 
   return json;
 }
 
-function parseTextAsPackageJson(text: string, spec: string): PackageJson {
-  const json = parseTextAsPartialPackageJson(text, spec);
+function parseTextAsRootPackageJson(text: string, spec: string): RootPackageJson {
+  const json = parseTextAsPackageJson(text, spec);
 
-  if (!isValidPackageJson(json)) {
+  if (!isValidRootPackageJson(json)) {
     throw new Error(`Invalid manifest for the package ${spec}`);
   }
 

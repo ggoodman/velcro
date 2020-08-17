@@ -5,8 +5,8 @@ import {
   checkCancellation,
   EntryNotFoundError,
   isThenable,
-  PackageJson,
-  parseBufferAsPackageJson,
+  parseBufferAsRootPackageJson,
+  RootPackageJson,
   Thenable,
   Uri,
 } from '@velcro/common';
@@ -274,7 +274,7 @@ export class CdnStrategy extends AbstractResolverStrategyWithRoot
   private readonly packageEntriesCache = new Map<string, Map<string, CdnStrategy.Directory>>();
   private readonly packageJsonCache = new Map<
     string,
-    Map<string, { packageJson: PackageJson; visited: ResolverContext.Visit[] }>
+    Map<string, { packageJson: RootPackageJson; visited: ResolverContext.Visit[] }>
   >();
   private readonly readUrlFn: CdnStrategy.UrlContentFetcher;
 
@@ -565,16 +565,16 @@ export class CdnStrategy extends AbstractResolverStrategyWithRoot
   private async _readPackageJson(
     spec: CdnStrategy.Spec,
     ctx: ResolverContext
-  ): Promise<PackageJson> {
+  ): Promise<RootPackageJson> {
     ctx.debug('%s._readPackageJson(%s)', this.constructor.name, specToString(spec));
     const uri = this.cdn.urlForPackageFile(spec.spec, '/package.json');
     const contentReturn = ctx.readFileContent(uri);
     const contentResult = isThenable(contentReturn) ? await contentReturn : contentReturn;
 
-    let manifest: PackageJson;
+    let manifest: RootPackageJson;
 
     try {
-      manifest = parseBufferAsPackageJson(ctx.decoder, contentResult.content, spec.spec);
+      manifest = parseBufferAsRootPackageJson(ctx.decoder, contentResult.content, spec.spec);
     } catch (err) {
       throw new Error(`Error parsing manifest as json for package ${spec}: ${err.message}`);
     }

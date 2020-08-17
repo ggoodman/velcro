@@ -14,8 +14,7 @@ import {
   isThenable,
   MapSet,
   PackageJson,
-  parseBufferAsPartialPackageJson,
-  PartialPackageJson,
+  parseBufferAsPackageJson,
   Thenable,
   Uri,
 } from '@velcro/common';
@@ -81,7 +80,7 @@ type ReadParentPackageJsonResult =
 type ReadParentPackageJsonResultInternal =
   | {
       found: true;
-      packageJson: PartialPackageJson;
+      packageJson: PackageJson;
       uri: Uri;
       visitedDirs: Uri[];
     }
@@ -315,7 +314,8 @@ export class ResolverContext {
     );
   }
 
-  readParentPackageJson(uri: Uri): StrategyResult<ReadParentPackageJsonResultInternal> {
+  readParentPackageJson(uri: Uri): StrategyResult<ReadParentPackageJsonResult> {
+    console.debug('readParentPackageJson(%s)', uri.toString());
     return this.runWithCache(
       'readParentPackageJson',
       uri.toString(),
@@ -548,7 +548,12 @@ async function resolve(ctx: ResolverContext, uri: Uri): Promise<ResolveResult> {
             null
           )
         );
-  const readParentPackageJsonReturn = ctx.readParentPackageJson(uri);
+  const readParentPackageJsonReturn = readParentPackageJsonInternal(
+    ctx,
+    canonicalizationResult.uri,
+    rootUri,
+    { uriIsCanonicalized: true }
+  );
   const resolveAndPackageJson = all([resolveReturn, readParentPackageJsonReturn], ctx.token);
 
   const [resolveResult, readParentPackageJsonResult] = isThenable(resolveAndPackageJson)
@@ -571,7 +576,9 @@ async function resolve(ctx: ResolverContext, uri: Uri): Promise<ResolveResult> {
     let nextUri = Uri.joinPath(readParentPackageJsonResult.uri, '..');
 
     while (Uri.isPrefixOf(rootUri, nextUri, true)) {
-      const readParentPackageJsonReturn = ctx.readParentPackageJson(nextUri);
+      const readParentPackageJsonReturn = readParentPackageJsonInternal(ctx, nextUri, rootUri, {
+        uriIsCanonicalized: false,
+      });
       const readParentPackageJsonResult = isThenable(readParentPackageJsonReturn)
         ? await checkCancellation(readParentPackageJsonReturn, ctx.token)
         : readParentPackageJsonReturn;
@@ -651,7 +658,12 @@ async function resolveBareModule(ctx: ResolverContext, uri: Uri, parsedSpec: Bar
       const currentUri = nextUri;
       consultedUris.push(currentUri);
 
-      const parentPackageJsonReturn = ctx.readParentPackageJson(uri);
+      const parentPackageJsonReturn = readParentPackageJsonInternal(
+        ctx,
+        currentUri,
+        resolveRootResult.uri,
+        { uriIsCanonicalized: false }
+      );
       const parentPackageJsonResult = isThenable(parentPackageJsonReturn)
         ? await checkCancellation(parentPackageJsonReturn, ctx.token)
         : parentPackageJsonReturn;
@@ -782,7 +794,7 @@ async function resolveAsDirectory(
       entry.type === ResolverStrategy.EntryKind.File && Uri.equals(packageJsonUri, entry.uri)
   );
 
-  let packageJson: PartialPackageJson | null = null;
+  let packageJson: PackageJson | null = null;
 
   if (packageJsonEntry) {
     const packageJsonContentReturn = ctx.readFileContent(packageJsonUri);
@@ -790,7 +802,7 @@ async function resolveAsDirectory(
       ? await checkCancellation(packageJsonContentReturn, ctx.token)
       : packageJsonContentReturn;
 
-    packageJson = parseBufferAsPartialPackageJson(
+    packageJson = parseBufferAsPackageJson(
       ctx.decoder,
       packageJsonContentResult.content,
       uri.toString()
@@ -817,7 +829,7 @@ async function resolveAsFile(
   uri: Uri,
   rootUri: Uri,
   settings: Resolver.Settings,
-  packageJson: PartialPackageJson | null,
+  packageJson: PackageJson | null,
   ignoreBrowserOverrides = false
 ): Promise<ResolveResult> {
   if (uri.path === '' || uri.path === '/') {
@@ -835,7 +847,7 @@ async function resolveAsFile(
       settings.packageMain.includes('browser') && !ignoreBrowserOverrides
         ? await checkCancellation(
             ctx.runInChildContext('readParentPackageJsonInternal', uri, (ctx) =>
-              readParentPartialPackageJsonInternal(ctx, uri, rootUri, { uriIsCanonicalized: true })
+              readParentPackageJsonInternal(ctx, uri, rootUri, { uriIsCanonicalized: true })
             ),
             ctx.token
           )
@@ -1001,43 +1013,6 @@ async function readParentPackageJsonInternal(
   uri: Uri,
   rootUri: Uri,
   options: { uriIsCanonicalized: boolean }
-): Promise<ReadParentPackageJsonResult> {
-  let nextUri = uri;
-
-  while (Uri.isPrefixOf(rootUri, nextUri, true)) {
-    const parentPackageJsonReturn = readParentPartialPackageJsonInternal(
-      ctx,
-      nextUri,
-      rootUri,
-      options
-    );
-    const parentPackageJsonResult = isThenable(parentPackageJsonReturn)
-      ? await checkCancellation(parentPackageJsonReturn, ctx.token)
-      : parentPackageJsonReturn;
-
-    if (!parentPackageJsonResult.found) {
-      return parentPackageJsonResult;
-    }
-
-    if (parentPackageJsonResult.packageJson.name && parentPackageJsonResult.packageJson.version) {
-      return parentPackageJsonResult as ReadParentPackageJsonResult;
-    }
-
-    nextUri = Uri.joinPath(parentPackageJsonResult.uri, '..');
-  }
-
-  return {
-    found: false,
-    packageJson: null,
-    uri: null,
-  };
-}
-
-async function readParentPartialPackageJsonInternal(
-  ctx: ResolverContext,
-  uri: Uri,
-  rootUri: Uri,
-  options: { uriIsCanonicalized: boolean }
 ): Promise<ReadParentPackageJsonResultInternal> {
   if (!options.uriIsCanonicalized) {
     const canonicalizationReturn = ctx.getCanonicalUrl(uri);
@@ -1087,7 +1062,7 @@ async function readParentPartialPackageJsonInternal(
           ? await checkCancellation(parentPackageJsonContentReturn, ctx.token)
           : parentPackageJsonContentReturn;
 
-        const packageJson = parseBufferAsPartialPackageJson(
+        const packageJson = parseBufferAsPackageJson(
           ctx.decoder,
           parentPackageJsonContentResult.content,
           packageJsonUri.toString()
