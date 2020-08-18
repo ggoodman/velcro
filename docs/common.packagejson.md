@@ -7,14 +7,21 @@
 <b>Signature:</b>
 
 ```typescript
-interface PackageJson extends PartialPackageJson 
+interface PackageJson 
 ```
-<b>Extends:</b> PartialPackageJson
 
 ## Properties
 
 |  Property | Type | Description |
 |  --- | --- | --- |
+|  ["jsnext:main"](./common.packagejson._jsnext_main_.md) | string |  |
+|  [browser](./common.packagejson.browser.md) | string \| { \[key: string\]: false \| string; } |  |
+|  [dependencies](./common.packagejson.dependencies.md) | { \[key: string\]: string; } |  |
+|  [devDependencies](./common.packagejson.devdependencies.md) | { \[key: string\]: string; } |  |
+|  [main](./common.packagejson.main.md) | string |  |
+|  [module](./common.packagejson.module.md) | string |  |
 |  [name](./common.packagejson.name.md) | string |  |
+|  [peerDependencies](./common.packagejson.peerdependencies.md) | { \[key: string\]: string; } |  |
+|  [unpkg](./common.packagejson.unpkg.md) | string |  |
 |  [version](./common.packagejson.version.md) | string |  |
 

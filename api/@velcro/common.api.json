@@ -1,7 +1,7 @@
 {
   "metadata": {
     "toolPackage": "@microsoft/api-extractor",
-    "toolVersion": "7.9.3",
+    "toolVersion": "7.9.5",
     "schemaVersion": 1003,
     "oldestForwardsCompatibleVersion": 1001
   },
@@ -1579,12 +1579,12 @@
         },
         {
           "kind": "Function",
-          "canonicalReference": "@velcro/common!isValidPartialPackageJson:function(1)",
+          "canonicalReference": "@velcro/common!isValidRootPackageJson:function(1)",
           "docComment": "",
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "declare function isValidPartialPackageJson(json: "
+              "text": "declare function isValidRootPackageJson(json: "
             },
             {
               "kind": "Content",
@@ -1605,8 +1605,8 @@
             },
             {
               "kind": "Reference",
-              "text": "PartialPackageJson",
-              "canonicalReference": "@velcro/common!~PartialPackageJson:interface"
+              "text": "RootPackageJson",
+              "canonicalReference": "@velcro/common!~RootPackageJson:interface"
             },
             {
               "kind": "Content",
@@ -1628,7 +1628,7 @@
               }
             }
           ],
-          "name": "isValidPartialPackageJson"
+          "name": "isValidRootPackageJson"
         },
         {
           "kind": "Variable",
@@ -2181,16 +2181,7 @@
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "interface PackageJson extends "
-            },
-            {
-              "kind": "Reference",
-              "text": "PartialPackageJson",
-              "canonicalReference": "@velcro/common!~PartialPackageJson:interface"
-            },
-            {
-              "kind": "Content",
-              "text": " "
+              "text": "interface PackageJson "
             }
           ],
           "releaseTag": "Public",
@@ -2198,12 +2189,162 @@
           "members": [
             {
               "kind": "PropertySignature",
+              "canonicalReference": "@velcro/common!PackageJson#\"jsnext:main\":member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "\"jsnext:main\"?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "\"jsnext:main\"",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/common!PackageJson#browser:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "browser?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string | {\n        [key: string]: false | string;\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "browser",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/common!PackageJson#dependencies:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "dependencies?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        [key: string]: string;\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "dependencies",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/common!PackageJson#devDependencies:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "devDependencies?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        [key: string]: string;\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "devDependencies",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/common!PackageJson#main:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "main?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "main",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/common!PackageJson#module:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "module?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "module",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
               "canonicalReference": "@velcro/common!PackageJson#name:member",
               "docComment": "",
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "name: "
+                  "text": "name?: "
                 },
                 {
                   "kind": "Content",
@@ -2223,12 +2364,62 @@
             },
             {
               "kind": "PropertySignature",
+              "canonicalReference": "@velcro/common!PackageJson#peerDependencies:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "peerDependencies?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "{\n        [key: string]: string;\n    }"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "peerDependencies",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/common!PackageJson#unpkg:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "unpkg?: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "unpkg",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
               "canonicalReference": "@velcro/common!PackageJson#version:member",
               "docComment": "",
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "version: "
+                  "text": "version?: "
                 },
                 {
                   "kind": "Content",
@@ -2247,12 +2438,7 @@
               }
             }
           ],
-          "extendsTokenRanges": [
-            {
-              "startIndex": 1,
-              "endIndex": 3
-            }
-          ]
+          "extendsTokenRanges": []
         },
         {
           "kind": "TypeAlias",
@@ -2383,12 +2569,12 @@
         },
         {
           "kind": "Function",
-          "canonicalReference": "@velcro/common!parseBufferAsPartialPackageJson:function(1)",
+          "canonicalReference": "@velcro/common!parseBufferAsRootPackageJson:function(1)",
           "docComment": "",
           "excerptTokens": [
             {
               "kind": "Content",
-              "text": "declare function parseBufferAsPartialPackageJson(decoder: "
+              "text": "declare function parseBufferAsRootPackageJson(decoder: "
             },
             {
               "kind": "Reference",
@@ -2418,8 +2604,8 @@
             },
             {
               "kind": "Reference",
-              "text": "PartialPackageJson",
-              "canonicalReference": "@velcro/common!~PartialPackageJson:interface"
+              "text": "RootPackageJson",
+              "canonicalReference": "@velcro/common!~RootPackageJson:interface"
             },
             {
               "kind": "Content",
@@ -2455,7 +2641,7 @@
               }
             }
           ],
-          "name": "parseBufferAsPartialPackageJson"
+          "name": "parseBufferAsRootPackageJson"
         },
         {
           "kind": "Interface",
@@ -2701,272 +2887,6 @@
           "implementsTokenRanges": []
         },
         {
-          "kind": "Interface",
-          "canonicalReference": "@velcro/common!PartialPackageJson:interface",
-          "docComment": "",
-          "excerptTokens": [
-            {
-              "kind": "Content",
-              "text": "interface PartialPackageJson "
-            }
-          ],
-          "releaseTag": "Public",
-          "name": "PartialPackageJson",
-          "members": [
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@velcro/common!PartialPackageJson#\"jsnext:main\":member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "\"jsnext:main\"?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "releaseTag": "Public",
-              "name": "\"jsnext:main\"",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@velcro/common!PartialPackageJson#browser:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "browser?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string | {\n        [key: string]: false | string;\n    }"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "releaseTag": "Public",
-              "name": "browser",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@velcro/common!PartialPackageJson#dependencies:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "dependencies?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "{\n        [key: string]: string;\n    }"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "releaseTag": "Public",
-              "name": "dependencies",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@velcro/common!PartialPackageJson#devDependencies:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "devDependencies?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "{\n        [key: string]: string;\n    }"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "releaseTag": "Public",
-              "name": "devDependencies",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@velcro/common!PartialPackageJson#main:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "main?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "releaseTag": "Public",
-              "name": "main",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@velcro/common!PartialPackageJson#module:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "module?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "releaseTag": "Public",
-              "name": "module",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@velcro/common!PartialPackageJson#name:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "name?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "releaseTag": "Public",
-              "name": "name",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@velcro/common!PartialPackageJson#peerDependencies:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "peerDependencies?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "{\n        [key: string]: string;\n    }"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "releaseTag": "Public",
-              "name": "peerDependencies",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@velcro/common!PartialPackageJson#unpkg:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "unpkg?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "releaseTag": "Public",
-              "name": "unpkg",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            },
-            {
-              "kind": "PropertySignature",
-              "canonicalReference": "@velcro/common!PartialPackageJson#version:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "version?: "
-                },
-                {
-                  "kind": "Content",
-                  "text": "string"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "releaseTag": "Public",
-              "name": "version",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              }
-            }
-          ],
-          "extendsTokenRanges": []
-        },
-        {
           "kind": "Variable",
           "canonicalReference": "@velcro/common!posix:var",
           "docComment": "",
@@ -3029,6 +2949,86 @@
             "startIndex": 1,
             "endIndex": 2
           }
+        },
+        {
+          "kind": "Interface",
+          "canonicalReference": "@velcro/common!RootPackageJson:interface",
+          "docComment": "",
+          "excerptTokens": [
+            {
+              "kind": "Content",
+              "text": "interface RootPackageJson extends "
+            },
+            {
+              "kind": "Reference",
+              "text": "PackageJson",
+              "canonicalReference": "@velcro/common!~PackageJson:interface"
+            },
+            {
+              "kind": "Content",
+              "text": " "
+            }
+          ],
+          "releaseTag": "Public",
+          "name": "RootPackageJson",
+          "members": [
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/common!RootPackageJson#name:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "name: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "name",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            },
+            {
+              "kind": "PropertySignature",
+              "canonicalReference": "@velcro/common!RootPackageJson#version:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "version: "
+                },
+                {
+                  "kind": "Content",
+                  "text": "string"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "version",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              }
+            }
+          ],
+          "extendsTokenRanges": [
+            {
+              "startIndex": 1,
+              "endIndex": 3
+            }
+          ]
         },
         {
           "kind": "Variable",

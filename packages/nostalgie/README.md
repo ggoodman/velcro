@@ -24,7 +24,7 @@ In your html markup:
 > Note: This example kind of defeats the purpose of using nostalgie since it will run fine without the ✨.
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/nostalgie@0.49.0/dist/index.umd.js">
+<script src="https://cdn.jsdelivr.net/npm/nostalgie@0.50.0/dist/index.umd.js">
   console.log("Ummm, can't I already do this without nostalgie...?");
 </script>
 ```
@@ -34,7 +34,7 @@ OK, fine. Well if you want to get all fancy on me with your "npm module here, np
 ```html
 <script
   data-dependencies="react:^16.13.1, react-dom:^16.13.1"
-  src="https://cdn.jsdelivr.net/npm/nostalgie@0.49.0/dist/index.umd.js"
+  src="https://cdn.jsdelivr.net/npm/nostalgie@0.50.0/dist/index.umd.js"
 >
   import React from 'react';
   import ReactDOM from 'react-dom';
@@ -55,7 +55,7 @@ OK, let's try something else:
 ```html
 <script
   data-dependencies="preact:^10.4.4, github-markdown-css: ^4.0.0"
-  src="https://cdn.jsdelivr.net/npm/nostalgie@0.49.0/dist/index.umd.js"
+  src="https://cdn.jsdelivr.net/npm/nostalgie@0.50.0/dist/index.umd.js"
 >
   /** @jsx h */
 
@@ -79,7 +79,7 @@ And just for fun, let's get a bit more crazy!
 ```html
 <div id="root">Wait for it! Loading some ✨ from the ☁️.</div>
 <script
-  src="https://cdn.jsdelivr.net/npm/nostalgie@0.49.0/dist/index.umd.js"
+  src="https://cdn.jsdelivr.net/npm/nostalgie@0.50.0/dist/index.umd.js"
   data-dependencies="react:^16.13.1, react-dom:^16.13.1, react-ui: ^1.0.0-beta.26"
 >
   import React from 'react';

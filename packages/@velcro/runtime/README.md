@@ -7,4 +7,4 @@ Runtime and pseudo-Module objects that schedule execution during runtime.
 The compiled output of this module is encoded in a string export via an inline Rollup
 plugin.
 
-[API Docs](https://github.com/ggoodman/velcro/tree/v0.49.0/docs/runtime.md)
+[API Docs](https://github.com/ggoodman/velcro/tree/v0.50.0/docs/runtime.md)

@@ -39,9 +39,9 @@
 |  [isCanceledError(err)](./common.iscancelederror.md) |  |
 |  [isThenable(object)](./common.isthenable.md) |  |
 |  [isValidPackageJson(json)](./common.isvalidpackagejson.md) |  |
-|  [isValidPartialPackageJson(json)](./common.isvalidpartialpackagejson.md) |  |
+|  [isValidRootPackageJson(json)](./common.isvalidrootpackagejson.md) |  |
 |  [parseBufferAsPackageJson(decoder, content, spec)](./common.parsebufferaspackagejson.md) |  |
-|  [parseBufferAsPartialPackageJson(decoder, content, spec)](./common.parsebufferaspartialpackagejson.md) |  |
+|  [parseBufferAsRootPackageJson(decoder, content, spec)](./common.parsebufferasrootpackagejson.md) |  |
 |  [uriToFsPath(uri, keepDriveLetterCasing)](./common.uritofspath.md) | Compute <code>fsPath</code> for the given uri |
 
 ## Interfaces
@@ -51,7 +51,7 @@
 |  [IPath](./common.ipath.md) |  |
 |  [PackageJson](./common.packagejson.md) |  |
 |  [ParsedPath](./common.parsedpath.md) |  |
-|  [PartialPackageJson](./common.partialpackagejson.md) |  |
+|  [RootPackageJson](./common.rootpackagejson.md) |  |
 |  [Thenable](./common.thenable.md) |  |
 |  [UriComponents](./common.uricomponents.md) |  |
 
