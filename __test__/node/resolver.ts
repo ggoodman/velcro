@@ -8,49 +8,103 @@ async function readUrl(href: string) {
 }
 
 describe('Velcro.Resolver', () => {
-  it('will resolve htm/react', async () => {
-    const strategy = CdnStrategy.forJsDelivr(readUrl);
-    const resolver = new Resolver(strategy, {
-      extensions: ['.js', '.json'],
-      packageMain: ['browser', 'main'],
+  describe('jsDelivr', () => {
+    it('will resolve htm/react', async () => {
+      const strategy = CdnStrategy.forJsDelivr(readUrl);
+      const resolver = new Resolver(strategy, {
+        extensions: ['.js', '.json'],
+        packageMain: ['browser', 'main'],
+      });
+
+      const result = await resolver.getUrlForBareModule('htm', '3.0.4', '/react');
+
+      expect(result.found).toBe(true);
+      expect(result.uri!.toString()).toEqual(
+        'https://cdn.jsdelivr.net/npm/htm@3.0.4/react/index.js'
+      );
     });
 
-    const result = await resolver.getUrlForBareModule('htm', '3.0.4', '/react');
+    it('will resolve react-dom/server', async () => {
+      const strategy = CdnStrategy.forJsDelivr(readUrl);
+      const resolver = new Resolver(strategy, {
+        extensions: ['.js', '.json'],
+        packageMain: ['browser', 'main'],
+      });
 
-    expect(result.found).toBe(true);
-    expect(result.uri!.toString()).toEqual('https://cdn.jsdelivr.net/npm/htm@3.0.4/react/index.js');
+      const result = await resolver.getUrlForBareModule('react-dom', '16.13.1', '/server');
+
+      expect(result.found).toBe(true);
+      expect(result.uri!.toString()).toEqual(
+        'https://cdn.jsdelivr.net/npm/react-dom@16.13.1/server.browser.js'
+      );
+    });
+
+    it('will resolve htm from htm/react', async () => {
+      const strategy = CdnStrategy.forJsDelivr(readUrl);
+      const resolver = new Resolver(strategy, {
+        extensions: ['.js', '.json'],
+        packageMain: ['browser', 'main'],
+      });
+
+      const result = await resolver.getUrlForBareModule('htm', '3.0.4', '/react');
+
+      expect(result.found).toBe(true);
+      expect(result.uri!.toString()).toEqual(
+        'https://cdn.jsdelivr.net/npm/htm@3.0.4/react/index.js'
+      );
+
+      const result2 = await resolver.resolve('htm', result.uri!);
+
+      expect(result2.found).toBe(true);
+      expect(result2.uri!.toString()).toEqual('https://cdn.jsdelivr.net/npm/htm@3.0.4/dist/htm.js');
+    });
   });
 
-  it('will resolve react-dom/server', async () => {
-    const strategy = CdnStrategy.forJsDelivr(readUrl);
-    const resolver = new Resolver(strategy, {
-      extensions: ['.js', '.json'],
-      packageMain: ['browser', 'main'],
+  describe('unpkg', () => {
+    it('will resolve htm/react', async () => {
+      const strategy = CdnStrategy.forUnpkg(readUrl);
+      const resolver = new Resolver(strategy, {
+        extensions: ['.js', '.json'],
+        packageMain: ['browser', 'main'],
+      });
+
+      const result = await resolver.getUrlForBareModule('htm', '3.0.4', '/react');
+
+      expect(result.found).toBe(true);
+      expect(result.uri!.toString()).toEqual('https://unpkg.com/htm@3.0.4/react/index.js');
     });
 
-    const result = await resolver.getUrlForBareModule('react-dom', '16.13.1', '/server');
+    it('will resolve react-dom/server', async () => {
+      const strategy = CdnStrategy.forUnpkg(readUrl);
+      const resolver = new Resolver(strategy, {
+        extensions: ['.js', '.json'],
+        packageMain: ['browser', 'main'],
+      });
 
-    expect(result.found).toBe(true);
-    expect(result.uri!.toString()).toEqual(
-      'https://cdn.jsdelivr.net/npm/react-dom@16.13.1/server.browser.js'
-    );
-  });
+      const result = await resolver.getUrlForBareModule('react-dom', '16.13.1', '/server');
 
-  it('will resolve htm from htm/react', async () => {
-    const strategy = CdnStrategy.forJsDelivr(readUrl);
-    const resolver = new Resolver(strategy, {
-      extensions: ['.js', '.json'],
-      packageMain: ['browser', 'main'],
+      expect(result.found).toBe(true);
+      expect(result.uri!.toString()).toEqual(
+        'https://unpkg.com/react-dom@16.13.1/server.browser.js'
+      );
     });
 
-    const result = await resolver.getUrlForBareModule('htm', '3.0.4', '/react');
+    it('will resolve htm from htm/react', async () => {
+      const strategy = CdnStrategy.forUnpkg(readUrl);
+      const resolver = new Resolver(strategy, {
+        extensions: ['.js', '.json'],
+        packageMain: ['browser', 'main'],
+      });
 
-    expect(result.found).toBe(true);
-    expect(result.uri!.toString()).toEqual('https://cdn.jsdelivr.net/npm/htm@3.0.4/react/index.js');
+      const result = await resolver.getUrlForBareModule('htm', '3.0.4', '/react');
 
-    const result2 = await resolver.resolve('htm', result.uri!);
+      expect(result.found).toBe(true);
+      expect(result.uri!.toString()).toEqual('https://unpkg.com/htm@3.0.4/react/index.js');
 
-    expect(result2.found).toBe(true);
-    expect(result2.uri!.toString()).toEqual('https://cdn.jsdelivr.net/npm/htm@3.0.4/dist/htm.js');
+      const result2 = await resolver.resolve('htm', result.uri!);
+
+      expect(result2.found).toBe(true);
+      expect(result2.uri!.toString()).toEqual('https://unpkg.com/htm@3.0.4/dist/htm.js');
+    });
   });
 });

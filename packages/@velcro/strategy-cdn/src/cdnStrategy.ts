@@ -576,7 +576,11 @@ export class CdnStrategy extends AbstractResolverStrategyWithRoot
     try {
       manifest = parseBufferAsRootPackageJson(ctx.decoder, contentResult.content, spec.spec);
     } catch (err) {
-      throw new Error(`Error parsing manifest as json for package ${spec}: ${err.message}`);
+      throw new Error(
+        `Error parsing manifest as json for package '${specToString(
+          spec
+        )}' at '${uri.toString()}': ${err.message}`
+      );
     }
 
     // Since we know what the canonicalized version is now (we didn't until the promise resolved)
