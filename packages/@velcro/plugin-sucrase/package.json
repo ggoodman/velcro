@@ -1,6 +1,6 @@
 {
   "name": "@velcro/plugin-sucrase",
-  "version": "0.50.0",
+  "version": "0.51.0",
   "description": "A sucrase plugin for Velcro that adds support for Typescript, jsx, ES Modules and more",
   "keywords": [
     "velcro",
@@ -44,8 +44,8 @@
   "devDependencies": {
     "@microsoft/api-documenter": "^7.8.27",
     "@microsoft/api-extractor": "^7.9.5",
-    "@velcro/bundler": "^0.50.0",
-    "@velcro/common": "^0.50.0",
+    "@velcro/bundler": "^0.51.0",
+    "@velcro/common": "^0.51.0",
     "rollup": "^2.26.3",
     "typescript": "^3.9.2"
   },
