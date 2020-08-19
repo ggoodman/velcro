@@ -37,7 +37,7 @@ exports.rollupConfigFactory = function rollupConfigFactory(dirname, packageJson)
         }),
       },
       transpileOnly: !emitDeclarations,
-      transpiler: 'babel',
+      transpiler: 'typescript',
       typescript: Typescript,
       // exclude: ['node_modules/**', '**/*.mjs'],
     });
