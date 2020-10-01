@@ -2,9 +2,7 @@ import type { Module } from './module';
 import type { Runtime } from './runtime';
 
 export type VelcroEnvironment = {
-  registry: {
-    defs: ModuleDefinitions;
-  };
+  registry: VelcroModuleRegistry;
   Runtime: typeof Runtime;
   Module: typeof Module;
   runtime: Runtime;
@@ -24,6 +22,10 @@ export type VelcroModuleFactory = (
   __dirname: string,
   __filename: string
 ) => void;
+
+export type VelcroModuleRegistry = {
+  defs: ModuleDefinitions;
+};
 
 export interface VelcroRequire {
   (spec: string): unknown;

@@ -1,9 +1,9 @@
 import { MapSet, Uri } from '@velcro/common';
+import type { VelcroImportMap, VelcroModuleRegistry } from '@velcro/runtime';
 import { runtime } from '@velcro/runtime';
 import { Bundle } from 'magic-string';
 import type { DependencyEdge } from '../graph/dependencyEdge';
 import type { SourceModule } from '../graph/sourceModule';
-import type { VelcroImportMap, VelcroStaticRuntime } from '../runtime/types';
 import { ChunkOutput } from './chunkOutput';
 import { LazyLink, Link, Source } from './sourceMapTree';
 
@@ -60,7 +60,7 @@ export class Chunk {
       bundle.addSource(sourceModuleCode);
     }
 
-    const velcroStaticRuntime: VelcroStaticRuntime = { defs: {} };
+    const velcroStaticRuntime: VelcroModuleRegistry = { defs: {} };
 
     bundle.prepend(`(function(velcro){\n`);
     bundle.prepend(

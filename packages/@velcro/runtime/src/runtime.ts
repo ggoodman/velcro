@@ -9,10 +9,10 @@ import type {
 } from './types';
 
 export class Runtime {
-  private readonly defs: ModuleDefinitions;
-  private readonly moduleDependents: { [id: string]: Module[] | undefined } = {};
-  private readonly moduleInstances: { [id: string]: Module | undefined } = {};
-  private readonly root: Module;
+  readonly defs: ModuleDefinitions;
+  readonly dependents: { [id: string]: Module[] | undefined } = {};
+  readonly modules: { [id: string]: Module | undefined } = {};
+  readonly root: Module;
 
   readonly require!: VelcroRequire;
 
@@ -24,6 +24,8 @@ export class Runtime {
     this.defs = registry.defs;
     this.root = new Module(this, 'velcro:/root', {});
 
+    // We define require as a property because it is not enough for it to be a method.
+    // Recall that require functions also have a `.resolve` method hanging off.
     Object.defineProperty(this, 'require', {
       enumerable: true,
       value: this.root.require.bind(this.root),
@@ -36,7 +38,7 @@ export class Runtime {
     function require(spec: string) {
       const id = resolve(spec);
 
-      let module = runtime.moduleInstances[id];
+      let module = runtime.modules[id];
 
       if (!module) {
         const moduleDefinition = runtime.defs[id];
@@ -49,7 +51,7 @@ export class Runtime {
         const importMap = moduleDefinition[1];
 
         module = new Module(runtime, id, importMap);
-        runtime.moduleInstances[id] = module;
+        runtime.modules[id] = module;
 
         const specParts = id.split('/');
         const __filename = specParts.pop() || spec;
@@ -65,7 +67,7 @@ export class Runtime {
         );
       }
 
-      (runtime.moduleDependents[id] = runtime.moduleDependents[id] || []).push(fromModule);
+      (runtime.dependents[id] = runtime.dependents[id] || []).push(fromModule);
 
       return module.module.exports;
     }
@@ -82,7 +84,7 @@ export class Runtime {
 
     moduleInstance.module.exports = exports;
 
-    this.moduleInstances[id] = moduleInstance;
+    this.modules[id] = moduleInstance;
 
     return moduleInstance;
   }
@@ -93,8 +95,8 @@ export class Runtime {
 
     while (queue.length) {
       const id = queue.shift()!;
-      invalidated = delete this.moduleInstances[id] || invalidated;
-      const dependents = this.moduleDependents[id];
+      invalidated = delete this.modules[id] || invalidated;
+      const dependents = this.dependents[id];
 
       if (!Array.isArray(dependents)) continue;
 

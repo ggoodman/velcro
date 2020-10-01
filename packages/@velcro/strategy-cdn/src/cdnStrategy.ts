@@ -267,7 +267,7 @@ export namespace CdnStrategy {
 export class CdnStrategy
   extends AbstractResolverStrategyWithRoot
   implements ResolverStrategyWithRoot {
-  private readonly cdn: AbstractCdn;
+  readonly cdn: AbstractCdn;
   private readonly contentCache = new Map<
     string,
     null | { content: ArrayBuffer } | Thenable<{ content: ArrayBuffer }>
