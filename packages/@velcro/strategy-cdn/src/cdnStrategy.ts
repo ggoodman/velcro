@@ -16,7 +16,8 @@ import {
   ResolverStrategy,
   ResolverStrategyWithRoot,
 } from '@velcro/resolver';
-import { satisfies, validRange } from 'semver';
+import satisfies from 'semver/functions/satisfies';
+import validRange from 'semver/ranges/valid';
 
 interface AbstractCdn {
   name: string;
@@ -263,7 +264,8 @@ export namespace CdnStrategy {
   ) => Thenable<ArrayBuffer | null>;
 }
 
-export class CdnStrategy extends AbstractResolverStrategyWithRoot
+export class CdnStrategy
+  extends AbstractResolverStrategyWithRoot
   implements ResolverStrategyWithRoot {
   private readonly cdn: AbstractCdn;
   private readonly contentCache = new Map<
