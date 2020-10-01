@@ -1,6 +1,6 @@
 {
   "name": "@velcro/plugin-css",
-  "version": "0.52.0",
+  "version": "0.53.0",
   "description": "A css plugin for Velcro that adds browser support for importing stylesheets",
   "keywords": [
     "velcro",
@@ -44,8 +44,8 @@
   "devDependencies": {
     "@microsoft/api-documenter": "^7.8.27",
     "@microsoft/api-extractor": "^7.9.5",
-    "@velcro/bundler": "^0.52.0",
-    "@velcro/common": "^0.52.0",
+    "@velcro/bundler": "^0.53.0",
+    "@velcro/common": "^0.53.0",
     "magic-string": "^0.25.7",
     "rollup": "^2.26.3",
     "typescript": "^4.0.3"

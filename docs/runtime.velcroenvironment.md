@@ -8,9 +8,7 @@
 
 ```typescript
 type VelcroEnvironment = {
-    registry: {
-        defs: ModuleDefinitions;
-    };
+    registry: VelcroModuleRegistry;
     Runtime: typeof Runtime;
     Module: typeof Module;
     runtime: Runtime;

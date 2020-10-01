@@ -4,6 +4,12 @@
 
 ## runtime package
 
+## Classes
+
+|  Class | Description |
+|  --- | --- |
+|  [VelcroRuntime](./runtime.velcroruntime.md) |  |
+
 ## Interfaces
 
 |  Interface | Description |
@@ -26,4 +32,5 @@
 |  [VelcroModule](./runtime.velcromodule.md) |  |
 |  [VelcroModuleFactory](./runtime.velcromodulefactory.md) |  |
 |  [VelcroModuleGeneration](./runtime.velcromodulegeneration.md) |  |
+|  [VelcroModuleRegistry](./runtime.velcromoduleregistry.md) |  |
 

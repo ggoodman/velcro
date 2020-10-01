@@ -98,6 +98,33 @@
               ]
             },
             {
+              "kind": "Property",
+              "canonicalReference": "@velcro/strategy-cdn!CdnStrategy#cdn:member",
+              "docComment": "",
+              "excerptTokens": [
+                {
+                  "kind": "Content",
+                  "text": "readonly cdn: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "AbstractCdn",
+                  "canonicalReference": "@velcro/strategy-cdn!~AbstractCdn:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": ";"
+                }
+              ],
+              "releaseTag": "Public",
+              "name": "cdn",
+              "propertyTypeTokenRange": {
+                "startIndex": 1,
+                "endIndex": 2
+              },
+              "isStatic": false
+            },
+            {
               "kind": "Method",
               "canonicalReference": "@velcro/strategy-cdn!CdnStrategy.forJsDelivr:member(1)",
               "docComment": "",
