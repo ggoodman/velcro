@@ -7,9 +7,12 @@
 <b>Signature:</b>
 
 ```typescript
-entries(): IterableIterator<[K, V]>;
+entries(): IterableIterator<[
+        K,
+        V
+    ]>;
 ```
 <b>Returns:</b>
 
-IterableIterator&lt;\[K, V\]&gt;
+IterableIterator&lt;\[ K, V \]&gt;
 

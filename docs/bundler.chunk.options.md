@@ -15,6 +15,6 @@ interface Options
 |  Property | Type | Description |
 |  --- | --- | --- |
 |  [edges](./bundler.chunk.options.edges.md) | Iterable&lt;DependencyEdge&gt; |  |
-|  [rootUri](./bundler.chunk.options.rooturi.md) | Uri |  |
+|  [entrypoints](./bundler.chunk.options.entrypoints.md) | Array&lt;Uri&gt; |  |
 |  [sourceModules](./bundler.chunk.options.sourcemodules.md) | Iterable&lt;SourceModule&gt; |  |
 

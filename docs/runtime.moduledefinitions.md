@@ -8,6 +8,10 @@
 
 ```typescript
 type ModuleDefinitions = {
-    [key: string]: [VelcroModuleFactory, VelcroImportMap, VelcroModuleGeneration] | undefined;
+    [key: string]: [
+        VelcroModuleFactory,
+        VelcroImportMap,
+        VelcroModuleGeneration
+    ] | undefined;
 };
 ```

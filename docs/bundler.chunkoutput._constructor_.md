@@ -9,7 +9,7 @@ Constructs a new instance of the `ChunkOutput` class
 <b>Signature:</b>
 
 ```typescript
-constructor(bundle: Bundle, sourceMapTree: ISourceMapper, uri: Uri);
+constructor(bundle: Bundle, sourceMapTree: ISourceMapper, entrypoints: ReadonlyArray<Uri>);
 ```
 
 ## Parameters
@@ -18,5 +18,5 @@ constructor(bundle: Bundle, sourceMapTree: ISourceMapper, uri: Uri);
 |  --- | --- | --- |
 |  bundle | Bundle |  |
 |  sourceMapTree | ISourceMapper |  |
-|  uri | Uri |  |
+|  entrypoints | ReadonlyArray&lt;Uri&gt; |  |
 

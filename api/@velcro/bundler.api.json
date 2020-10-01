@@ -1,7 +1,7 @@
 {
   "metadata": {
     "toolPackage": "@microsoft/api-extractor",
-    "toolVersion": "7.9.5",
+    "toolVersion": "7.9.11",
     "schemaVersion": 1003,
     "oldestForwardsCompatibleVersion": 1001
   },
@@ -771,12 +771,21 @@
                 },
                 {
                   "kind": "PropertySignature",
-                  "canonicalReference": "@velcro/bundler!Chunk.Options#rootUri:member",
+                  "canonicalReference": "@velcro/bundler!Chunk.Options#entrypoints:member",
                   "docComment": "",
                   "excerptTokens": [
                     {
                       "kind": "Content",
-                      "text": "rootUri: "
+                      "text": "entrypoints: "
+                    },
+                    {
+                      "kind": "Reference",
+                      "text": "Array",
+                      "canonicalReference": "!Array:interface"
+                    },
+                    {
+                      "kind": "Content",
+                      "text": "<"
                     },
                     {
                       "kind": "Reference",
@@ -785,14 +794,18 @@
                     },
                     {
                       "kind": "Content",
+                      "text": ">"
+                    },
+                    {
+                      "kind": "Content",
                       "text": ";"
                     }
                   ],
                   "releaseTag": "Public",
-                  "name": "rootUri",
+                  "name": "entrypoints",
                   "propertyTypeTokenRange": {
                     "startIndex": 1,
-                    "endIndex": 2
+                    "endIndex": 5
                   }
                 },
                 {
@@ -943,12 +956,25 @@
                 },
                 {
                   "kind": "Content",
-                  "text": ", uri: "
+                  "text": ", entrypoints: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ReadonlyArray",
+                  "canonicalReference": "!ReadonlyArray:interface"
+                },
+                {
+                  "kind": "Content",
+                  "text": "<"
                 },
                 {
                   "kind": "Reference",
                   "text": "Uri",
                   "canonicalReference": "@velcro/bundler!Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">"
                 },
                 {
                   "kind": "Content",
@@ -973,10 +999,10 @@
                   }
                 },
                 {
-                  "parameterName": "uri",
+                  "parameterName": "entrypoints",
                   "parameterTypeTokenRange": {
                     "startIndex": 5,
-                    "endIndex": 6
+                    "endIndex": 9
                   }
                 }
               ]
@@ -1009,16 +1035,30 @@
             },
             {
               "kind": "Property",
-              "canonicalReference": "@velcro/bundler!ChunkOutput#href:member",
+              "canonicalReference": "@velcro/bundler!ChunkOutput#entrypoints:member",
               "docComment": "",
               "excerptTokens": [
                 {
                   "kind": "Content",
-                  "text": "get href(): "
+                  "text": "readonly entrypoints: "
+                },
+                {
+                  "kind": "Reference",
+                  "text": "ReadonlyArray",
+                  "canonicalReference": "!ReadonlyArray:interface"
                 },
                 {
                   "kind": "Content",
-                  "text": "string"
+                  "text": "<"
+                },
+                {
+                  "kind": "Reference",
+                  "text": "Uri",
+                  "canonicalReference": "@velcro/bundler!Uri:class"
+                },
+                {
+                  "kind": "Content",
+                  "text": ">"
                 },
                 {
                   "kind": "Content",
@@ -1026,10 +1066,10 @@
                 }
               ],
               "releaseTag": "Public",
-              "name": "href",
+              "name": "entrypoints",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
-                "endIndex": 2
+                "endIndex": 5
               },
               "isStatic": false
             },
@@ -1106,33 +1146,6 @@
               ],
               "releaseTag": "Public",
               "name": "sourceMapString",
-              "propertyTypeTokenRange": {
-                "startIndex": 1,
-                "endIndex": 2
-              },
-              "isStatic": false
-            },
-            {
-              "kind": "Property",
-              "canonicalReference": "@velcro/bundler!ChunkOutput#uri:member",
-              "docComment": "",
-              "excerptTokens": [
-                {
-                  "kind": "Content",
-                  "text": "readonly uri: "
-                },
-                {
-                  "kind": "Reference",
-                  "text": "Uri",
-                  "canonicalReference": "@velcro/bundler!Uri:class"
-                },
-                {
-                  "kind": "Content",
-                  "text": ";"
-                }
-              ],
-              "releaseTag": "Public",
-              "name": "uri",
               "propertyTypeTokenRange": {
                 "startIndex": 1,
                 "endIndex": 2

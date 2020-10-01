@@ -1,6 +1,6 @@
 {
   "name": "@velcro/strategy-cdn",
-  "version": "0.51.0",
+  "version": "0.52.0",
   "description": "Velcro resolver strategy for resolving modules from a cdn such as Unpkg or JsDelivr",
   "keywords": [
     "velcro",
@@ -48,8 +48,8 @@
     "typescript": "^4.0.3"
   },
   "dependencies": {
-    "@velcro/common": "^0.51.0",
-    "@velcro/resolver": "^0.51.0",
+    "@velcro/common": "^0.52.0",
+    "@velcro/resolver": "^0.52.0",
     "semver": "^7.3.2"
   },
   "gitHead": "f63b45ad688f2fe9768349afeaf449c016bf33ef"

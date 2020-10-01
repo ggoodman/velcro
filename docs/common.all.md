@@ -7,7 +7,9 @@
 <b>Signature:</b>
 
 ```typescript
-declare function all<T extends [unknown] | unknown[]>(values: T, token: CancellationToken): Promise<{
+declare function all<T extends [
+    unknown
+] | unknown[]>(values: T, token: CancellationToken): Promise<{
     [P in keyof T]: Awaited<T[P]>;
 }> | {
     [P_1 in keyof T]: Awaited<T[P_1]>;

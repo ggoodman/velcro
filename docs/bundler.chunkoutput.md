@@ -14,16 +14,15 @@ declare class ChunkOutput
 
 |  Constructor | Modifiers | Description |
 |  --- | --- | --- |
-|  [(constructor)(bundle, sourceMapTree, uri)](./bundler.chunkoutput._constructor_.md) |  | Constructs a new instance of the <code>ChunkOutput</code> class |
+|  [(constructor)(bundle, sourceMapTree, entrypoints)](./bundler.chunkoutput._constructor_.md) |  | Constructs a new instance of the <code>ChunkOutput</code> class |
 
 ## Properties
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [code](./bundler.chunkoutput.code.md) |  | string |  |
-|  [href](./bundler.chunkoutput.href.md) |  | string |  |
+|  [entrypoints](./bundler.chunkoutput.entrypoints.md) |  | ReadonlyArray&lt;Uri&gt; |  |
 |  [sourceMap](./bundler.chunkoutput.sourcemap.md) |  | SourceMap |  |
 |  [sourceMapDataUri](./bundler.chunkoutput.sourcemapdatauri.md) |  | string |  |
 |  [sourceMapString](./bundler.chunkoutput.sourcemapstring.md) |  | string |  |
-|  [uri](./bundler.chunkoutput.uri.md) |  | Uri |  |
 
