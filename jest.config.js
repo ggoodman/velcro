@@ -105,6 +105,7 @@ module.exports = {
       testMatch: ['<rootDir>/__test__/**/*.ts'],
       globals: {
         pollyConfig: {
+          expiryStrategy: 'record',
           recordIfMissing: true,
           timing: Timing.relative(0),
         },
@@ -137,6 +138,7 @@ module.exports = {
       testMatch: [`<rootDir>/packages/${name}/**/*.test.ts`],
       globals: {
         pollyConfig: {
+          expiryStrategy: 'record',
           recordIfMissing: true,
           timing: Timing.relative(0),
         },

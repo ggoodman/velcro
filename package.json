@@ -15,7 +15,7 @@
     "preversion": "npm run clean && npm test",
     "version": "npm run build:docs && git add .",
     "start": "cd packages/playground && SKIP_PREFLIGHT_CHECK=true npm run start",
-    "test": "jest --verbose"
+    "test": "NODE_OPTIONS=--max_old_space_size=4096 jest"
   },
   "repository": {
     "type": "git",
