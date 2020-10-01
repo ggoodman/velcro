@@ -12,12 +12,11 @@ type NotUndefined<T> = T extends undefined ? never : T;
 export class Chunk {
   private readonly edgesFrom = new MapSet<string, DependencyEdge>();
   private readonly edgesTo = new MapSet<string, DependencyEdge>();
-  //@ts-ignore
-  private readonly rootUri: Uri;
+  private readonly entrypoints: ReadonlyArray<Uri>;
   private readonly sourceModules = new Map<string, SourceModule>();
 
   constructor(options: Chunk.Options) {
-    this.rootUri = options.rootUri;
+    this.entrypoints = options.entrypoints;
 
     for (const sourceModule of options.sourceModules) {
       this.sourceModules.set(sourceModule.href, sourceModule);
@@ -33,13 +32,6 @@ export class Chunk {
   }
 
   buildForStaticRuntime(options?: Chunk.ToStringOptions) {
-    // const velcroModuleFactoryParts = velcroModuleFactory
-    //   .toString()
-    //   .split(velcroModuleFactory.splitString);
-    // const velcroChunkWrapperParts = velcroChunkWrapper
-    //   .toString()
-    //   .split(velcroChunkWrapper.splitString);
-
     const bundle = new Bundle({
       separator: '\n',
     });
@@ -96,7 +88,7 @@ export class Chunk {
       const inputMap = bundle.generateDecodedMap({
         includeContent: false,
         hires: true,
-        source: this.rootUri.toString(),
+        // source: this.rootUri.toString(),
       });
       return new Link(
         inputMap,
@@ -115,14 +107,14 @@ export class Chunk {
       );
     });
 
-    return new ChunkOutput(bundle, sourceMapTree, this.rootUri);
+    return new ChunkOutput(bundle, sourceMapTree, this.entrypoints);
   }
 }
 
 export namespace Chunk {
   export interface Options {
     edges: Iterable<DependencyEdge>;
-    rootUri: Uri;
+    entrypoints: Array<Uri>;
     sourceModules: Iterable<SourceModule>;
   }
 

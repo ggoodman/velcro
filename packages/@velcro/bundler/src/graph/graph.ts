@@ -27,10 +27,18 @@ export class Graph {
   }
 
   splitChunks(): Iterable<Chunk> {
+    const entrypointEdges = this.edgesFrom.get(this.rootUri.toString());
+
+    if (!entrypointEdges) {
+      return [];
+    }
+
+    const entrypoints = Array.from(entrypointEdges).map((edge) => edge.toUri);
+
     return [
       new Chunk({
         edges: this.edgesFrom.values(),
-        rootUri: Uri.joinPath(this.rootUri, './chunk/0.js'),
+        entrypoints,
         sourceModules: this.sourceModules.values(),
       }),
     ];

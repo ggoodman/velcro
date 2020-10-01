@@ -1000,7 +1000,7 @@ async function readParentPackageJson(
 
   if (readResult.found && readResult.visitedDirs) {
     const visitedDirs = readResult.visitedDirs;
-    delete readResult.visitedDirs;
+    delete (readResult as any).visitedDirs;
 
     (readResult as any)[CACHE] = visitedDirs.map((uri) => [uri.toString(), { ...readResult, uri }]);
   }

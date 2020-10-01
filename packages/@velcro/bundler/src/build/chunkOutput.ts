@@ -13,7 +13,7 @@ export class ChunkOutput {
   constructor(
     private readonly bundle: Bundle,
     private readonly sourceMapTree: ISourceMapper,
-    readonly uri: Uri
+    public readonly entrypoints: ReadonlyArray<Uri>
   ) {}
 
   get code() {
@@ -22,10 +22,6 @@ export class ChunkOutput {
     }
 
     return this.cachedCode!;
-  }
-
-  get href() {
-    return this.uri.toString();
   }
 
   get sourceMap() {
@@ -57,7 +53,7 @@ export class ChunkOutput {
 
     if (sourceMapTreeMappings instanceof Error) {
       return new SourceMap({
-        file: this.href,
+        // file: this.href,
         mappings: '',
         names: [],
         sources: [],
@@ -102,7 +98,7 @@ export class ChunkOutput {
     // }
 
     const sourceMap = new SourceMap({
-      file: this.href,
+      // file: this.href,
       mappings: encode(sourceMapTreeMappings.mappings),
       names: sourceMapTreeMappings.names,
       sources: sourceMapTreeMappings.sources,

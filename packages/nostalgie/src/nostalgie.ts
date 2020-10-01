@@ -135,8 +135,8 @@ export function refresh(scripts: Iterable<HTMLScriptElement>) {
   }
 
   queue = queue.then(() => {
-    const entrypointUris = entrypointPaths.map((path) => memoryStrategy.uriForPath(path));
-    const build = graphBuilder.build(entrypointUris, {
+    const unresolvedEntrypointUris = entrypointPaths.map((path) => memoryStrategy.uriForPath(path));
+    const build = graphBuilder.build(unresolvedEntrypointUris, {
       token: tokenSource ? tokenSource.token : undefined,
     });
 
@@ -147,7 +147,7 @@ export function refresh(scripts: Iterable<HTMLScriptElement>) {
           injectRuntime: buildId === 0,
         });
 
-        const codeWithStart = `${output.code}\n\n${entrypointUris
+        const codeWithStart = `${output.code}\n\n${output.entrypoints
           .map((entrypoint) => `Velcro.runtime.require(${JSON.stringify(entrypoint.toString())});`)
           .join('\n')}\n`;
         const runtimeCode = `${codeWithStart}\n//# sourceMappingURL=${output.sourceMapDataUri}`;

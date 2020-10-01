@@ -298,6 +298,8 @@ export class GraphBuilder {
         SourceModuleDependency.fromEntrypoint(uri)
       );
 
+      build.addEdge(edge);
+
       this.loadEdge(build, edge);
     });
   }
