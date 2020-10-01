@@ -7,7 +7,7 @@ import React from 'react';
 import { Tooltip, TooltipReference, useTooltipState } from 'reakit/Tooltip';
 
 import { Playground } from './playground';
-import { files } from './templates/svelte';
+import { files } from './templates/react';
 import { useServiceWorker, ServiceWorkerProvider } from './useServiceWorker';
 import { Button } from 'reakit/Button';
 
