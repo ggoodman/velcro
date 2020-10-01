@@ -7,6 +7,25 @@ const { resolve } = require('path');
 const { terser } = require('rollup-plugin-terser');
 const Typescript = require('typescript');
 
+const SPEC_RX = /^((@[^/]+\/[^/@]+|[^./@][^/@]*)(?:@([^/]+))?)(.*)?$/;
+
+function parseBareModuleSpec(bareModuleSpec) {
+  const matches = bareModuleSpec.match(SPEC_RX);
+
+  if (matches) {
+    const [, nameSpec, name, spec, path = ''] = matches;
+
+    return {
+      nameSpec,
+      name,
+      spec,
+      path,
+    };
+  }
+
+  return null;
+}
+
 function toUmdName(name) {
   let umdName = 'Velcro.';
 
@@ -15,6 +34,25 @@ function toUmdName(name) {
   }
 
   return umdName;
+}
+
+function createIsExternal(packageJson) {
+  const dependencies = new Set(
+    Object.keys({
+      ...packageJson.devDependencies,
+      ...packageJson.dependencies,
+    })
+  );
+
+  return function isExternal(id) {
+    const spec = parseBareModuleSpec(id);
+
+    if (!spec) return false;
+
+    const result = dependencies.has(spec.name);
+
+    return result;
+  };
 }
 
 /**
@@ -68,12 +106,7 @@ exports.rollupConfigFactory = function rollupConfigFactory(dirname, packageJson)
     configs.push({
       input: resolve(dirname, './src/index.ts'),
       output,
-      external(id) {
-        return Object.hasOwnProperty.call(
-          { ...packageJson.dependencies, ...packageJson.devDependencies },
-          id
-        );
-      },
+      external: createIsExternal(packageJson),
       onwarn: (msg, warn) => {
         if (!/Circular/.test(msg)) {
           warn(msg);
@@ -85,6 +118,7 @@ exports.rollupConfigFactory = function rollupConfigFactory(dirname, packageJson)
         RollupPluginNodeResolve({
           mainFields: ['module', 'main', 'unpkg'],
         }),
+        RollupPluginCommonJs(),
         RollupPluginReplace({ __VERSION__: packageJson.version }),
       ],
     });
