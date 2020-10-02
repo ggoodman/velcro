@@ -1,6 +1,6 @@
 {
   "name": "@velcro/strategy-cdn",
-  "version": "0.53.1",
+  "version": "0.53.2",
   "description": "Velcro resolver strategy for resolving modules from a cdn such as Unpkg or JsDelivr",
   "keywords": [
     "velcro",
