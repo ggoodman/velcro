@@ -48,7 +48,7 @@
             },
             {
               "kind": "Content",
-              "text": "<{\n    entrypointUri: "
+              "text": "<{\n    entrypoints: readonly "
             },
             {
               "kind": "Reference",
@@ -57,7 +57,7 @@
             },
             {
               "kind": "Content",
-              "text": ";\n    output: "
+              "text": "[];\n    output: "
             },
             {
               "kind": "Reference",

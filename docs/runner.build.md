@@ -8,7 +8,7 @@
 
 ```typescript
 declare function build(code: string, options: BuildOptions): Promise<{
-    entrypointUri: Uri;
+    entrypoints: readonly Uri[];
     output: ChunkOutput;
 }>;
 ```
@@ -22,5 +22,5 @@ declare function build(code: string, options: BuildOptions): Promise<{
 
 <b>Returns:</b>
 
-Promise&lt;{ entrypointUri: Uri; output: ChunkOutput; }&gt;
+Promise&lt;{ entrypoints: readonly Uri\[\]; output: ChunkOutput; }&gt;
 
