@@ -1,4 +1,5 @@
 const { Timing } = require('@pollyjs/core');
+const { MODES } = require('@pollyjs/utils');
 
 // For a detailed explanation regarding each configuration property, visit:
 // https://jestjs.io/docs/en/configuration.html
@@ -105,6 +106,8 @@ module.exports = {
       testMatch: ['<rootDir>/__test__/**/*.ts'],
       globals: {
         pollyConfig: {
+          mode: MODES.REPLAY,
+          recordIfMissing: false,
           timing: Timing.relative(0),
         },
         'ts-jest': {
@@ -136,6 +139,8 @@ module.exports = {
       testMatch: [`<rootDir>/packages/${name}/**/*.test.ts`],
       globals: {
         pollyConfig: {
+          mode: MODES.REPLAY,
+          recordIfMissing: false,
           timing: Timing.relative(0),
         },
         'ts-jest': {
