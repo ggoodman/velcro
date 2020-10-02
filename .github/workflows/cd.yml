@@ -7,19 +7,13 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
-      - name: Dump GitHub context
-        env:
-          GITHUB_CONTEXT: ${{ toJson(github) }}
-        run: echo "$GITHUB_CONTEXT"
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.sha}}
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: '12.x'
           registry-url: https://registry.npmjs.org/
       - run: npm i
       - run: npx lerna bootstrap --no-ci
       - run: npx lerna publish from-package --yes
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
