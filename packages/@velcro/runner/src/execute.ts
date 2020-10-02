@@ -27,7 +27,7 @@ export interface ExecuteOptions extends BuildOptions {
 export async function build(
   code: string,
   options: BuildOptions
-): Promise<{ entrypointUri: Uri; output: ChunkOutput }> {
+): Promise<{ entrypoints: readonly Uri[]; output: ChunkOutput }> {
   const entrypointPath = `index.js`;
   const cdnStrategy =
     options.cdn === 'unpkg'
@@ -63,7 +63,7 @@ export async function build(
     injectRuntime: true,
   });
 
-  return { entrypointUri, output };
+  return { entrypoints: output.entrypoints, output };
 }
 
 export async function execute<T = unknown>(code: string, options: ExecuteOptions): Promise<T> {
@@ -83,7 +83,7 @@ export async function execute<T = unknown>(code: string, options: ExecuteOptions
     options.external = isExternal;
   }
 
-  const { entrypointUri, output } = await build(code, options);
+  const { entrypoints, output } = await build(code, options);
   const codeWithStart = `${output.code}\n\nreturn Velcro.runtime;\n`;
   const runtimeCode = options.sourceMap
     ? `${codeWithStart}\n//# sourceMappingURL=${output.sourceMapDataUri}`
@@ -98,7 +98,7 @@ export async function execute<T = unknown>(code: string, options: ExecuteOptions
     }
   }
 
-  const result = velcro.require(entrypointUri.toString());
+  const result = velcro.require(entrypoints[0].toString());
 
   return result as T;
 }
