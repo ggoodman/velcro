@@ -54,7 +54,7 @@ module.exports = {
   // globalSetup: "globalSetup.js',
 
   // A path to a module which exports an async function that is triggered once after all test suites
-  globalTeardown: './globalTeardown.js',
+  globalTeardown: './globalTeardown.ts',
 
   // A set of global variables that need to be available in all test environments
   // globals: {},
@@ -105,8 +105,6 @@ module.exports = {
       testMatch: ['<rootDir>/__test__/**/*.ts'],
       globals: {
         pollyConfig: {
-          expiryStrategy: 'record',
-          recordIfMissing: true,
           timing: Timing.relative(0),
         },
         'ts-jest': {
@@ -138,8 +136,6 @@ module.exports = {
       testMatch: [`<rootDir>/packages/${name}/**/*.test.ts`],
       globals: {
         pollyConfig: {
-          expiryStrategy: 'record',
-          recordIfMissing: true,
           timing: Timing.relative(0),
         },
         'ts-jest': {
