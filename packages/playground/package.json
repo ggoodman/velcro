@@ -1,6 +1,6 @@
 {
   "name": "@velcro/playground",
-  "version": "0.53.0",
+  "version": "0.53.1",
   "private": true,
   "dependencies": {
     "@emotion/core": "^10.0.28",
@@ -13,8 +13,8 @@
     "@velcro/plugin-css": "^0.53.0",
     "@velcro/plugin-sucrase": "^0.53.0",
     "@velcro/resolver": "^0.53.0",
-    "@velcro/runner": "^0.53.0",
-    "@velcro/strategy-cdn": "^0.53.0",
+    "@velcro/runner": "^0.53.1",
+    "@velcro/strategy-cdn": "^0.53.1",
     "@velcro/strategy-compound": "^0.53.0",
     "@velcro/strategy-memory": "^0.53.0",
     "emotion-theming": "^10.0.27",
