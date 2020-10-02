@@ -1,4 +1,4 @@
-name: Publish
+name: CD
 on:
   push:
     tags:
@@ -13,7 +13,7 @@ jobs:
           node-version: 12
           registry-url: https://registry.npmjs.org/
       - run: npm i
-      - run: npx lerna bootstrap
+      - run: npx lerna bootstrap --no-ci
       - run: npx lerna publish --yes
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
