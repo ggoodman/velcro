@@ -1,6 +1,6 @@
 {
   "name": "@velcro/runner",
-  "version": "0.53.2",
+  "version": "0.53.3",
   "description": "Opinionated tool for easily bundling and running code from anywhere",
   "keywords": [
     "velcro",
@@ -51,7 +51,7 @@
     "@velcro/bundler": "^0.53.0",
     "@velcro/common": "^0.53.0",
     "@velcro/resolver": "^0.53.0",
-    "@velcro/strategy-cdn": "^0.53.2",
+    "@velcro/strategy-cdn": "^0.53.3",
     "@velcro/strategy-compound": "^0.53.0",
     "@velcro/strategy-memory": "^0.53.0"
   },
