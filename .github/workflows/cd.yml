@@ -12,7 +12,7 @@ jobs:
         with:
           node-version: '12.x'
           registry-url: https://registry.npmjs.org/
-      - run: echo //registry.npmjs.org/:__authToken=${NODE_AUTH_TOKEN} > .npmrc
+      - run: npm set //registry.npmjs.org/:_authToken $NPM_TOKEN -g
       - run: npm i
       - run: npx lerna bootstrap --no-ci
       - run: npx lerna publish from-package --yes
