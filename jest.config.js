@@ -107,7 +107,10 @@ module.exports = {
       globals: {
         pollyConfig: {
           mode: MODES.REPLAY,
-          recordIfMissing: false,
+          // Recording missing requests is (unfortunately) required during the transition
+          // to a new version (such as CI) where references to `@velcro/node-libs@<new_version>`
+          // will be made that will need to be recorded and allowed.
+          recordIfMissing: true,
           timing: Timing.relative(0),
         },
         'ts-jest': {
@@ -140,7 +143,10 @@ module.exports = {
       globals: {
         pollyConfig: {
           mode: MODES.REPLAY,
-          recordIfMissing: false,
+          // Recording missing requests is (unfortunately) required during the transition
+          // to a new version (such as CI) where references to `@velcro/node-libs@<new_version>`
+          // will be made that will need to be recorded and allowed.
+          recordIfMissing: true,
           timing: Timing.relative(0),
         },
         'ts-jest': {
