@@ -1,6 +1,6 @@
 {
   "name": "@velcro/strategy-memory",
-  "version": "0.54.1",
+  "version": "0.55.0",
   "description": "Velcro strategy for resolving files from an in-memory object",
   "keywords": [
     "velcro",
@@ -48,8 +48,8 @@
     "typescript": "^4.0.3"
   },
   "dependencies": {
-    "@velcro/common": "^0.54.1",
-    "@velcro/resolver": "^0.54.1"
+    "@velcro/common": "^0.55.0",
+    "@velcro/resolver": "^0.55.0"
   },
   "gitHead": "f63b45ad688f2fe9768349afeaf449c016bf33ef"
 }
