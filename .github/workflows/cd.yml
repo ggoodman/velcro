@@ -8,15 +8,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
       - uses: actions/setup-node@v1
         with:
           node-version: '12.x'
           registry-url: https://registry.npmjs.org/
-      - run: npm set //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN -g
-      - run: npm i
+      - run: npm set -g //registry.npmjs.org/:_authToken $NODE_AUTH_TOKEN
+      - run: npm i --no-fund --no-shrinkwrap --no-package-lock --no-audit
       - run: npx lerna bootstrap --no-ci
       - run: npm run build
-      - run: git status
+      - run: git diff
+      - run: git checkout -- package.json
       - run: npx lerna publish from-package --yes --no-verify-access
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
