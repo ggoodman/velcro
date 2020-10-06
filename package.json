@@ -12,7 +12,6 @@
     "clean": "rm -rf ./packages/@velcro/*/dist",
     "predeploy": "cd packages/playground && SKIP_PREFLIGHT_CHECK=true npm run build",
     "deploy": "gh-pages -d packages/playground/build",
-    "prepublish": "npm run build",
     "preversion": "npm run clean && npm test",
     "version": "npm run build:docs && git add .",
     "start": "cd packages/playground && SKIP_PREFLIGHT_CHECK=true npm run start",
