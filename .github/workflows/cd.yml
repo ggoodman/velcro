@@ -16,6 +16,7 @@ jobs:
       - run: npm i
       - run: npx lerna bootstrap --no-ci
       - run: npm run build
+      - run: git status
       - run: npx lerna publish from-package --yes --no-verify-access
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
