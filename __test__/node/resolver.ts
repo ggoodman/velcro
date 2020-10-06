@@ -3,7 +3,14 @@ import { Resolver } from '@velcro/resolver';
 import { CdnStrategy } from '@velcro/strategy-cdn';
 
 async function readUrl(href: string) {
-  const { payload } = await Wreck.get(href, {});
+  const { res, payload } = await Wreck.get(href, { redirects: 3 });
+  if (res.statusCode !== 200) {
+    throw new Error(
+      `Unexpected response while reading ${JSON.stringify(href)}: ${res.statusCode} ${
+        res.statusMessage
+      }`
+    );
+  }
   return payload as Buffer;
 }
 

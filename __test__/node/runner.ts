@@ -2,9 +2,14 @@ import Wreck from '@hapi/wreck';
 import { execute } from '@velcro/runner';
 
 async function readUrl(href: string) {
-  const { payload } = await Wreck.get(href, {
-    redirects: 1,
-  });
+  const { res, payload } = await Wreck.get(href, { redirects: 3 });
+  if (res.statusCode !== 200) {
+    throw new Error(
+      `Unexpected response while reading ${JSON.stringify(href)}: ${res.statusCode} ${
+        res.statusMessage
+      }`
+    );
+  }
   return payload as Buffer;
 }
 

@@ -7,7 +7,14 @@ import { execute } from '@velcro/runner';
 import fetch from 'cross-fetch';
 
 async function readUrl(href: string) {
-  const res = await fetch(href);
+  const res = await fetch(href, { redirect: 'follow' });
+
+  if (!res.ok) {
+    throw new Error(
+      `Unexpected response while fetching ${JSON.stringify(href)}: ${res.status} ${res.statusText}`
+    );
+  }
+
   return res.arrayBuffer();
 }
 

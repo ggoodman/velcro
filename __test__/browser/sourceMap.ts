@@ -2,15 +2,22 @@
  * @jest-environment jsdom
  */
 
-import Wreck from '@hapi/wreck';
 import { cssPlugin } from '@velcro/plugin-css';
 import { build } from '@velcro/runner';
+import fetch from 'cross-fetch';
 import { getLocator } from 'locate-character';
 import { SourceMapConsumer } from 'source-map';
 
 async function readUrl(href: string) {
-  const { payload } = await Wreck.get(href, {});
-  return payload as Buffer;
+  const res = await fetch(href, { redirect: 'follow' });
+
+  if (!res.ok) {
+    throw new Error(
+      `Unexpected response while fetching ${JSON.stringify(href)}: ${res.status} ${res.statusText}`
+    );
+  }
+
+  return res.arrayBuffer();
 }
 
 describe('SourceMap support', () => {
