@@ -9,6 +9,7 @@
     "declarationMap": true,
     "downlevelIteration": true,
     "esModuleInterop": true,
+    "importHelpers": true,
     "importsNotUsedAsValues": "error",
     "incremental": true,
     "module": "esnext",
