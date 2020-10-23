@@ -15,7 +15,7 @@
     "preversion": "npm run clean && npm test",
     "version": "npm run build:docs && git add .",
     "start": "cd packages/playground && SKIP_PREFLIGHT_CHECK=true npm run start",
-    "test": "cross-env NODE_OPTIONS=--max_old_space_size=4096 jest --verbose"
+    "test": "cross-env NODE_OPTIONS=--max_old_space_size=4096 POLLY_MODE=replay jest --verbose"
   },
   "repository": {
     "type": "git",

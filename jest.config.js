@@ -106,7 +106,6 @@ module.exports = {
       testMatch: ['<rootDir>/__test__/**/*.ts'],
       globals: {
         pollyConfig: {
-          mode: MODES.REPLAY,
           // Recording missing requests is (unfortunately) required during the transition
           // to a new version (such as CI) where references to `@velcro/node-libs@<new_version>`
           // will be made that will need to be recorded and allowed.
@@ -143,7 +142,6 @@ module.exports = {
       testMatch: [`<rootDir>/packages/${name}/**/*.test.ts`],
       globals: {
         pollyConfig: {
-          mode: MODES.REPLAY,
           // Recording missing requests is (unfortunately) required during the transition
           // to a new version (such as CI) where references to `@velcro/node-libs@<new_version>`
           // will be made that will need to be recorded and allowed.
