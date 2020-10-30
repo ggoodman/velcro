@@ -179,43 +179,6 @@ export class ResolverContext {
     this.tokenSource.dispose(true);
   }
 
-  forOperation(
-    operationName: string,
-    uri: { toString(): string },
-    options: { resetPath?: boolean; resetVisits?: boolean } = {}
-  ) {
-    const encodedOperation = encodePathNode(operationName, uri);
-
-    if (this.path.includes(encodedOperation)) {
-      const formattedPath = this.path
-        .map((segment) => {
-          const { operationName, uri } = decodePathNode(segment);
-
-          return `${operationName}(${uri.toString()})`;
-        })
-        .join(' -> ');
-
-      throw this._wrapError(
-        new Error(
-          `Detected a recursive call to the operation '${operationName}' for '${uri.toString()}' at path '${formattedPath}'`
-        )
-      );
-    }
-
-    return new ResolverContext({
-      cache: this.cache,
-      cacheInvalidations: this.cacheInvalidations,
-      debug: this.debugMode,
-      decoder: this.decoder,
-      path: options.resetPath ? [] : this.path.concat(encodedOperation),
-      resolver: this.resolver,
-      settings: this.settings,
-      strategy: this.strategy,
-      token: this.tokenSource.token,
-      visits: options.resetVisits ? new Visits(uri) : this.visits.child(uri),
-    });
-  }
-
   getCanonicalUrl(uri: Uri): StrategyResult<ResolverStrategy.CanonicalizeResult> {
     const method = this.strategy.getCanonicalUrl;
     const receiver = this.strategy;
@@ -329,7 +292,7 @@ export class ResolverContext {
     this.visits.push({ type, uri });
   }
 
-  resolve(spec: string, fromUri: Uri): StrategyResult<ResolveResult> {
+  resolveDependency(spec: string, fromUri: Uri): StrategyResult<ResolveResult> {
     const method = resolveDependency;
     const receiver = null;
     const operationName = 'resolve';
@@ -370,6 +333,43 @@ export class ResolverContext {
     contextFn: (ctx: ResolverContext) => T
   ): T {
     return this.runInContext(operationName, uri, { resetPath: true, resetVisits: true }, contextFn);
+  }
+
+  private forOperation(
+    operationName: string,
+    uri: { toString(): string },
+    options: { resetPath?: boolean; resetVisits?: boolean } = {}
+  ) {
+    const encodedOperation = encodePathNode(operationName, uri);
+
+    if (this.path.includes(encodedOperation)) {
+      const formattedPath = this.path
+        .map((segment) => {
+          const { operationName, uri } = decodePathNode(segment);
+
+          return `${operationName}(${uri.toString()})`;
+        })
+        .join(' -> ');
+
+      throw this._wrapError(
+        new Error(
+          `Detected a recursive call to the operation '${operationName}' for '${uri.toString()}' at path '${formattedPath}'`
+        )
+      );
+    }
+
+    return new ResolverContext({
+      cache: this.cache,
+      cacheInvalidations: this.cacheInvalidations,
+      debug: this.debugMode,
+      decoder: this.decoder,
+      path: options.resetPath ? [] : this.path.concat(encodedOperation),
+      resolver: this.resolver,
+      settings: this.settings,
+      strategy: this.strategy,
+      token: this.tokenSource.token,
+      visits: options.resetVisits ? new Visits(uri) : this.visits.child(uri),
+    });
   }
 
   private runInContext<T>(

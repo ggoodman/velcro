@@ -116,9 +116,9 @@ export class Resolver {
     );
   }
 
-  resolve(spec: Uri): ReturnType<ResolverContext['resolve']>;
-  resolve(spec: string, fromUri: Uri): ReturnType<ResolverContext['resolve']>;
-  resolve(spec: string | Uri, fromUri?: Uri): ReturnType<ResolverContext['resolve']> {
+  resolve(spec: Uri): ReturnType<ResolverContext['resolveDependency']>;
+  resolve(spec: string, fromUri: Uri): ReturnType<ResolverContext['resolveDependency']>;
+  resolve(spec: string | Uri, fromUri?: Uri): ReturnType<ResolverContext['resolveDependency']> {
     if (this.disposed) {
       throw new Error('Resolver has been disposed');
     }
@@ -138,7 +138,7 @@ export class Resolver {
     return this.rootCtx.runInIsolatedContext(
       'Resolver.resolve',
       `${fromUri ? fromUri.toString() : ''}|${spec}`,
-      (ctx) => ctx.resolve(spec, fromUri)
+      (ctx) => ctx.resolveDependency(spec, fromUri)
     );
   }
 }

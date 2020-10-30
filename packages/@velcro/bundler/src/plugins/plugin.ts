@@ -6,6 +6,10 @@ import type { SourceModule, SourceModuleDependency } from '../graph';
 
 type MaybeThenable<T> = T | PromiseLike<T>;
 
+export type RequireFn = <T extends { [moduleName: string]: string }>(
+  modules: T
+) => Promise<{ [K in keyof T]: unknown }>;
+
 export interface Plugin {
   name: string;
   load?(ctx: PluginLoadContext, id: string): MaybeThenable<PluginLoadResult | undefined>;
@@ -66,6 +70,7 @@ export interface PluginTransformContext {
   token: CancellationToken;
 
   createMagicString(): MagicString;
+  // require: RequireFn;
 }
 
 export type PluginTransformResult = {

@@ -7,8 +7,8 @@ import {
   Uri,
 } from '@velcro/common';
 import type { ResolverContext } from '@velcro/resolver';
-import MagicString from 'magic-string';
 import type { DecodedSourceMap, SourceMap } from 'magic-string';
+import MagicString from 'magic-string';
 import {
   decodeDataUriAsSourceMap,
   getSourceMappingUrl,
@@ -175,6 +175,11 @@ export class PluginManager {
       createMagicString() {
         return new MagicString(code as string);
       },
+      // require: <T extends { [moduleName: string]: string }>(
+      //   modules: T
+      // ): Promise<{ [K in keyof T]: unknown }> => {
+      //   this.
+      // }
     });
 
     let sourceMapTree: Source | Link = new Source(uri.toString(), code);
