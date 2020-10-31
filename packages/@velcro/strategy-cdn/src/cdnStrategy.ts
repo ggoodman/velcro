@@ -7,7 +7,6 @@ import {
   isThenable,
   parseBufferAsRootPackageJson,
   RootPackageJson,
-  Thenable,
   Uri,
 } from '@velcro/common';
 import {
@@ -261,7 +260,7 @@ export namespace CdnStrategy {
   export type UrlContentFetcher = (
     href: string,
     token: CancellationToken
-  ) => Thenable<ArrayBuffer | null>;
+  ) => PromiseLike<ArrayBuffer | null>;
 }
 
 export class CdnStrategy
@@ -270,9 +269,9 @@ export class CdnStrategy
   readonly cdn: AbstractCdn;
   private readonly contentCache = new Map<
     string,
-    null | { content: ArrayBuffer } | Thenable<{ content: ArrayBuffer }>
+    null | { content: ArrayBuffer } | PromiseLike<{ content: ArrayBuffer }>
   >();
-  private readonly locks = new Map<string, unknown | Thenable<unknown>>();
+  private readonly locks = new Map<string, unknown | PromiseLike<unknown>>();
   private readonly packageEntriesCache = new Map<string, Map<string, CdnStrategy.Directory>>();
   private readonly packageJsonCache = new Map<
     string,
@@ -287,7 +286,7 @@ export class CdnStrategy
     this.readUrlFn = readUrlFn;
   }
 
-  private _withRootUriCheck<T extends unknown | Thenable<unknown>>(
+  private _withRootUriCheck<T extends unknown | PromiseLike<unknown>>(
     uri: Uri,
     fn: (rootUri: Uri) => T
   ): T {
@@ -448,7 +447,7 @@ export class CdnStrategy
           if (data === null) {
             this.contentCache.delete(uriStr);
 
-            return Promise.reject(new EntryNotFoundError(uri));
+            throw new EntryNotFoundError(uri);
           }
 
           const entry = { content: data };

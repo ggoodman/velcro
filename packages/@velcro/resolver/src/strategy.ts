@@ -1,8 +1,8 @@
-import type { Thenable, Uri } from '@velcro/common';
+import type { Uri } from '@velcro/common';
 import type { ResolverContext } from './context';
 import type { Resolver } from './resolver';
 
-type MaybeThenable<T> = T | Thenable<T>;
+type MaybeThenable<T> = T | PromiseLike<T>;
 
 export interface ResolverStrategy {
   /**
@@ -195,7 +195,8 @@ export abstract class AbstractResolverStrategy implements ResolverStrategy {
   ): ReturnType<ResolverStrategy['readFileContent']>;
 }
 
-export abstract class AbstractResolverStrategyWithRoot extends AbstractResolverStrategy
+export abstract class AbstractResolverStrategyWithRoot
+  extends AbstractResolverStrategy
   implements ResolverStrategyWithRoot {
   constructor(readonly rootUri: Uri) {
     super();

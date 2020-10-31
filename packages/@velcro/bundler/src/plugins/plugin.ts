@@ -1,10 +1,10 @@
-import type { CancellationToken, Thenable, Uri } from '@velcro/common';
+import type { CancellationToken, Uri } from '@velcro/common';
 import type { Resolver, ResolverContext } from '@velcro/resolver';
 import type MagicString from 'magic-string';
 import type { SourceMapSegment } from 'magic-string';
 import type { SourceModule, SourceModuleDependency } from '../graph';
 
-type MaybeThenable<T> = T | Thenable<T>;
+type MaybeThenable<T> = T | PromiseLike<T>;
 
 export interface Plugin {
   name: string;

@@ -15,7 +15,6 @@ import {
   MapSet,
   PackageJson,
   parseBufferAsPackageJson,
-  Thenable,
   Uri,
 } from '@velcro/common';
 import { BareModuleSpec, parseBareModuleSpec } from './bareModules';
@@ -26,7 +25,7 @@ import { ResolverStrategy } from './strategy';
 type ReturnTypeWithVisits<
   T extends (...args: any[]) => any,
   TReturn = ReturnType<T>
-> = TReturn extends Thenable<infer U>
+> = TReturn extends PromiseLike<infer U>
   ? Promise<U & { visited: ResolverContext.Visit[] }>
   : TReturn & { visited: ResolverContext.Visit[] };
 
@@ -452,7 +451,7 @@ export class ResolverContext {
     const ret = fn.apply(target, args);
 
     if (isThenable(ret)) {
-      const promiseRet = ret as Thenable<ReturnTypeWithVisits<TMethod>>;
+      const promiseRet = ret as PromiseLike<ReturnTypeWithVisits<TMethod>>;
 
       // Produce a promise that will only be settled once the cache has been updated accordingly.
       const wrappedRet = promiseRet.then(cacheResult, (err) => {
@@ -463,9 +462,12 @@ export class ResolverContext {
       });
 
       // Set the pending value in the cache for now
-      operationCache.set(cacheKey, wrappedRet as Awaited<Thenable<ReturnTypeWithVisits<TMethod>>>);
+      operationCache.set(
+        cacheKey,
+        wrappedRet as Awaited<PromiseLike<ReturnTypeWithVisits<TMethod>>>
+      );
 
-      return wrappedRet as Awaited<Thenable<ReturnTypeWithVisits<TMethod>>>;
+      return wrappedRet as Awaited<PromiseLike<ReturnTypeWithVisits<TMethod>>>;
     }
 
     return cacheResult(ret);
