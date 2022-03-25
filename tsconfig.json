@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "importsNotUsedAsValues": "error",
+    "isolatedModules": true,
+    "lib": ["ESNext"],
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "noErrorTruncation": true,
+    "noUncheckedIndexedAccess": true,
+    "pretty": true,
+    "resolveJsonModule": true,
+    "strict": true,
+    "target": "ESNext"
+  },
+  "include": ["src"]
+}
